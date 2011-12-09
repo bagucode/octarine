@@ -24,6 +24,7 @@ typedef int64_t  i64;
 typedef uint64_t u64;
 typedef float    f32;
 typedef double   f64;
+
 #if defined(_WIN64) || defined(__LP64__)
 typedef int64_t  word;
 typedef uint64_t uword;
@@ -31,7 +32,10 @@ typedef uint64_t uword;
 typedef int32_t  word;
 typedef uint32_t uword;
 #endif
+
 typedef void* pointer;
+
+#ifndef __cplusplus
 typedef i8 bool;
 #ifndef true
 # define true 1
@@ -39,8 +43,27 @@ typedef i8 bool;
 #ifndef false
 # define false 0
 #endif
+#endif
+
 #ifndef NULL
 # define NULL 0
 #endif
+
+typedef union {
+	bool boolean;
+	i8 i8;
+	u8 u8;
+	i16 i16;
+	u16 u16;
+	i32 i32;
+	u32 u32;
+	i64 i64;
+	u64 u64;
+	f32 f32;
+	f64 f64;
+	word word;
+	uword uword;
+	pointer pointer;
+} v_any;
 
 #endif
