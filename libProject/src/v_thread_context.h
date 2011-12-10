@@ -5,7 +5,7 @@
 struct v_runtime;
 
 typedef struct v_thread_context {
-    v_runtime *runtime;
+    struct v_runtime *runtime;
 } v_thread_context;
 
 #endif
