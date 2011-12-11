@@ -11,3 +11,4 @@ include(../globfiles.cmake)
 # The _EXPORTING definition is for windows dll export support
 add_definitions(-D_EXPORTING)
 add_library(${PROJECT_NAME} SHARED ${${PROJECT_NAME}_h} ${${PROJECT_NAME}_c})
+target_link_libraries(${PROJECT_NAME} platform)

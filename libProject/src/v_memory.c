@@ -3,9 +3,9 @@
 #include "v_type.h"
 #include "v_thread_context.h"
 #include "v_runtime.h"
-#include <stdlib.h>
+#include "../../platformProject/src/v_platform.h"
 
-v_object alloc(v_thread_context *ctx, v_type *t) {
+static v_object alloc(v_thread_context *ctx, v_type *t) {
     v_object ret;
     ret.type = t;
     
@@ -13,7 +13,7 @@ v_object alloc(v_thread_context *ctx, v_type *t) {
         ret.value.uword = 0;
     }
     else {
-        ret.value.pointer = malloc(t->size);
+        ret.value.pointer = v_pf.malloc(t->size);
     }
     return ret;
 }

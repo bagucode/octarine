@@ -24,9 +24,10 @@ typedef struct v_runtime {
 } v_runtime;
 
 typedef struct {
-    
+    v_runtime *(*create)();
+    void (*destroy)(v_runtime *rt);
 } v_runtime_ns;
 
-extern const v_runtime_ns * const v_rt;
+extern const v_runtime_ns const v_rt;
 
 #endif
