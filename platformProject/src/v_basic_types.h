@@ -35,22 +35,16 @@ typedef uint32_t uword;
 
 typedef void* pointer;
 
-#ifndef __cplusplus
-typedef i8 bool;
-#ifndef true
-# define true 1
-#endif
-#ifndef false
-# define false 0
-#endif
-#endif
+typedef i8 v_bool;
+#define v_true 1
+#define v_false 0
 
 #ifndef NULL
 # define NULL 0
 #endif
 
 typedef union {
-	bool boolean;
+	v_bool v_bool;
 	i8 i8;
 	u8 u8;
 	i16 i16;
