@@ -16,11 +16,22 @@ static void rt_free(pointer location) {
 }
 
 const v_platform_ns const v_pf = {
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    rt_malloc,
-    rt_free
+	/* Thread local storage */ {
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+	},
+	/* Memory management */ {
+		rt_malloc,
+		rt_free
+	},
+	/* String support */ {
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL
+	}
 };
 

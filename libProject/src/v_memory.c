@@ -13,7 +13,7 @@ static v_object alloc(v_thread_context *ctx, v_type *t) {
         ret.value.uword = 0;
     }
     else {
-        ret.value.pointer = v_pf.malloc(t->size);
+		ret.value.pointer = v_pf.memory.malloc(t->size);
     }
     return ret;
 }
