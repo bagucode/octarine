@@ -2,7 +2,7 @@
 #include "v_thread_context.h"
 #include "v_runtime.h"
 
-static bool is_primitive(struct v_thread_context *ctx, v_type *t) {
+static v_bool is_primitive(struct v_thread_context *ctx, v_type *t) {
     v_runtime *rt = ctx->runtime;
     if(t == rt->built_in_types.i8
        || t == rt->built_in_types.u8
@@ -18,11 +18,11 @@ static bool is_primitive(struct v_thread_context *ctx, v_type *t) {
        || t == rt->built_in_types.word
        || t == rt->built_in_types.uword
        || t == rt->built_in_types.pointer)
-        return true;
-    return false;
+        return v_true;
+    return v_false;
 }
 
-static bool is_aggregate(struct v_thread_context *ctx, v_type *t) {
+static v_bool is_aggregate(struct v_thread_context *ctx, v_type *t) {
     return !is_primitive(ctx, t);
 }
 

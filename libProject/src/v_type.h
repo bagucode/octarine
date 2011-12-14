@@ -17,8 +17,8 @@ typedef struct v_type {
 } v_type;
 
 typedef struct {
-    bool (*is_primitive)(struct v_thread_context *ctx, v_type *t);
-    bool (*is_aggregate)(struct v_thread_context *ctx, v_type *t);
+    v_bool (*is_primitive)(struct v_thread_context *ctx, v_type *t);
+    v_bool (*is_aggregate)(struct v_thread_context *ctx, v_type *t);
 } v_type_ns;
 
 extern const v_type_ns const v_t;
