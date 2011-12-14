@@ -2,7 +2,7 @@
 #include "v_thread_context.h"
 #include "v_runtime.h"
 
-bool is_primitive(struct v_thread_context *ctx, v_type *t) {
+static bool is_primitive(struct v_thread_context *ctx, v_type *t) {
     v_runtime *rt = ctx->runtime;
     if(t == rt->built_in_types.i8
        || t == rt->built_in_types.u8
@@ -22,7 +22,7 @@ bool is_primitive(struct v_thread_context *ctx, v_type *t) {
     return false;
 }
 
-bool is_aggregate(struct v_thread_context *ctx, v_type *t) {
+static bool is_aggregate(struct v_thread_context *ctx, v_type *t) {
     return !is_primitive(ctx, t);
 }
 

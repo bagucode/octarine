@@ -1,7 +1,10 @@
 #include "v_platform.h"
 
 /* TODO: Use something else than malloc/free for windows?
-         Or just make sure to link statically to the runtime? */
+         Or just make sure to link statically to the runtime?
+		 We don't want to introduce any dependencies on stuff
+		 that does not come installed with the OS. Not even
+		 a C/C++ runtime library. */
 #include <stdlib.h>
 
 static pointer rt_malloc(uword size) {
