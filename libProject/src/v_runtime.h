@@ -19,7 +19,8 @@ typedef struct v_runtime {
         struct v_type *word;
         struct v_type *uword;
         struct v_type *pointer;
-        struct v_type *boolean;
+        struct v_type *v_bool;
+		struct v_type *v_char;
     } built_in_types;
 } v_runtime;
 

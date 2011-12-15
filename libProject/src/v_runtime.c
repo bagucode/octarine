@@ -17,9 +17,13 @@ static void set_shared_attributes(v_type *t) {
 
 static void init_built_in_types(v_runtime *rt) {
 
-	rt->built_in_types.boolean = alloc_built_in();
-	set_shared_attributes(rt->built_in_types.boolean);
-	rt->built_in_types.boolean->size = 1; /* i8 */
+	rt->built_in_types.v_char = alloc_built_in();
+	set_shared_attributes(rt->built_in_types.v_char);
+	rt->built_in_types.v_char->size = 4; /* i32 - unicode code point */
+
+	rt->built_in_types.v_bool = alloc_built_in();
+	set_shared_attributes(rt->built_in_types.v_bool);
+	rt->built_in_types.v_bool->size = 1; /* i8 */
 
 	rt->built_in_types.f32 = alloc_built_in();
 	set_shared_attributes(rt->built_in_types.f32);
@@ -75,7 +79,8 @@ static void init_built_in_types(v_runtime *rt) {
 }
 
 static void destroy_built_in_types(v_runtime *rt) {
-	free_built_in(rt->built_in_types.boolean);
+	free_built_in(rt->built_in_types.v_char);
+	free_built_in(rt->built_in_types.v_bool);
 	free_built_in(rt->built_in_types.f32);
 	free_built_in(rt->built_in_types.f64);
 	free_built_in(rt->built_in_types.i16);

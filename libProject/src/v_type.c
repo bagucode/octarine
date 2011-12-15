@@ -14,10 +14,11 @@ static v_bool is_primitive(struct v_thread_context *ctx, v_type *t) {
        || t == rt->built_in_types.u64
        || t == rt->built_in_types.f32
        || t == rt->built_in_types.f64
-       || t == rt->built_in_types.boolean
+	   || t == rt->built_in_types.v_bool
        || t == rt->built_in_types.word
        || t == rt->built_in_types.uword
-       || t == rt->built_in_types.pointer)
+       || t == rt->built_in_types.pointer
+	   || t == rt->built_in_types.v_char)
         return v_true;
     return v_false;
 }

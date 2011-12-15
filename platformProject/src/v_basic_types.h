@@ -39,6 +39,8 @@ typedef i8 v_bool;
 #define v_true 1
 #define v_false 0
 
+typedef int32_t v_char;
+
 #ifndef NULL
 # define NULL 0
 #endif
@@ -57,6 +59,7 @@ typedef union {
 	f64 f64;
 	word word;
 	uword uword;
+	v_char v_char;
 	pointer pointer;
 } v_any;
 
