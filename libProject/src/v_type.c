@@ -23,11 +23,16 @@ static v_bool is_primitive(struct v_thread_context *ctx, v_type *t) {
     return v_false;
 }
 
-static v_bool is_aggregate(struct v_thread_context *ctx, v_type *t) {
-    return !is_primitive(ctx, t);
+static v_bool is_struct(struct v_thread_context *ctx, v_type *t) {
+    return t->kind == V_T_STRUCT;
+}
+
+static v_bool is_object(struct v_thread_context *ctx, v_type *t) {
+    return t->kind == V_T_OBJECT;
 }
 
 const v_type_ns v_t = {
     is_primitive,
-    is_aggregate
+    is_struct,
+    is_object
 };
