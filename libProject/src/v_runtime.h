@@ -29,6 +29,6 @@ typedef struct {
     void (*destroy)(v_runtime *rt);
 } v_runtime_ns;
 
-extern const v_runtime_ns const v_rt;
+extern const v_runtime_ns v_rt;
 
 #endif

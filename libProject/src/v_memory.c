@@ -18,6 +18,6 @@ static v_object alloc(v_thread_context *ctx, v_type *t) {
     return ret;
 }
 
-const v_memory_ns const v_mem = {
+const v_memory_ns v_mem = {
     alloc
 };

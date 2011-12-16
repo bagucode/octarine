@@ -24,7 +24,7 @@ typedef struct v_native_string v_native_string;
 
 typedef struct v_platform_string_ns {
 	v_native_string *(*from_utf8_with_null)(char* utf8);
-	v_native_string *(*from_utf_8)(char* utf8, uword length);
+	v_native_string *(*from_utf8)(char* utf8, uword length);
 	char *(*to_utf8_with_null)(v_native_string *str);
 	char *(*to_utf8)(v_native_string *str, uword *out_length);
 	/* TODO: to/from other encodings. Perhaps replace specific functions
@@ -39,6 +39,6 @@ typedef struct {
 	struct v_platform_string_ns string;
 } v_platform_ns;
 
-extern const v_platform_ns const v_pf;
+extern const v_platform_ns v_pf;
 
 #endif

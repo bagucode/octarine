@@ -27,7 +27,7 @@ static v_bool is_aggregate(struct v_thread_context *ctx, v_type *t) {
     return !is_primitive(ctx, t);
 }
 
-const v_type_ns const v_t = {
+const v_type_ns v_t = {
     is_primitive,
     is_aggregate
 };

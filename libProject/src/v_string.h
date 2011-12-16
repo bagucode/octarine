@@ -13,7 +13,7 @@ typedef struct {
 	int (*compare)(v_string *str1, v_string *str2);
 } v_string_ns;
 
-extern const v_string_ns const v_str;
+extern const v_string_ns v_str;
 
 #endif
 

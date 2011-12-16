@@ -8,7 +8,7 @@ static v_type *alloc_built_in() {
 }
 
 static void free_built_in(v_type *t) {
-	free_built_in(t);
+	v_pf.memory.free(t);
 }
 
 static void set_shared_attributes(v_type *t) {
@@ -110,7 +110,7 @@ static void destroy(v_runtime *rt) {
 	v_pf.memory.free(rt);
 }
 
-const v_runtime_ns const v_rt = {
+const v_runtime_ns v_rt = {
     create,
     destroy
 };

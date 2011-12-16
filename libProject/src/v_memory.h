@@ -10,6 +10,6 @@ typedef struct {
                               struct v_type *type);
 } v_memory_ns;
 
-extern const v_memory_ns const v_mem;
+extern const v_memory_ns v_mem;
 
 #endif

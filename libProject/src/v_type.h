@@ -21,6 +21,6 @@ typedef struct {
     v_bool (*is_aggregate)(struct v_thread_context *ctx, v_type *t);
 } v_type_ns;
 
-extern const v_type_ns const v_t;
+extern const v_type_ns v_t;
 
 #endif
