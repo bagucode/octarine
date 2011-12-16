@@ -2,6 +2,7 @@
 #include "v_runtime.h"
 #include "../../platformProject/src/v_platform.h"
 #include "v_type.h"
+#include "v_string.h"
 
 static v_type *alloc_built_in() {
 	return (v_type*)v_pf.memory.malloc(sizeof(v_type));
@@ -11,74 +12,87 @@ static void free_built_in(v_type *t) {
 	v_pf.memory.free(t);
 }
 
-static void set_shared_attributes(v_type *t) {
+static void set_shared_primitive_attributes(v_type *t) {
 	t->kind = V_T_STRUCT;
 }
 
 static void init_built_in_types(v_runtime *rt) {
 
+    /* primitives */
+    
 	rt->built_in_types.v_char = alloc_built_in();
-	set_shared_attributes(rt->built_in_types.v_char);
+	set_shared_primitive_attributes(rt->built_in_types.v_char);
 	rt->built_in_types.v_char->size = 4; /* i32 - unicode code point */
 
 	rt->built_in_types.v_bool = alloc_built_in();
-	set_shared_attributes(rt->built_in_types.v_bool);
+	set_shared_primitive_attributes(rt->built_in_types.v_bool);
 	rt->built_in_types.v_bool->size = 1; /* i8 */
 
 	rt->built_in_types.f32 = alloc_built_in();
-	set_shared_attributes(rt->built_in_types.f32);
+	set_shared_primitive_attributes(rt->built_in_types.f32);
 	rt->built_in_types.f32->size = 4;
 
 	rt->built_in_types.f64 = alloc_built_in();
-	set_shared_attributes(rt->built_in_types.f64);
+	set_shared_primitive_attributes(rt->built_in_types.f64);
 	rt->built_in_types.f64->size = 8;
 
 	rt->built_in_types.i16 = alloc_built_in();
-	set_shared_attributes(rt->built_in_types.i16);
+	set_shared_primitive_attributes(rt->built_in_types.i16);
 	rt->built_in_types.i16->size = 2;
 
 	rt->built_in_types.i32 = alloc_built_in();
-	set_shared_attributes(rt->built_in_types.i32);
+	set_shared_primitive_attributes(rt->built_in_types.i32);
 	rt->built_in_types.i32->size = 4;
 
 	rt->built_in_types.i64 = alloc_built_in();
-	set_shared_attributes(rt->built_in_types.i64);
+	set_shared_primitive_attributes(rt->built_in_types.i64);
 	rt->built_in_types.i64->size = 8;
 
 	rt->built_in_types.i8 = alloc_built_in();
-	set_shared_attributes(rt->built_in_types.i8);
+	set_shared_primitive_attributes(rt->built_in_types.i8);
 	rt->built_in_types.i8->size = 1;
 
 	rt->built_in_types.pointer = alloc_built_in();
-	set_shared_attributes(rt->built_in_types.pointer);
+	set_shared_primitive_attributes(rt->built_in_types.pointer);
 	rt->built_in_types.pointer->size = sizeof(pointer);
 
 	rt->built_in_types.u16 = alloc_built_in();
-	set_shared_attributes(rt->built_in_types.u16);
+	set_shared_primitive_attributes(rt->built_in_types.u16);
 	rt->built_in_types.u16->size = 2;
 
 	rt->built_in_types.u32 = alloc_built_in();
-	set_shared_attributes(rt->built_in_types.u32);
+	set_shared_primitive_attributes(rt->built_in_types.u32);
 	rt->built_in_types.u32->size = 4;
 
 	rt->built_in_types.u64 = alloc_built_in();
-	set_shared_attributes(rt->built_in_types.u64);
+	set_shared_primitive_attributes(rt->built_in_types.u64);
 	rt->built_in_types.u64->size = 8;
 
 	rt->built_in_types.u8 = alloc_built_in();
-	set_shared_attributes(rt->built_in_types.u8);
+	set_shared_primitive_attributes(rt->built_in_types.u8);
 	rt->built_in_types.u8->size = 1;
 
 	rt->built_in_types.uword = alloc_built_in();
-	set_shared_attributes(rt->built_in_types.uword);
+	set_shared_primitive_attributes(rt->built_in_types.uword);
 	rt->built_in_types.uword->size = sizeof(uword);
 
 	rt->built_in_types.word = alloc_built_in();
-	set_shared_attributes(rt->built_in_types.word);
+	set_shared_primitive_attributes(rt->built_in_types.word);
 	rt->built_in_types.word->size = sizeof(word);
+    
+    /* aggregate structs */
+    
+    /* objects */
+    
+    rt->built_in_types.string = alloc_built_in();
+    rt->built_in_types.string->kind = V_T_OBJECT;
+    rt->built_in_types.string->size = sizeof(v_string);
 }
 
 static void destroy_built_in_types(v_runtime *rt) {
+    
+    /* primitives */
+    
 	free_built_in(rt->built_in_types.v_char);
 	free_built_in(rt->built_in_types.v_bool);
 	free_built_in(rt->built_in_types.f32);
@@ -94,6 +108,12 @@ static void destroy_built_in_types(v_runtime *rt) {
 	free_built_in(rt->built_in_types.u8);
 	free_built_in(rt->built_in_types.uword);
 	free_built_in(rt->built_in_types.word);
+
+    /* aggregate structs */
+    
+    /* objects */
+    
+    free_built_in(rt->built_in_types.string);
 }
 
 static v_runtime *create() {

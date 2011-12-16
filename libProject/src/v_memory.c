@@ -18,6 +18,14 @@ static v_object alloc(v_thread_context *ctx, v_type *t) {
     return ret;
 }
 
+static v_object alloc_raw(v_thread_context *ctx, v_type *proto_type, uword size) {
+    v_object ret;
+    ret.type = proto_type;
+    ret.value.pointer = v_pf.memory.malloc(size);
+    return ret;
+}
+
 const v_memory_ns v_mem = {
-    alloc
+    alloc,
+    alloc_raw
 };

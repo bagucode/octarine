@@ -6,6 +6,7 @@ struct v_type;
 
 typedef struct v_runtime {
     struct {
+        /* primitive types */
         struct v_type *i8;
         struct v_type *u8;
         struct v_type *i16;
@@ -21,6 +22,9 @@ typedef struct v_runtime {
         struct v_type *pointer;
         struct v_type *v_bool;
 		struct v_type *v_char;
+        /* aggregate value types */
+        /* object types */
+        struct v_type *string;
     } built_in_types;
 } v_runtime;
 

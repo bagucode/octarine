@@ -22,13 +22,18 @@ struct v_platform_memory_ns {
 /* String support */
 typedef struct v_native_string v_native_string;
 
-typedef struct v_platform_string_ns {
-	v_native_string *(*from_utf8_with_null)(char* utf8);
-	v_native_string *(*from_utf8)(char* utf8, uword length);
-	char *(*to_utf8_with_null)(v_native_string *str);
+struct v_platform_string_ns {
+    
+    /* If a length of 0 is used, the given utf8 string must be null terminated */
+    v_native_string *(*from_utf8)(char* utf8, uword length);
+    
+    /* out_length will contain the length of the returned string, without the
+       terminating null character. A terminating null is always added.
+       Use v_pf.free to deallocate the returned string. */
 	char *(*to_utf8)(v_native_string *str, uword *out_length);
-	/* TODO: to/from other encodings. Perhaps replace specific functions
-	         with ones that take an encoding enum parameter. */
+    
+    int (*compare)(v_native_string *x, v_native_string *y);
+
 	void (*destroy)(v_native_string *str);
 };
 
