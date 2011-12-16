@@ -25,6 +25,9 @@ typedef struct v_runtime {
         /* aggregate value types */
         /* object types */
         struct v_type *string;
+        struct v_type *type;
+        struct v_type *field;
+        struct v_type *array;
     } built_in_types;
 } v_runtime;
 
