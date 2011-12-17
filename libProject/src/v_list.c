@@ -26,31 +26,38 @@ void v_bootstrap_list_init_type(struct v_runtime *rt) {
     fields[1]->type = rt->built_in_types.list;
 }
 
-v_list_obj *create(v_thread_context *ctx) {
+static v_list_obj *create(v_thread_context *ctx) {
     v_object obj = v_mem.alloc(ctx, ctx->runtime->built_in_types.list);
     v_list_obj *ret = obj.value.pointer;
     return ret; /* TODO: lots of stuff */
 }
 
-void destroy(v_list_obj *lst) {
+static void destroy(v_list_obj *lst) {
     
 }
 
-void append(v_thread_context *ctx,
-            v_list_obj *lst,
-            v_object obj) {
-    
+static v_list_obj *add_front(v_thread_context *ctx,
+                             v_list_obj *lst,
+                             v_object data) {
+    v_object obj = v_mem.alloc(ctx, ctx->runtime->built_in_types.list);
+    v_list_obj *head = obj.value.pointer;
+    head->data = data;
+    head->next = lst;
+    return head;
 }
 
-void remove(v_thread_context *ctx,
-            v_list_obj *lst,
-            v_object obj) {
+static v_list_obj *remove(v_thread_context *ctx,
+                          v_list_obj *lst,
+                          v_object obj) {
+    /* TODO: implement.
+             Need Compare protocol? */
+    return lst;
 }
 
 const v_list_obj_ns v_lst = {
     create,
     destroy,
-    append,
+    add_front,
     remove
 };
 

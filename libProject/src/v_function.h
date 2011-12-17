@@ -17,14 +17,16 @@ typedef struct v_signature {
     struct v_array *parameters; /* array of v_parameter (besides thread context) */
 } v_signature;
 
+typedef struct v_signature_ns {
+    int (*compare)(v_signature *sig1, v_signature *sig2);
+} v_signature_ns;
+
 typedef struct v_function {
-    struct v_string *name;
-    v_signature *signature;
-    union {
-        struct v_array *instructions;
-        pointer native_code;
-    };
-    v_bool is_native;
+    /* struct v_string *name; */ /* probably don't need to store name in the function itself */
+    struct v_string *doc_string;
+    struct v_array *effects; /* array of Keyword or Symbol. Or do we want an Effect type? */
+    struct v_array *instructions;
+    pointer native_code;
 } v_function;
 
 typedef struct v_function_ns {
@@ -43,6 +45,7 @@ typedef struct v_closure_ns {
 } v_closure_ns;
                         
 typedef const v_closure_ns v_cl;
-typedef const v_function_ns v_fn;                        
+typedef const v_function_ns v_fn;
+typedef const v_signature_ns v_sig;
 
 #endif

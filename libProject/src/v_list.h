@@ -15,12 +15,14 @@ typedef struct v_list_obj {
 typedef struct v_list_obj_ns {
     v_list_obj *(*create)(struct v_thread_context *ctx);
     void (*destroy)(v_list_obj *lst);
-    void (*append)(struct v_thread_context *ctx,
-                   v_list_obj *lst,
-                   v_object obj);
-    void (*remove)(struct v_thread_context *ctx,
-                   v_list_obj *lst,
-                   v_object obj);
+    /* returns new head */
+    v_list_obj *(*add_front)(struct v_thread_context *ctx,
+                             v_list_obj *lst,
+                             v_object data);
+    /* mutating remove, returns (new) head */
+    v_list_obj *(*remove)(struct v_thread_context *ctx,
+                          v_list_obj *lst,
+                          v_object data);
 } v_list_obj_ns;
 
 extern const v_list_obj_ns v_lst;
