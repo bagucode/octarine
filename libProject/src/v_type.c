@@ -99,7 +99,7 @@ void v_bootstrap_type_init_field(struct v_runtime *rt) {
 
 const u8 V_T_OBJECT = 0;
 const u8 V_T_STRUCT = 1;
-const u8 V_T_SELF = 2;
+const v_type *V_T_SELF = NULL;
 
 const v_type_ns v_t = {
     is_primitive,

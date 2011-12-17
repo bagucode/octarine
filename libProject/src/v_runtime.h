@@ -3,8 +3,10 @@
 #define vlang_runtime_h
 
 struct v_type;
+struct v_heap_record;
 
 typedef struct v_runtime {
+    struct v_heap_record *globals;
     struct {
         /* primitive types */
         struct v_type *i8;
@@ -31,6 +33,7 @@ typedef struct v_runtime {
         struct v_type *list;
         struct v_type *nothing;
         struct v_type *any;
+        struct v_type *map;
     } built_in_types;
 } v_runtime;
 

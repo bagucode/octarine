@@ -11,9 +11,10 @@ struct v_array;
 
 const u8 V_T_OBJECT;
 const u8 V_T_STRUCT;
-const u8 V_T_SELF;
 
 typedef struct v_type v_type;
+
+const v_type *V_T_SELF;
 
 typedef struct v_field {
     struct v_string *name;

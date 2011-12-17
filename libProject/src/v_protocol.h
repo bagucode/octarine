@@ -24,7 +24,8 @@ typedef struct v_protocol {
 
 typedef struct v_protocol_ns {
     /* Returns an array because there may be more than one match
-     if dynamic typing is used. */
+     if dynamic typing is used. The array can also be empty, if
+     there is no match at all. */
     struct v_array *(*find_function)(v_protocol *protocol,
                                      struct v_signature *signature);
 } v_protocol_ns;

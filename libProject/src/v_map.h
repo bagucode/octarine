@@ -5,6 +5,8 @@
 
 struct v_string;
 struct v_array;
+struct v_thread_context;
+struct v_runtime;
 
 /* A hash map where the keys are strings and the values objects of any type */
 
@@ -14,12 +16,12 @@ typedef struct v_map_str_obj_entry {
 } v_map_str_obj_entry;
 
 typedef struct v_map_str_obj {
-    struct v_array buckets; /* array of v_list_obj containing entries */
+    struct v_array *buckets; /* array of v_list_obj containing entries */
     f32 load_factor;
 } v_map_str_obj;
 
 typedef struct v_map_str_obj_ns {
-    v_map_str_obj *(*create)();
+    v_map_str_obj *(*create)(struct v_thread_context *ctx);
     void (*destroy)(v_map_str_obj *map);
     void (*put)(v_map_str_obj *map, struct v_string *key, v_object value);
     /* Type of returned object is Nothing if there was no entry. */
@@ -27,5 +29,7 @@ typedef struct v_map_str_obj_ns {
 } v_map_str_obj_ns;
 
 extern const v_map_str_obj_ns v_map;
+
+void v_bootstrap_map_init_type(struct v_runtime *rt);
 
 #endif
