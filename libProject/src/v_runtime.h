@@ -28,8 +28,9 @@ typedef struct v_runtime {
         struct v_type *type;
         struct v_type *field;
         struct v_type *array;
-        
+        struct v_type *list;
         struct v_type *nothing;
+        struct v_type *any;
     } built_in_types;
 } v_runtime;
 
