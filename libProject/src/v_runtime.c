@@ -45,6 +45,8 @@ static void alloc_built_in_types(v_runtime *rt) {
     rt->built_in_types.type = alloc_built_in();
     rt->built_in_types.field = alloc_built_in();
     rt->built_in_types.array = alloc_built_in();
+    
+    rt->built_in_types.nothing = alloc_built_in();
 }
 
 static void init_built_in_types(v_runtime *rt) {
@@ -149,6 +151,7 @@ static void destroy_built_in_types(v_runtime *rt) {
     free_built_in(rt->built_in_types.type);
     free_built_in(rt->built_in_types.field);
     free_built_in(rt->built_in_types.array);
+    free_built_in(rt->built_in_types.nothing);
 }
 
 static v_runtime *create() {
