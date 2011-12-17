@@ -15,16 +15,13 @@ static void pf_free(pointer location) {
     free(location);
 }
 
-static v_native_string *str_from_utf8_with_null(char* utf8) {
-}
-
 static v_native_string *str_from_utf8(char* utf8, uword length) {
 }
 
-static char *str_to_utf8_with_null(v_native_string *str) {
+static char *str_to_utf8(v_native_string *str, uword *out_length) {
 }
 
-static char *str_to_utf8(v_native_string *str, uword *out_length) {
+static int str_compare(v_native_string *x, v_native_string *y) {
 }
 
 static void str_destroy(v_native_string *str) {
@@ -42,10 +39,9 @@ const v_platform_ns v_pf = {
 		pf_free
 	},
 	/* String support */ {
-		str_from_utf8_with_null,
 		str_from_utf8,
-		str_to_utf8_with_null,
 		str_to_utf8,
+		str_compare,
 		str_destroy
 	}
 };
