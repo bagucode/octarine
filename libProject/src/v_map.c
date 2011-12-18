@@ -5,7 +5,8 @@
 #include "v_runtime.h"
 
 static v_map_str_obj *create(v_thread_context *ctx) {
-    v_map_str_obj *map = v_mem.alloc(ctx, ctx->runtime->built_in_types.map);
+    v_object obj = v_mem.alloc(ctx, ctx->heap, ctx->runtime->built_in_types.map);
+    return obj.value.pointer;
 }
 
 static void destroy(v_map_str_obj *map) {
@@ -24,3 +25,7 @@ const v_map_str_obj_ns v_map = {
     put,
     get
 };
+
+void v_bootstrap_map_init_type(struct v_runtime *rt) {
+}
+

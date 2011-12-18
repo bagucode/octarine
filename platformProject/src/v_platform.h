@@ -13,6 +13,16 @@ struct v_platform_tls_ns {
 	void (*set)(v_tls *tls, pointer value);
 };
 
+/* Other threading stuff */
+typedef struct v_mutex v_mutex;
+
+struct v_thread_ns {
+    v_mutex *(*create_mutex)();
+    void (*destroy_mutex)(v_mutex *mutex);
+    void (*lock_mutex)(v_mutex *mutex);
+    void (*unlock_mutex)(v_mutex *mutex);
+};
+
 /* Memory management */
 struct v_platform_memory_ns {
 	pointer (*malloc)(uword size);
@@ -39,6 +49,7 @@ struct v_platform_string_ns {
 
 /* Platform namespace */
 typedef struct {
+    struct v_thread_ns thread;
 	struct v_platform_tls_ns tls;
     struct v_platform_memory_ns memory;
 	struct v_platform_string_ns string;

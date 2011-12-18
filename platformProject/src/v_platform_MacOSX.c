@@ -1,6 +1,7 @@
 #include "v_platform.h"
 #include <stdlib.h>
 #include <CoreFoundation/CoreFoundation.h>
+#include <pthread.h>
 
 /* malloc & free */
 
@@ -50,9 +51,42 @@ static void str_destroy(v_native_string *str) {
     pf_free(str);
 }
 
+/* Threading */
+
+struct v_mutex {
+    pthread_mutex_t mutex;
+};
+
+/* TODO: error handling on these? */
+static v_mutex *create_mutex() {
+    v_mutex *ret = pf_malloc(sizeof(v_mutex));
+    pthread_mutex_init(&ret->mutex, NULL);
+    return ret;
+}
+
+static void destroy_mutex(v_mutex *mutex) {
+    pthread_mutex_destroy(&mutex->mutex);
+    pf_free(mutex);
+}
+
+static void lock_mutex(v_mutex *mutex) {
+    pthread_mutex_lock(&mutex->mutex);
+}
+
+static void unlock_mutex(v_mutex *mutex) {
+    pthread_mutex_unlock(&mutex->mutex);
+}
+
+
 /* Platform namespace */
 
 const v_platform_ns const v_pf = {
+    /* General threading stuff */ {
+        create_mutex,
+        destroy_mutex,
+        lock_mutex,
+        unlock_mutex
+    },
 	/* Thread local storage */ {
 		NULL,
 		NULL,

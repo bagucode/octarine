@@ -27,7 +27,7 @@ void v_bootstrap_list_init_type(struct v_runtime *rt) {
 }
 
 static v_list_obj *create(v_thread_context *ctx) {
-    v_object obj = v_mem.alloc(ctx, ctx->runtime->built_in_types.list);
+    v_object obj = v_mem.alloc(ctx, ctx->heap, ctx->runtime->built_in_types.list);
     v_list_obj *ret = obj.value.pointer;
     return ret; /* TODO: lots of stuff */
 }
@@ -39,7 +39,7 @@ static void destroy(v_list_obj *lst) {
 static v_list_obj *add_front(v_thread_context *ctx,
                              v_list_obj *lst,
                              v_object data) {
-    v_object obj = v_mem.alloc(ctx, ctx->runtime->built_in_types.list);
+    v_object obj = v_mem.alloc(ctx, ctx->heap, ctx->runtime->built_in_types.list);
     v_list_obj *head = obj.value.pointer;
     head->data = data;
     head->next = lst;

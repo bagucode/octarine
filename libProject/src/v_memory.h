@@ -8,18 +8,20 @@ struct v_type;
 struct v_thread_context;
 struct v_runtime;
 
-typedef struct v_heap_record v_heap_record;
+typedef struct v_heap v_heap;
 
 typedef struct {
+    v_heap *(*create_heap)(v_bool synchronized, uword gc_limit);
+    void (*destroy_heap)(v_heap *heap);
 	v_object (*alloc)(struct v_thread_context *ctx,
+                      struct v_heap *heap,
                       struct v_type *type);
+    void (*force_gc)(v_heap *heap);
 } v_memory_ns;
 
-v_heap_record *v_bootstrap_memory_create_heap_record();
-
-pointer v_bootstrap_memory_alloc(struct v_runtime *rt,
-                                 struct v_type *proto_type,
-                                 uword size);
+v_object v_bootstrap_memory_alloc(v_heap *heap,
+                                  struct v_type *proto_type,
+                                  uword size);
 
 extern const v_memory_ns v_mem;
 

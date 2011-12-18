@@ -3,10 +3,10 @@
 #define vlang_runtime_h
 
 struct v_type;
-struct v_heap_record;
+struct v_heap;
 
 typedef struct v_runtime {
-    struct v_heap_record *globals;
+    struct v_heap *globals;
     struct {
         /* primitive types */
         struct v_type *i8;

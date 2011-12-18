@@ -10,7 +10,7 @@
 static v_array *create(v_thread_context *ctx,
                        v_type *elemType,
                        uword num_elements) {
-    v_object obj = v_mem.alloc(ctx, ctx->runtime->built_in_types.array);
+    v_object obj = v_mem.alloc(ctx, ctx->heap, ctx->runtime->built_in_types.array);
     v_array *ret = obj.value.pointer;
     uword byte_size;
     

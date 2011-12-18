@@ -7,8 +7,8 @@
 #include "v_list.h"
 #include "v_map.h"
 
-static v_type *alloc_built_in() {
-	return (v_type*)v_pf.memory.malloc(sizeof(v_type));
+static v_type *alloc_built_in(v_runtime *rt) {
+	return v_bootstrap_memory_alloc(rt->globals, rt->built_in_types.type, sizeof(v_type)).value.pointer;
 }
 
 static void set_shared_primitive_attributes(v_type *t) {
@@ -18,29 +18,29 @@ static void set_shared_primitive_attributes(v_type *t) {
 }
 
 static void alloc_built_in_types(v_runtime *rt) {
-	rt->built_in_types.v_char = alloc_built_in();
-	rt->built_in_types.v_bool = alloc_built_in();
-	rt->built_in_types.f32 = alloc_built_in();
-	rt->built_in_types.f64 = alloc_built_in();
-	rt->built_in_types.i16 = alloc_built_in();
-	rt->built_in_types.i32 = alloc_built_in();
-	rt->built_in_types.i64 = alloc_built_in();
-	rt->built_in_types.i8 = alloc_built_in();
-	rt->built_in_types.pointer = alloc_built_in();
-	rt->built_in_types.u16 = alloc_built_in();
-	rt->built_in_types.u32 = alloc_built_in();
-	rt->built_in_types.u64 = alloc_built_in();
-	rt->built_in_types.u8 = alloc_built_in();
-	rt->built_in_types.uword = alloc_built_in();
-	rt->built_in_types.word = alloc_built_in();
-    rt->built_in_types.string = alloc_built_in();
-    rt->built_in_types.type = alloc_built_in();
-    rt->built_in_types.field = alloc_built_in();
-    rt->built_in_types.array = alloc_built_in();
-    rt->built_in_types.nothing = alloc_built_in();
-    rt->built_in_types.list = alloc_built_in();
-    rt->built_in_types.any = alloc_built_in();
-    rt->built_in_types.map = alloc_built_in();
+    rt->built_in_types.type = v_bootstrap_memory_alloc(rt->globals, (v_type*)V_T_SELF, sizeof(v_type)).value.pointer;
+	rt->built_in_types.v_char = alloc_built_in(rt);
+	rt->built_in_types.v_bool = alloc_built_in(rt);
+	rt->built_in_types.f32 = alloc_built_in(rt);
+	rt->built_in_types.f64 = alloc_built_in(rt);
+	rt->built_in_types.i16 = alloc_built_in(rt);
+	rt->built_in_types.i32 = alloc_built_in(rt);
+	rt->built_in_types.i64 = alloc_built_in(rt);
+	rt->built_in_types.i8 = alloc_built_in(rt);
+	rt->built_in_types.pointer = alloc_built_in(rt);
+	rt->built_in_types.u16 = alloc_built_in(rt);
+	rt->built_in_types.u32 = alloc_built_in(rt);
+	rt->built_in_types.u64 = alloc_built_in(rt);
+	rt->built_in_types.u8 = alloc_built_in(rt);
+	rt->built_in_types.uword = alloc_built_in(rt);
+	rt->built_in_types.word = alloc_built_in(rt);
+    rt->built_in_types.string = alloc_built_in(rt);
+    rt->built_in_types.field = alloc_built_in(rt);
+    rt->built_in_types.array = alloc_built_in(rt);
+    rt->built_in_types.nothing = alloc_built_in(rt);
+    rt->built_in_types.list = alloc_built_in(rt);
+    rt->built_in_types.any = alloc_built_in(rt);
+    rt->built_in_types.map = alloc_built_in(rt);
 }
 
 static void init_built_in_types(v_runtime *rt) {
@@ -121,42 +121,9 @@ static void init_built_in_types(v_runtime *rt) {
     v_bootstrap_map_init_type(rt);
 }
 
-static void destroy_built_in_types(v_runtime *rt) {
-
-    /* primitives */
-
-	free_built_in(rt->built_in_types.v_char);
-	free_built_in(rt->built_in_types.v_bool);
-	free_built_in(rt->built_in_types.f32);
-	free_built_in(rt->built_in_types.f64);
-	free_built_in(rt->built_in_types.i16);
-	free_built_in(rt->built_in_types.i32);
-	free_built_in(rt->built_in_types.i64);
-	free_built_in(rt->built_in_types.i8);
-	free_built_in(rt->built_in_types.pointer);
-	free_built_in(rt->built_in_types.u16);
-	free_built_in(rt->built_in_types.u32);
-	free_built_in(rt->built_in_types.u64);
-	free_built_in(rt->built_in_types.u8);
-	free_built_in(rt->built_in_types.uword);
-	free_built_in(rt->built_in_types.word);
-
-    /* aggregate structs */
-
-    /* objects */
-
-    free_built_in(rt->built_in_types.string);
-    free_built_in(rt->built_in_types.type);
-    free_built_in(rt->built_in_types.field);
-    free_built_in(rt->built_in_types.array);
-    free_built_in(rt->built_in_types.nothing);
-    free_built_in(rt->built_in_types.list);
-    free_built_in(rt->built_in_types.any);
-    free_built_in(rt->built_in_types.map);
-}
-
 static v_runtime *create() {
 	v_runtime *ret = (v_runtime*)v_pf.memory.malloc(sizeof(v_runtime));
+    ret->globals = v_mem.create_heap(v_true, 2000 * 1024);
     alloc_built_in_types(ret);
 	init_built_in_types(ret);
     /* TODO: init thread context for main thread */
@@ -164,9 +131,9 @@ static v_runtime *create() {
 }
 
 static void destroy(v_runtime *rt) {
-    /* TODO: make sure all live objects are destroyed
+    /* TODO: make sure all live objects in all threads are destroyed
              and deallocated before deleting the runtime object */
-	destroy_built_in_types(rt);
+    v_mem.destroy_heap(rt->globals);
 	v_pf.memory.free(rt);
 }
 

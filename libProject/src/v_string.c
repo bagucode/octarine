@@ -8,7 +8,7 @@
 
 static v_string *create(v_thread_context *ctx, char *utf8) {
     v_runtime *rt = ctx->runtime;
-    v_object obj = v_mem.alloc(ctx, rt->built_in_types.string);
+    v_object obj = v_mem.alloc(ctx, ctx->heap, rt->built_in_types.string);
     v_string *ret = obj.value.pointer;
     ret->str = v_pf.string.from_utf8(utf8, 0);
     return ret;
