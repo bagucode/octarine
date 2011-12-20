@@ -20,7 +20,7 @@ typedef struct vSignature_ns {
 
 struct vFunction {
     vStringRef doc_string;
-    vArrayRef effects; /* array of Keyword or Symbol. Or do we want an Effect type? */
+    vArrayRef meta_data; /* array of Keyword or Symbol. Or do we want an Effect type? */
     vArrayRef instructions;
     pointer native_code;
 };
