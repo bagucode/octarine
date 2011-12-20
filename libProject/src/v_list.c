@@ -7,8 +7,8 @@
 #include "v_array.h"
 #include <stddef.h>
 
-void v_bootstrap_list_init_type(struct vRuntime *rt) {
-    vField **fields;
+void v_bootstrap_list_init_type(vRuntimeRef rt) {
+    vFieldRef *fields;
     rt->built_in_types.list->fields = v_bootstrap_type_create_field_array(rt, 2);
     rt->built_in_types.list->kind = V_T_OBJECT;
     rt->built_in_types.list->name = v_bootstrap_string_create("AnyList");
@@ -26,28 +26,28 @@ void v_bootstrap_list_init_type(struct vRuntime *rt) {
     fields[1]->type = rt->built_in_types.list;
 }
 
-static vListObj *create(vThreadContext *ctx) {
+static vListObjRef create(vThreadContextRef ctx) {
     vObject obj = v_mem.alloc(ctx, ctx->heap, ctx->runtime->built_in_types.list);
-    vListObj *ret = obj.value.pointer;
+    vListObjRef ret = obj.value.pointer;
     return ret; /* TODO: lots of stuff */
 }
 
-static void destroy(vListObj *lst) {
+static void destroy(vListObjRef lst) {
     
 }
 
-static vListObj *add_front(vThreadContext *ctx,
-                             vListObj *lst,
+static vListObjRef add_front(vThreadContextRef ctx,
+                             vListObjRef lst,
                              vObject data) {
     vObject obj = v_mem.alloc(ctx, ctx->heap, ctx->runtime->built_in_types.list);
-    vListObj *head = obj.value.pointer;
+    vListObjRef head = obj.value.pointer;
     head->data = data;
     head->next = lst;
     return head;
 }
 
-static vListObj *remove(vThreadContext *ctx,
-                          vListObj *lst,
+static vListObjRef remove(vThreadContextRef ctx,
+                          vListObjRef lst,
                           vObject obj) {
     /* TODO: implement.
              Need Compare protocol? */

@@ -3,7 +3,7 @@
 #include "v_string.h"
 #include "v_runtime.h"
 
-void v_bootstrap_nothing_init_type(struct vRuntime *rt) {
+void v_bootstrap_nothing_init_type(vRuntimeRef rt) {
     rt->built_in_types.nothing->fields = NULL;
     rt->built_in_types.nothing->kind = V_T_OBJECT;
     rt->built_in_types.nothing->name = v_bootstrap_string_create("Nothing");
@@ -11,5 +11,5 @@ void v_bootstrap_nothing_init_type(struct vRuntime *rt) {
     rt->built_in_types.nothing->size = sizeof(vNothing);
 }
 
-const vNothing *v_nil = NULL;
+const vNothingRef v_nil = NULL;
 

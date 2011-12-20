@@ -7,18 +7,18 @@
 #include "v_list.h"
 #include "v_map.h"
 
-static vType *alloc_built_in(vRuntime *rt) {
+static vTypeRef alloc_built_in(vRuntimeRef rt) {
 	return v_bootstrap_memory_alloc(rt->globals, rt->built_in_types.type, sizeof(vType)).value.pointer;
 }
 
-static void set_shared_primitive_attributes(vType *t) {
+static void set_shared_primitive_attributes(vTypeRef t) {
 	t->kind = V_T_STRUCT;
     t->numFields = 0;
     t->fields = NULL;
 }
 
-static void alloc_built_in_types(vRuntime *rt) {
-    rt->built_in_types.type = v_bootstrap_memory_alloc(rt->globals, (vType*)V_T_SELF, sizeof(vType)).value.pointer;
+static void alloc_built_in_types(vRuntimeRef rt) {
+    rt->built_in_types.type = v_bootstrap_memory_alloc(rt->globals, V_T_SELF, sizeof(vType)).value.pointer;
 	rt->built_in_types.v_char = alloc_built_in(rt);
 	rt->built_in_types.v_bool = alloc_built_in(rt);
 	rt->built_in_types.f32 = alloc_built_in(rt);
@@ -43,7 +43,7 @@ static void alloc_built_in_types(vRuntime *rt) {
     rt->built_in_types.map = alloc_built_in(rt);
 }
 
-static void init_built_in_types(vRuntime *rt) {
+static void init_built_in_types(vRuntimeRef rt) {
 
     /* primitives */
 
@@ -121,8 +121,8 @@ static void init_built_in_types(vRuntime *rt) {
     v_bootstrap_map_init_type(rt);
 }
 
-static vRuntime *create() {
-	vRuntime *ret = (vRuntime*)v_pf.memory.malloc(sizeof(vRuntime));
+static vRuntimeRef create() {
+	vRuntimeRef ret = (vRuntimeRef)v_pf.memory.malloc(sizeof(vRuntime));
     ret->globals = v_mem.create_heap(v_true, 2000 * 1024);
     alloc_built_in_types(ret);
 	init_built_in_types(ret);
@@ -130,7 +130,7 @@ static vRuntime *create() {
     return ret;
 }
 
-static void destroy(vRuntime *rt) {
+static void destroy(vRuntimeRef rt) {
     /* TODO: make sure all live objects in all threads are destroyed
              and deallocated before deleting the runtime object */
     v_mem.destroy_heap(rt->globals);

@@ -2,22 +2,20 @@
 #define vlang_string_h
 
 #include "../../platformProject/src/v_platform.h"
+#include "v_typedefs.h"
 
-struct vThreadContext;
-struct vRuntime;
-
-typedef struct vString {
-	vNativeString *str;
-} vString;
+struct vString {
+	vNativeStringRef str;
+};
 
 typedef struct {
-	vString *(*create)(struct vThreadContext *ctx, char *utf8);
-	void (*destroy)(struct vThreadContext *ctx, vString *str);
-	int (*compare)(vString *str1, vString *str2);
+	vStringRef (*create)(vThreadContextRef ctx, char *utf8);
+	void (*destroy)(vThreadContextRef ctx, vStringRef str);
+	int (*compare)(vStringRef str1, vStringRef str2);
 } vString_ns;
 
-vString *v_bootstrap_string_create(char *utf8);
-void v_bootstrap_string_init_type(struct vRuntime *rt);
+vStringRef v_bootstrap_string_create(char *utf8);
+void v_bootstrap_string_init_type(vRuntimeRef rt);
 
 extern const vString_ns v_str;
 

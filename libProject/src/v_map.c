@@ -4,19 +4,19 @@
 #include "v_thread_context.h"
 #include "v_runtime.h"
 
-static vMapStrObj *create(vThreadContext *ctx) {
+static vMapStrObjRef create(vThreadContextRef ctx) {
     vObject obj = v_mem.alloc(ctx, ctx->heap, ctx->runtime->built_in_types.map);
     return obj.value.pointer;
 }
 
-static void destroy(vMapStrObj *map) {
+static void destroy(vMapStrObjRef map) {
 }
 
-static void put(vMapStrObj *map, struct vString *key, vObject value) {
+static void put(vMapStrObjRef map, vStringRef key, vObject value) {
 }
 
 /* Type of returned object is Nothing if there was no entry. */
-static vObject get(vMapStrObj *map, struct vString *key) {
+static vObject get(vMapStrObjRef map, vStringRef key) {
 }
 
 const vMapStrObj_ns v_map = {
@@ -26,6 +26,6 @@ const vMapStrObj_ns v_map = {
     get
 };
 
-void v_bootstrap_map_init_type(struct vRuntime *rt) {
+void v_bootstrap_map_init_type(vRuntimeRef rt) {
 }
 

@@ -1,9 +1,7 @@
 #ifndef vlang_protocol_h
 #define vlang_protocol_h
 
-struct vMapStrObj;
-struct vArray;
-struct vSignature;
+#include "v_typedefs.h"
 
 /* Find correct function at callsite:
  Check current namespace mappings for function name -> protocol mapping.
@@ -18,16 +16,16 @@ struct vSignature;
       specific with the types at the callsite
 */
 
-typedef struct vProtocol {
-    struct vMapStrObj *mappings; /* function name -> array of functions */
-} vProtocol;
+struct vProtocol {
+    vMapStrObjRef mappings; /* function name -> array of functions */
+};
 
 typedef struct vProtocol_ns {
     /* Returns an array because there may be more than one match
      if dynamic typing is used. The array can also be empty, if
      there is no match at all. */
-    struct vArray *(*find_function)(vProtocol *protocol,
-                                     struct vSignature *signature);
+    vArrayRef (*find_function)(vProtocolRef protocol,
+                               vSignatureRef signature);
 } vProtocol_ns;
 
 extern const vProtocol_ns v_pr;

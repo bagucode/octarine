@@ -2,46 +2,42 @@
 #define vlang_function_h
 
 #include "../../platformProject/src/v_platform.h"
+#include "v_typedefs.h"
 
-struct vString;
-struct vThreadContext;
-struct vArray;
+struct vParameter {
+    vStringRef name;
+    vTypeRef type;
+};
 
-typedef struct vParameter {
-    struct vString *name;
-    struct vType *type;
-} vParameter;
-
-typedef struct vSignature {
-    struct vArray *returns; /* array of vType */
-    struct vArray *parameters; /* array of vParameter (besides thread context) */
-} vSignature;
+struct vSignature {
+    vArrayRef returns; /* array of vType */
+    vArrayRef parameters; /* array of vParameter (besides thread context) */
+};
 
 typedef struct vSignature_ns {
-    int (*compare)(vSignature *sig1, vSignature *sig2);
+    int (*compare)(vSignatureRef sig1, vSignatureRef sig2);
 } vSignature_ns;
 
-typedef struct vFunction {
-    /* struct vString *name; */ /* probably don't need to store name in the function itself */
-    struct vString *doc_string;
-    struct vArray *effects; /* array of Keyword or Symbol. Or do we want an Effect type? */
-    struct vArray *instructions;
+struct vFunction {
+    vStringRef doc_string;
+    vArrayRef effects; /* array of Keyword or Symbol. Or do we want an Effect type? */
+    vArrayRef instructions;
     pointer native_code;
-} vFunction;
+};
 
 typedef struct vFunction_ns {
 } vFunction_ns;
 
-typedef struct vClosure {
-    vFunction *function;
-    struct vArray *arguments;
-} vClosure;
+struct vClosure {
+    vFunctionRef function;
+    vArrayRef arguments;
+};
 
 typedef struct vClosure_ns {
-    vClosure *(*create)(struct vThreadContext *ctx,
-                         vFunction *fn,
-                         struct vArray *args);
-    void (*destroy)(vClosure *closure);
+    vClosureRef (*create)(vThreadContextRef ctx,
+					      vFunctionRef fn,
+                          vArrayRef args);
+    void (*destroy)(vClosureRef closure);
 } vClosure_ns;
                         
 typedef const vClosure_ns v_cl;

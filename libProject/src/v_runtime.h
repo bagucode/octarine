@@ -2,44 +2,43 @@
 #ifndef vlang_runtime_h
 #define vlang_runtime_h
 
-struct vType;
-struct vHeap;
+#include "v_typedefs.h"
 
-typedef struct vRuntime {
-    struct vHeap *globals;
+struct vRuntime {
+    vHeapRef globals;
     struct {
         /* primitive types */
-        struct vType *i8;
-        struct vType *u8;
-        struct vType *i16;
-        struct vType *u16;
-        struct vType *i32;
-        struct vType *u32;
-        struct vType *i64;
-        struct vType *u64;
-        struct vType *f32;
-        struct vType *f64;
-        struct vType *word;
-        struct vType *uword;
-        struct vType *pointer;
-        struct vType *v_bool;
-		struct vType *v_char;
+        vTypeRef i8;
+        vTypeRef u8;
+        vTypeRef i16;
+        vTypeRef u16;
+        vTypeRef i32;
+        vTypeRef u32;
+        vTypeRef i64;
+        vTypeRef u64;
+        vTypeRef f32;
+        vTypeRef f64;
+        vTypeRef word;
+        vTypeRef uword;
+        vTypeRef pointer;
+        vTypeRef v_bool;
+		vTypeRef v_char;
         /* aggregate value types */
         /* object types */
-        struct vType *string;
-        struct vType *type;
-        struct vType *field;
-        struct vType *array;
-        struct vType *list;
-        struct vType *nothing;
-        struct vType *any;
-        struct vType *map;
+        vTypeRef string;
+        vTypeRef type;
+        vTypeRef field;
+        vTypeRef array;
+        vTypeRef list;
+        vTypeRef nothing;
+        vTypeRef any;
+        vTypeRef map;
     } built_in_types;
-} vRuntime;
+};
 
 typedef struct {
-    vRuntime *(*create)();
-    void (*destroy)(vRuntime *rt);
+    vRuntimeRef (*create)();
+    void (*destroy)(vRuntimeRef rt);
 } vRuntime_ns;
 
 extern const vRuntime_ns v_rt;

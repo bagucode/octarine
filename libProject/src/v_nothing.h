@@ -3,15 +3,14 @@
 #define vlang_nothing_h
 
 #include "v_object.h"
+#include "v_typedefs.h"
 
-struct vRuntime;
-
-typedef struct vNothing {
+struct vNothing {
 	u8 do_not_use;
-} vNothing;
+};
 
-extern const vNothing *v_nil;
+extern const vNothingRef v_nil;
 
-void v_bootstrap_nothing_init_type(struct vRuntime *rt);
+void v_bootstrap_nothing_init_type(vRuntimeRef rt);
 
 #endif

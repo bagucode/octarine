@@ -2,31 +2,28 @@
 #define vlang_array_h
 
 #include "../../platformProject/src/v_platform.h"
+#include "v_typedefs.h"
 
-struct vType;
-struct vRuntime;
-struct vThreadContext;
-
-typedef struct vArray {
-    struct vType *element_type;
+struct vArray {
+    vTypeRef element_type;
     uword num_elements;
     pointer data;
-} vArray;
+};
 
 typedef struct vArray_ns {
-    vArray *(*create)(struct vThreadContext *ctx,
-                       struct vType *elemType,
-                       uword num_elements);
-    void (*destroy)(vArray *arr);
-    pointer (*data_pointer)(vArray *arr);
-    uword (*size)(vArray *arr);
+    vArrayRef (*create)(vThreadContextRef ctx,
+                        vTypeRef elemType,
+                        uword num_elements);
+    void (*destroy)(vArrayRef arr);
+    pointer (*data_pointer)(vArrayRef arr);
+    uword (*size)(vArrayRef arr);
 } vArray_ns;
 
-vArray *v_bootstrap_array_create(struct vType *type,
-                                  uword num_elements,
-                                  uword byte_size);
+vArrayRef v_bootstrap_array_create(vTypeRef type,
+                                   uword num_elements,
+                                   uword byte_size);
 
-void v_bootstrap_array_init_type(struct vRuntime *rt);
+void v_bootstrap_array_init_type(vRuntimeRef rt);
 
 extern const vArray_ns v_arr;
 

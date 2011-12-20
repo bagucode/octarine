@@ -2,31 +2,29 @@
 #define vlang_list_h
 
 #include "v_object.h"
-
-struct vThreadContext;
-struct vRuntime;
+#include "v_typedefs.h"
 
 /* List of objects of any type */
-typedef struct vListObj {
+struct vListObj {
     vObject data;
-    struct vListObj *next;
-} vListObj;
+    vListObjRef next;
+};
 
 typedef struct vListObj_ns {
-    vListObj *(*create)(struct vThreadContext *ctx);
-    void (*destroy)(vListObj *lst);
+    vListObjRef (*create)(vThreadContextRef ctx);
+    void (*destroy)(vListObjRef lst);
     /* returns new head */
-    vListObj *(*add_front)(struct vThreadContext *ctx,
-                             vListObj *lst,
+    vListObjRef (*add_front)(vThreadContextRef ctx,
+                             vListObjRef lst,
                              vObject data);
     /* mutating remove, returns (new) head */
-    vListObj *(*remove)(struct vThreadContext *ctx,
-                          vListObj *lst,
+    vListObjRef (*remove)(vThreadContextRef ctx,
+                          vListObjRef lst,
                           vObject data);
 } vListObj_ns;
 
 extern const vListObj_ns v_lst;
 
-void v_bootstrap_list_init_type(struct vRuntime *rt);
+void v_bootstrap_list_init_type(vRuntimeRef rt);
 
 #endif

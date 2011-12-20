@@ -7,11 +7,11 @@
 #include "v_string.h"
 #include <memory.h>
 
-static vArray *create(vThreadContext *ctx,
-                       vType *elemType,
+static vArrayRef create(vThreadContextRef ctx,
+                       vTypeRef elemType,
                        uword num_elements) {
     vObject obj = v_mem.alloc(ctx, ctx->heap, ctx->runtime->built_in_types.array);
-    vArray *ret = obj.value.pointer;
+    vArrayRef ret = obj.value.pointer;
     uword byte_size;
     
     ret->element_type = elemType;
@@ -30,7 +30,7 @@ static vArray *create(vThreadContext *ctx,
     return ret;
 }
 
-static void destroy(vArray *arr) {
+static void destroy(vArrayRef arr) {
     if(arr->element_type->kind == V_T_OBJECT) {
         /* TODO: loop through objects and call destructors
                  before deallocating them. Need protocols for this */
@@ -38,25 +38,25 @@ static void destroy(vArray *arr) {
     v_pf.memory.free(arr->data);
 }
 
-static pointer data_pointer(vArray *arr) {
+static pointer data_pointer(vArrayRef arr) {
     return arr->data;
 }
 
-static uword size(vArray *arr) {
+static uword size(vArrayRef arr) {
     return arr->num_elements;
 }
 
-vArray *v_bootstrap_array_create(struct vType *type,
+vArrayRef v_bootstrap_array_create(vTypeRef type,
                                   uword num_elements,
                                   uword byte_size) {
-    vArray *ret = v_pf.memory.malloc(sizeof(vArray));
+    vArrayRef ret = v_pf.memory.malloc(sizeof(vArray));
     ret->data = v_pf.memory.malloc(byte_size);
     ret->element_type = type;
     ret->num_elements = num_elements;
     return ret;
 }
 
-void v_bootstrap_array_init_type(struct vRuntime *rt) {
+void v_bootstrap_array_init_type(vRuntimeRef rt) {
     rt->built_in_types.array->fields = NULL;
     rt->built_in_types.array->kind = V_T_OBJECT;
     rt->built_in_types.array->name = v_bootstrap_string_create("Array");

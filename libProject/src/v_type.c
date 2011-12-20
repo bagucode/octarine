@@ -5,8 +5,8 @@
 #include "v_array.h"
 #include <stddef.h>
 
-static v_bool is_primitive(struct vThreadContext *ctx, vType *t) {
-    vRuntime *rt = ctx->runtime;
+static v_bool is_primitive(vThreadContextRef ctx, vTypeRef t) {
+    vRuntimeRef rt = ctx->runtime;
     if(t == rt->built_in_types.i8
        || t == rt->built_in_types.u8
        || t == rt->built_in_types.i16
@@ -26,25 +26,25 @@ static v_bool is_primitive(struct vThreadContext *ctx, vType *t) {
     return v_false;
 }
 
-static v_bool is_struct(struct vThreadContext *ctx, vType *t) {
+static v_bool is_struct(vThreadContextRef ctx, vTypeRef t) {
     return t->kind == V_T_STRUCT;
 }
 
-static v_bool is_object(struct vThreadContext *ctx, vType *t) {
+static v_bool is_object(vThreadContextRef ctx, vTypeRef t) {
     return t->kind == V_T_OBJECT;
 }
 
-vArray *v_bootstrap_type_create_field_array(vRuntime *rt, uword numFields) {
-    vArray *ret = v_bootstrap_array_create(rt->built_in_types.field, numFields, sizeof(pointer) * numFields);
+vArrayRef v_bootstrap_type_create_field_array(vRuntimeRef rt, uword numFields) {
+    vArrayRef ret = v_bootstrap_array_create(rt->built_in_types.field, numFields, sizeof(pointer) * numFields);
     uword i;
     for(i = 0; i < numFields; ++i) {
-        ((vField**)ret->data)[i] = v_pf.memory.malloc(sizeof(vField));
+        ((vFieldRef*)ret->data)[i] = v_pf.memory.malloc(sizeof(vField));
     }
     return ret;
 }
 
-void v_bootstrap_type_init_type(struct vRuntime *rt) {
-    vField **fields;
+void v_bootstrap_type_init_type(vRuntimeRef rt) {
+    vFieldRef *fields;
     rt->built_in_types.type->fields = v_bootstrap_type_create_field_array(rt, 5);
     rt->built_in_types.type->kind = V_T_OBJECT;
     rt->built_in_types.type->name = v_bootstrap_string_create("Type");
@@ -74,8 +74,8 @@ void v_bootstrap_type_init_type(struct vRuntime *rt) {
     fields[4]->type = rt->built_in_types.u8;
 }
 
-void v_bootstrap_type_init_field(struct vRuntime *rt) {
-    vField **fields;
+void v_bootstrap_type_init_field(vRuntimeRef rt) {
+    vFieldRef *fields;
     rt->built_in_types.field->fields = v_bootstrap_type_create_field_array(rt, 3);
     rt->built_in_types.field->kind = V_T_OBJECT;
     rt->built_in_types.field->name = v_bootstrap_string_create("Field");
@@ -99,7 +99,7 @@ void v_bootstrap_type_init_field(struct vRuntime *rt) {
 
 const u8 V_T_OBJECT = 0;
 const u8 V_T_STRUCT = 1;
-const vType *V_T_SELF = NULL;
+const vTypeRef V_T_SELF = NULL;
 
 const vType_ns v_t = {
     is_primitive,

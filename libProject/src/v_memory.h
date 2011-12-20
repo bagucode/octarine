@@ -3,25 +3,20 @@
 
 #include "../../platformProject/src/v_basic_types.h"
 #include "v_object.h"
-
-struct vType;
-struct vThreadContext;
-struct vRuntime;
-
-typedef struct vHeap vHeap;
+#include "v_typedefs.h"
 
 typedef struct {
-    vHeap *(*create_heap)(v_bool synchronized, uword gc_limit);
-    void (*destroy_heap)(vHeap *heap);
-	vObject (*alloc)(struct vThreadContext *ctx,
-                      struct vHeap *heap,
-                      struct vType *type);
-    void (*force_gc)(vHeap *heap);
+    vHeapRef (*create_heap)(v_bool synchronized, uword gc_limit);
+    void (*destroy_heap)(vHeapRef heap);
+	vObject (*alloc)(vThreadContextRef ctx,
+                     vHeapRef heap,
+                     vTypeRef type);
+    void (*force_gc)(vHeapRef heap);
 } v_memory_ns;
 
-vObject v_bootstrap_memory_alloc(vHeap *heap,
-                                  struct vType *proto_type,
-                                  uword size);
+vObject v_bootstrap_memory_alloc(vHeapRef heap,
+                                 vTypeRef proto_type,
+                                 uword size);
 
 extern const v_memory_ns v_mem;
 

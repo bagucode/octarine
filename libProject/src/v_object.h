@@ -2,15 +2,13 @@
 #define vlang_object_h
 
 #include "../../platformProject/src/v_basic_types.h"
+#include "v_typedefs.h"
 
-struct vType;
-struct vRuntime;
-
-typedef struct vObject {
-	struct vType *type;
+struct vObject {
+	vTypeRef type;
 	vAny value;
-} vObject;
+};
 
-void v_bootstrap_any_type_init(struct vRuntime *rt);
+void v_bootstrap_any_type_init(vRuntimeRef rt);
 
 #endif

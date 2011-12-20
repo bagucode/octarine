@@ -5,22 +5,24 @@
 
 /* Thread local storage */
 typedef struct vTLS vTLS;
+typedef vTLS* vTLSRef;
 
 struct v_platform_tls_ns {
-    vTLS *(*create)();
-	void (*destroy)(vTLS *tls);
-	pointer (*get)(vTLS *tls);
-	void (*set)(vTLS *tls, pointer value);
+    vTLSRef(*create)();
+	void (*destroy)(vTLSRef tls);
+	pointer (*get)(vTLSRef tls);
+	void (*set)(vTLSRef tls, pointer value);
 };
 
 /* Other threading stuff */
 typedef struct vMutex vMutex;
+typedef vMutex* vMutexRef;
 
 struct v_thread_ns {
-    vMutex *(*create_mutex)();
-    void (*destroy_mutex)(vMutex *mutex);
-    void (*lock_mutex)(vMutex *mutex);
-    void (*unlock_mutex)(vMutex *mutex);
+    vMutexRef (*create_mutex)();
+    void (*destroy_mutex)(vMutexRef mutex);
+    void (*lock_mutex)(vMutexRef mutex);
+    void (*unlock_mutex)(vMutexRef mutex);
 };
 
 /* Memory management */
@@ -31,20 +33,21 @@ struct v_platform_memory_ns {
 
 /* String support */
 typedef struct vNativeString vNativeString;
+typedef vNativeString* vNativeStringRef;
 
 struct v_platform_string_ns {
     
     /* If a length of 0 is used, the given utf8 string must be null terminated */
-    vNativeString *(*from_utf8)(char* utf8, uword length);
+    vNativeStringRef (*from_utf8)(char* utf8, uword length);
     
     /* out_length will contain the length of the returned string, without the
        terminating null character. A terminating null is always added.
        Use v_pf.free to deallocate the returned string. */
-	char *(*to_utf8)(vNativeString *str, uword *out_length);
+	char *(*to_utf8)(vNativeStringRef str, uword *out_length);
     
-    int (*compare)(vNativeString *x, vNativeString *y);
+    int (*compare)(vNativeStringRef x, vNativeStringRef y);
 
-	void (*destroy)(vNativeString *str);
+	void (*destroy)(vNativeStringRef str);
 };
 
 /* Platform namespace */
