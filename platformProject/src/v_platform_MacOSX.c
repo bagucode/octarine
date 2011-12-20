@@ -15,18 +15,18 @@ static void pf_free(pointer location) {
 
 /* String */
 
-struct v_native_string {
+struct vNativeString {
     CFStringRef str;
 };
 
-static v_native_string *str_from_utf8(char* utf8, uword length) {
+static vNativeString *str_from_utf8(char* utf8, uword length) {
     uword len = length == 0 ? strlen(utf8) : length;
-    v_native_string *str = (v_native_string*)pf_malloc(sizeof(v_native_string));
+    vNativeString *str = (vNativeString*)pf_malloc(sizeof(vNativeString));
     str->str = CFStringCreateWithBytes(NULL, (const UInt8*)utf8, len, kCFStringEncodingUTF8, false);
     return str;
 }
 
-static char *str_to_utf8(v_native_string *str, uword *out_length) {
+static char *str_to_utf8(vNativeString *str, uword *out_length) {
     CFIndex numChars = CFStringGetLength(str->str);
     CFIndex bufSize = (numChars + 1) * 4; // 4 is the maximum number of bytes for a utf8 char
     char *tmpBuffer = pf_malloc(bufSize);
@@ -42,38 +42,38 @@ static char *str_to_utf8(v_native_string *str, uword *out_length) {
     return cString;
 }
 
-static int str_compare(v_native_string *x, v_native_string *y) {
+static int str_compare(vNativeString *x, vNativeString *y) {
     return CFStringCompare(x->str, y->str, 0);
 }
 
-static void str_destroy(v_native_string *str) {
+static void str_destroy(vNativeString *str) {
     CFRelease(str->str);
     pf_free(str);
 }
 
 /* Threading */
 
-struct v_mutex {
+struct vMutex {
     pthread_mutex_t mutex;
 };
 
 /* TODO: error handling on these? */
-static v_mutex *create_mutex() {
-    v_mutex *ret = pf_malloc(sizeof(v_mutex));
+static vMutex *create_mutex() {
+    vMutex *ret = pf_malloc(sizeof(vMutex));
     pthread_mutex_init(&ret->mutex, NULL);
     return ret;
 }
 
-static void destroy_mutex(v_mutex *mutex) {
+static void destroy_mutex(vMutex *mutex) {
     pthread_mutex_destroy(&mutex->mutex);
     pf_free(mutex);
 }
 
-static void lock_mutex(v_mutex *mutex) {
+static void lock_mutex(vMutex *mutex) {
     pthread_mutex_lock(&mutex->mutex);
 }
 
-static void unlock_mutex(v_mutex *mutex) {
+static void unlock_mutex(vMutex *mutex) {
     pthread_mutex_unlock(&mutex->mutex);
 }
 

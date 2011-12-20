@@ -7,7 +7,7 @@ struct v_thread_context;
 struct v_runtime;
 
 typedef struct v_string {
-	v_native_string *str;
+	vNativeString *str;
 } v_string;
 
 typedef struct {

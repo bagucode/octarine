@@ -4,23 +4,23 @@
 #include "v_basic_types.h"
 
 /* Thread local storage */
-typedef struct v_tls v_tls;
+typedef struct vTLS vTLS;
 
 struct v_platform_tls_ns {
-    v_tls *(*create)();
-	void (*destroy)(v_tls *tls);
-	pointer (*get)(v_tls *tls);
-	void (*set)(v_tls *tls, pointer value);
+    vTLS *(*create)();
+	void (*destroy)(vTLS *tls);
+	pointer (*get)(vTLS *tls);
+	void (*set)(vTLS *tls, pointer value);
 };
 
 /* Other threading stuff */
-typedef struct v_mutex v_mutex;
+typedef struct vMutex vMutex;
 
 struct v_thread_ns {
-    v_mutex *(*create_mutex)();
-    void (*destroy_mutex)(v_mutex *mutex);
-    void (*lock_mutex)(v_mutex *mutex);
-    void (*unlock_mutex)(v_mutex *mutex);
+    vMutex *(*create_mutex)();
+    void (*destroy_mutex)(vMutex *mutex);
+    void (*lock_mutex)(vMutex *mutex);
+    void (*unlock_mutex)(vMutex *mutex);
 };
 
 /* Memory management */
@@ -30,21 +30,21 @@ struct v_platform_memory_ns {
 };
 
 /* String support */
-typedef struct v_native_string v_native_string;
+typedef struct vNativeString vNativeString;
 
 struct v_platform_string_ns {
     
     /* If a length of 0 is used, the given utf8 string must be null terminated */
-    v_native_string *(*from_utf8)(char* utf8, uword length);
+    vNativeString *(*from_utf8)(char* utf8, uword length);
     
     /* out_length will contain the length of the returned string, without the
        terminating null character. A terminating null is always added.
        Use v_pf.free to deallocate the returned string. */
-	char *(*to_utf8)(v_native_string *str, uword *out_length);
+	char *(*to_utf8)(vNativeString *str, uword *out_length);
     
-    int (*compare)(v_native_string *x, v_native_string *y);
+    int (*compare)(vNativeString *x, vNativeString *y);
 
-	void (*destroy)(v_native_string *str);
+	void (*destroy)(vNativeString *str);
 };
 
 /* Platform namespace */

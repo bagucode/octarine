@@ -29,7 +29,7 @@ typedef struct heap_record {
 } heap_record;
 
 struct v_heap {
-    v_mutex *mutex;
+    vMutex *mutex;
     uword gc_limit;
     uword current_size;
     heap_record *record;

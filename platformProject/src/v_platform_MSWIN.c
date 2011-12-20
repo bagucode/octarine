@@ -19,30 +19,30 @@ static void pf_free(pointer location) {
 
 /* Strings */
 
-static v_native_string *str_from_utf8(char* utf8, uword length) {
+static vNativeString *str_from_utf8(char* utf8, uword length) {
 }
 
-static char *str_to_utf8(v_native_string *str, uword *out_length) {
+static char *str_to_utf8(vNativeString *str, uword *out_length) {
 }
 
-static int str_compare(v_native_string *x, v_native_string *y) {
+static int str_compare(vNativeString *x, vNativeString *y) {
 }
 
-static void str_destroy(v_native_string *str) {
+static void str_destroy(vNativeString *str) {
 }
 
 /* Threading */
 
-static v_mutex *thread_create_mutex() {
+static vMutex *thread_create_mutex() {
 }
 
-static void thread_destroy_mutex(v_mutex *mutex) {
+static void thread_destroy_mutex(vMutex *mutex) {
 }
 
-static void thread_lock_mutex(v_mutex *mutex) {
+static void thread_lock_mutex(vMutex *mutex) {
 }
 
-static void thread_unlock_mutex(v_mutex *mutex) {
+static void thread_unlock_mutex(vMutex *mutex) {
 }
 
 /* Thread local storage */
