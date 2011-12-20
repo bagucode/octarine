@@ -21,9 +21,12 @@ static v_bool is_primitive(vThreadContextRef ctx, vTypeRef t) {
        || t == rt->built_in_types.word
        || t == rt->built_in_types.uword
        || t == rt->built_in_types.pointer
-	   || t == rt->built_in_types.v_char)
+	   || t == rt->built_in_types.v_char) {
         return v_true;
-    return v_false;
+    }
+    else {
+        return v_false;
+    }
 }
 
 static v_bool is_struct(vThreadContextRef ctx, vTypeRef t) {
@@ -45,10 +48,9 @@ vArrayRef v_bootstrap_type_create_field_array(vRuntimeRef rt, uword numFields) {
 
 void v_bootstrap_type_init_type(vRuntimeRef rt) {
     vFieldRef *fields;
-    rt->built_in_types.type->fields = v_bootstrap_type_create_field_array(rt, 5);
+    rt->built_in_types.type->fields = v_bootstrap_type_create_field_array(rt, 4);
     rt->built_in_types.type->kind = V_T_OBJECT;
     rt->built_in_types.type->name = v_bootstrap_string_create("Type");
-    rt->built_in_types.type->numFields = 5;
     rt->built_in_types.type->size = sizeof(vType);
     
     fields = rt->built_in_types.type->fields->data;
@@ -65,13 +67,9 @@ void v_bootstrap_type_init_type(vRuntimeRef rt) {
     fields[2]->offset = offsetof(vType, size);
     fields[2]->type = rt->built_in_types.uword;
     
-    fields[3]->name = v_bootstrap_string_create("numFields");
-    fields[3]->offset = offsetof(vType, numFields);
-    fields[3]->type = rt->built_in_types.u32;
-    
-    fields[4]->name = v_bootstrap_string_create("kind");
-    fields[4]->offset = offsetof(vType, kind);
-    fields[4]->type = rt->built_in_types.u8;
+    fields[3]->name = v_bootstrap_string_create("kind");
+    fields[3]->offset = offsetof(vType, kind);
+    fields[3]->type = rt->built_in_types.u8;
 }
 
 void v_bootstrap_type_init_field(vRuntimeRef rt) {
@@ -79,7 +77,6 @@ void v_bootstrap_type_init_field(vRuntimeRef rt) {
     rt->built_in_types.field->fields = v_bootstrap_type_create_field_array(rt, 3);
     rt->built_in_types.field->kind = V_T_OBJECT;
     rt->built_in_types.field->name = v_bootstrap_string_create("Field");
-    rt->built_in_types.field->numFields = 3;
     rt->built_in_types.field->size = sizeof(vField);
 
     fields = rt->built_in_types.field->fields->data;

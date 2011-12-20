@@ -7,7 +7,6 @@ void v_bootstrap_any_type_init(vRuntimeRef rt) {
     rt->built_in_types.any->fields = NULL;
     rt->built_in_types.any->kind = V_T_OBJECT;
     rt->built_in_types.any->name = v_bootstrap_string_create("Any");
-    rt->built_in_types.any->numFields = 0;
     rt->built_in_types.any->size = 0;
 }
 

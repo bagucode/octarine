@@ -20,7 +20,6 @@ struct vType {
     vStringRef name;
     vArrayRef fields;
     uword size;
-    u32 numFields;
     u8 kind;
 };
 

@@ -1,6 +1,8 @@
 #ifndef vlang_typedefs_h
 #define vlang_typedefs_h
 
+/* Please put in alphabetical order. */
+
 typedef struct vArray vArray;
 typedef vArray* vArrayRef;
 

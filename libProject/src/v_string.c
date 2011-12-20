@@ -33,7 +33,6 @@ void v_bootstrap_string_init_type(vRuntimeRef rt) {
     rt->built_in_types.string->fields = NULL;
     rt->built_in_types.string->kind = V_T_OBJECT;
     rt->built_in_types.string->name = v_bootstrap_string_create("String");
-    rt->built_in_types.string->numFields = 0; /* Opaque for now, change later */
     rt->built_in_types.string->size = sizeof(vString);
 }
 

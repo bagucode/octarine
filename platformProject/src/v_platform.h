@@ -7,8 +7,11 @@
 typedef struct vTLS vTLS;
 typedef vTLS* vTLSRef;
 
+vTLSRef vTLSCreate();
+
+
 struct v_platform_tls_ns {
-    vTLSRef(*create)();
+    vTLSRef (*create)();
 	void (*destroy)(vTLSRef tls);
 	pointer (*get)(vTLSRef tls);
 	void (*set)(vTLSRef tls, pointer value);

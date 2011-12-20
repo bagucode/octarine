@@ -12,7 +12,6 @@ void v_bootstrap_list_init_type(vRuntimeRef rt) {
     rt->built_in_types.list->fields = v_bootstrap_type_create_field_array(rt, 2);
     rt->built_in_types.list->kind = V_T_OBJECT;
     rt->built_in_types.list->name = v_bootstrap_string_create("AnyList");
-    rt->built_in_types.list->numFields = 0;
     rt->built_in_types.list->size = sizeof(vListObj);
 
     fields = rt->built_in_types.list->fields->data;

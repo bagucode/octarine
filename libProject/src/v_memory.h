@@ -6,7 +6,7 @@
 #include "v_typedefs.h"
 
 typedef struct {
-    vHeapRef (*create_heap)(v_bool synchronized, uword gc_limit);
+    vHeapRef (*create_heap)(v_bool synchronized, uword gc_threshold);
     void (*destroy_heap)(vHeapRef heap);
 	vObject (*alloc)(vThreadContextRef ctx,
                      vHeapRef heap,

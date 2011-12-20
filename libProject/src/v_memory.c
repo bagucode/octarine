@@ -30,7 +30,7 @@ typedef struct heap_record {
 
 struct vHeap {
     vMutexRef mutex;
-    uword gc_limit;
+    uword gc_threshold;
     uword current_size;
     heap_record *record;
 };
@@ -43,10 +43,10 @@ static heap_record *create_record() {
     return rec;
 }
 
-static vHeapRef public_create_heap(v_bool synchronized, uword gc_limit) {
+static vHeapRef public_create_heap(v_bool synchronized, uword gc_threshold) {
     vHeapRef heap = v_pf.memory.malloc(sizeof(vHeap));
     heap->mutex = synchronized ? v_pf.thread.create_mutex() : NULL;
-    heap->gc_limit = gc_limit;
+    heap->gc_threshold = gc_threshold;
     heap->current_size = 0;
     heap->record = create_record();
     return heap;
@@ -67,9 +67,9 @@ static void public_force_gc(vHeapRef heap) {
 }
 
 static v_bool check_heap_space(vHeapRef heap, uword size) {
-    if((heap->gc_limit - heap->current_size) < size) {
+    if((heap->gc_threshold - heap->current_size) < size) {
         collect_garbage(heap);
-        if((heap->gc_limit - heap->current_size) < size) {
+        if((heap->gc_threshold - heap->current_size) < size) {
             return v_false;
         }
     }

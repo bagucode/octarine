@@ -60,7 +60,6 @@ void v_bootstrap_array_init_type(vRuntimeRef rt) {
     rt->built_in_types.array->fields = NULL;
     rt->built_in_types.array->kind = V_T_OBJECT;
     rt->built_in_types.array->name = v_bootstrap_string_create("Array");
-    rt->built_in_types.array->numFields = 0; /* Opaque */
     rt->built_in_types.array->size = sizeof(vArray);
 }
 

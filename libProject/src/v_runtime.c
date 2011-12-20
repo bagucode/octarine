@@ -13,7 +13,6 @@ static vTypeRef alloc_built_in(vRuntimeRef rt) {
 
 static void set_shared_primitive_attributes(vTypeRef t) {
 	t->kind = V_T_STRUCT;
-    t->numFields = 0;
     t->fields = NULL;
 }
 
