@@ -3,31 +3,31 @@
 
 #include "../../platformProject/src/v_platform.h"
 
-struct v_type;
-struct v_runtime;
-struct v_thread_context;
+struct vType;
+struct vRuntime;
+struct vThreadContext;
 
-typedef struct v_array {
-    struct v_type *element_type;
+typedef struct vArray {
+    struct vType *element_type;
     uword num_elements;
     pointer data;
-} v_array;
+} vArray;
 
-typedef struct v_array_ns {
-    v_array *(*create)(struct v_thread_context *ctx,
-                       struct v_type *elemType,
+typedef struct vArray_ns {
+    vArray *(*create)(struct vThreadContext *ctx,
+                       struct vType *elemType,
                        uword num_elements);
-    void (*destroy)(v_array *arr);
-    pointer (*data_pointer)(v_array *arr);
-    uword (*size)(v_array *arr);
-} v_array_ns;
+    void (*destroy)(vArray *arr);
+    pointer (*data_pointer)(vArray *arr);
+    uword (*size)(vArray *arr);
+} vArray_ns;
 
-v_array *v_bootstrap_array_create(struct v_type *type,
+vArray *v_bootstrap_array_create(struct vType *type,
                                   uword num_elements,
                                   uword byte_size);
 
-void v_bootstrap_array_init_type(struct v_runtime *rt);
+void v_bootstrap_array_init_type(struct vRuntime *rt);
 
-extern const v_array_ns v_arr;
+extern const vArray_ns v_arr;
 
 #endif

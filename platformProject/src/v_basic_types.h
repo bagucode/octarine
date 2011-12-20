@@ -61,6 +61,6 @@ typedef union {
 	uword uword;
 	v_char v_char;
 	pointer pointer;
-} v_any;
+} vAny;
 
 #endif

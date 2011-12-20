@@ -3,23 +3,23 @@
 
 #include "../../platformProject/src/v_platform.h"
 
-struct v_thread_context;
-struct v_runtime;
+struct vThreadContext;
+struct vRuntime;
 
-typedef struct v_string {
+typedef struct vString {
 	vNativeString *str;
-} v_string;
+} vString;
 
 typedef struct {
-	v_string *(*create)(struct v_thread_context *ctx, char *utf8);
-	void (*destroy)(struct v_thread_context *ctx, v_string *str);
-	int (*compare)(v_string *str1, v_string *str2);
-} v_string_ns;
+	vString *(*create)(struct vThreadContext *ctx, char *utf8);
+	void (*destroy)(struct vThreadContext *ctx, vString *str);
+	int (*compare)(vString *str1, vString *str2);
+} vString_ns;
 
-v_string *v_bootstrap_string_create(char *utf8);
-void v_bootstrap_string_init_type(struct v_runtime *rt);
+vString *v_bootstrap_string_create(char *utf8);
+void v_bootstrap_string_init_type(struct vRuntime *rt);
 
-extern const v_string_ns v_str;
+extern const vString_ns v_str;
 
 #endif
 

@@ -4,14 +4,14 @@
 
 #include "v_object.h"
 
-struct v_runtime;
+struct vRuntime;
 
-typedef struct v_nothing {
+typedef struct vNothing {
 	u8 do_not_use;
-} v_nothing;
+} vNothing;
 
-extern const v_nothing *v_nil;
+extern const vNothing *v_nil;
 
-void v_bootstrap_nothing_init_type(struct v_runtime *rt);
+void v_bootstrap_nothing_init_type(struct vRuntime *rt);
 
 #endif

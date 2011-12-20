@@ -3,30 +3,30 @@
 
 #include "v_object.h"
 
-struct v_thread_context;
-struct v_runtime;
+struct vThreadContext;
+struct vRuntime;
 
 /* List of objects of any type */
-typedef struct v_list_obj {
-    v_object data;
-    struct v_list_obj *next;
-} v_list_obj;
+typedef struct vListObj {
+    vObject data;
+    struct vListObj *next;
+} vListObj;
 
-typedef struct v_list_obj_ns {
-    v_list_obj *(*create)(struct v_thread_context *ctx);
-    void (*destroy)(v_list_obj *lst);
+typedef struct vListObj_ns {
+    vListObj *(*create)(struct vThreadContext *ctx);
+    void (*destroy)(vListObj *lst);
     /* returns new head */
-    v_list_obj *(*add_front)(struct v_thread_context *ctx,
-                             v_list_obj *lst,
-                             v_object data);
+    vListObj *(*add_front)(struct vThreadContext *ctx,
+                             vListObj *lst,
+                             vObject data);
     /* mutating remove, returns (new) head */
-    v_list_obj *(*remove)(struct v_thread_context *ctx,
-                          v_list_obj *lst,
-                          v_object data);
-} v_list_obj_ns;
+    vListObj *(*remove)(struct vThreadContext *ctx,
+                          vListObj *lst,
+                          vObject data);
+} vListObj_ns;
 
-extern const v_list_obj_ns v_lst;
+extern const vListObj_ns v_lst;
 
-void v_bootstrap_list_init_type(struct v_runtime *rt);
+void v_bootstrap_list_init_type(struct vRuntime *rt);
 
 #endif

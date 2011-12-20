@@ -10,7 +10,7 @@ const u8 V_GC_MARKED = 1 << 0;
 
 typedef struct heap_entry {
     uword flags;
-    v_object obj;
+    vObject obj;
 } heap_entry;
 
 #define MAX_ENTRIES 100
@@ -28,14 +28,14 @@ typedef struct heap_record {
     struct heap_record *prev;
 } heap_record;
 
-struct v_heap {
+struct vHeap {
     vMutex *mutex;
     uword gc_limit;
     uword current_size;
     heap_record *record;
 };
 
-static void add_heap_entry(v_heap *heap, v_object obj);
+static void add_heap_entry(vHeap *heap, vObject obj);
 
 static heap_record *create_record() {
     heap_record *rec = v_pf.memory.malloc(sizeof(heap_record));
@@ -43,8 +43,8 @@ static heap_record *create_record() {
     return rec;
 }
 
-static v_heap *public_create_heap(v_bool synchronized, uword gc_limit) {
-    v_heap *heap = v_pf.memory.malloc(sizeof(v_heap));
+static vHeap *public_create_heap(v_bool synchronized, uword gc_limit) {
+    vHeap *heap = v_pf.memory.malloc(sizeof(vHeap));
     heap->mutex = synchronized ? v_pf.thread.create_mutex() : NULL;
     heap->gc_limit = gc_limit;
     heap->current_size = 0;
@@ -52,11 +52,11 @@ static v_heap *public_create_heap(v_bool synchronized, uword gc_limit) {
     return heap;
 }
 
-static void collect_garbage(v_heap *heap) {
+static void collect_garbage(vHeap *heap) {
     /* TODO: implement */
 }
 
-static void public_force_gc(v_heap *heap) {
+static void public_force_gc(vHeap *heap) {
     if(heap->mutex != NULL) {
         v_pf.thread.lock_mutex(heap->mutex);
     }
@@ -66,7 +66,7 @@ static void public_force_gc(v_heap *heap) {
     }
 }
 
-static v_bool check_heap_space(v_heap *heap, uword size) {
+static v_bool check_heap_space(vHeap *heap, uword size) {
     if((heap->gc_limit - heap->current_size) < size) {
         collect_garbage(heap);
         if((heap->gc_limit - heap->current_size) < size) {
@@ -76,8 +76,8 @@ static v_bool check_heap_space(v_heap *heap, uword size) {
     return v_true;
 }
 
-static v_object internal_alloc(v_heap *heap, v_type *type, uword size) {
-    v_object ret;
+static vObject internal_alloc(vHeap *heap, vType *type, uword size) {
+    vObject ret;
     
     if(heap->mutex != NULL) {
         v_pf.thread.lock_mutex(heap->mutex);
@@ -96,8 +96,8 @@ static v_object internal_alloc(v_heap *heap, v_type *type, uword size) {
     return ret;
 }
 
-static v_object public_alloc(v_thread_context *ctx, v_heap *heap, v_type *t) {
-    v_object ret;
+static vObject public_alloc(vThreadContext *ctx, vHeap *heap, vType *t) {
+    vObject ret;
     ret.type = t;
     
     if(v_t.is_primitive(ctx, t)) {
@@ -109,7 +109,7 @@ static v_object public_alloc(v_thread_context *ctx, v_heap *heap, v_type *t) {
     return ret;
 }
 
-static void add_heap_entry(v_heap *heap, v_object obj) {
+static void add_heap_entry(vHeap *heap, vObject obj) {
     uword i;
     heap_record *tmp;
     
@@ -145,13 +145,13 @@ static void add_heap_entry(v_heap *heap, v_object obj) {
     }
 }
 
-v_object v_bootstrap_memory_alloc(v_heap *heap,
-                                 v_type *proto_type,
+vObject v_bootstrap_memory_alloc(vHeap *heap,
+                                 vType *proto_type,
                                  uword size) {
     return internal_alloc(heap, proto_type, size);
 }
 
-static void public_destroy_heap(v_heap *heap) {
+static void public_destroy_heap(vHeap *heap) {
     /* TODO */
 }
 

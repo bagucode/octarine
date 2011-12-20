@@ -4,43 +4,43 @@
 
 #include "../../platformProject/src/v_basic_types.h"
 
-struct v_thread_context;
-struct v_string;
-struct v_runtime;
-struct v_array;
+struct vThreadContext;
+struct vString;
+struct vRuntime;
+struct vArray;
 
 const u8 V_T_OBJECT;
 const u8 V_T_STRUCT;
 
-typedef struct v_type v_type;
+typedef struct vType vType;
 
-const v_type *V_T_SELF;
+const vType *V_T_SELF;
 
-typedef struct v_field {
-    struct v_string *name;
-    v_type *type;
+typedef struct vField {
+    struct vString *name;
+    vType *type;
     u32 offset;
-} v_field;
+} vField;
 
-struct v_type {
-    struct v_string *name;
-    struct v_array *fields;
+struct vType {
+    struct vString *name;
+    struct vArray *fields;
     uword size;
     u32 numFields;
     u8 kind;
 };
 
 typedef struct {
-    v_bool (*is_primitive)(struct v_thread_context *ctx, v_type *t);
-    v_bool (*is_struct)(struct v_thread_context *ctx, v_type *t);
-    v_bool (*is_object)(struct v_thread_context *ctx, v_type *t);
-} v_type_ns;
+    v_bool (*is_primitive)(struct vThreadContext *ctx, vType *t);
+    v_bool (*is_struct)(struct vThreadContext *ctx, vType *t);
+    v_bool (*is_object)(struct vThreadContext *ctx, vType *t);
+} vType_ns;
 
-void v_bootstrap_type_init_type(struct v_runtime *rt);
-void v_bootstrap_type_init_field(struct v_runtime *rt);
-struct v_array *v_bootstrap_type_create_field_array(struct v_runtime *rt,
+void v_bootstrap_type_init_type(struct vRuntime *rt);
+void v_bootstrap_type_init_field(struct vRuntime *rt);
+struct vArray *v_bootstrap_type_create_field_array(struct vRuntime *rt,
                                                     uword numFields);
 
-extern const v_type_ns v_t;
+extern const vType_ns v_t;
 
 #endif

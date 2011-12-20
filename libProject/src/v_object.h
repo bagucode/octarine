@@ -3,14 +3,14 @@
 
 #include "../../platformProject/src/v_basic_types.h"
 
-struct v_type;
-struct v_runtime;
+struct vType;
+struct vRuntime;
 
-typedef struct v_object {
-	struct v_type *type;
-	v_any value;
-} v_object;
+typedef struct vObject {
+	struct vType *type;
+	vAny value;
+} vObject;
 
-void v_bootstrap_any_type_init(struct v_runtime *rt);
+void v_bootstrap_any_type_init(struct vRuntime *rt);
 
 #endif

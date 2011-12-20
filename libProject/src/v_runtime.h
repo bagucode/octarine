@@ -2,46 +2,46 @@
 #ifndef vlang_runtime_h
 #define vlang_runtime_h
 
-struct v_type;
-struct v_heap;
+struct vType;
+struct vHeap;
 
-typedef struct v_runtime {
-    struct v_heap *globals;
+typedef struct vRuntime {
+    struct vHeap *globals;
     struct {
         /* primitive types */
-        struct v_type *i8;
-        struct v_type *u8;
-        struct v_type *i16;
-        struct v_type *u16;
-        struct v_type *i32;
-        struct v_type *u32;
-        struct v_type *i64;
-        struct v_type *u64;
-        struct v_type *f32;
-        struct v_type *f64;
-        struct v_type *word;
-        struct v_type *uword;
-        struct v_type *pointer;
-        struct v_type *v_bool;
-		struct v_type *v_char;
+        struct vType *i8;
+        struct vType *u8;
+        struct vType *i16;
+        struct vType *u16;
+        struct vType *i32;
+        struct vType *u32;
+        struct vType *i64;
+        struct vType *u64;
+        struct vType *f32;
+        struct vType *f64;
+        struct vType *word;
+        struct vType *uword;
+        struct vType *pointer;
+        struct vType *v_bool;
+		struct vType *v_char;
         /* aggregate value types */
         /* object types */
-        struct v_type *string;
-        struct v_type *type;
-        struct v_type *field;
-        struct v_type *array;
-        struct v_type *list;
-        struct v_type *nothing;
-        struct v_type *any;
-        struct v_type *map;
+        struct vType *string;
+        struct vType *type;
+        struct vType *field;
+        struct vType *array;
+        struct vType *list;
+        struct vType *nothing;
+        struct vType *any;
+        struct vType *map;
     } built_in_types;
-} v_runtime;
+} vRuntime;
 
 typedef struct {
-    v_runtime *(*create)();
-    void (*destroy)(v_runtime *rt);
-} v_runtime_ns;
+    vRuntime *(*create)();
+    void (*destroy)(vRuntime *rt);
+} vRuntime_ns;
 
-extern const v_runtime_ns v_rt;
+extern const vRuntime_ns v_rt;
 
 #endif

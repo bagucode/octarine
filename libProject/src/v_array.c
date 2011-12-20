@@ -7,11 +7,11 @@
 #include "v_string.h"
 #include <memory.h>
 
-static v_array *create(v_thread_context *ctx,
-                       v_type *elemType,
+static vArray *create(vThreadContext *ctx,
+                       vType *elemType,
                        uword num_elements) {
-    v_object obj = v_mem.alloc(ctx, ctx->heap, ctx->runtime->built_in_types.array);
-    v_array *ret = obj.value.pointer;
+    vObject obj = v_mem.alloc(ctx, ctx->heap, ctx->runtime->built_in_types.array);
+    vArray *ret = obj.value.pointer;
     uword byte_size;
     
     ret->element_type = elemType;
@@ -30,7 +30,7 @@ static v_array *create(v_thread_context *ctx,
     return ret;
 }
 
-static void destroy(v_array *arr) {
+static void destroy(vArray *arr) {
     if(arr->element_type->kind == V_T_OBJECT) {
         /* TODO: loop through objects and call destructors
                  before deallocating them. Need protocols for this */
@@ -38,33 +38,33 @@ static void destroy(v_array *arr) {
     v_pf.memory.free(arr->data);
 }
 
-static pointer data_pointer(v_array *arr) {
+static pointer data_pointer(vArray *arr) {
     return arr->data;
 }
 
-static uword size(v_array *arr) {
+static uword size(vArray *arr) {
     return arr->num_elements;
 }
 
-v_array *v_bootstrap_array_create(struct v_type *type,
+vArray *v_bootstrap_array_create(struct vType *type,
                                   uword num_elements,
                                   uword byte_size) {
-    v_array *ret = v_pf.memory.malloc(sizeof(v_array));
+    vArray *ret = v_pf.memory.malloc(sizeof(vArray));
     ret->data = v_pf.memory.malloc(byte_size);
     ret->element_type = type;
     ret->num_elements = num_elements;
     return ret;
 }
 
-void v_bootstrap_array_init_type(struct v_runtime *rt) {
+void v_bootstrap_array_init_type(struct vRuntime *rt) {
     rt->built_in_types.array->fields = NULL;
     rt->built_in_types.array->kind = V_T_OBJECT;
     rt->built_in_types.array->name = v_bootstrap_string_create("Array");
     rt->built_in_types.array->numFields = 0; /* Opaque */
-    rt->built_in_types.array->size = sizeof(v_array);
+    rt->built_in_types.array->size = sizeof(vArray);
 }
 
-const v_array_ns v_arr = {
+const vArray_ns v_arr = {
     create,
     destroy,
     data_pointer,

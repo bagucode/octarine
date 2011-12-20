@@ -3,49 +3,49 @@
 
 #include "../../platformProject/src/v_platform.h"
 
-struct v_string;
-struct v_thread_context;
-struct v_array;
+struct vString;
+struct vThreadContext;
+struct vArray;
 
-typedef struct v_parameter {
-    struct v_name *name;
-    struct v_type *type;
-} v_parameter;
+typedef struct vParameter {
+    struct vString *name;
+    struct vType *type;
+} vParameter;
 
-typedef struct v_signature {
-    struct v_array *returns; /* array of v_type */
-    struct v_array *parameters; /* array of v_parameter (besides thread context) */
-} v_signature;
+typedef struct vSignature {
+    struct vArray *returns; /* array of vType */
+    struct vArray *parameters; /* array of vParameter (besides thread context) */
+} vSignature;
 
-typedef struct v_signature_ns {
-    int (*compare)(v_signature *sig1, v_signature *sig2);
-} v_signature_ns;
+typedef struct vSignature_ns {
+    int (*compare)(vSignature *sig1, vSignature *sig2);
+} vSignature_ns;
 
-typedef struct v_function {
-    /* struct v_string *name; */ /* probably don't need to store name in the function itself */
-    struct v_string *doc_string;
-    struct v_array *effects; /* array of Keyword or Symbol. Or do we want an Effect type? */
-    struct v_array *instructions;
+typedef struct vFunction {
+    /* struct vString *name; */ /* probably don't need to store name in the function itself */
+    struct vString *doc_string;
+    struct vArray *effects; /* array of Keyword or Symbol. Or do we want an Effect type? */
+    struct vArray *instructions;
     pointer native_code;
-} v_function;
+} vFunction;
 
-typedef struct v_function_ns {
-} v_function_ns;
+typedef struct vFunction_ns {
+} vFunction_ns;
 
-typedef struct v_closure {
-    v_function *function;
-    struct v_array *arguments;
-} v_closure;
+typedef struct vClosure {
+    vFunction *function;
+    struct vArray *arguments;
+} vClosure;
 
-typedef struct v_closure_ns {
-    v_closure *(*create)(struct v_thread_context *ctx,
-                         v_function *fn,
-                         struct v_array *args);
-    void (*destroy)(v_closure *closure);
-} v_closure_ns;
+typedef struct vClosure_ns {
+    vClosure *(*create)(struct vThreadContext *ctx,
+                         vFunction *fn,
+                         struct vArray *args);
+    void (*destroy)(vClosure *closure);
+} vClosure_ns;
                         
-typedef const v_closure_ns v_cl;
-typedef const v_function_ns v_fn;
-typedef const v_signature_ns v_sig;
+typedef const vClosure_ns v_cl;
+typedef const vFunction_ns v_fn;
+typedef const vSignature_ns v_sig;
 
 #endif
