@@ -7,6 +7,7 @@
 struct v_runtime;
 
 typedef struct v_nothing {
+	u8 do_not_use;
 } v_nothing;
 
 extern const v_nothing *v_nil;
