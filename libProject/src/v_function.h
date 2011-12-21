@@ -14,9 +14,7 @@ struct vSignature {
     vArrayRef parameters; /* array of vParameter (besides thread context) */
 };
 
-typedef struct vSignature_ns {
-    int (*compare)(vSignatureRef sig1, vSignatureRef sig2);
-} vSignature_ns;
+int vSignatureCompare(vSignatureRef sig1, vSignatureRef sig2);
 
 struct vFunction {
     vStringRef doc_string;
@@ -25,23 +23,14 @@ struct vFunction {
     pointer native_code;
 };
 
-typedef struct vFunction_ns {
-} vFunction_ns;
-
 struct vClosure {
     vFunctionRef function;
     vArrayRef arguments;
 };
 
-typedef struct vClosure_ns {
-    vClosureRef (*create)(vThreadContextRef ctx,
-					      vFunctionRef fn,
-                          vArrayRef args);
-    void (*destroy)(vClosureRef closure);
-} vClosure_ns;
-                        
-typedef const vClosure_ns v_cl;
-typedef const vFunction_ns v_fn;
-typedef const vSignature_ns v_sig;
+vClosureRef vClosureCreate(vThreadContextRef ctx,
+					       vFunctionRef fn,
+                           vArrayRef args);
+void vClosureDestroy(vClosureRef closure);
 
 #endif
