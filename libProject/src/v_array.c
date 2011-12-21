@@ -7,7 +7,7 @@
 #include "v_string.h"
 #include <memory.h>
 
-static vArrayRef create(vThreadContextRef ctx,
+vArrayRef vArrayCreate(vThreadContextRef ctx,
                        vTypeRef elemType,
                        uword num_elements) {
     vObject obj = v_mem.alloc(ctx, ctx->heap, ctx->runtime->built_in_types.array);
@@ -30,7 +30,7 @@ static vArrayRef create(vThreadContextRef ctx,
     return ret;
 }
 
-static void destroy(vArrayRef arr) {
+void vArrayDestroy(vArrayRef arr) {
     if(arr->element_type->kind == V_T_OBJECT) {
         /* TODO: loop through objects and call destructors
                  before deallocating them. Need protocols for this */
@@ -38,11 +38,11 @@ static void destroy(vArrayRef arr) {
     vFree(arr->data);
 }
 
-static pointer data_pointer(vArrayRef arr) {
+pointer vArrayDataPointer(vArrayRef arr) {
     return arr->data;
 }
 
-static uword size(vArrayRef arr) {
+uword vArraySize(vArrayRef arr) {
     return arr->num_elements;
 }
 
@@ -62,11 +62,4 @@ void v_bootstrap_array_init_type(vRuntimeRef rt) {
     rt->built_in_types.array->name = v_bootstrap_string_create("Array");
     rt->built_in_types.array->size = sizeof(vArray);
 }
-
-const vArray_ns v_arr = {
-    create,
-    destroy,
-    data_pointer,
-    size
-};
 

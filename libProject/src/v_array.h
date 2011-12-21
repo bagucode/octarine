@@ -10,21 +10,17 @@ struct vArray {
     pointer data;
 };
 
-typedef struct vArray_ns {
-    vArrayRef (*create)(vThreadContextRef ctx,
-                        vTypeRef elemType,
-                        uword num_elements);
-    void (*destroy)(vArrayRef arr);
-    pointer (*data_pointer)(vArrayRef arr);
-    uword (*size)(vArrayRef arr);
-} vArray_ns;
+vArrayRef vArrayCreate(vThreadContextRef ctx,
+                       vTypeRef elemType,
+                       uword num_elements);
+void vArrayDestroy(vArrayRef arr);
+pointer vArrayDataPointer(vArrayRef arr);
+uword vArraySize(vArrayRef arr);
 
 vArrayRef v_bootstrap_array_create(vTypeRef type,
                                    uword num_elements,
                                    uword byte_size);
 
 void v_bootstrap_array_init_type(vRuntimeRef rt);
-
-extern const vArray_ns v_arr;
 
 #endif
