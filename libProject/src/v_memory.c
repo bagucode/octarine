@@ -45,7 +45,7 @@ static heap_record *create_record() {
 
 static vHeapRef public_create_heap(v_bool synchronized, uword gc_threshold) {
     vHeapRef heap = v_pf.memory.malloc(sizeof(vHeap));
-    heap->mutex = synchronized ? v_pf.thread.create_mutex() : NULL;
+	heap->mutex = synchronized ? vMutexCreate() : NULL;
     heap->gc_threshold = gc_threshold;
     heap->current_size = 0;
     heap->record = create_record();
@@ -58,11 +58,11 @@ static void collect_garbage(vHeapRef heap) {
 
 static void public_force_gc(vHeapRef heap) {
     if(heap->mutex != NULL) {
-        v_pf.thread.lock_mutex(heap->mutex);
+        vMutexLock(heap->mutex);
     }
     collect_garbage(heap);
     if(heap->mutex != NULL) {
-        v_pf.thread.unlock_mutex(heap->mutex);
+        vMutexUnlock(heap->mutex);
     }
 }
 
@@ -80,7 +80,7 @@ static vObject internal_alloc(vHeapRef heap, vTypeRef type, uword size) {
     vObject ret;
     
     if(heap->mutex != NULL) {
-        v_pf.thread.lock_mutex(heap->mutex);
+        vMutexLock(heap->mutex);
     }
     
     check_heap_space(heap, size); /* TODO: handle out of memory here */
@@ -90,7 +90,7 @@ static vObject internal_alloc(vHeapRef heap, vTypeRef type, uword size) {
     add_heap_entry(heap, ret);
     
     if(heap->mutex != NULL) {
-        v_pf.thread.unlock_mutex(heap->mutex);
+		vMutexUnlock(heap->mutex);
     }
     
     return ret;

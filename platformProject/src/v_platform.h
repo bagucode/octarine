@@ -8,25 +8,18 @@ typedef struct vTLS vTLS;
 typedef vTLS* vTLSRef;
 
 vTLSRef vTLSCreate();
-
-
-struct v_platform_tls_ns {
-    vTLSRef (*create)();
-	void (*destroy)(vTLSRef tls);
-	pointer (*get)(vTLSRef tls);
-	void (*set)(vTLSRef tls, pointer value);
-};
+void vTLSDestroy(vTLSRef tls);
+pointer vTLSGet(vTLSRef tls);
+void vTLSSet(vTLSRef tls, pointer value);
 
 /* Other threading stuff */
 typedef struct vMutex vMutex;
 typedef vMutex* vMutexRef;
 
-struct v_thread_ns {
-    vMutexRef (*create_mutex)();
-    void (*destroy_mutex)(vMutexRef mutex);
-    void (*lock_mutex)(vMutexRef mutex);
-    void (*unlock_mutex)(vMutexRef mutex);
-};
+vMutexRef vMutexCreate();
+void vMutexDestroy(vMutexRef mutex);
+void vMutexLock(vMutexRef mutex);
+void vMutexUnlock(vMutexRef mutex);
 
 /* Memory management */
 struct v_platform_memory_ns {
@@ -55,8 +48,6 @@ struct v_platform_string_ns {
 
 /* Platform namespace */
 typedef struct {
-    struct v_thread_ns thread;
-	struct v_platform_tls_ns tls;
     struct v_platform_memory_ns memory;
 	struct v_platform_string_ns string;
 } v_platform_ns;

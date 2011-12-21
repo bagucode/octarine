@@ -31,35 +31,35 @@ static int str_compare(vNativeString *x, vNativeString *y) {
 static void str_destroy(vNativeString *str) {
 }
 
-/* Threading */
-
-static vMutex *thread_create_mutex() {
-}
-
-static void thread_destroy_mutex(vMutex *mutex) {
-}
-
-static void thread_lock_mutex(vMutex *mutex) {
-}
-
-static void thread_unlock_mutex(vMutex *mutex) {
-}
-
 /* Thread local storage */
 
+vTLSRef vTLSCreate() {
+}
+
+void vTLSDestroy(vTLSRef tls) {
+}
+
+pointer vTLSGet(vTLSRef tls) {
+}
+
+void vTLSSet(vTLSRef tls, pointer value) {
+}
+
+/* Other threading stuff */
+
+vMutexRef vMutexCreate() {
+}
+
+void vMutexDestroy(vMutexRef mutex) {
+}
+
+void vMutexLock(vMutexRef mutex) {
+}
+
+void vMutexUnlock(vMutexRef mutex) {
+}
+
 const v_platform_ns v_pf = {
-	/* General threading stuff */ {
-		thread_create_mutex,
-		thread_destroy_mutex,
-		thread_lock_mutex,
-		thread_unlock_mutex
-	},
-	/* Thread local storage */ {
-		NULL,
-		NULL,
-		NULL,
-		NULL,
-	},
 	/* Memory management */ {
 		pf_malloc,
 		pf_free
