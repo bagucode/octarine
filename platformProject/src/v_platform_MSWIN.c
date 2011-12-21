@@ -19,17 +19,18 @@ void vFree(pointer location) {
 
 /* Strings */
 
-static vNativeString *str_from_utf8(char* utf8, uword length) {
+vNativeStringRef vNativeStringFromUtf8(char *utf8, uword length) {
 }
 
-static char *str_to_utf8(vNativeString *str, uword *out_length) {
+char* vNativeStringToUtf8(vNativeStringRef str, uword* out_length) {
 }
 
-static int str_compare(vNativeString *x, vNativeString *y) {
+int vNativeStringCompare(vNativeStringRef str1, vNativeStringRef str2) {
 }
 
-static void str_destroy(vNativeString *str) {
+void vNativeStringDestroy(vNativeStringRef str) {
 }
+
 
 /* Thread local storage */
 
@@ -58,13 +59,3 @@ void vMutexLock(vMutexRef mutex) {
 
 void vMutexUnlock(vMutexRef mutex) {
 }
-
-const v_platform_ns v_pf = {
-	/* String support */ {
-		str_from_utf8,
-		str_to_utf8,
-		str_compare,
-		str_destroy
-	}
-};
-

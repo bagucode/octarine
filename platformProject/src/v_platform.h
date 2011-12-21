@@ -29,26 +29,9 @@ void vFree(pointer location);
 typedef struct vNativeString vNativeString;
 typedef vNativeString* vNativeStringRef;
 
-struct v_platform_string_ns {
-    
-    /* If a length of 0 is used, the given utf8 string must be null terminated */
-    vNativeStringRef (*from_utf8)(char* utf8, uword length);
-    
-    /* out_length will contain the length of the returned string, without the
-       terminating null character. A terminating null is always added.
-       Use v_pf.free to deallocate the returned string. */
-	char *(*to_utf8)(vNativeStringRef str, uword *out_length);
-    
-    int (*compare)(vNativeStringRef x, vNativeStringRef y);
-
-	void (*destroy)(vNativeStringRef str);
-};
-
-/* Platform namespace */
-typedef struct {
-	struct v_platform_string_ns string;
-} v_platform_ns;
-
-extern const v_platform_ns v_pf;
+vNativeStringRef vNativeStringFromUtf8(char *utf8, uword length);
+char* vNativeStringToUtf8(vNativeStringRef str, uword* out_length);
+int vNativeStringCompare(vNativeStringRef str1, vNativeStringRef str2);
+void vNativeStringDestroy(vNativeStringRef str);
 
 #endif
