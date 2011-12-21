@@ -20,14 +20,10 @@ struct vProtocol {
     vMapStrObjRef mappings; /* function name -> array of functions */
 };
 
-typedef struct vProtocol_ns {
-    /* Returns an array because there may be more than one match
-     if dynamic typing is used. The array can also be empty, if
-     there is no match at all. */
-    vArrayRef (*find_function)(vProtocolRef protocol,
-                               vSignatureRef signature);
-} vProtocol_ns;
-
-extern const vProtocol_ns v_pr;
+/* Returns an array because there may be more than one match
+ if dynamic typing is used. The array can also be empty, if
+ there is no match at all. */
+vArrayRef vProtocolFindFunction(vProtocolRef protocol,
+                                vSignatureRef signature);
 
 #endif
