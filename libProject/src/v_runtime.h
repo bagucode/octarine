@@ -36,11 +36,7 @@ struct vRuntime {
     } built_in_types;
 };
 
-typedef struct {
-    vRuntimeRef (*create)();
-    void (*destroy)(vRuntimeRef rt);
-} vRuntime_ns;
-
-extern const vRuntime_ns v_rt;
+vRuntimeRef vRuntimeCreate();
+void vRuntimeDestroy(vRuntimeRef rt);
 
 #endif

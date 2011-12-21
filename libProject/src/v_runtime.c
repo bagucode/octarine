@@ -120,7 +120,7 @@ static void init_built_in_types(vRuntimeRef rt) {
     v_bootstrap_map_init_type(rt);
 }
 
-static vRuntimeRef create() {
+vRuntimeRef vRuntimeCreate() {
 	vRuntimeRef ret = (vRuntimeRef)vMalloc(sizeof(vRuntime));
     ret->globals = vHeapCreate(v_true, 2000 * 1024);
     alloc_built_in_types(ret);
@@ -129,15 +129,10 @@ static vRuntimeRef create() {
     return ret;
 }
 
-static void destroy(vRuntimeRef rt) {
+void vRuntimeDestroy(vRuntimeRef rt) {
     /* TODO: make sure all live objects in all threads are destroyed
              and deallocated before deleting the runtime object */
     vHeapDestroy(rt->globals);
 	vFree(rt);
 }
-
-const vRuntime_ns v_rt = {
-    create,
-    destroy
-};
 
