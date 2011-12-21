@@ -10,20 +10,16 @@ struct vListObj {
     vListObjRef next;
 };
 
-typedef struct vListObj_ns {
-    vListObjRef (*create)(vThreadContextRef ctx);
-    void (*destroy)(vListObjRef lst);
-    /* returns new head */
-    vListObjRef (*add_front)(vThreadContextRef ctx,
+vListObjRef vListObjCreate(vThreadContextRef ctx);
+void vListObjDestroy(vListObjRef lst);
+/* returns new head */
+vListObjRef vListObjAddFront(vThreadContextRef ctx,
                              vListObjRef lst,
                              vObject data);
-    /* mutating remove, returns (new) head */
-    vListObjRef (*remove)(vThreadContextRef ctx,
-                          vListObjRef lst,
-                          vObject data);
-} vListObj_ns;
-
-extern const vListObj_ns v_lst;
+/* mutating remove, returns (new) head */
+vListObjRef vListObjRemove(vThreadContextRef ctx,
+                           vListObjRef lst,
+                           vObject data);
 
 void v_bootstrap_list_init_type(vRuntimeRef rt);
 

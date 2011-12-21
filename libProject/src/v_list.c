@@ -25,17 +25,17 @@ void v_bootstrap_list_init_type(vRuntimeRef rt) {
     fields[1]->type = rt->built_in_types.list;
 }
 
-static vListObjRef create(vThreadContextRef ctx) {
+vListObjRef vListObjCreate(vThreadContextRef ctx) {
     vObject obj = v_mem.alloc(ctx, ctx->heap, ctx->runtime->built_in_types.list);
     vListObjRef ret = obj.value.pointer;
     return ret; /* TODO: lots of stuff */
 }
 
-static void destroy(vListObjRef lst) {
+void vListObjDestroy(vListObjRef lst) {
     
 }
 
-static vListObjRef add_front(vThreadContextRef ctx,
+vListObjRef vListObjAddFront(vThreadContextRef ctx,
                              vListObjRef lst,
                              vObject data) {
     vObject obj = v_mem.alloc(ctx, ctx->heap, ctx->runtime->built_in_types.list);
@@ -45,18 +45,11 @@ static vListObjRef add_front(vThreadContextRef ctx,
     return head;
 }
 
-static vListObjRef remove(vThreadContextRef ctx,
+vListObjRef vListObjRemove(vThreadContextRef ctx,
                           vListObjRef lst,
                           vObject obj) {
     /* TODO: implement.
              Need Compare protocol? */
     return lst;
 }
-
-const vListObj_ns v_lst = {
-    create,
-    destroy,
-    add_front,
-    remove
-};
 
