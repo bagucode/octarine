@@ -6,7 +6,7 @@
 #include "v_runtime.h"
 #include "v_type.h"
 
-static vStringRef create(vThreadContextRef ctx, char *utf8) {
+vStringRef vStringCreate(vThreadContextRef ctx, char *utf8) {
     vRuntimeRef rt = ctx->runtime;
     vObject obj = vHeapAlloc(ctx, ctx->heap, rt->built_in_types.string);
     vStringRef ret = obj.value.pointer;
@@ -14,12 +14,12 @@ static vStringRef create(vThreadContextRef ctx, char *utf8) {
     return ret;
 }
 
-static void destroy(vThreadContextRef ctx, vStringRef str) {
+void vStringDestroy(vThreadContextRef ctx, vStringRef str) {
     vNativeStringDestroy(str->str);
     // Don't deallocate here, this is a finalizer called from the GC. I think.
 }
 
-static int compare(vStringRef x, vStringRef y) {
+int vStringCompare(vStringRef x, vStringRef y) {
     return vNativeStringCompare(x->str, y->str);
 }
 
@@ -35,9 +35,3 @@ void v_bootstrap_string_init_type(vRuntimeRef rt) {
     rt->built_in_types.string->name = v_bootstrap_string_create("String");
     rt->built_in_types.string->size = sizeof(vString);
 }
-
-const vString_ns v_str = {
-    create,
-    destroy,
-    compare
-};
