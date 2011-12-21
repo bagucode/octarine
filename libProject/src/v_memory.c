@@ -43,7 +43,7 @@ static heap_record *create_record() {
     return rec;
 }
 
-static vHeapRef public_create_heap(v_bool synchronized, uword gc_threshold) {
+vHeapRef vHeapCreate(v_bool synchronized, uword gc_threshold) {
     vHeapRef heap = vMalloc(sizeof(vHeap));
 	heap->mutex = synchronized ? vMutexCreate() : NULL;
     heap->gc_threshold = gc_threshold;
@@ -56,7 +56,7 @@ static void collect_garbage(vHeapRef heap) {
     /* TODO: implement */
 }
 
-static void public_force_gc(vHeapRef heap) {
+void vHeapForceGC(vHeapRef heap) {
     if(heap->mutex != NULL) {
         vMutexLock(heap->mutex);
     }
@@ -96,7 +96,7 @@ static vObject internal_alloc(vHeapRef heap, vTypeRef type, uword size) {
     return ret;
 }
 
-static vObject public_alloc(vThreadContextRef ctx, vHeapRef heap, vTypeRef t) {
+vObject vHeapAlloc(vThreadContextRef ctx, vHeapRef heap, vTypeRef t) {
     vObject ret;
     ret.type = t;
     
@@ -151,13 +151,6 @@ vObject v_bootstrap_memory_alloc(vHeapRef heap,
     return internal_alloc(heap, proto_type, size);
 }
 
-static void public_destroy_heap(vHeapRef heap) {
+void vHeapDestroy(vHeapRef heap) {
     /* TODO */
 }
-
-const v_memory_ns v_mem = {
-    public_create_heap,
-    public_destroy_heap,
-    public_alloc,
-    public_force_gc
-};

@@ -5,19 +5,15 @@
 #include "v_object.h"
 #include "v_typedefs.h"
 
-typedef struct {
-    vHeapRef (*create_heap)(v_bool synchronized, uword gc_threshold);
-    void (*destroy_heap)(vHeapRef heap);
-	vObject (*alloc)(vThreadContextRef ctx,
-                     vHeapRef heap,
-                     vTypeRef type);
-    void (*force_gc)(vHeapRef heap);
-} v_memory_ns;
+vHeapRef vHeapCreate(v_bool synchronized, uword gc_threshold);
+void vHeapDestroy(vHeapRef heap);
+vObject vHeapAlloc(vThreadContextRef ctx,
+                   vHeapRef heap,
+                   vTypeRef type);
+void vHeapForceGC(vHeapRef heap);
 
 vObject v_bootstrap_memory_alloc(vHeapRef heap,
                                  vTypeRef proto_type,
                                  uword size);
-
-extern const v_memory_ns v_mem;
 
 #endif

@@ -122,7 +122,7 @@ static void init_built_in_types(vRuntimeRef rt) {
 
 static vRuntimeRef create() {
 	vRuntimeRef ret = (vRuntimeRef)vMalloc(sizeof(vRuntime));
-    ret->globals = v_mem.create_heap(v_true, 2000 * 1024);
+    ret->globals = vHeapCreate(v_true, 2000 * 1024);
     alloc_built_in_types(ret);
 	init_built_in_types(ret);
     /* TODO: init thread context for main thread */
@@ -132,7 +132,7 @@ static vRuntimeRef create() {
 static void destroy(vRuntimeRef rt) {
     /* TODO: make sure all live objects in all threads are destroyed
              and deallocated before deleting the runtime object */
-    v_mem.destroy_heap(rt->globals);
+    vHeapDestroy(rt->globals);
 	vFree(rt);
 }
 
