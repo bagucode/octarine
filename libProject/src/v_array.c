@@ -25,7 +25,7 @@ static vArrayRef create(vThreadContextRef ctx,
     /* TODO: integrate with GC in v_memory
              so that the allocated space counts toward 
              the GC threshold */
-    ret->data = v_pf.memory.malloc(byte_size);
+    ret->data = vMalloc(byte_size);
     memset(ret->data, 0, byte_size);
     return ret;
 }
@@ -35,7 +35,7 @@ static void destroy(vArrayRef arr) {
         /* TODO: loop through objects and call destructors
                  before deallocating them. Need protocols for this */
     }
-    v_pf.memory.free(arr->data);
+    vFree(arr->data);
 }
 
 static pointer data_pointer(vArrayRef arr) {
@@ -49,8 +49,8 @@ static uword size(vArrayRef arr) {
 vArrayRef v_bootstrap_array_create(vTypeRef type,
                                   uword num_elements,
                                   uword byte_size) {
-    vArrayRef ret = v_pf.memory.malloc(sizeof(vArray));
-    ret->data = v_pf.memory.malloc(byte_size);
+    vArrayRef ret = vMalloc(sizeof(vArray));
+    ret->data = vMalloc(byte_size);
     ret->element_type = type;
     ret->num_elements = num_elements;
     return ret;

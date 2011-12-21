@@ -22,10 +22,8 @@ void vMutexLock(vMutexRef mutex);
 void vMutexUnlock(vMutexRef mutex);
 
 /* Memory management */
-struct v_platform_memory_ns {
-	pointer (*malloc)(uword size);
-	void (*free)(pointer location);
-};
+pointer vMalloc(uword size);
+void vFree(pointer location);
 
 /* String support */
 typedef struct vNativeString vNativeString;
@@ -48,7 +46,6 @@ struct v_platform_string_ns {
 
 /* Platform namespace */
 typedef struct {
-    struct v_platform_memory_ns memory;
 	struct v_platform_string_ns string;
 } v_platform_ns;
 

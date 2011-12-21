@@ -38,13 +38,13 @@ struct vHeap {
 static void add_heap_entry(vHeapRef heap, vObject obj);
 
 static heap_record *create_record() {
-    heap_record *rec = v_pf.memory.malloc(sizeof(heap_record));
+    heap_record *rec = vMalloc(sizeof(heap_record));
     memset(rec, 0, sizeof(heap_record));
     return rec;
 }
 
 static vHeapRef public_create_heap(v_bool synchronized, uword gc_threshold) {
-    vHeapRef heap = v_pf.memory.malloc(sizeof(vHeap));
+    vHeapRef heap = vMalloc(sizeof(vHeap));
 	heap->mutex = synchronized ? vMutexCreate() : NULL;
     heap->gc_threshold = gc_threshold;
     heap->current_size = 0;
@@ -84,7 +84,7 @@ static vObject internal_alloc(vHeapRef heap, vTypeRef type, uword size) {
     }
     
     check_heap_space(heap, size); /* TODO: handle out of memory here */
-    ret.value.pointer = v_pf.memory.malloc(size);
+    ret.value.pointer = vMalloc(size);
     ret.type = type;
     memset(ret.value.pointer, 0, size);
     add_heap_entry(heap, ret);

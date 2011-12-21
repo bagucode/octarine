@@ -41,7 +41,7 @@ vArrayRef v_bootstrap_type_create_field_array(vRuntimeRef rt, uword numFields) {
     vArrayRef ret = v_bootstrap_array_create(rt->built_in_types.field, numFields, sizeof(pointer) * numFields);
     uword i;
     for(i = 0; i < numFields; ++i) {
-        ((vFieldRef*)ret->data)[i] = v_pf.memory.malloc(sizeof(vField));
+        ((vFieldRef*)ret->data)[i] = vMalloc(sizeof(vField));
     }
     return ret;
 }

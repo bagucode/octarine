@@ -24,7 +24,7 @@ static int compare(vStringRef x, vStringRef y) {
 }
 
 vStringRef v_bootstrap_string_create(char *utf8) {
-    vStringRef str = v_pf.memory.malloc(sizeof(vString));
+    vStringRef str = vMalloc(sizeof(vString));
     str->str = v_pf.string.from_utf8(utf8, 0);
     return str;
 }

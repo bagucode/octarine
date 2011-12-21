@@ -9,11 +9,11 @@
 
 /* Memory management */
 
-static pointer pf_malloc(uword size) {
+pointer vMalloc(uword size) {
     return malloc(size);
 }
 
-static void pf_free(pointer location) {
+void vFree(pointer location) {
     free(location);
 }
 
@@ -60,10 +60,6 @@ void vMutexUnlock(vMutexRef mutex) {
 }
 
 const v_platform_ns v_pf = {
-	/* Memory management */ {
-		pf_malloc,
-		pf_free
-	},
 	/* String support */ {
 		str_from_utf8,
 		str_to_utf8,
