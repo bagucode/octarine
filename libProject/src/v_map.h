@@ -16,15 +16,11 @@ struct vMapStrObj {
     f32 load_factor;
 };
 
-typedef struct vMapStrObj_ns {
-    vMapStrObjRef (*create)(vThreadContextRef ctx);
-    void (*destroy)(vMapStrObjRef map);
-    void (*put)(vMapStrObjRef map, vStringRef key, vObject value);
-    /* Type of returned object is Nothing if there was no entry. */
-    vObject (*get)(vMapStrObjRef map, vStringRef key);
-} vMapStrObj_ns;
-
-extern const vMapStrObj_ns v_map;
+vMapStrObjRef vMapStrObjCreate(vThreadContextRef ctx);
+void vMapStrObjDestroy(vMapStrObjRef map);
+void vMapStrObjPut(vMapStrObjRef map, vStringRef key, vObject value);
+/* Type of returned object is Nothing if there was no entry. */
+vObject vMapStrObjGet(vMapStrObjRef map, vStringRef key);
 
 void v_bootstrap_map_init_type(vRuntimeRef rt);
 
