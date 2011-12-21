@@ -9,9 +9,7 @@ struct vThreadContext {
     vHeapRef heap;
 };
 
-typedef struct vThreadContext_ns {
-    vThreadContextRef (*get_current)(vRuntimeRef rt);
-} vThreadContext_ns;
+vThreadContextRef vThreadContextGetCurrent(vRuntimeRef rt);
 
 extern const vThreadContext v_ctx;
 

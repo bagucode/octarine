@@ -5,7 +5,7 @@
 #include "v_array.h"
 #include <stddef.h>
 
-static v_bool is_primitive(vThreadContextRef ctx, vTypeRef t) {
+v_bool vTypeIsPrimitive(vThreadContextRef ctx, vTypeRef t) {
     vRuntimeRef rt = ctx->runtime;
     if(t == rt->built_in_types.i8
        || t == rt->built_in_types.u8
@@ -29,11 +29,11 @@ static v_bool is_primitive(vThreadContextRef ctx, vTypeRef t) {
     }
 }
 
-static v_bool is_struct(vThreadContextRef ctx, vTypeRef t) {
+v_bool vTypeIsStruct(vThreadContextRef ctx, vTypeRef t) {
     return t->kind == V_T_STRUCT;
 }
 
-static v_bool is_object(vThreadContextRef ctx, vTypeRef t) {
+v_bool vTypeIsObject(vThreadContextRef ctx, vTypeRef t) {
     return t->kind == V_T_OBJECT;
 }
 
@@ -97,9 +97,3 @@ void v_bootstrap_type_init_field(vRuntimeRef rt) {
 const u8 V_T_OBJECT = 0;
 const u8 V_T_STRUCT = 1;
 const vTypeRef V_T_SELF = NULL;
-
-const vType_ns v_t = {
-    is_primitive,
-    is_struct,
-    is_object
-};

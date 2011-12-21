@@ -100,7 +100,7 @@ vObject vHeapAlloc(vThreadContextRef ctx, vHeapRef heap, vTypeRef t) {
     vObject ret;
     ret.type = t;
     
-    if(v_t.is_primitive(ctx, t)) {
+    if(vTypeIsPrimitive(ctx, t)) {
         ret.value.uword = 0;
     }
     else {

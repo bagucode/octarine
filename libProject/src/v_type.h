@@ -23,17 +23,13 @@ struct vType {
     u8 kind;
 };
 
-typedef struct {
-    v_bool (*is_primitive)(vThreadContextRef ctx, vTypeRef t);
-    v_bool (*is_struct)(vThreadContextRef ctx, vTypeRef t);
-    v_bool (*is_object)(vThreadContextRef ctx, vTypeRef t);
-} vType_ns;
+v_bool vTypeIsPrimitive(vThreadContextRef ctx, vTypeRef t);
+v_bool vTypeIsStruct(vThreadContextRef ctx, vTypeRef t);
+v_bool vTypeIsObject(vThreadContextRef ctx, vTypeRef t);
 
 void v_bootstrap_type_init_type(vRuntimeRef rt);
 void v_bootstrap_type_init_field(vRuntimeRef rt);
 vArrayRef v_bootstrap_type_create_field_array(vRuntimeRef rt,
                                               uword numFields);
-
-extern const vType_ns v_t;
 
 #endif
