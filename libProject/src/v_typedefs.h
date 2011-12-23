@@ -39,6 +39,9 @@ typedef vParameter* vParameterRef;
 typedef struct vProtocol vProtocol;
 typedef vProtocol* vProtocolRef;
 
+typedef struct vRootSet vRootSet;
+typedef vRootSet* vRootSetRef;
+
 typedef struct vRuntime vRuntime;
 typedef vRuntime* vRuntimeRef;
 

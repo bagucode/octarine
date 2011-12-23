@@ -7,6 +7,7 @@
 struct vThreadContext {
     vRuntimeRef runtime;
     vHeapRef heap;
+    vRootSetRef roots;
 };
 
 vThreadContextRef vThreadContextGetCurrent(vRuntimeRef rt);
