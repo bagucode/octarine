@@ -8,7 +8,7 @@
 #include "v_map.h"
 
 static vTypeRef alloc_built_in(vRuntimeRef rt) {
-	return v_bootstrap_memory_alloc(rt->globals, rt->built_in_types.type, sizeof(vType));
+	return (vTypeRef)v_bootstrap_memory_alloc(rt->globals, rt->built_in_types.type, sizeof(vType));
 }
 
 static void set_shared_primitive_attributes(vTypeRef t) {
@@ -17,7 +17,7 @@ static void set_shared_primitive_attributes(vTypeRef t) {
 }
 
 static void alloc_built_in_types(vRuntimeRef rt) {
-    rt->built_in_types.type = v_bootstrap_memory_alloc(rt->globals, V_T_SELF, sizeof(vType));
+    rt->built_in_types.type = (vTypeRef)v_bootstrap_memory_alloc(rt->globals, V_T_SELF, sizeof(vType));
 	rt->built_in_types.v_char = alloc_built_in(rt);
 	rt->built_in_types.v_bool = alloc_built_in(rt);
 	rt->built_in_types.f32 = alloc_built_in(rt);

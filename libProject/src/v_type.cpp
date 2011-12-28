@@ -41,7 +41,7 @@ vArrayRef v_bootstrap_type_create_field_array(vRuntimeRef rt, uword numFields) {
     vArrayRef ret = v_bootstrap_array_create(rt->built_in_types.field, numFields, sizeof(pointer) * numFields);
     uword i;
     for(i = 0; i < numFields; ++i) {
-        ((vFieldRef*)ret->data)[i] = vMalloc(sizeof(vField));
+        ((vFieldRef*)ret->data)[i] = (vFieldRef)vMalloc(sizeof(vField));
     }
     return ret;
 }
@@ -53,7 +53,7 @@ void v_bootstrap_type_init_type(vRuntimeRef rt) {
     rt->built_in_types.type->name = v_bootstrap_string_create("Type");
     rt->built_in_types.type->size = sizeof(vType);
     
-    fields = rt->built_in_types.type->fields->data;
+    fields = (vFieldRef*)rt->built_in_types.type->fields->data;
 
     fields[0]->name = v_bootstrap_string_create("name");
     fields[0]->offset = offsetof(vType, name);
@@ -79,7 +79,7 @@ void v_bootstrap_type_init_field(vRuntimeRef rt) {
     rt->built_in_types.field->name = v_bootstrap_string_create("Field");
     rt->built_in_types.field->size = sizeof(vField);
 
-    fields = rt->built_in_types.field->fields->data;
+    fields = (vFieldRef*)rt->built_in_types.field->fields->data;
     
     fields[0]->name = v_bootstrap_string_create("name");
     fields[0]->offset = offsetof(vField, name);

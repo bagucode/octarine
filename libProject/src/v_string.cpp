@@ -8,7 +8,7 @@
 
 vStringRef vStringCreate(vThreadContextRef ctx, char *utf8) {
     vRuntimeRef rt = ctx->runtime;
-    vStringRef ret = vHeapAlloc(ctx, ctx->heap, rt->built_in_types.string);
+    vStringRef ret = (vStringRef)vHeapAlloc(ctx, ctx->heap, rt->built_in_types.string);
     ret->str = vNativeStringFromUtf8(utf8, 0);
     return ret;
 }
@@ -22,8 +22,8 @@ int vStringCompare(vStringRef x, vStringRef y) {
     return vNativeStringCompare(x->str, y->str);
 }
 
-vStringRef v_bootstrap_string_create(char *utf8) {
-    vStringRef str = vMalloc(sizeof(vString));
+vStringRef v_bootstrap_string_create(const char *utf8) {
+    vStringRef str = (vStringRef)vMalloc(sizeof(vString));
     str->str = vNativeStringFromUtf8(utf8, 0);
     return str;
 }
@@ -31,6 +31,6 @@ vStringRef v_bootstrap_string_create(char *utf8) {
 void v_bootstrap_string_init_type(vRuntimeRef rt) {
     rt->built_in_types.string->fields = NULL;
     rt->built_in_types.string->kind = V_T_OBJECT;
-    rt->built_in_types.string->name = v_bootstrap_string_create("String");
+    rt->built_in_types.string->name = v_bootstrap_string_create((char*)"String");
     rt->built_in_types.string->size = sizeof(vString);
 }

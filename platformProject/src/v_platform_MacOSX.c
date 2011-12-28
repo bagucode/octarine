@@ -19,7 +19,7 @@ struct vNativeString {
     CFStringRef str;
 };
 
-vNativeStringRef vNativeStringFromUtf8(char *utf8, uword length) {
+vNativeStringRef vNativeStringFromUtf8(const char *utf8, uword length) {
     uword len = length == 0 ? strlen(utf8) : length;
     vNativeString *str = vMalloc(sizeof(vNativeString));
     str->str = CFStringCreateWithBytes(NULL, (const UInt8*)utf8, len, kCFStringEncodingUTF8, false);

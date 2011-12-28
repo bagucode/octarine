@@ -10,7 +10,7 @@
 vArrayRef vArrayCreate(vThreadContextRef ctx,
                        vTypeRef elemType,
                        uword num_elements) {
-    vArrayRef ret = vHeapAlloc(ctx, ctx->heap, ctx->runtime->built_in_types.array);
+    vArrayRef ret = (vArrayRef)vHeapAlloc(ctx, ctx->heap, ctx->runtime->built_in_types.array);
     uword byte_size;
     
     ret->element_type = elemType;
@@ -48,7 +48,7 @@ uword vArraySize(vArrayRef arr) {
 vArrayRef v_bootstrap_array_create(vTypeRef type,
                                   uword num_elements,
                                   uword byte_size) {
-    vArrayRef ret = vMalloc(sizeof(vArray));
+    vArrayRef ret = (vArrayRef)vMalloc(sizeof(vArray));
     ret->data = vMalloc(byte_size);
     ret->element_type = type;
     ret->num_elements = num_elements;
@@ -58,7 +58,7 @@ vArrayRef v_bootstrap_array_create(vTypeRef type,
 void v_bootstrap_array_init_type(vRuntimeRef rt) {
     rt->built_in_types.array->fields = NULL;
     rt->built_in_types.array->kind = V_T_OBJECT;
-    rt->built_in_types.array->name = v_bootstrap_string_create("Array");
+    rt->built_in_types.array->name = v_bootstrap_string_create((char*)"Array");
     rt->built_in_types.array->size = sizeof(vArray);
 }
 

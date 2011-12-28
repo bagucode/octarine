@@ -33,7 +33,7 @@ void vFree(pointer location);
 typedef struct vNativeString vNativeString;
 typedef vNativeString* vNativeStringRef;
 
-vNativeStringRef vNativeStringFromUtf8(char *utf8, uword length);
+vNativeStringRef vNativeStringFromUtf8(const char *utf8, uword length);
 char* vNativeStringToUtf8(vNativeStringRef str, uword* out_length);
 int vNativeStringCompare(vNativeStringRef str1, vNativeStringRef str2);
 void vNativeStringDestroy(vNativeStringRef str);
