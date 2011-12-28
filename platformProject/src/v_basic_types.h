@@ -14,6 +14,12 @@ typedef signed __int64 int64_t;
 typedef unsigned __int64 uint64_t;
 #endif
 
+#if defined(_WIN64) || defined(__LP64__)
+# define VLANG64
+#else
+# define VLANG32
+#endif
+
 typedef int8_t   i8;
 typedef uint8_t  u8;
 typedef int16_t  i16;
@@ -25,7 +31,7 @@ typedef uint64_t u64;
 typedef float    f32;
 typedef double   f64;
 
-#if defined(_WIN64) || defined(__LP64__)
+#ifdef VLANG64
 typedef int64_t  word;
 typedef uint64_t uword;
 #else
