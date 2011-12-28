@@ -156,13 +156,19 @@ static v_bool checkHeapSpace(vHeapRef heap, uword size) {
 
 static vObject internalAlloc(vHeapRef heap, vTypeRef type, uword size) {
     vObject ret;
+    char* tmp;
     
     if(heap->mutex != NULL) {
         vMutexLock(heap->mutex);
     }
     
     checkHeapSpace(heap, size); /* TODO: handle out of memory here */
-    ret = vMalloc(size);
+    /* Over-allocate by one pointer size and then use that extra area
+       "in front of" the object to store the type.
+       TODO: This might cause alignment issues on some platforms? Look into that. */
+    tmp = (char*)vMalloc(size + sizeof(pointer));
+    ret = tmp + sizeof(pointer);
+    tmp = (char*)type;
     memset(ret, 0, size);
     addHeapEntry(heap, ret, type);
     
