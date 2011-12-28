@@ -9,7 +9,7 @@ void v_bootstrap_any_type_init(vThreadContextRef ctx) {
     ctx->runtime->built_in_types.any->fields = NULL;
     ctx->runtime->built_in_types.any->kind = V_T_OBJECT;
     ctx->runtime->built_in_types.any->name = v_bootstrap_string_create(ctx, "Any");
-    ctx->runtime->built_in_types.any->size = 0;
+    ctx->runtime->built_in_types.any->size = sizeof(pointer);
 }
 
 vTypeRef vObjectGetType(vThreadContextRef ctx, vObject obj) {
