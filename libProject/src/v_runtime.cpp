@@ -130,6 +130,7 @@ vRuntimeRef vRuntimeCreate() {
     rt->currentContext = vTLSCreate();
     vTLSSet(rt->currentContext, ctx);
     rt->allContexts = (vThreadContextListRef)vMalloc(sizeof(vThreadContextList));
+	rt->allContexts->next = NULL;
     rt->allContexts->ctx = ctx;
 
     alloc_built_in_types(ctx);
@@ -140,10 +141,13 @@ vRuntimeRef vRuntimeCreate() {
 void vRuntimeDestroy(vRuntimeRef rt) {
     /* TODO: synchronize stopping of all threads before deleting the heaps */
     vThreadContextListRef lst = rt->allContexts;
-    for(; lst; lst = lst->next) {
+	vThreadContextListRef next;
+    while(lst) {
+		next = lst->next;
         vHeapDestroy(lst->ctx->heap);
         vFree(lst->ctx);
         vFree(lst);
+		lst = next;
     }
     vHeapDestroy(rt->globals);
 	vFree(rt);
