@@ -58,7 +58,7 @@ struct vHeap {
     HeapRecordRef record;
 };
 
-static void addHeapEntry(vHeapRef heap, vObject obj, vTypeRef type);
+static void addHeapEntry(vHeapRef heap, vObject obj);
 
 static HeapRecordRef createRecord() {
     HeapRecordRef rec = (HeapRecordRef)vMalloc(sizeof(HeapRecord));
@@ -156,21 +156,23 @@ static v_bool checkHeapSpace(vHeapRef heap, uword size) {
 
 static vObject internalAlloc(vHeapRef heap, vTypeRef type, uword size) {
     vObject ret;
-    char* tmp;
+    pointer* tmp;
+    uword allocSize = size + sizeof(pointer);
     
     if(heap->mutex != NULL) {
         vMutexLock(heap->mutex);
     }
     
-    checkHeapSpace(heap, size); /* TODO: handle out of memory here */
+    checkHeapSpace(heap, allocSize); /* TODO: handle out of memory here */
+
     /* Over-allocate by one pointer size and then use that extra area
        "in front of" the object to store the type.
        TODO: This might cause alignment issues on some platforms? Look into that. */
-    tmp = (char*)vMalloc(size + sizeof(pointer));
-    ret = tmp + sizeof(pointer);
-    tmp = (char*)type;
+    tmp = (pointer*)vMalloc(allocSize);
+    ret = &tmp[1];
+    tmp[0] = type == V_T_SELF ? ret : type;
     memset(ret, 0, size);
-    addHeapEntry(heap, ret, type);
+    addHeapEntry(heap, ret);
     
     if(heap->mutex != NULL) {
 		vMutexUnlock(heap->mutex);
@@ -191,20 +193,14 @@ vObject vHeapAlloc(vThreadContextRef ctx, vHeapRef heap, vTypeRef t) {
     return ret;
 }
 
-static void addHeapEntry(vHeapRef heap, vObject obj, vTypeRef type) {
+static void addHeapEntry(vHeapRef heap, vObject obj) {
     HeapRecordRef tmp;
-    
-    /* TODO: move this special case out of here, not good to
-     have bootstrap code affecting the runtime code. */
-    if(type == V_T_SELF) {
-        type = (vTypeRef)obj;
-    }
     
     if(recordEntry(heap->record, obj) == v_false) {
         tmp = createRecord();
         tmp->prev = heap->record;
         heap->record = tmp;
-        addHeapEntry(heap, obj, type);
+        addHeapEntry(heap, obj);
     }
 }
 
