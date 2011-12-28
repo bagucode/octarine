@@ -2,7 +2,6 @@
 #include "v_type.h"
 #include "v_thread_context.h"
 #include "v_runtime.h"
-#include "v_nothing.h"
 #include "../../platformProject/src/v_platform.h"
 #include <memory.h> /* TODO: replace this with some platform function */
 
@@ -154,3 +153,10 @@ vObject v_bootstrap_memory_alloc(vHeapRef heap,
 void vHeapDestroy(vHeapRef heap) {
     /* TODO */
 }
+
+vTypeRef vMemoryGetObjectType(vThreadContextRef ctx, vObject obj) {
+    return NULL;
+}
+
+
+

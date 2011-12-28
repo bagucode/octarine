@@ -11,6 +11,7 @@ vObject vHeapAlloc(vThreadContextRef ctx,
                    vHeapRef heap,
                    vTypeRef type);
 void vHeapForceGC(vHeapRef heap);
+vTypeRef vMemoryGetObjectType(vThreadContextRef ctx, vObject obj);
 
 vObject v_bootstrap_memory_alloc(vHeapRef heap,
                                  vTypeRef proto_type,
