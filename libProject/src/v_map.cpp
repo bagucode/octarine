@@ -5,6 +5,7 @@
 #include "v_runtime.h"
 
 vMapStrObjRef vMapStrObjCreate(vThreadContextRef ctx) {
+	return NULL;
 }
 
 void vMapStrObjDestroy(vMapStrObjRef map) {
@@ -15,6 +16,7 @@ void vMapStrObjPut(vMapStrObjRef map, vStringRef key, vObject value) {
 
 /* Type of returned object is Nothing if there was no entry. */
 vObject vMapStrObjGet(vMapStrObjRef map, vStringRef key) {
+	return NULL;
 }
 
 
