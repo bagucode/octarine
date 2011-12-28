@@ -10,6 +10,7 @@ const u8 V_GC_MARKED = 1 << 0;
 
 typedef struct heap_entry {
     uword flags;
+    vTypeRef type;
     vObject obj;
 } heap_entry;
 
@@ -35,7 +36,7 @@ struct vHeap {
     heap_record *record;
 };
 
-static void add_heap_entry(vHeapRef heap, vObject obj);
+static void add_heap_entry(vHeapRef heap, vObject obj, vTypeRef type);
 
 static heap_record *create_record() {
     heap_record *rec = vMalloc(sizeof(heap_record));
@@ -84,10 +85,9 @@ static vObject internal_alloc(vHeapRef heap, vTypeRef type, uword size) {
     }
     
     check_heap_space(heap, size); /* TODO: handle out of memory here */
-    ret.value.pointer = vMalloc(size);
-    ret.type = type;
-    memset(ret.value.pointer, 0, size);
-    add_heap_entry(heap, ret);
+    ret = vMalloc(size);
+    memset(ret, 0, size);
+    add_heap_entry(heap, ret, type);
     
     if(heap->mutex != NULL) {
 		vMutexUnlock(heap->mutex);
@@ -98,10 +98,9 @@ static vObject internal_alloc(vHeapRef heap, vTypeRef type, uword size) {
 
 vObject vHeapAlloc(vThreadContextRef ctx, vHeapRef heap, vTypeRef t) {
     vObject ret;
-    ret.type = t;
     
     if(vTypeIsPrimitive(ctx, t)) {
-        ret.value.uword = 0;
+        ret = NULL;
     }
     else {
         ret = internal_alloc(heap, t, t->size);
@@ -109,14 +108,14 @@ vObject vHeapAlloc(vThreadContextRef ctx, vHeapRef heap, vTypeRef t) {
     return ret;
 }
 
-static void add_heap_entry(vHeapRef heap, vObject obj) {
+static void add_heap_entry(vHeapRef heap, vObject obj, vTypeRef type) {
     uword i;
     heap_record *tmp;
     
     /* TODO: move this special case out of here, not good to
      have bootstrap code affecting the runtime code. */
-    if(obj.type == V_T_SELF) {
-        obj.type = obj.value.pointer;
+    if(type == V_T_SELF) {
+        type = obj;
     }
     
     if(heap->record->num_entries < MAX_ENTRIES) {
@@ -128,10 +127,11 @@ static void add_heap_entry(vHeapRef heap, vObject obj) {
         tmp = heap->record;
         do {
             for(i = 0; i < MAX_ENTRIES; ++i) {
-                if(tmp->entries[i].obj.type == NULL) {
+                if(tmp->entries[i].type == NULL) {
                     /* Found one! */
                     tmp->entries[i].flags = 0;
                     tmp->entries[i].obj = obj;
+                    tmp->entries[i].type = type;
                     return;
                 }
             }
@@ -141,7 +141,7 @@ static void add_heap_entry(vHeapRef heap, vObject obj) {
         tmp = create_record();
         tmp->prev = heap->record;
         heap->record = tmp;
-        add_heap_entry(heap, obj);
+        add_heap_entry(heap, obj, type);
     }
 }
 

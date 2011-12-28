@@ -45,22 +45,4 @@ typedef int32_t v_char;
 # define NULL 0
 #endif
 
-typedef union {
-	v_bool v_bool;
-	i8 i8;
-	u8 u8;
-	i16 i16;
-	u16 u16;
-	i32 i32;
-	u32 u32;
-	i64 i64;
-	u64 u64;
-	f32 f32;
-	f64 f64;
-	word word;
-	uword uword;
-	v_char v_char;
-	pointer pointer;
-} vAny;
-
 #endif

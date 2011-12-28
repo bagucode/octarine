@@ -4,9 +4,8 @@
 #include "../../platformProject/src/v_basic_types.h"
 #include "v_typedefs.h"
 
-struct vObject {
-	vTypeRef type;
-	vAny value;
+struct vAny {
+    pointer ptr;
 };
 
 void v_bootstrap_any_type_init(vRuntimeRef rt);

@@ -10,8 +10,7 @@
 vArrayRef vArrayCreate(vThreadContextRef ctx,
                        vTypeRef elemType,
                        uword num_elements) {
-    vObject obj = vHeapAlloc(ctx, ctx->heap, ctx->runtime->built_in_types.array);
-    vArrayRef ret = obj.value.pointer;
+    vArrayRef ret = vHeapAlloc(ctx, ctx->heap, ctx->runtime->built_in_types.array);
     uword byte_size;
     
     ret->element_type = elemType;

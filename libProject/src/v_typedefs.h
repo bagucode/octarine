@@ -30,8 +30,7 @@ typedef vMapStrObjEntry* vMapStrObjEntryRef;
 typedef struct vNothing vNothing;
 typedef vNothing* vNothingRef;
 
-typedef struct vObject vObject;
-typedef vObject* vObjectRef;
+typedef void* vObject;
 
 typedef struct vParameter vParameter;
 typedef vParameter* vParameterRef;
