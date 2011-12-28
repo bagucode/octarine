@@ -3,7 +3,6 @@
 #include "v_type.h"
 #include "v_string.h"
 #include "v_array.h"
-#include "v_nothing.h"
 #include "v_list.h"
 #include "v_map.h"
 #include "v_thread_context.h"
@@ -115,7 +114,6 @@ static void init_built_in_types(vThreadContextRef ctx) {
     v_bootstrap_type_init_type(ctx);
     v_bootstrap_type_init_field(ctx);
     v_bootstrap_array_init_type(ctx);
-    v_bootstrap_nothing_init_type(ctx);
     v_bootstrap_list_init_type(ctx);
     v_bootstrap_any_type_init(ctx);
     v_bootstrap_map_init_type(ctx);
