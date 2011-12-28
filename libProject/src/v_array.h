@@ -17,7 +17,6 @@ struct vArray {
 vArrayRef vArrayCreate(vThreadContextRef ctx,
                        vTypeRef elemType,
                        uword num_elements);
-void vArrayDestroy(vArrayRef arr);
 pointer vArrayDataPointer(vArrayRef arr);
 uword vArraySize(vArrayRef arr);
 

@@ -13,14 +13,6 @@ vArrayRef vArrayCreate(vThreadContextRef ctx,
     return vHeapAllocArray(ctx, ctx->heap, elemType, num_elements);
 }
 
-void vArrayDestroy(vArrayRef arr) {
-    if(arr->element_type->kind == V_T_OBJECT) {
-        /* TODO: loop through objects and call destructors
-                 before deallocating them. Need protocols for this */
-    }
-    vFree(arr->data);
-}
-
 pointer vArrayDataPointer(vArrayRef arr) {
     return arr->data;
 }
