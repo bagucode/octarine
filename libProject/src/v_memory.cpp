@@ -100,8 +100,38 @@ vHeapRef vHeapCreate(v_bool synchronized, uword gc_threshold) {
     return heap;
 }
 
+#define MAX_ROOTS 1000
+struct vRootSet {
+    uword numUsed;
+    vObject roots[MAX_ROOTS];
+    vRootSetRef prev;
+};
+
+static vRootSetRef createRootSet() {
+    vRootSetRef rootSet = (vRootSetRef)vMalloc(sizeof(vRootSet));
+    memset(rootSet, 0, sizeof(vRootSet));
+    return rootSet;
+}
+
+void vMemoryAddRoot(vCollectRootsRef rootCollection, vObject obj) {
+    vRootSetRef newRoots;
+    if(rootCollection->roots->numUsed < MAX_ROOTS) {
+        rootCollection->roots->roots[rootCollection->roots->numUsed++] = obj;
+    } else {
+        newRoots = createRootSet();
+        newRoots->prev = rootCollection->roots;
+        rootCollection->roots = newRoots;
+        vMemoryAddRoot(rootCollection, obj);
+    }
+}
+
 static void collectGarbage(vHeapRef heap) {
-    /* TODO: implement */
+    vCollectRoots collectStruct;
+    collectStruct.roots = createRootSet();
+    if(setjmp(collectStruct.returnPoint) == 0) {
+        throw collectStruct;
+    }
+    /* TODO: mark all reachable objects here. */
 }
 
 void vHeapForceGC(vHeapRef heap) {
