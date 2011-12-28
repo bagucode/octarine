@@ -3,13 +3,22 @@
 #define vlang_runtime_h
 
 #include "v_typedefs.h"
+#include "../../platformProject/src/v_platform.h"
 
 #if defined (__cplusplus)
 extern "C" {
 #endif
+    
+typedef struct vThreadContextList {
+    vThreadContextRef ctx;
+    struct vThreadContextList* next;
+} vThreadContextList;
+typedef vThreadContextList* vThreadContextListRef;
 
 struct vRuntime {
     vHeapRef globals;
+    vTLSRef currentContext;
+    vThreadContextListRef allContexts;
     struct {
         /* primitive types */
         vTypeRef i8;

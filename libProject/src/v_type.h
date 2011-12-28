@@ -30,9 +30,9 @@ v_bool vTypeIsPrimitive(vThreadContextRef ctx, vTypeRef t);
 v_bool vTypeIsStruct(vThreadContextRef ctx, vTypeRef t);
 v_bool vTypeIsObject(vThreadContextRef ctx, vTypeRef t);
 
-void v_bootstrap_type_init_type(vRuntimeRef rt);
-void v_bootstrap_type_init_field(vRuntimeRef rt);
-vArrayRef v_bootstrap_type_create_field_array(vRuntimeRef rt,
+void v_bootstrap_type_init_type(vThreadContextRef ctx);
+void v_bootstrap_type_init_field(vThreadContextRef ctx);
+vArrayRef v_bootstrap_type_create_field_array(vThreadContextRef ctx,
                                               uword numFields);
 
 #if defined (__cplusplus)

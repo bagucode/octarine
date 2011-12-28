@@ -10,23 +10,7 @@
 vArrayRef vArrayCreate(vThreadContextRef ctx,
                        vTypeRef elemType,
                        uword num_elements) {
-    vArrayRef ret = (vArrayRef)vHeapAlloc(ctx, ctx->heap, ctx->runtime->built_in_types.array);
-    uword byte_size;
-    
-    ret->element_type = elemType;
-    ret->num_elements = num_elements;
-    
-    if(elemType->kind == V_T_OBJECT) {
-        byte_size = sizeof(pointer) * num_elements;
-    } else {
-        byte_size = elemType->size * num_elements;
-    }
-    /* TODO: integrate with GC in v_memory
-             so that the allocated space counts toward 
-             the GC threshold */
-    ret->data = vMalloc(byte_size);
-    memset(ret->data, 0, byte_size);
-    return ret;
+    return vHeapAllocArray(ctx, ctx->heap, elemType, num_elements);
 }
 
 void vArrayDestroy(vArrayRef arr) {
@@ -45,20 +29,17 @@ uword vArraySize(vArrayRef arr) {
     return arr->num_elements;
 }
 
-vArrayRef v_bootstrap_array_create(vTypeRef type,
-                                  uword num_elements,
-                                  uword byte_size) {
-    vArrayRef ret = (vArrayRef)vMalloc(sizeof(vArray));
-    ret->data = vMalloc(byte_size);
-    ret->element_type = type;
-    ret->num_elements = num_elements;
-    return ret;
+vArrayRef v_bootstrap_array_create(vThreadContextRef ctx,
+                                   vTypeRef type,
+                                   uword num_elements,
+                                   uword elem_size) {
+    return v_bootstrap_array_alloc(ctx, type, num_elements, elem_size);
 }
 
-void v_bootstrap_array_init_type(vRuntimeRef rt) {
-    rt->built_in_types.array->fields = NULL;
-    rt->built_in_types.array->kind = V_T_OBJECT;
-    rt->built_in_types.array->name = v_bootstrap_string_create((char*)"Array");
-    rt->built_in_types.array->size = sizeof(vArray);
+void v_bootstrap_array_init_type(vThreadContextRef ctx) {
+    ctx->runtime->built_in_types.array->fields = NULL;
+    ctx->runtime->built_in_types.array->kind = V_T_OBJECT;
+    ctx->runtime->built_in_types.array->name = v_bootstrap_string_create(ctx, "Array");
+    ctx->runtime->built_in_types.array->size = sizeof(vArray);
 }
 

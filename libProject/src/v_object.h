@@ -14,7 +14,7 @@ struct vAny {
 
 vTypeRef vObjectGetType(vThreadContextRef ctx, vObject obj);
 
-void v_bootstrap_any_type_init(vRuntimeRef rt);
+void v_bootstrap_any_type_init(vThreadContextRef ctx);
 
 #if defined (__cplusplus)
 }

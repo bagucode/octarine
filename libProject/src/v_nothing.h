@@ -15,7 +15,7 @@ struct vNothing {
 
 extern const vNothingRef v_nil;
 
-void v_bootstrap_nothing_init_type(vRuntimeRef rt);
+void v_bootstrap_nothing_init_type(vThreadContextRef ctx);
 
 #if defined (__cplusplus)
 }

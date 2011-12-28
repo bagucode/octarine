@@ -7,22 +7,22 @@
 #include "v_array.h"
 #include <stddef.h>
 
-void v_bootstrap_list_init_type(vRuntimeRef rt) {
+void v_bootstrap_list_init_type(vThreadContextRef ctx) {
     vFieldRef *fields;
-    rt->built_in_types.list->fields = v_bootstrap_type_create_field_array(rt, 2);
-    rt->built_in_types.list->kind = V_T_OBJECT;
-    rt->built_in_types.list->name = v_bootstrap_string_create("AnyList");
-    rt->built_in_types.list->size = sizeof(vListObj);
+    ctx->runtime->built_in_types.list->fields = v_bootstrap_type_create_field_array(ctx, 2);
+    ctx->runtime->built_in_types.list->kind = V_T_OBJECT;
+    ctx->runtime->built_in_types.list->name = v_bootstrap_string_create(ctx, "AnyList");
+    ctx->runtime->built_in_types.list->size = sizeof(vListObj);
 
-    fields = (vFieldRef*)rt->built_in_types.list->fields->data;
+    fields = (vFieldRef*)ctx->runtime->built_in_types.list->fields->data;
     
-    fields[0]->name = v_bootstrap_string_create("data");
+    fields[0]->name = v_bootstrap_string_create(ctx, "data");
     fields[0]->offset = offsetof(vListObj, data);
-    fields[0]->type = rt->built_in_types.any;
+    fields[0]->type = ctx->runtime->built_in_types.any;
 
-    fields[1]->name = v_bootstrap_string_create("next");
+    fields[1]->name = v_bootstrap_string_create(ctx, "next");
     fields[1]->offset = offsetof(vListObj, next);
-    fields[1]->type = rt->built_in_types.list;
+    fields[1]->type = ctx->runtime->built_in_types.list;
 }
 
 vListObjRef vListObjCreate(vThreadContextRef ctx) {

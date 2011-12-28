@@ -3,6 +3,7 @@
 #include "v_thread_context.h"
 #include "v_runtime.h"
 #include "../../platformProject/src/v_platform.h"
+#include "v_array.h"
 #include <memory.h> /* TODO: replace this with some platform function */
 
 typedef uword HeapEntry;
@@ -193,6 +194,25 @@ vObject vHeapAlloc(vThreadContextRef ctx, vHeapRef heap, vTypeRef t) {
     return ret;
 }
 
+vArrayRef vHeapAllocArray(vThreadContextRef ctx,
+                          vHeapRef heap,
+                          vTypeRef elementType,
+                          uword numElements) {
+    vArrayRef arr;
+    uword size = sizeof(vArray);
+    
+    if(elementType->kind == V_T_OBJECT) {
+        size += sizeof(pointer) * numElements;
+    } else {
+        size += elementType->size * numElements;
+    }
+    
+    arr = (vArrayRef)internalAlloc(heap, ctx->runtime->built_in_types.array, size);
+    arr->element_type = elementType;
+    arr->num_elements = numElements;
+    return arr;
+}
+
 static void addHeapEntry(vHeapRef heap, vObject obj) {
     HeapRecordRef tmp;
     
@@ -204,10 +224,23 @@ static void addHeapEntry(vHeapRef heap, vObject obj) {
     }
 }
 
-vObject v_bootstrap_memory_alloc(vHeapRef heap,
+vObject v_bootstrap_object_alloc(vThreadContextRef ctx,
                                  vTypeRef proto_type,
                                  uword size) {
-    return internalAlloc(heap, proto_type, size);
+    return internalAlloc(ctx->runtime->globals, proto_type, size);
+}
+
+vArrayRef v_bootstrap_array_alloc(vThreadContextRef ctx,
+                                  vTypeRef proto_elem_type,
+                                  uword num_elements,
+                                  uword elem_size) {
+    vArrayRef arr;
+    uword size = sizeof(vArray) + num_elements * elem_size;
+    
+    arr = (vArrayRef)internalAlloc(ctx->runtime->globals, ctx->runtime->built_in_types.array, size);
+    arr->element_type = proto_elem_type;
+    arr->num_elements = num_elements;
+    return arr;
 }
 
 void vHeapDestroy(vHeapRef heap) {

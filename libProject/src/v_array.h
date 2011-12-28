@@ -11,7 +11,7 @@ extern "C" {
 struct vArray {
     vTypeRef element_type;
     uword num_elements;
-    pointer data;
+    char data[0]; /* Variable size */
 };
 
 vArrayRef vArrayCreate(vThreadContextRef ctx,
@@ -21,11 +21,12 @@ void vArrayDestroy(vArrayRef arr);
 pointer vArrayDataPointer(vArrayRef arr);
 uword vArraySize(vArrayRef arr);
 
-vArrayRef v_bootstrap_array_create(vTypeRef type,
+vArrayRef v_bootstrap_array_create(vThreadContextRef ctx,
+                                   vTypeRef type,
                                    uword num_elements,
-                                   uword byte_size);
+                                   uword elem_size);
 
-void v_bootstrap_array_init_type(vRuntimeRef rt);
+void v_bootstrap_array_init_type(vThreadContextRef ctx);
 
 #if defined (__cplusplus)
 }

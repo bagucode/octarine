@@ -14,12 +14,21 @@ void vHeapDestroy(vHeapRef heap);
 vObject vHeapAlloc(vThreadContextRef ctx,
                    vHeapRef heap,
                    vTypeRef type);
+vArrayRef vHeapAllocArray(vThreadContextRef ctx,
+                          vHeapRef heap,
+                          vTypeRef elementType,
+                          uword numElements);
 void vHeapForceGC(vHeapRef heap);
 vTypeRef vMemoryGetObjectType(vThreadContextRef ctx, vObject obj);
 
-vObject v_bootstrap_memory_alloc(vHeapRef heap,
+vObject v_bootstrap_object_alloc(vThreadContextRef ctx,
                                  vTypeRef proto_type,
                                  uword size);
+
+vArrayRef v_bootstrap_array_alloc(vThreadContextRef ctx,
+                                  vTypeRef proto_elem_type,
+                                  uword num_elements,
+                                  uword elem_size);
 
 #if defined (__cplusplus)
 }

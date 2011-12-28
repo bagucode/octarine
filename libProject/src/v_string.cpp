@@ -22,15 +22,15 @@ int vStringCompare(vStringRef x, vStringRef y) {
     return vNativeStringCompare(x->str, y->str);
 }
 
-vStringRef v_bootstrap_string_create(const char *utf8) {
-    vStringRef str = (vStringRef)vMalloc(sizeof(vString));
+vStringRef v_bootstrap_string_create(vThreadContextRef ctx, const char *utf8) {
+    vStringRef str = (vStringRef)v_bootstrap_object_alloc(ctx, ctx->runtime->built_in_types.string, sizeof(vString));
     str->str = vNativeStringFromUtf8(utf8, 0);
     return str;
 }
 
-void v_bootstrap_string_init_type(vRuntimeRef rt) {
-    rt->built_in_types.string->fields = NULL;
-    rt->built_in_types.string->kind = V_T_OBJECT;
-    rt->built_in_types.string->name = v_bootstrap_string_create((char*)"String");
-    rt->built_in_types.string->size = sizeof(vString);
+void v_bootstrap_string_init_type(vThreadContextRef ctx) {
+    ctx->runtime->built_in_types.string->fields = NULL;
+    ctx->runtime->built_in_types.string->kind = V_T_OBJECT;
+    ctx->runtime->built_in_types.string->name = v_bootstrap_string_create(ctx, "String");
+    ctx->runtime->built_in_types.string->size = sizeof(vString);
 }
