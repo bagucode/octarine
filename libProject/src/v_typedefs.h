@@ -3,6 +3,10 @@
 
 /* Please put in alphabetical order. */
 
+#if defined (__cplusplus)
+extern "C" {
+#endif
+
 typedef struct vArray vArray;
 typedef vArray* vArrayRef;
 
@@ -55,5 +59,9 @@ typedef vSignature* vSignatureRef;
 
 typedef struct vString vString;
 typedef vString* vStringRef;
+
+#if defined (__cplusplus)
+}
+#endif
 
 #endif

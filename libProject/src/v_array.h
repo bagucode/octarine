@@ -4,6 +4,10 @@
 #include "../../platformProject/src/v_platform.h"
 #include "v_typedefs.h"
 
+#if defined (__cplusplus)
+extern "C" {
+#endif
+
 struct vArray {
     vTypeRef element_type;
     uword num_elements;
@@ -22,5 +26,9 @@ vArrayRef v_bootstrap_array_create(vTypeRef type,
                                    uword byte_size);
 
 void v_bootstrap_array_init_type(vRuntimeRef rt);
+
+#if defined (__cplusplus)
+}
+#endif
 
 #endif

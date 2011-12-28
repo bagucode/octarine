@@ -4,6 +4,10 @@
 #include "v_object.h"
 #include "v_typedefs.h"
 
+#if defined (__cplusplus)
+extern "C" {
+#endif
+
 /* A hash map where the keys are strings and the values objects of any type */
 
 struct vMapStrObjEntry {
@@ -23,5 +27,9 @@ void vMapStrObjPut(vMapStrObjRef map, vStringRef key, vObject value);
 vObject vMapStrObjGet(vMapStrObjRef map, vStringRef key);
 
 void v_bootstrap_map_init_type(vRuntimeRef rt);
+
+#if defined (__cplusplus)
+}
+#endif
 
 #endif

@@ -4,6 +4,10 @@
 
 #include "v_typedefs.h"
 
+#if defined (__cplusplus)
+extern "C" {
+#endif
+
 struct vRuntime {
     vHeapRef globals;
     struct {
@@ -38,5 +42,9 @@ struct vRuntime {
 
 vRuntimeRef vRuntimeCreate();
 void vRuntimeDestroy(vRuntimeRef rt);
+
+#if defined (__cplusplus)
+}
+#endif
 
 #endif

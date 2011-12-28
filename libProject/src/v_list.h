@@ -4,6 +4,10 @@
 #include "v_object.h"
 #include "v_typedefs.h"
 
+#if defined (__cplusplus)
+extern "C" {
+#endif
+
 /* List of objects of any type */
 struct vListObj {
     vObject data;
@@ -22,5 +26,9 @@ vListObjRef vListObjRemove(vThreadContextRef ctx,
                            vObject data);
 
 void v_bootstrap_list_init_type(vRuntimeRef rt);
+
+#if defined (__cplusplus)
+}
+#endif
 
 #endif

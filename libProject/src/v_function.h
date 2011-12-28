@@ -4,6 +4,10 @@
 #include "../../platformProject/src/v_platform.h"
 #include "v_typedefs.h"
 
+#if defined (__cplusplus)
+extern "C" {
+#endif
+
 struct vParameter {
     vStringRef name;
     vTypeRef type;
@@ -32,5 +36,9 @@ vClosureRef vClosureCreate(vThreadContextRef ctx,
 					       vFunctionRef fn,
                            vArrayRef args);
 void vClosureDestroy(vClosureRef closure);
+
+#if defined (__cplusplus)
+}
+#endif
 
 #endif

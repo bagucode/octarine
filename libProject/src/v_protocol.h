@@ -3,6 +3,10 @@
 
 #include "v_typedefs.h"
 
+#if defined (__cplusplus)
+extern "C" {
+#endif
+
 /* Find correct function at callsite:
  Check current namespace mappings for function name -> protocol mapping.
  When protocol is found, check that the protocol contains an entry for the
@@ -25,5 +29,9 @@ struct vProtocol {
  there is no match at all. */
 vArrayRef vProtocolFindFunction(vProtocolRef protocol,
                                 vSignatureRef signature);
+
+#if defined (__cplusplus)
+}
+#endif
 
 #endif

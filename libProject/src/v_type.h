@@ -5,10 +5,13 @@
 #include "../../platformProject/src/v_basic_types.h"
 #include "v_typedefs.h"
 
-const u8 V_T_OBJECT;
-const u8 V_T_STRUCT;
+#if defined (__cplusplus)
+extern "C" {
+#endif
 
-const vTypeRef V_T_SELF;
+extern const u8 V_T_OBJECT;
+extern const u8 V_T_STRUCT;
+extern const vTypeRef V_T_SELF;
 
 struct vField {
     vStringRef name;
@@ -31,5 +34,9 @@ void v_bootstrap_type_init_type(vRuntimeRef rt);
 void v_bootstrap_type_init_field(vRuntimeRef rt);
 vArrayRef v_bootstrap_type_create_field_array(vRuntimeRef rt,
                                               uword numFields);
+
+#if defined (__cplusplus)
+}
+#endif
 
 #endif
