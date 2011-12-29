@@ -25,8 +25,9 @@ void v_bootstrap_list_init_type(vThreadContextRef ctx) {
     fields[1]->type = ctx->runtime->built_in_types.list;
 }
 
-vListObjRef vListObjCreate(vThreadContextRef ctx) {
-    vListObjRef ret = (vListObjRef)vHeapAlloc(ctx, ctx->heap, ctx->runtime->built_in_types.list);
+vListObjRef vListObjCreate(vThreadContextRef ctx, vObject data) {
+    vListObjRef ret = (vListObjRef)vHeapAlloc(ctx, v_false, ctx->runtime->built_in_types.list);
+    vHeapForceGC(ctx, v_false);
     return ret; /* TODO: lots of stuff */
 }
 
@@ -37,7 +38,7 @@ void vListObjDestroy(vListObjRef lst) {
 vListObjRef vListObjAddFront(vThreadContextRef ctx,
                              vListObjRef lst,
                              vObject data) {
-    vListObjRef head = (vListObjRef)vHeapAlloc(ctx, ctx->heap, ctx->runtime->built_in_types.list);
+    vListObjRef head = (vListObjRef)vHeapAlloc(ctx, v_false, ctx->runtime->built_in_types.list);
     head->data = data;
     head->next = lst;
     return head;

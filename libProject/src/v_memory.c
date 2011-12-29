@@ -114,40 +114,53 @@ static vRootSetRef createRootSet() {
     return rootSet;
 }
 
-void vMemoryAddRoot(vCollectRootsRef rootCollection, vObject obj) {
+vRootSetRef vMemoryAddRoot(vRootSetRef roots, vObject obj) {
     vRootSetRef newRoots;
-    if(rootCollection->roots->numUsed < MAX_ROOTS) {
-        rootCollection->roots->roots[rootCollection->roots->numUsed++] = obj;
+    if(roots->numUsed < MAX_ROOTS) {
+        roots->roots[roots->numUsed++] = obj;
+        return roots;
     } else {
         newRoots = createRootSet();
-        newRoots->prev = rootCollection->roots;
-        rootCollection->roots = newRoots;
-        vMemoryAddRoot(rootCollection, obj);
+        newRoots->prev = roots;
+        roots = newRoots;
+        return vMemoryAddRoot(roots, obj);
     }
 }
 
-static void collectGarbage(vHeapRef heap) {
-    vCollectRoots collectStruct;
-    collectStruct.roots = createRootSet();
-    if(setjmp(collectStruct.returnPoint) == 0) {
-        throw collectStruct;
+static void collectGarbage(vThreadContextRef ctx, v_bool collectSharedHeap) {
+
+    if(collectSharedHeap) {
+        /* This thread initiated a collection of the shared heap.
+           we need to signal the other threads to stop and then
+           wait for them. */
+        /* TODO: implement */
     }
     /* TODO: mark all reachable objects here. */
+    /* TODO: perform full or partial sweep here. */
 }
 
-void vHeapForceGC(vHeapRef heap) {
+void vHeapForceGC(vThreadContextRef ctx, v_bool collectSharedHeap) {
+    vHeapRef heap = collectSharedHeap ? ctx->runtime->globals : ctx->heap;
+    
     if(heap->mutex != NULL) {
         vMutexLock(heap->mutex);
     }
-    collectGarbage(heap);
+
+    collectGarbage(ctx, collectSharedHeap);
+    
     if(heap->mutex != NULL) {
         vMutexUnlock(heap->mutex);
     }
 }
 
-static v_bool checkHeapSpace(vHeapRef heap, uword size) {
+static v_bool checkHeapSpace(vThreadContextRef ctx,
+                             v_bool checkSharedHeap,
+                             uword size) {
+    vHeapRef heap = checkSharedHeap ? ctx->runtime->globals : ctx->heap;
+
     if((heap->gcThreshold - heap->currentSize) < size) {
-        collectGarbage(heap);
+        collectGarbage(ctx, checkSharedHeap);
+
         if((heap->gcThreshold - heap->currentSize) < size) {
             return v_false; /* Grow? */
         }
@@ -155,7 +168,11 @@ static v_bool checkHeapSpace(vHeapRef heap, uword size) {
     return v_true;
 }
 
-static vObject internalAlloc(vHeapRef heap, vTypeRef type, uword size) {
+static vObject internalAlloc(vThreadContextRef ctx,
+                             v_bool sharedAlloc,
+                             vTypeRef type,
+                             uword size) {
+    vHeapRef heap = sharedAlloc ? ctx->runtime->globals : ctx->heap;
     vObject ret;
     pointer* tmp;
     uword allocSize = size + sizeof(pointer);
@@ -164,7 +181,7 @@ static vObject internalAlloc(vHeapRef heap, vTypeRef type, uword size) {
         vMutexLock(heap->mutex);
     }
     
-    checkHeapSpace(heap, allocSize); /* TODO: handle out of memory here */
+    checkHeapSpace(ctx, sharedAlloc, allocSize); /* TODO: handle out of memory here */
 
     /* Over-allocate by one pointer size and then use that extra area
        "in front of" the object to store the type.
@@ -182,20 +199,20 @@ static vObject internalAlloc(vHeapRef heap, vTypeRef type, uword size) {
     return ret;
 }
 
-vObject vHeapAlloc(vThreadContextRef ctx, vHeapRef heap, vTypeRef t) {
+vObject vHeapAlloc(vThreadContextRef ctx, v_bool useSharedHeap, vTypeRef t) {
     vObject ret;
     
     if(vTypeIsPrimitive(ctx, t)) {
         ret = NULL;
     }
     else {
-        ret = internalAlloc(heap, t, t->size);
+        ret = internalAlloc(ctx, useSharedHeap, t, t->size);
     }
     return ret;
 }
 
 vArrayRef vHeapAllocArray(vThreadContextRef ctx,
-                          vHeapRef heap,
+                          v_bool useSharedHeap,
                           vTypeRef elementType,
                           uword numElements) {
     vArrayRef arr;
@@ -207,7 +224,7 @@ vArrayRef vHeapAllocArray(vThreadContextRef ctx,
         size += elementType->size * numElements;
     }
     
-    arr = (vArrayRef)internalAlloc(heap, ctx->runtime->built_in_types.array, size);
+    arr = (vArrayRef)internalAlloc(ctx, useSharedHeap, ctx->runtime->built_in_types.array, size);
     arr->element_type = elementType;
     arr->num_elements = numElements;
     return arr;
@@ -227,7 +244,7 @@ static void addHeapEntry(vHeapRef heap, vObject obj) {
 vObject v_bootstrap_object_alloc(vThreadContextRef ctx,
                                  vTypeRef proto_type,
                                  uword size) {
-    return internalAlloc(ctx->runtime->globals, proto_type, size);
+    return internalAlloc(ctx, v_true, proto_type, size);
 }
 
 vArrayRef v_bootstrap_array_alloc(vThreadContextRef ctx,
@@ -237,7 +254,7 @@ vArrayRef v_bootstrap_array_alloc(vThreadContextRef ctx,
     vArrayRef arr;
     uword size = sizeof(vArray) + num_elements * elem_size;
     
-    arr = (vArrayRef)internalAlloc(ctx->runtime->globals, ctx->runtime->built_in_types.array, size);
+    arr = (vArrayRef)internalAlloc(ctx, v_true, ctx->runtime->built_in_types.array, size);
     arr->element_type = proto_elem_type;
     arr->num_elements = num_elements;
     return arr;

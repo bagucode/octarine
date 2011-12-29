@@ -5,10 +5,6 @@
 #include "../../platformProject/src/v_basic_types.h"
 #include "v_typedefs.h"
 
-#if defined (__cplusplus)
-extern "C" {
-#endif
-
 extern const u8 V_T_OBJECT;
 extern const u8 V_T_STRUCT;
 extern const vTypeRef V_T_SELF;
@@ -34,9 +30,5 @@ void v_bootstrap_type_init_type(vThreadContextRef ctx);
 void v_bootstrap_type_init_field(vThreadContextRef ctx);
 vArrayRef v_bootstrap_type_create_field_array(vThreadContextRef ctx,
                                               uword numFields);
-
-#if defined (__cplusplus)
-}
-#endif
 
 #endif

@@ -119,8 +119,9 @@ static void init_built_in_types(vThreadContextRef ctx) {
     v_bootstrap_map_init_type(ctx);
 }
 
-vRuntimeRef vRuntimeCreate() {
+vRuntimeRef vRuntimeCreate(pointer stackTop) {
 	vRuntimeRef rt = (vRuntimeRef)vMalloc(sizeof(vRuntime));
+    rt->stackTop = stackTop;
 
     vThreadContextRef ctx = (vThreadContextRef)vMalloc(sizeof(vThreadContext));
     ctx->heap = vHeapCreate(v_false, 2000 * 1024);

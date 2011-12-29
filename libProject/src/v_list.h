@@ -4,31 +4,25 @@
 #include "v_object.h"
 #include "v_typedefs.h"
 
-#if defined (__cplusplus)
-extern "C" {
-#endif
-
 /* List of objects of any type */
 struct vListObj {
     vObject data;
     vListObjRef next;
 };
 
-vListObjRef vListObjCreate(vThreadContextRef ctx);
-void vListObjDestroy(vListObjRef lst);
+/* data parameter is used to fill first "cons cell" */
+vListObjRef vListObjCreate(vThreadContextRef ctx, vObject data);
+
 /* returns new head */
 vListObjRef vListObjAddFront(vThreadContextRef ctx,
                              vListObjRef lst,
                              vObject data);
+
 /* mutating remove, returns (new) head */
 vListObjRef vListObjRemove(vThreadContextRef ctx,
                            vListObjRef lst,
                            vObject data);
 
 void v_bootstrap_list_init_type(vThreadContextRef ctx);
-
-#if defined (__cplusplus)
-}
-#endif
 
 #endif

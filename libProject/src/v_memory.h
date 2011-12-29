@@ -5,21 +5,24 @@
 #include "v_object.h"
 #include "v_typedefs.h"
 
-#if defined (__cplusplus)
-extern "C" {
-#endif
-
 vHeapRef vHeapCreate(v_bool synchronized, uword gc_threshold);
+
 void vHeapDestroy(vHeapRef heap);
+
 vObject vHeapAlloc(vThreadContextRef ctx,
-                   vHeapRef heap,
+                   v_bool useSharedHeap,
                    vTypeRef type);
+
 vArrayRef vHeapAllocArray(vThreadContextRef ctx,
-                          vHeapRef heap,
+                          v_bool useSharedHeap,
                           vTypeRef elementType,
                           uword numElements);
-void vHeapForceGC(vHeapRef heap);
+
+void vHeapForceGC(vThreadContextRef ctx, v_bool collectSharedHeap);
+
 vTypeRef vMemoryGetObjectType(vThreadContextRef ctx, vObject obj);
+
+vRootSetRef vMemoryAddRoot(vRootSetRef rootSet, vObject root);
 
 vObject v_bootstrap_object_alloc(vThreadContextRef ctx,
                                  vTypeRef proto_type,
@@ -29,9 +32,5 @@ vArrayRef v_bootstrap_array_alloc(vThreadContextRef ctx,
                                   vTypeRef proto_elem_type,
                                   uword num_elements,
                                   uword elem_size);
-
-#if defined (__cplusplus)
-}
-#endif
 
 #endif

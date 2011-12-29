@@ -3,13 +3,7 @@
 
 #ifndef WIN32
 # include <inttypes.h>
-#if defined (__cplusplus)
-extern "C" {
-#endif
 #else
-#if defined (__cplusplus)
-extern "C" {
-#endif
 typedef signed char int8_t;
 typedef unsigned char uint8_t;
 typedef signed short int16_t;
@@ -55,10 +49,6 @@ typedef int32_t v_char;
 
 #ifndef NULL
 # define NULL 0
-#endif
-
-#if defined (__cplusplus)
-}
 #endif
 
 #endif

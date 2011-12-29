@@ -4,10 +4,6 @@
 
 #include "v_typedefs.h"
 #include "../../platformProject/src/v_platform.h"
-
-#if defined (__cplusplus)
-extern "C" {
-#endif
     
 typedef struct vThreadContextList {
     vThreadContextRef ctx;
@@ -16,6 +12,7 @@ typedef struct vThreadContextList {
 typedef vThreadContextList* vThreadContextListRef;
 
 struct vRuntime {
+    pointer stackTop;
     vHeapRef globals;
     vTLSRef currentContext;
     vThreadContextListRef allContexts;
@@ -49,11 +46,7 @@ struct vRuntime {
     } built_in_types;
 };
 
-vRuntimeRef vRuntimeCreate();
+vRuntimeRef vRuntimeCreate(pointer stackTop);
 void vRuntimeDestroy(vRuntimeRef rt);
-
-#if defined (__cplusplus)
-}
-#endif
 
 #endif

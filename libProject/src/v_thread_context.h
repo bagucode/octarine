@@ -4,10 +4,6 @@
 
 #include "v_typedefs.h"
 
-#if defined (__cplusplus)
-extern "C" {
-#endif
-
 struct vThreadContext {
     vRuntimeRef runtime;
     vHeapRef heap;
@@ -16,9 +12,5 @@ struct vThreadContext {
 vThreadContextRef vThreadContextGetCurrent(vRuntimeRef rt);
 
 extern const vThreadContext v_ctx;
-
-#if defined (__cplusplus)
-}
-#endif
 
 #endif

@@ -10,7 +10,7 @@
 vArrayRef vArrayCreate(vThreadContextRef ctx,
                        vTypeRef elemType,
                        uword num_elements) {
-    return vHeapAllocArray(ctx, ctx->heap, elemType, num_elements);
+    return vHeapAllocArray(ctx, v_false, elemType, num_elements);
 }
 
 pointer vArrayDataPointer(vArrayRef arr) {

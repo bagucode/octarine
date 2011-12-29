@@ -8,7 +8,7 @@
 
 vStringRef vStringCreate(vThreadContextRef ctx, char *utf8) {
     vRuntimeRef rt = ctx->runtime;
-    vStringRef ret = (vStringRef)vHeapAlloc(ctx, ctx->heap, rt->built_in_types.string);
+    vStringRef ret = (vStringRef)vHeapAlloc(ctx, v_false, rt->built_in_types.string);
     ret->str = vNativeStringFromUtf8(utf8, 0);
     return ret;
 }
