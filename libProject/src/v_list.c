@@ -26,8 +26,10 @@ void v_bootstrap_list_init_type(vThreadContextRef ctx) {
 }
 
 vListObjRef vListObjCreate(vThreadContextRef ctx, vObject data) {
-    vListObjRef ret = (vListObjRef)vHeapAlloc(ctx, v_false, ctx->runtime->built_in_types.list);
-    return ret; /* TODO: lots of stuff */
+    vListObjRef ret;
+    ret = (vListObjRef)vHeapAlloc(ctx, v_false, ctx->runtime->built_in_types.list);
+    ret->data = data;
+    return ret;
 }
 
 void vListObjDestroy(vListObjRef lst) {

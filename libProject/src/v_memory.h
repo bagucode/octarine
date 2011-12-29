@@ -22,7 +22,14 @@ void vHeapForceGC(vThreadContextRef ctx, v_bool collectSharedHeap);
 
 vTypeRef vMemoryGetObjectType(vThreadContextRef ctx, vObject obj);
 
-vRootSetRef vMemoryAddRoot(vRootSetRef rootSet, vObject root);
+void vMemoryPushFrame(vThreadContextRef ctx,
+                      pointer frame,
+                      uword numRootsInFrame);
+
+void vMemoryPopFrame(vThreadContextRef ctx);
+
+/* This is a little bit internal right? Invent naming convention? */
+vRootSetRef vMemoryCreateRootSet();
 
 vObject v_bootstrap_object_alloc(vThreadContextRef ctx,
                                  vTypeRef proto_type,

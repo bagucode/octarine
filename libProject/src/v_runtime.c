@@ -123,9 +123,11 @@ vRuntimeRef vRuntimeCreate() {
 	vRuntimeRef rt = (vRuntimeRef)vMalloc(sizeof(vRuntime));
 	vThreadContextRef ctx;
 
+    /* TODO: move thread context creation code to own function and file */
     ctx = (vThreadContextRef)vMalloc(sizeof(vThreadContext));
     ctx->heap = vHeapCreate(v_false, 2000 * 1024);
     ctx->runtime = rt;
+    ctx->roots = vMemoryCreateRootSet();
 
     rt->globals = vHeapCreate(v_true, 2000 * 1024);
     rt->currentContext = vTLSCreate();

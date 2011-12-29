@@ -101,29 +101,50 @@ vHeapRef vHeapCreate(v_bool synchronized, uword gc_threshold) {
     return heap;
 }
 
-#define MAX_ROOTS 1000
+typedef struct vFrameInfo {
+    pointer frame;
+    uword numRoots;
+} vFrameInfo;
+
+#define MAX_FRAMES 500
 struct vRootSet {
     uword numUsed;
-    vObject roots[MAX_ROOTS];
+    vFrameInfo frames[MAX_FRAMES];
     vRootSetRef prev;
 };
 
-static vRootSetRef createRootSet() {
+vRootSetRef vMemoryCreateRootSet() {
     vRootSetRef rootSet = (vRootSetRef)vMalloc(sizeof(vRootSet));
     memset(rootSet, 0, sizeof(vRootSet));
     return rootSet;
 }
 
-vRootSetRef vMemoryAddRoot(vRootSetRef roots, vObject obj) {
+void vMemoryPushFrame(vThreadContextRef ctx,
+                      pointer frame,
+                      uword numRootsInFrame) {
     vRootSetRef newRoots;
-    if(roots->numUsed < MAX_ROOTS) {
-        roots->roots[roots->numUsed++] = obj;
-        return roots;
-    } else {
-        newRoots = createRootSet();
-        newRoots->prev = roots;
-        roots = newRoots;
-        return vMemoryAddRoot(roots, obj);
+    
+    memset(frame, 0, sizeof(pointer) * numRootsInFrame);
+    
+    if(ctx->roots->numUsed < MAX_FRAMES) {
+        ctx->roots->frames[ctx->roots->numUsed].frame = frame;
+        ctx->roots->frames[ctx->roots->numUsed].numRoots = numRootsInFrame;
+        ctx->roots->numUsed++;
+   } else {
+       newRoots = vMemoryCreateRootSet();
+       newRoots->prev = ctx->roots;
+       ctx->roots = newRoots;
+       vMemoryPushFrame(ctx, frame, numRootsInFrame);
+    }
+}
+
+void vMemoryPopFrame(vThreadContextRef ctx) {
+    vRootSetRef prev;
+    ctx->roots->numUsed--;
+    if(ctx->roots->numUsed == 0 && ctx->roots->prev != NULL) {
+        prev = ctx->roots->prev;
+        vFree(ctx->roots);
+        ctx->roots = prev;
     }
 }
 
