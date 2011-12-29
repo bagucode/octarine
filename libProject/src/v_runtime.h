@@ -12,7 +12,6 @@ typedef struct vThreadContextList {
 typedef vThreadContextList* vThreadContextListRef;
 
 struct vRuntime {
-    pointer stackTop;
     vHeapRef globals;
     vTLSRef currentContext;
     vThreadContextListRef allContexts;
@@ -46,7 +45,7 @@ struct vRuntime {
     } built_in_types;
 };
 
-vRuntimeRef vRuntimeCreate(pointer stackTop);
+vRuntimeRef vRuntimeCreate();
 void vRuntimeDestroy(vRuntimeRef rt);
 
 #endif
