@@ -23,6 +23,13 @@ vListObjRef vListObjRemove(vThreadContextRef ctx,
                            vListObjRef lst,
                            vObject data);
 
+/* mutating remove, returns (new) head */
+vListObjRef vListObjRemoveNth(vThreadContextRef ctx,
+                              vListObjRef lst,
+                              uword idx);
+
+v_bool vListObjIsEmpty(vThreadContextRef ctx, vListObjRef lst);
+
 void v_bootstrap_list_init_type(vThreadContextRef ctx);
 
 #endif

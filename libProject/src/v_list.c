@@ -45,11 +45,58 @@ vListObjRef vListObjAddFront(vThreadContextRef ctx,
     return head;
 }
 
+static vListObjRef removeInternal(vListObjRef head, vListObjRef elem, vListObjRef prev) {
+    if(prev == NULL) {
+        /* Removing head. */
+        if(elem->next == NULL) {
+            /* Have to have something to return, so we can never delete the
+             last element. Just set the data pointer to NULL to indicate
+             that the list is empty. */
+            elem->data = NULL;
+        }
+        else {
+            /* Just drop list head. */
+            return elem->next;
+        }
+    }
+    else {
+        /* Removing non-head element. */
+        prev->next = elem->next;
+    }
+    return head;
+}
+
 vListObjRef vListObjRemove(vThreadContextRef ctx,
                           vListObjRef lst,
                           vObject obj) {
-    /* TODO: implement.
-             Need Compare protocol? */
+    /* TODO: implement, need equals function. */
     return lst;
 }
+
+vListObjRef vListObjRemoveNth(vThreadContextRef ctx,
+                              vListObjRef lst,
+                              uword idx) {
+    uword currentIdx = 0;
+    vListObjRef current = lst;
+    vListObjRef prev = NULL;
+    
+    for(; currentIdx < idx && current->next;
+        ++currentIdx, current = current->next) {
+        prev = current;
+    }
+
+    if(currentIdx == idx) {
+        lst = removeInternal(lst, current, prev);
+    } else {
+        /* No such index, what now? */
+    }
+    return lst;
+}
+
+v_bool vListObjIsEmpty(vThreadContextRef ctx, vListObjRef lst) {
+    /* Should really be an error if data is null but not next, right? */
+    return lst->data == NULL && lst->next == NULL;
+}
+
+
 
