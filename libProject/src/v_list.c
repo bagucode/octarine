@@ -39,9 +39,16 @@ void vListObjDestroy(vListObjRef lst) {
 vListObjRef vListObjAddFront(vThreadContextRef ctx,
                              vListObjRef lst,
                              vObject data) {
-    vListObjRef head = (vListObjRef)vHeapAlloc(ctx, v_false, ctx->runtime->built_in_types.list);
-    head->data = data;
-    head->next = lst;
+    vListObjRef head;
+
+    if(lst->data == NULL) {
+        lst->data = data;
+        head = lst;
+    } else {
+        head = (vListObjRef)vHeapAlloc(ctx, v_false, ctx->runtime->built_in_types.list);
+        head->data = data;
+        head->next = lst;
+    }
     return head;
 }
 
