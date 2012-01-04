@@ -6,38 +6,46 @@
 #include "v_array.h"
 #include <memory.h> /* TODO: replace this with some platform function */
 
-typedef uword HeapEntry;
+typedef struct HeapBlock {
+    uword typeRefAndMark;
+    char data[0];
+} HeapBlock;
+typedef HeapBlock *HeapBlockRef;
 
-static v_bool isMarked(HeapEntry entry) {
-    return entry & 1;
+static HeapBlockRef getBlock(vObject obj) {
+    return (HeapBlockRef)(((char*)obj) - sizeof(HeapBlock));
 }
 
-static HeapEntry setMark(HeapEntry entry) {
-    return entry | 1;
+static v_bool isMarked(HeapBlockRef block) {
+    return block->typeRefAndMark & 1;
 }
 
-static HeapEntry clearMark(HeapEntry entry) {
+static void setMark(HeapBlockRef block) {
+    block->typeRefAndMark |= 1;
+}
+
+static void clearMark(HeapBlockRef block) {
 #ifdef VLANG64
-    return entry & 0xFFFFFFFFFFFFFFFE;
+    block->typeRefAndMark &= 0xFFFFFFFFFFFFFFFE;
 #else
-    return entry & 0xFFFFFFFE;
+    block->typeRefAndMark &= 0xFFFFFFFE;
 #endif
 }
 
-static vObject getPointer(HeapEntry entry) {
+static vTypeRef getType(HeapBlockRef block) {
 #ifdef VLANG64
-    return (vObject)(entry & 0xFFFFFFFFFFFFFFFE);
+    return (vTypeRef)(block->typeRefAndMark & 0xFFFFFFFFFFFFFFFE);
 #else
-    return (vObject)(entry & 0xFFFFFFFE);
+    return (vTypeRef)(block->typeRefAndMark & 0xFFFFFFFE);
 #endif
 }
 
-static HeapEntry setPointer(vObject obj) {
-    return (HeapEntry)obj;
+static void setType(HeapBlockRef block, vTypeRef type) {
+    block->typeRefAndMark = (uword)type;
 }
 
-static vTypeRef internalGetType(vObject obj) {
-    return (vTypeRef) (((char*)obj) - sizeof(pointer));
+static vObject getObject(HeapBlockRef block) {
+    return &(block->data[0]);
 }
 
 #define MAX_ENTRIES 100
@@ -46,7 +54,7 @@ static vTypeRef internalGetType(vObject obj) {
 typedef struct HeapRecord {
     uword numFree;
     uword freeList[MAX_ENTRIES];
-    HeapEntry entries[MAX_ENTRIES];
+    HeapBlockRef entries[MAX_ENTRIES];
     struct HeapRecord *prev;
 } HeapRecord;
 
@@ -59,7 +67,7 @@ struct vHeap {
     HeapRecordRef record;
 };
 
-static void addHeapEntry(vHeapRef heap, vObject obj);
+static void addHeapEntry(vHeapRef heap, HeapBlockRef block);
 
 static HeapRecordRef createRecord() {
     HeapRecordRef rec = (HeapRecordRef)vMalloc(sizeof(HeapRecord));
@@ -83,12 +91,12 @@ static void pushFreeEntryIndex(HeapRecordRef record, uword index) {
     record->freeList[record->numFree++] = index;
 }
 
-static v_bool recordEntry(HeapRecordRef record, vObject obj) {
+static v_bool recordEntry(HeapRecordRef record, HeapBlockRef block) {
     uword idx = popFreeEntryIndex(record);
     if(idx == INVALID_INDEX) {
         return v_false;
     }
-    record->entries[idx] = setPointer(obj);
+    record->entries[idx] = block;
     return v_true;
 }
 
@@ -102,7 +110,7 @@ vHeapRef vHeapCreate(v_bool synchronized, uword gc_threshold) {
 }
 
 typedef struct vFrameInfo {
-    pointer frame;
+    vObject* frame;
     uword numRoots;
 } vFrameInfo;
 
@@ -149,15 +157,34 @@ void vMemoryPopFrame(vThreadContextRef ctx) {
 }
 
 static void collectGarbage(vThreadContextRef ctx, v_bool collectSharedHeap) {
-
+    vRootSetRef roots;
+    uword i, j;
+    HeapBlockRef block;
+    vTypeRef type;
+    
     if(collectSharedHeap) {
         /* This thread initiated a collection of the shared heap.
            we need to signal the other threads to stop and then
            wait for them. */
         /* TODO: implement */
+    } else {
+        /* Phase 1, mark. */
+        roots = ctx->roots;
+        while (roots) {
+            for(i = 0; i < roots->numUsed; ++i) {
+                for(j = 0; j < roots->frames[i].numRoots; ++j) {
+                    block = roots->frames[i].frame[j];
+                    setMark(block);
+                    type = getType(block);
+                    /* TODO: recursively trace all fields in the block */
+                }
+            }
+            roots = roots->prev;
+        }
+        
+        /* Phase 2, sweep. */
+        /* TODO */
     }
-    /* TODO: mark all reachable objects here. */
-    /* TODO: perform full or partial sweep here. */
 }
 
 void vHeapForceGC(vThreadContextRef ctx, v_bool collectSharedHeap) {
@@ -195,8 +222,8 @@ static vObject internalAlloc(vThreadContextRef ctx,
                              uword size) {
     vHeapRef heap = sharedAlloc ? ctx->runtime->globals : ctx->heap;
     vObject ret;
-    pointer* tmp;
-    uword allocSize = size + sizeof(pointer);
+    HeapBlockRef block;
+    uword allocSize = size + sizeof(HeapBlock);
     
     if(heap->mutex != NULL) {
         vMutexLock(heap->mutex);
@@ -204,14 +231,11 @@ static vObject internalAlloc(vThreadContextRef ctx,
     
     checkHeapSpace(ctx, sharedAlloc, allocSize); /* TODO: handle out of memory here */
 
-    /* Over-allocate by one pointer size and then use that extra area
-       "in front of" the object to store the type.
-       TODO: This might cause alignment issues on some platforms? Look into that. */
-    tmp = (pointer*)vMalloc(allocSize);
-    ret = &tmp[1];
-    tmp[0] = type == V_T_SELF ? ret : type;
+    block = (HeapBlockRef)vMalloc(allocSize);
+    ret = getObject(block);
+    setType(block, type == V_T_SELF ? ret : type);
     memset(ret, 0, size);
-    addHeapEntry(heap, ret);
+    addHeapEntry(heap, block);
     
     if(heap->mutex != NULL) {
 		vMutexUnlock(heap->mutex);
@@ -251,14 +275,14 @@ vArrayRef vHeapAllocArray(vThreadContextRef ctx,
     return arr;
 }
 
-static void addHeapEntry(vHeapRef heap, vObject obj) {
+static void addHeapEntry(vHeapRef heap, HeapBlockRef block) {
     HeapRecordRef tmp;
     
-    if(recordEntry(heap->record, obj) == v_false) {
+    if(recordEntry(heap->record, block) == v_false) {
         tmp = createRecord();
         tmp->prev = heap->record;
         heap->record = tmp;
-        addHeapEntry(heap, obj);
+        addHeapEntry(heap, block);
     }
 }
 
@@ -286,7 +310,7 @@ void vHeapDestroy(vHeapRef heap) {
 }
 
 vTypeRef vMemoryGetObjectType(vThreadContextRef ctx, vObject obj) {
-    return internalGetType(obj);
+    return getType(getBlock(obj));
 }
 
 
