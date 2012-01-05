@@ -117,7 +117,7 @@ typedef struct vFrameInfo {
 #define MAX_FRAMES 500
 struct vRootSet {
     uword numUsed;
-    vFrameInfo frames[MAX_FRAMES];
+    vFrameInfo frameInfos[MAX_FRAMES];
     vRootSetRef prev;
 };
 
@@ -135,8 +135,8 @@ void vMemoryPushFrame(vThreadContextRef ctx,
     memset(frame, 0, sizeof(pointer) * numRootsInFrame);
     
     if(ctx->roots->numUsed < MAX_FRAMES) {
-        ctx->roots->frames[ctx->roots->numUsed].frame = frame;
-        ctx->roots->frames[ctx->roots->numUsed].numRoots = numRootsInFrame;
+        ctx->roots->frameInfos[ctx->roots->numUsed].frame = frame;
+        ctx->roots->frameInfos[ctx->roots->numUsed].numRoots = numRootsInFrame;
         ctx->roots->numUsed++;
    } else {
        newRoots = vMemoryCreateRootSet();
@@ -156,11 +156,34 @@ void vMemoryPopFrame(vThreadContextRef ctx) {
     }
 }
 
+static void traceAndMark(vThreadContextRef ctx, vObject obj, vTypeRef type) {
+    char* ptr;
+    vFieldRef field;
+    vFieldRef* fields;
+    HeapBlockRef block = NULL;
+    uword i;
+
+    if(vTypeIsObject(ctx, type)) {
+        block = getBlock(obj);
+    }
+    if(block == NULL || isMarked(block) == v_false) {
+        if(block)
+            setMark(block);
+        fields = vArrayDataPointer(type->fields);
+        for(i = 0; type->fields->num_elements; ++i) {
+            field = fields[i];
+            if(!vTypeIsPrimitive(ctx, field->type)) {
+                ptr = ((char*)obj) + field->offset;
+                traceAndMark(ctx, (vObject)ptr, field->type);
+            }
+        }
+    }
+}
+
 static void collectGarbage(vThreadContextRef ctx, v_bool collectSharedHeap) {
     vRootSetRef roots;
     uword i, j;
-    HeapBlockRef block;
-    vTypeRef type;
+    vObject obj;
     
     if(collectSharedHeap) {
         /* This thread initiated a collection of the shared heap.
@@ -172,11 +195,9 @@ static void collectGarbage(vThreadContextRef ctx, v_bool collectSharedHeap) {
         roots = ctx->roots;
         while (roots) {
             for(i = 0; i < roots->numUsed; ++i) {
-                for(j = 0; j < roots->frames[i].numRoots; ++j) {
-                    block = roots->frames[i].frame[j];
-                    setMark(block);
-                    type = getType(block);
-                    /* TODO: recursively trace all fields in the block */
+                for(j = 0; j < roots->frameInfos[i].numRoots; ++j) {
+                    obj = roots->frameInfos[i].frame[j];
+                    traceAndMark(ctx, obj, getType(obj));
                 }
             }
             roots = roots->prev;
