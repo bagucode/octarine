@@ -32,10 +32,6 @@ vListObjRef vListObjCreate(vThreadContextRef ctx, vObject data) {
     return ret;
 }
 
-void vListObjDestroy(vListObjRef lst) {
-    
-}
-
 vListObjRef vListObjAddFront(vThreadContextRef ctx,
                              vListObjRef lst,
                              vObject data) {

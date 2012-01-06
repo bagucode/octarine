@@ -48,13 +48,13 @@ static vObject getObject(HeapBlockRef block) {
     return &(block->data[0]);
 }
 
-#define MAX_ENTRIES 100
+#define MAX_RECORD_ENTRIES 100
 #define INVALID_INDEX 100
 
 typedef struct HeapRecord {
     uword numFree;
-    uword freeList[MAX_ENTRIES];
-    HeapBlockRef entries[MAX_ENTRIES];
+    uword freeList[MAX_RECORD_ENTRIES];
+    HeapBlockRef entries[MAX_RECORD_ENTRIES];
     struct HeapRecord *prev;
 } HeapRecord;
 
@@ -72,10 +72,11 @@ static void addHeapEntry(vHeapRef heap, HeapBlockRef block);
 static HeapRecordRef createRecord() {
     HeapRecordRef rec = (HeapRecordRef)vMalloc(sizeof(HeapRecord));
     uword i;
-    for(i = 0; i < MAX_ENTRIES; ++i) {
+    for(i = 0; i < MAX_RECORD_ENTRIES; ++i) {
         rec->freeList[i] = i;
+        rec->entries[i] = NULL;
     }
-    rec->numFree = MAX_ENTRIES;
+    rec->numFree = MAX_RECORD_ENTRIES;
     rec->prev = NULL;
     return rec;
 }
@@ -163,6 +164,11 @@ static void traceAndMark(vThreadContextRef ctx, vObject obj, vTypeRef type) {
     HeapBlockRef block = NULL;
     uword i;
 
+    /* TODO: for collecting the shared heap, we should check if a root
+     points into the shared heap because we should skip it if it does not.
+     (Because an object in the shared heap cannot point into a thread
+     specific heap)*/
+    
     if(vTypeIsObject(ctx, type)) {
         block = getBlock(obj);
     }
@@ -184,6 +190,9 @@ static void collectGarbage(vThreadContextRef ctx, v_bool collectSharedHeap) {
     vRootSetRef roots;
     uword i, j;
     vObject obj;
+    HeapRecordRef heapRecord;
+    HeapRecordRef prevRecord;
+    HeapBlockRef block;
     
     if(collectSharedHeap) {
         /* This thread initiated a collection of the shared heap.
@@ -192,6 +201,8 @@ static void collectGarbage(vThreadContextRef ctx, v_bool collectSharedHeap) {
         /* TODO: implement */
     } else {
         /* Phase 1, mark. */
+        /* TODO: need to trace from the roots in all threads when doing
+         a collection of the shared heap. */
         roots = ctx->roots;
         while (roots) {
             for(i = 0; i < roots->numUsed; ++i) {
@@ -204,7 +215,29 @@ static void collectGarbage(vThreadContextRef ctx, v_bool collectSharedHeap) {
         }
         
         /* Phase 2, sweep. */
-        /* TODO */
+        /* TODO: When collecting shared heap  */
+        heapRecord = ctx->heap->record;
+        while (heapRecord) {
+            for(i = 0; i < MAX_RECORD_ENTRIES; ++i) {
+                block = heapRecord->entries[i];
+                if(block) {
+                    if(!isMarked(block)) {
+                        vFree(block);
+                        pushFreeEntryIndex(heapRecord, i);
+                        heapRecord->entries[i] = NULL;
+                    } else {
+                        clearMark(block);
+                    }
+                }
+            }
+            prevRecord = heapRecord->prev;
+            if(heapRecord->numFree == MAX_RECORD_ENTRIES
+               && heapRecord->prev != NULL) {
+                vFree(heapRecord);
+            }
+            heapRecord = prevRecord;
+        }
+        ctx->heap->record = heapRecord;
     }
 }
 
