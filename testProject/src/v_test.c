@@ -42,6 +42,10 @@ void testGCAllRetained() {
     vRuntimeDestroy(runtime);
 }
 
+void testGCSomeRetained() {
+    
+}
+
 int main(int argc, char** argv) {
     
     testCreateRuntime();

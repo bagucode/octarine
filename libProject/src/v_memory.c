@@ -368,7 +368,24 @@ vArrayRef v_bootstrap_array_alloc(vThreadContextRef ctx,
 }
 
 void vHeapDestroy(vHeapRef heap) {
-    /* TODO */
+    HeapBlockRef block;
+    HeapRecordRef currentRecord;
+    uword i;
+    
+    currentRecord = heap->record;
+    while (currentRecord) {
+        for(i = 0; i < currentRecord->numBlocks; ++i) {
+            block = currentRecord->blocks[i];
+            vFree(block);
+        }
+        heap->record = currentRecord->prev;
+        vFree(currentRecord);
+        currentRecord = heap->record;
+    }
+    if(heap->mutex) {
+        vMutexDestroy(heap->mutex);
+    }
+    vFree(heap);
 }
 
 vTypeRef vMemoryGetObjectType(vThreadContextRef ctx, vObject obj) {
