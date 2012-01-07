@@ -48,13 +48,11 @@ static vObject getObject(HeapBlockRef block) {
     return &(block->data[0]);
 }
 
-#define MAX_RECORD_ENTRIES 100
-#define INVALID_INDEX 100
+#define MAX_BLOCKS 100
 
 typedef struct HeapRecord {
-    uword numFree;
-    uword freeList[MAX_RECORD_ENTRIES];
-    HeapBlockRef entries[MAX_RECORD_ENTRIES];
+    uword numBlocks;
+    HeapBlockRef blocks[MAX_BLOCKS];
     struct HeapRecord *prev;
 } HeapRecord;
 
@@ -71,33 +69,15 @@ static void addHeapEntry(vHeapRef heap, HeapBlockRef block);
 
 static HeapRecordRef createRecord() {
     HeapRecordRef rec = (HeapRecordRef)vMalloc(sizeof(HeapRecord));
-    uword i;
-    for(i = 0; i < MAX_RECORD_ENTRIES; ++i) {
-        rec->freeList[i] = i;
-        rec->entries[i] = NULL;
-    }
-    rec->numFree = MAX_RECORD_ENTRIES;
-    rec->prev = NULL;
+    memset(rec, 0, sizeof(HeapRecord));
     return rec;
 }
 
-static uword popFreeEntryIndex(HeapRecordRef record) {
-    if(record->numFree == 0) {
-        return INVALID_INDEX;
-    }
-    return record->freeList[--record->numFree];
-}
-
-static void pushFreeEntryIndex(HeapRecordRef record, uword index) {
-    record->freeList[record->numFree++] = index;
-}
-
 static v_bool recordEntry(HeapRecordRef record, HeapBlockRef block) {
-    uword idx = popFreeEntryIndex(record);
-    if(idx == INVALID_INDEX) {
+    if(record->numBlocks == MAX_BLOCKS) {
         return v_false;
     }
-    record->entries[idx] = block;
+    record->blocks[record->numBlocks++] = block;
     return v_true;
 }
 
@@ -190,8 +170,9 @@ static void collectGarbage(vThreadContextRef ctx, v_bool collectSharedHeap) {
     vRootSetRef roots;
     uword i, j;
     vObject obj;
-    HeapRecordRef heapRecord;
-    HeapRecordRef prevRecord;
+    HeapRecordRef newRecord;
+    HeapRecordRef currentRecord;
+    HeapRecordRef tmpRecord;
     HeapBlockRef block;
     
     if(collectSharedHeap) {
@@ -215,29 +196,28 @@ static void collectGarbage(vThreadContextRef ctx, v_bool collectSharedHeap) {
         }
         
         /* Phase 2, sweep. */
-        /* TODO: When collecting shared heap  */
-        heapRecord = ctx->heap->record;
-        while (heapRecord) {
-            for(i = 0; i < MAX_RECORD_ENTRIES; ++i) {
-                block = heapRecord->entries[i];
-                if(block) {
-                    if(!isMarked(block)) {
-                        vFree(block);
-                        pushFreeEntryIndex(heapRecord, i);
-                        heapRecord->entries[i] = NULL;
-                    } else {
-                        clearMark(block);
+        newRecord = createRecord();
+        currentRecord = ctx->heap->record;
+        while (currentRecord) {
+            for(i = 0; i < currentRecord->numBlocks; ++i) {
+                block = currentRecord->blocks[i];
+                if(!isMarked(block)) {
+                    vFree(block);
+                } else {
+                    clearMark(block);
+                    if(recordEntry(newRecord, block) == v_false) {
+                        tmpRecord = newRecord;
+                        newRecord = createRecord();
+                        newRecord->prev = tmpRecord;
+                        recordEntry(newRecord, block);
                     }
                 }
             }
-            prevRecord = heapRecord->prev;
-            if(heapRecord->numFree == MAX_RECORD_ENTRIES
-               && heapRecord->prev != NULL) {
-                vFree(heapRecord);
-            }
-            heapRecord = prevRecord;
+            tmpRecord = currentRecord;
+            currentRecord = currentRecord->prev;
+            vFree(tmpRecord);
         }
-        ctx->heap->record = heapRecord;
+        ctx->heap->record = newRecord;
     }
 }
 
