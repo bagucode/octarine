@@ -143,10 +143,11 @@ void vMemoryPopFrame(vThreadContextRef ctx) {
 }
 
 static void traceAndMark(vThreadContextRef ctx, vObject obj, vTypeRef type) {
-    char* ptr;
+    vObject fieldPtr;
     vFieldRef field;
     vFieldRef* fields;
-    HeapBlockRef block = NULL;
+    vTypeRef fieldType;
+    HeapBlockRef block;
     uword i;
 
     /* TODO: for collecting the shared heap, we should check if a root
@@ -154,18 +155,31 @@ static void traceAndMark(vThreadContextRef ctx, vObject obj, vTypeRef type) {
      (Because an object in the shared heap cannot point into a thread
      specific heap)*/
     
-    if(vTypeIsObject(ctx, type)) {
-        block = getBlock(obj);
-    }
-    if(block == NULL || isMarked(block) == v_false) {
-        if(block)
-            setMark(block);
-        fields = vArrayDataPointer(type->fields);
-        for(i = 0; type->fields->num_elements; ++i) {
-            field = fields[i];
-            if(!vTypeIsPrimitive(ctx, field->type)) {
-                ptr = ((char*)obj) + field->offset;
-                traceAndMark(ctx, (vObject)ptr, field->type);
+    if(obj) {
+        block = NULL;
+        if(vTypeIsObject(ctx, type)) {
+            block = getBlock(obj);
+        }
+        if(block == NULL || isMarked(block) == v_false) {
+            if(block) {
+                setMark(block);
+            }
+            fields = vArrayDataPointer(type->fields);
+            for(i = 0; i < type->fields->num_elements; ++i) {
+                field = fields[i];
+                if(!vTypeIsPrimitive(ctx, field->type)) {
+                    fieldPtr = *((vObject*)(((char*)obj) + field->offset));
+                    if(fieldPtr) {
+                        /* if the type is Any we have to get the actual runtime
+                         type of the object here */
+                        if(field->type == ctx->runtime->built_in_types.any) {
+                            fieldType = getType(getBlock(fieldPtr));
+                        } else {
+                            fieldType = field->type;
+                        }
+                        traceAndMark(ctx, fieldPtr, fieldType);
+                    }
+                }
             }
         }
     }
@@ -194,7 +208,8 @@ static void collectGarbage(vThreadContextRef ctx, v_bool collectSharedHeap) {
             for(i = 0; i < roots->numUsed; ++i) {
                 for(j = 0; j < roots->frameInfos[i].numRoots; ++j) {
                     obj = roots->frameInfos[i].frame[j];
-                    traceAndMark(ctx, obj, getType(obj));
+                    block = getBlock(obj);
+                    traceAndMark(ctx, obj, getType(block));
                 }
             }
             roots = roots->prev;

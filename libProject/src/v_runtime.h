@@ -45,7 +45,8 @@ struct vRuntime {
     } built_in_types;
 };
 
-vRuntimeRef vRuntimeCreate();
+vRuntimeRef vRuntimeCreate(uword sharedHeapInitialSize,
+                           uword threadHeapInitialSize);
 void vRuntimeDestroy(vRuntimeRef rt);
 
 #endif

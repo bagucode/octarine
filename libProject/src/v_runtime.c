@@ -119,17 +119,18 @@ static void init_built_in_types(vThreadContextRef ctx) {
     v_bootstrap_map_init_type(ctx);
 }
 
-vRuntimeRef vRuntimeCreate() {
+vRuntimeRef vRuntimeCreate(uword sharedHeapInitialSize,
+                           uword threadHeapInitialSize) {
 	vRuntimeRef rt = (vRuntimeRef)vMalloc(sizeof(vRuntime));
 	vThreadContextRef ctx;
 
     /* TODO: move thread context creation code to own function and file */
     ctx = (vThreadContextRef)vMalloc(sizeof(vThreadContext));
-    ctx->heap = vHeapCreate(v_false, 2000 * 1024);
+    ctx->heap = vHeapCreate(v_false, threadHeapInitialSize);
     ctx->runtime = rt;
     ctx->roots = vMemoryCreateRootSet();
 
-    rt->globals = vHeapCreate(v_true, 2000 * 1024);
+    rt->globals = vHeapCreate(v_true, sharedHeapInitialSize);
     rt->currentContext = vTLSCreate();
     vTLSSet(rt->currentContext, ctx);
     rt->allContexts = (vThreadContextListRef)vMalloc(sizeof(vThreadContextList));
