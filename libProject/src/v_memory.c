@@ -48,6 +48,11 @@ static vObject getObject(HeapBlockRef block) {
     return &(block->data[0]);
 }
 
+static uword getSize(HeapBlockRef block) {
+    vTypeRef type = getType(block);
+    return sizeof(HeapBlock) + type->size;
+}
+
 #define MAX_BLOCKS 100
 
 typedef struct HeapRecord {
@@ -202,6 +207,7 @@ static void collectGarbage(vThreadContextRef ctx, v_bool collectSharedHeap) {
             for(i = 0; i < currentRecord->numBlocks; ++i) {
                 block = currentRecord->blocks[i];
                 if(!isMarked(block)) {
+                    ctx->heap->currentSize -= getSize(block);
                     vFree(block);
                 } else {
                     clearMark(block);
@@ -244,7 +250,7 @@ static v_bool checkHeapSpace(vThreadContextRef ctx,
         collectGarbage(ctx, checkSharedHeap);
 
         if((heap->gcThreshold - heap->currentSize) < size) {
-            return v_false; /* Grow? */
+            return v_false;
         }
     }
     return v_true;
@@ -263,13 +269,20 @@ static vObject internalAlloc(vThreadContextRef ctx,
         vMutexLock(heap->mutex);
     }
     
-    checkHeapSpace(ctx, sharedAlloc, allocSize); /* TODO: handle out of memory here */
+    if(checkHeapSpace(ctx, sharedAlloc, allocSize) == v_false) {
+        /* Just expand blindly for now. Should really check if
+         the system is out of memory and report some error if
+         that is the case. */
+        heap->gcThreshold *= 2;
+    }
 
     block = (HeapBlockRef)vMalloc(allocSize);
     ret = getObject(block);
     setType(block, type == V_T_SELF ? ret : type);
     memset(ret, 0, size);
     addHeapEntry(heap, block);
+    
+    heap->currentSize += allocSize;
     
     if(heap->mutex != NULL) {
 		vMutexUnlock(heap->mutex);
