@@ -153,7 +153,10 @@ static void traceAndMark(vThreadContextRef ctx, vObject obj, vTypeRef type) {
     /* TODO: for collecting the shared heap, we should check if a root
      points into the shared heap because we should skip it if it does not.
      (Because an object in the shared heap cannot point into a thread
-     specific heap)*/
+     specific heap)
+     Likewise, thread local roots that point into the shared heap need
+     to be ignored when marking a thread local heap because there will
+     be no sweep in the shared heap to reset the marks. */
     
     if(obj) {
         block = NULL;
@@ -177,6 +180,8 @@ static void traceAndMark(vThreadContextRef ctx, vObject obj, vTypeRef type) {
                         } else {
                             fieldType = field->type;
                         }
+                        /* TODO: make this iterative instead of recursive.
+                         It segfaults now if the object graph is too large. */
                         traceAndMark(ctx, fieldPtr, fieldType);
                     }
                 }
