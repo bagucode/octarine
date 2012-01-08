@@ -122,13 +122,7 @@ static void init_built_in_types(vThreadContextRef ctx) {
 vRuntimeRef vRuntimeCreate(uword sharedHeapInitialSize,
                            uword threadHeapInitialSize) {
 	vRuntimeRef rt = (vRuntimeRef)vMalloc(sizeof(vRuntime));
-	vThreadContextRef ctx;
-
-    /* TODO: move thread context creation code to own function and file */
-    ctx = (vThreadContextRef)vMalloc(sizeof(vThreadContext));
-    ctx->heap = vHeapCreate(v_false, threadHeapInitialSize);
-    ctx->runtime = rt;
-    ctx->roots = vMemoryCreateRootSet();
+	vThreadContextRef ctx = vThreadContextCreate(rt, threadHeapInitialSize);
 
     rt->globals = vHeapCreate(v_true, sharedHeapInitialSize);
     rt->currentContext = vTLSCreate();
@@ -148,8 +142,7 @@ void vRuntimeDestroy(vRuntimeRef rt) {
 	vThreadContextListRef next;
     while(lst) {
 		next = lst->next;
-        vHeapDestroy(lst->ctx->heap);
-        vFree(lst->ctx);
+        vThreadContextDestroy(lst->ctx);
         vFree(lst);
 		lst = next;
     }

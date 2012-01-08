@@ -113,6 +113,15 @@ vRootSetRef vMemoryCreateRootSet() {
     return rootSet;
 }
 
+void vMemoryDeleteRootSet(vRootSetRef roots) {
+    vRootSetRef tmp;
+    while(roots) {
+        tmp = roots->prev;
+        vFree(roots);
+        roots = tmp;
+    }
+}
+
 void vMemoryPushFrame(vThreadContextRef ctx,
                       pointer frame,
                       uword numRootsInFrame) {

@@ -31,6 +31,8 @@ void vMemoryPopFrame(vThreadContextRef ctx);
 /* This is a little bit internal right? Invent naming convention? */
 vRootSetRef vMemoryCreateRootSet();
 
+void vMemoryDeleteRootSet(vRootSetRef roots);
+
 vObject v_bootstrap_object_alloc(vThreadContextRef ctx,
                                  vTypeRef proto_type,
                                  uword size);
