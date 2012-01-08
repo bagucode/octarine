@@ -13,9 +13,9 @@ vStringRef vStringCreate(vThreadContextRef ctx, char *utf8) {
     return ret;
 }
 
-void vStringDestroy(vThreadContextRef ctx, vStringRef str) {
+static void finalizer(vObject obj) {
+    vStringRef str = (vStringRef)obj;
     vNativeStringDestroy(str->str);
-    // Don't deallocate here, this is a finalizer called from the GC. I think.
 }
 
 int vStringCompare(vStringRef x, vStringRef y) {
@@ -33,4 +33,5 @@ void v_bootstrap_string_init_type(vThreadContextRef ctx) {
     ctx->runtime->built_in_types.string->kind = V_T_OBJECT;
     ctx->runtime->built_in_types.string->name = v_bootstrap_string_create(ctx, "String");
     ctx->runtime->built_in_types.string->size = sizeof(vString);
+    ctx->runtime->built_in_types.string->finalizer = finalizer;
 }

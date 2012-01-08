@@ -18,6 +18,12 @@ struct vField {
 struct vType {
     vStringRef name;
     vArrayRef fields;
+    /* TODO: how to use this from the language?
+     It should probably be changed to a vFunction
+     but ... we can't allow overloads? There has to 
+     be a single signature that has no return value
+     and takes only an Any as parameter. */
+    vFinalizer finalizer;
     uword size;
     u8 kind;
 };

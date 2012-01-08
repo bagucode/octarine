@@ -176,22 +176,25 @@ static void traceAndMark(vThreadContextRef ctx, vObject obj, vTypeRef type) {
             if(block) {
                 setMark(block);
             }
-            fields = vArrayDataPointer(type->fields);
-            for(i = 0; i < type->fields->num_elements; ++i) {
-                field = fields[i];
-                if(!vTypeIsPrimitive(ctx, field->type)) {
-                    fieldPtr = *((vObject*)(((char*)obj) + field->offset));
-                    if(fieldPtr) {
-                        /* if the type is Any we have to get the actual runtime
-                         type of the object here */
-                        if(field->type == ctx->runtime->built_in_types.any) {
-                            fieldType = getType(getBlock(fieldPtr));
-                        } else {
-                            fieldType = field->type;
+            /* Some types don't have fields */
+            if(type->fields) {
+                fields = vArrayDataPointer(type->fields);
+                for(i = 0; i < type->fields->num_elements; ++i) {
+                    field = fields[i];
+                    if(!vTypeIsPrimitive(ctx, field->type)) {
+                        fieldPtr = *((vObject*)(((char*)obj) + field->offset));
+                        if(fieldPtr) {
+                            /* if the type is Any we have to get the actual runtime
+                             type of the object here */
+                            if(field->type == ctx->runtime->built_in_types.any) {
+                                fieldType = getType(getBlock(fieldPtr));
+                            } else {
+                                fieldType = field->type;
+                            }
+                            /* TODO: make this iterative instead of recursive.
+                             It segfaults now if the object graph is too large. */
+                            traceAndMark(ctx, fieldPtr, fieldType);
                         }
-                        /* TODO: make this iterative instead of recursive.
-                         It segfaults now if the object graph is too large. */
-                        traceAndMark(ctx, fieldPtr, fieldType);
                     }
                 }
             }
@@ -207,6 +210,7 @@ static void collectGarbage(vThreadContextRef ctx, v_bool collectSharedHeap) {
     HeapRecordRef currentRecord;
     HeapRecordRef tmpRecord;
     HeapBlockRef block;
+    vTypeRef type;
     
     if(collectSharedHeap) {
         /* This thread initiated a collection of the shared heap.
@@ -237,6 +241,13 @@ static void collectGarbage(vThreadContextRef ctx, v_bool collectSharedHeap) {
                 block = currentRecord->blocks[i];
                 if(!isMarked(block)) {
                     ctx->heap->currentSize -= getSize(block);
+                    /* Call finalizer if there is one.
+                     TODO: make sure the finalizers don't allocate memory
+                     or resurrect objects */
+                    type = getType(block);
+                    if(type->finalizer) {
+                        type->finalizer(getObject(block));
+                    }
                     vFree(block);
                 } else {
                     clearMark(block);

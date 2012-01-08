@@ -1,6 +1,7 @@
 #include "v_test.h"
 #include "../../libProject/src/v_runtime.h"
 #include "../../libProject/src/v_list.h"
+#include "../../libProject/src/v_string.h"
 #include "../../libProject/src/v_memory.h"
 #include <memory.h>
 
@@ -42,8 +43,14 @@ void testGCAllRetained() {
     vRuntimeDestroy(runtime);
 }
 
-void testGCSomeRetained() {
+void testGCFinalizer() {
+    vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024);
+    vThreadContextRef ctx = runtime->allContexts->ctx;
     
+    vStringCreate(ctx, "Test string");
+    vHeapForceGC(ctx, v_false);
+    
+    vRuntimeDestroy(runtime);
 }
 
 int main(int argc, char** argv) {
@@ -51,6 +58,7 @@ int main(int argc, char** argv) {
     testCreateRuntime();
     testGCAllGarbage();
     testGCAllRetained();
+    testGCFinalizer();
     
 	return 0;
 }

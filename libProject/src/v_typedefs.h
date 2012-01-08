@@ -32,6 +32,8 @@ typedef vNothing* vNothingRef;
 
 typedef void* vObject;
 
+typedef void (*vFinalizer)(vObject obj);
+
 typedef struct vParameter vParameter;
 typedef vParameter* vParameterRef;
 
