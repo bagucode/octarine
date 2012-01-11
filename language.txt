@@ -120,52 +120,76 @@ hello ; regular symbol, needs to be quoted to not be evaluated
 
 ;; Built in special forms (functions or operators that do not obey the normal language rules)
 
-(ns ...) ; changes the current namespace, creating a new one if the specified namespace did not exist
+;; changes the current namespace, creating a new one if the specified namespace did not exist
+(ns ...)
 
-(quote ...) ; prevents evaluation
+;; prevents evaluation
+(quote ...)
 
-(quasi-quote ...) ; like quote but is used for creating code templates, primarily for macros
+;; like quote but is used for creating code templates, primarily for macros
+(quasi-quote ...)
 
-(unquote ...) ; use inside a quasi-quoted expression to enable evaluation of a subexpression
+;; use inside a quasi-quoted expression to enable evaluation of a subexpression
+(unquote ...)
 
-(unquote-splicing ...) ; like unquote, but must unquote a sequence and the elements of the sequence are inserted in place of the unquote-splicing expression
+;; like unquote, but must unquote a sequence and the elements of the
+;; sequence are inserted in place of the unquote-splicing expression
+(unquote-splicing ...)
 
-(def ...) ; binds a value to a symbol in the current namespace and thread
+;; binds a value to a symbol in the current namespace and thread
+(def ...)
 
-(defshared ...) ; binds a value to a symbol in the current namespace, shared by all threads. Only immutable values and reentrant or pure functions are legal arguments
+;; binds a value to a symbol in the current namespace, shared by all threads.
+;; Only immutable values and reentrant or pure functions are legal arguments
+(defshared ...)
 
-(with-meta ...) ; modifies the meta data of an object
+;; modifies the meta data of an object
+(with-meta ...)
 
-(with-effects ...) ; Like with-meta but contains information about side effects and is "contagious"
+;; Like with-meta but contains information about side effects and is "contagious"
+(with-effects ...)
 
-(without-effects ...) ; makes it illegal for a set of specified effects to occurr within the without-effects expression. This is checked at compile or runtime depending on available information
+;; makes it illegal for a set of specified effects to occurr within
+;; the without-effects expression. This is checked at compile or runtime
+;; depending on available information
+(without-effects ...)
 
-(if ...) ; regular old if statement
+;; regular old if statement
+(if ...)
 
-(do ...) ; evaluates an arbitrary number of subexpressions in sequence (presumably for side effects) and returns the result of the last one
+;; evaluates an arbitrary number of subexpressions in sequence (presumably
+;; for side effects) and returns the result of the last one
+(do ...)
 
-(let ...) ; locally binds values to symbols
+;; locally binds values to symbols
+(let ...)
 
-(fn ...) ; creates a function
+;; creates a function
+(fn ...)
 
-(get ...) ; gets the value of a field out of an object or structure. Can be overloaded to "get" other things too, like values out of hash tables
+;; gets the value of a field out of an object or structure. Can be overloaded
+;; to "get" other things too, like values out of hash tables
+(get ...)
 
-(set! ...) ; sets the value of a field in an object or structure. Re. overloading, see get. The ! is naming convention for mutating functions
+;; sets the value of a field in an object or structure. Re. overloading,
+;; see get. The ! is naming convention for mutating functions
+(set! ...)
 
-(type ...) ; constructs a new type
+;; constructs a new type
+(type ...)
 
-(new ...) ; allocates a new instance of a type (object or boxed struct). Use 'shared as first argument to allocate on the shared heap (only legal for immutable data)
+;; allocates a new instance of a type (object or boxed struct). Use
+;; :shared as first argument to allocate on the shared heap (only legal for immutable data)
+(new ...)
 
 ;;; Huh, where is defmacro!?
 ;;; Macros us the fn form just like functions but have an additional entry in their meta data that marks the function as a macro.
-
 
 ;;; TODO:
 ;;; Some special form for communication between threads?
 ;;; Or is that just a set of regular built in functions? Probably.
 
-
-;;; Syntactic sugar
+;;; Syntactic sugar (keep to a minimum, can cause cancer of the semicolon)
 ;;; The reader has some syntactic sugar for commonly used built in special forms
 
 ^{:meta :data} hello ; becomes (with-meta hello {:meta :data})
