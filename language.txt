@@ -142,7 +142,7 @@ hello ; A symbol with no type specified, the type will be Any or inferred
 
 (type ...) ; constructs a new type
 
-(new ...) ; allocates a new instance of a type (object or boxed struct). Allocations are always thread local initially, defshared moves the objects to the shared heap
+(new ...) ; allocates a new instance of a type (object or boxed struct). Use 'shared as first argument to allocate on the shared heap (only legal for immutable data)
 
 ;;; Huh, where is defmacro!?
 ;;; Macros us the fn form just like functions but have an additional entry in their meta data that marks the function as a macro.
