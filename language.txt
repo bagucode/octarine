@@ -67,6 +67,18 @@ hello ; A symbol with no type specified, the type will be Any or inferred
 ;;; There is no literal syntax for pointers.
 ;;; The type name for pointers is 'pointer'.
 
+;;; Symbols
+;;; A symbol is simply that, a symbol.
+;;; There are two types of symbols, regular symbols and keywords.
+;;; A regular symbol is the classic lisp symbol that is used when
+;;; binding values. The keyword is stolen from Clojure and is a
+;;; symbol that always evaluates to itself (cannot be used in bindings)
+;;; this is convenient in places where you would use a quoted symbol
+;;; in traditional lisps to just get a unique value. E.g. for a hash key.
+
+hello ; regular symbol, needs to be quoted to not be evaluated
+:hello ; keyword
+
 ;;; Built in collection types
 
 ;;; Arrays
@@ -156,9 +168,9 @@ hello ; A symbol with no type specified, the type will be Any or inferred
 ;;; Syntactic sugar
 ;;; The reader has some syntactic sugar for commonly used built in special forms
 
-^{'meta 'data} hello ; becomes (with-meta hello {'meta 'data})
+^{:meta :data} hello ; becomes (with-meta hello {:meta :data})
 
-^String hello ; becomes (with-meta hello {'type vlang/String})
+^String hello ; becomes (with-meta hello {:type vlang/String})
 
 'hello ; becomes (quote hello)
 
