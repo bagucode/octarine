@@ -31,6 +31,7 @@ struct vType {
 v_bool vTypeIsPrimitive(vThreadContextRef ctx, vTypeRef t);
 v_bool vTypeIsStruct(vThreadContextRef ctx, vTypeRef t);
 v_bool vTypeIsObject(vThreadContextRef ctx, vTypeRef t);
+v_bool vTypeEquals(vThreadContextRef ctx, vTypeRef t, vObject other);
 
 void v_bootstrap_type_init_type(vThreadContextRef ctx);
 void v_bootstrap_type_init_field(vThreadContextRef ctx);

@@ -11,16 +11,18 @@ struct vParameter {
 
 struct vSignature {
     vArrayRef returns; /* array of vType */
-    vArrayRef parameters; /* array of vParameter (besides thread context) */
+    vArrayRef parameters; /* array of vParameter */
 };
 
-int vSignatureCompare(vSignatureRef sig1, vSignatureRef sig2);
+v_bool vSignatureEquals(vThreadContextRef ctx,
+                        vSignatureRef sig1,
+                        vSignatureRef sig2);
 
 struct vFunction {
-    vStringRef doc_string;
-    vArrayRef meta_data; /* array of Keyword or Symbol. Or do we want an Effect type? */
+    vStringRef docString;
+    vArrayRef metaData; /* array of Keyword or Symbol. Or do we want an Effect type? */
     vArrayRef instructions;
-    pointer native_code;
+    pointer nativeCode;
 };
 
 struct vClosure {

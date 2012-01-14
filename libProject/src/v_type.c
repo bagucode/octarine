@@ -95,6 +95,20 @@ void v_bootstrap_type_init_field(vThreadContextRef ctx) {
     fields[2]->type = ctx->runtime->built_in_types.u32;
 }
 
+v_bool vTypeEquals(vThreadContextRef ctx, vTypeRef t, vObject other) {
+    /* Types are only equal if they are the same type */
+    return t == other;
+}
+
 const u8 V_T_OBJECT = 0;
 const u8 V_T_STRUCT = 1;
 const vTypeRef V_T_SELF = NULL;
+
+
+
+
+
+
+
+
+
