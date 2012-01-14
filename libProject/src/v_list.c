@@ -36,26 +36,31 @@ vListObjRef vListObjAddFront(vThreadContextRef ctx,
                              vListObjRef lst,
                              vObject data) {
     vListObjRef head;
-
-    if(lst->data == NULL) {
-        lst->data = data;
-        head = lst;
-    } else {
-        head = (vListObjRef)vHeapAlloc(ctx, v_false, ctx->runtime->built_in_types.list);
-        head->data = data;
-        head->next = lst;
-    }
+    head = (vListObjRef)vHeapAlloc(ctx, v_false, ctx->runtime->built_in_types.list);
+    head->data = data;
+    head->next = lst;
     return head;
 }
 
-static vListObjRef removeInternal(vListObjRef head, vListObjRef elem, vListObjRef prev) {
+static vListObjRef removeInternal(vThreadContextRef ctx,
+                                  vListObjRef head,
+                                  vListObjRef elem,
+                                  vListObjRef prev) {
+    vListObjRef oldTmp;
+    vListObjRef newHead;
+    vListObjRef newTmp;
     if(prev == NULL) {
         /* Removing head. */
         if(elem->next == NULL) {
             /* Have to have something to return, so we can never delete the
-             last element. Just set the data pointer to NULL to indicate
-             that the list is empty. */
-            elem->data = NULL;
+             last element. If it is empty already, just return it. Otherwise
+             return a new empty element. */
+            if(elem->data == NULL) {
+                return elem;
+            }
+            else {
+                return vListObjCreate(ctx, NULL);
+            }
         }
         else {
             /* Just drop list head. */
@@ -63,10 +68,21 @@ static vListObjRef removeInternal(vListObjRef head, vListObjRef elem, vListObjRe
         }
     }
     else {
-        /* Removing non-head element. */
+        /* Removing non-head element. Have to duplicate the list up to the
+         point where the element to remove is. */
+        newHead = vListObjCreate(ctx, head->data);
+        prev = newHead;
+        oldTmp = head->next;
+        while (oldTmp != elem) {
+            newTmp = vListObjCreate(ctx, oldTmp->data);
+            prev->next = newTmp;
+            prev = newTmp;
+            oldTmp = oldTmp->next;
+        }
+        /* Skip past elem in new list */
         prev->next = elem->next;
+        return newHead;
     }
-    return head;
 }
 
 vListObjRef vListObjRemove(vThreadContextRef ctx,
@@ -89,10 +105,9 @@ vListObjRef vListObjRemoveNth(vThreadContextRef ctx,
     }
 
     if(currentIdx == idx) {
-        lst = removeInternal(lst, current, prev);
-    } else {
-        /* No such index, what now? */
+        lst = removeInternal(ctx, lst, current, prev);
     }
+    /* If the index is not found, we don't "change" the list. */
     return lst;
 }
 
