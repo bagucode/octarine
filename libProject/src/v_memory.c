@@ -186,7 +186,7 @@ static void traceAndMark(vThreadContextRef ctx, vObject obj, vTypeRef type) {
                         if(fieldPtr) {
                             /* if the type is Any we have to get the actual runtime
                              type of the object here */
-                            if(field->type == ctx->runtime->built_in_types.any) {
+                            if(field->type == ctx->runtime->builtInTypes.any) {
                                 fieldType = getType(getBlock(fieldPtr));
                             } else {
                                 fieldType = field->type;
@@ -356,7 +356,7 @@ vArrayRef vHeapAllocArray(vThreadContextRef ctx,
         size += elementType->size * numElements;
     }
     
-    arr = (vArrayRef)internalAlloc(ctx, useSharedHeap, ctx->runtime->built_in_types.array, size);
+    arr = (vArrayRef)internalAlloc(ctx, useSharedHeap, ctx->runtime->builtInTypes.array, size);
     arr->element_type = elementType;
     arr->num_elements = numElements;
     return arr;
@@ -386,7 +386,7 @@ vArrayRef v_bootstrap_array_alloc(vThreadContextRef ctx,
     vArrayRef arr;
     uword size = sizeof(vArray) + num_elements * elem_size;
     
-    arr = (vArrayRef)internalAlloc(ctx, v_true, ctx->runtime->built_in_types.array, size);
+    arr = (vArrayRef)internalAlloc(ctx, v_true, ctx->runtime->builtInTypes.array, size);
     arr->element_type = proto_elem_type;
     arr->num_elements = num_elements;
     return arr;

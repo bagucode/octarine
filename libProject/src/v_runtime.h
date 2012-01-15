@@ -42,7 +42,9 @@ struct vRuntime {
         vTypeRef nothing;
         vTypeRef any;
         vTypeRef map;
-    } built_in_types;
+    } builtInTypes;
+    struct {
+    } builtInFunctions;
 };
 
 vRuntimeRef vRuntimeCreate(uword sharedHeapInitialSize,

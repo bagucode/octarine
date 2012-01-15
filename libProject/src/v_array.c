@@ -29,9 +29,9 @@ vArrayRef v_bootstrap_array_create(vThreadContextRef ctx,
 }
 
 void v_bootstrap_array_init_type(vThreadContextRef ctx) {
-    ctx->runtime->built_in_types.array->fields = NULL;
-    ctx->runtime->built_in_types.array->kind = V_T_OBJECT;
-    ctx->runtime->built_in_types.array->name = v_bootstrap_string_create(ctx, "Array");
-    ctx->runtime->built_in_types.array->size = sizeof(vArray);
+    ctx->runtime->builtInTypes.array->fields = NULL;
+    ctx->runtime->builtInTypes.array->kind = V_T_OBJECT;
+    ctx->runtime->builtInTypes.array->name = v_bootstrap_string_create(ctx, "Array");
+    ctx->runtime->builtInTypes.array->size = sizeof(vArray);
 }
 

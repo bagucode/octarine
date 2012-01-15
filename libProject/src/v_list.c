@@ -9,25 +9,25 @@
 
 void v_bootstrap_list_init_type(vThreadContextRef ctx) {
     vFieldRef *fields;
-    ctx->runtime->built_in_types.list->fields = v_bootstrap_type_create_field_array(ctx, 2);
-    ctx->runtime->built_in_types.list->kind = V_T_OBJECT;
-    ctx->runtime->built_in_types.list->name = v_bootstrap_string_create(ctx, "AnyList");
-    ctx->runtime->built_in_types.list->size = sizeof(vListObj);
+    ctx->runtime->builtInTypes.list->fields = v_bootstrap_type_create_field_array(ctx, 2);
+    ctx->runtime->builtInTypes.list->kind = V_T_OBJECT;
+    ctx->runtime->builtInTypes.list->name = v_bootstrap_string_create(ctx, "AnyList");
+    ctx->runtime->builtInTypes.list->size = sizeof(vListObj);
 
-    fields = (vFieldRef*)ctx->runtime->built_in_types.list->fields->data;
+    fields = (vFieldRef*)ctx->runtime->builtInTypes.list->fields->data;
     
     fields[0]->name = v_bootstrap_string_create(ctx, "data");
     fields[0]->offset = offsetof(vListObj, data);
-    fields[0]->type = ctx->runtime->built_in_types.any;
+    fields[0]->type = ctx->runtime->builtInTypes.any;
 
     fields[1]->name = v_bootstrap_string_create(ctx, "next");
     fields[1]->offset = offsetof(vListObj, next);
-    fields[1]->type = ctx->runtime->built_in_types.list;
+    fields[1]->type = ctx->runtime->builtInTypes.list;
 }
 
 vListObjRef vListObjCreate(vThreadContextRef ctx, vObject data) {
     vListObjRef ret;
-    ret = (vListObjRef)vHeapAlloc(ctx, v_false, ctx->runtime->built_in_types.list);
+    ret = (vListObjRef)vHeapAlloc(ctx, v_false, ctx->runtime->builtInTypes.list);
     ret->data = data;
     return ret;
 }
@@ -36,7 +36,7 @@ vListObjRef vListObjAddFront(vThreadContextRef ctx,
                              vListObjRef lst,
                              vObject data) {
     vListObjRef head;
-    head = (vListObjRef)vHeapAlloc(ctx, v_false, ctx->runtime->built_in_types.list);
+    head = (vListObjRef)vHeapAlloc(ctx, v_false, ctx->runtime->builtInTypes.list);
     head->data = data;
     head->next = lst;
     return head;
