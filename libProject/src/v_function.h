@@ -24,9 +24,18 @@ v_bool vSignatureEquals(vThreadContextRef ctx,
 
 struct vFunctionOverload {
     vSignatureRef signature;
+
     /* TODO: Change sideEffects to a map? */
-    vArrayRef sideEffects; 
+    vArrayRef sideEffects;
+
+    /* instructions is an array of vObjects that define the implementation
+     of the function overload. It is used by eval implementations that do
+     not generate native code. */
     vArrayRef instructions;
+
+    /* If nativeCode is not NULL then there exists a machine-native
+     implementation for this particular function overload and nativeCode
+     points to the address of that function. */
     pointer nativeCode;
 };
 
