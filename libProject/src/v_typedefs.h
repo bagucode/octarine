@@ -9,6 +9,9 @@ typedef vArray* vArrayRef;
 typedef struct vClosure vClosure;
 typedef vClosure* vClosureRef;
 
+typedef struct vError vError;
+typedef vError* vErrorRef;
+
 typedef struct vField vField;
 typedef vField* vFieldRef;
 
