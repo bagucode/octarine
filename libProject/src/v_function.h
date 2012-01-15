@@ -20,7 +20,8 @@ v_bool vSignatureEquals(vThreadContextRef ctx,
 
 struct vFunction {
     vStringRef docString;
-    vArrayRef metaData; /* array of Keyword or Symbol. Or do we want an Effect type? */
+    /* Need to change metaData to a map */
+    vArrayRef metaData; 
     vArrayRef instructions;
     pointer nativeCode;
 };
