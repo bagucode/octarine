@@ -9,31 +9,50 @@ struct vParameter {
     vTypeRef type;
 };
 
+vParameterRef vParameterCreate(vStringRef name, vTypeRef type);
+
 struct vSignature {
     vArrayRef returns; /* array of vType */
     vArrayRef parameters; /* array of vParameter */
 };
 
+vSignatureRef vSignatureCreate(vArrayRef returnTypes, vArrayRef parameters);
+
 v_bool vSignatureEquals(vThreadContextRef ctx,
                         vSignatureRef sig1,
                         vSignatureRef sig2);
 
-struct vFunction {
-    vStringRef docString;
-    /* Need to change metaData to a map */
-    vArrayRef metaData; 
+struct vFunctionOverload {
+    vSignatureRef signature;
+    /* TODO: Change sideEffects to a map? */
+    vArrayRef sideEffects; 
     vArrayRef instructions;
     pointer nativeCode;
 };
 
+struct vFunction {
+    /* List of vFunctionOverloadRef
+     TODO: change this to a vector? */
+    vListObjRef overloads;
+};
+
+vFunctionRef vFunctionCreate(vFunctionOverloadRef initialImpl);
+
+void vFunctionAddOverload(vFunctionRef fn, vFunctionOverloadRef impl);
+
+vFunctionOverloadRef vFunctionFindOverload(vFunctionRef fn, vSignatureRef sig);
+
+vObject vFunctionInvoke(vThreadContextRef ctx,
+                        vFunctionOverloadRef fnImpl,
+                        vArrayRef args);
+
 struct vClosure {
-    vFunctionRef function;
+    vFunctionOverloadRef function;
     vArrayRef arguments;
 };
 
 vClosureRef vClosureCreate(vThreadContextRef ctx,
-					       vFunctionRef fn,
+					       vFunctionOverloadRef fnImpl,
                            vArrayRef args);
-void vClosureDestroy(vClosureRef closure);
 
 #endif

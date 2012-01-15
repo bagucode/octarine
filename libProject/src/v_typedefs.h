@@ -18,6 +18,9 @@ typedef vField* vFieldRef;
 typedef struct vFunction vFunction;
 typedef vFunction* vFunctionRef;
 
+typedef struct vFunctionOverload vFunctionOverload;
+typedef vFunctionOverload* vFunctionOverloadRef;
+
 typedef struct vHeap vHeap;
 typedef vHeap* vHeapRef;
 
@@ -39,9 +42,6 @@ typedef void (*vFinalizer)(vObject obj);
 
 typedef struct vParameter vParameter;
 typedef vParameter* vParameterRef;
-
-typedef struct vProtocol vProtocol;
-typedef vProtocol* vProtocolRef;
 
 typedef struct vRootSet vRootSet;
 typedef vRootSet* vRootSetRef;
