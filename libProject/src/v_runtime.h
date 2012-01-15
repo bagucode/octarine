@@ -39,11 +39,11 @@ struct vRuntime {
         vTypeRef field;
         vTypeRef array;
         vTypeRef list;
-        vTypeRef nothing;
         vTypeRef any;
         vTypeRef map;
     } builtInTypes;
     struct {
+        vFunctionRef equals;
     } builtInFunctions;
 };
 

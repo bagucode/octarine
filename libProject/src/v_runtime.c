@@ -36,7 +36,6 @@ static void alloc_builtInTypes(vThreadContextRef ctx) {
     ctx->runtime->builtInTypes.string = alloc_built_in(ctx);
     ctx->runtime->builtInTypes.field = alloc_built_in(ctx);
     ctx->runtime->builtInTypes.array = alloc_built_in(ctx);
-    ctx->runtime->builtInTypes.nothing = alloc_built_in(ctx);
     ctx->runtime->builtInTypes.list = alloc_built_in(ctx);
     ctx->runtime->builtInTypes.any = alloc_built_in(ctx);
     ctx->runtime->builtInTypes.map = alloc_built_in(ctx);
