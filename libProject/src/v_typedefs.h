@@ -49,6 +49,9 @@ typedef vRootSet* vRootSetRef;
 typedef struct vRuntime vRuntime;
 typedef vRuntime* vRuntimeRef;
 
+typedef struct vSymbol vSymbol;
+typedef vSymbol* vSymbolRef;
+
 typedef struct vThreadContext vThreadContext;
 typedef vThreadContext* vThreadContextRef;
 
