@@ -11,6 +11,7 @@ struct vString {
 vStringRef vStringCreate(vThreadContextRef ctx, char *utf8);
 int vStringCompare(vStringRef str1, vStringRef str2);
 
+
 vStringRef v_bootstrap_string_create(vThreadContextRef ctx, const char *utf8);
 void v_bootstrap_string_init_type(vThreadContextRef ctx);
 
