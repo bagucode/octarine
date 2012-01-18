@@ -67,4 +67,7 @@ typedef vSignature* vSignatureRef;
 typedef struct vString vString;
 typedef vString* vStringRef;
 
+typedef struct vSymbol vSymbol;
+typedef vSymbol* vSymbolRef;
+
 #endif

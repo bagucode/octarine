@@ -22,6 +22,14 @@ int vStringCompare(vStringRef x, vStringRef y) {
     return vNativeStringCompare(x->str, y->str);
 }
 
+uword vStringCopyAsUtf8(vStringRef str, char* buf, uword bufSize) {
+	return 0;
+}
+
+uword vStringByteSize(vStringRef stc, vSymbolRef encoding) {
+	return 0;
+}
+
 vStringRef v_bootstrap_string_create(vThreadContextRef ctx, const char *utf8) {
     vStringRef str = (vStringRef)v_bootstrap_object_alloc(ctx, ctx->runtime->builtInTypes.string, sizeof(vString));
     str->str = vNativeStringFromUtf8(utf8, 0);

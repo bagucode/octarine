@@ -42,6 +42,17 @@ vReaderRef vReaderCreate(vThreadContextRef ctx) {
 static const v_char LPAREN = '(';
 static const v_char RPAREN = ')';
 
-vObject vReaderRead(vReaderRef reader, vStringRef source) {
+vObject vReaderRead(vThreadContextRef ctx, vStringRef source) {
+	vReaderRef reader;
+	struct {
+		vArrayRef srcArr;
+	} frame;
+	vMemoryPushFrame(ctx, &frame, 1);
+
+	frame.srcArr = vHeapAllocArray(ctx, v_false, ctx->runtime->builtInTypes.u8, 1024);
+
+	reader = ctx->reader;
+	
+	vMemoryPopFrame(ctx);
 }
 

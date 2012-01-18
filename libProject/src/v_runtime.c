@@ -124,7 +124,7 @@ static void init_builtInTypes(vThreadContextRef ctx) {
 vRuntimeRef vRuntimeCreate(uword sharedHeapInitialSize,
                            uword threadHeapInitialSize) {
 	vRuntimeRef rt = (vRuntimeRef)vMalloc(sizeof(vRuntime));
-	vThreadContextRef ctx = vThreadContextCreate(rt, threadHeapInitialSize);
+	vThreadContextRef ctx = v_bootstrap_thread_context_create(rt, threadHeapInitialSize);
 
     rt->globals = vHeapCreate(v_true, sharedHeapInitialSize);
     rt->currentContext = vTLSCreate();
@@ -135,6 +135,13 @@ vRuntimeRef vRuntimeCreate(uword sharedHeapInitialSize,
 
     alloc_builtInTypes(ctx);
 	init_builtInTypes(ctx);
+
+	/*
+	Since ReaderCreate depends upon the types being defined we have to postpone
+	creating the reader for the main thread context to the end of this function.
+	*/
+	ctx->reader = vReaderCreate(ctx);
+
     return rt;
 }
 
