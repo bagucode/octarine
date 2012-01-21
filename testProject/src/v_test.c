@@ -39,7 +39,7 @@ void testGCAllRetained() {
     
     frame.listHead = vListObjCreate(ctx, NULL);
     for(i = 0; i < 1024; ++i) {
-        frame.listHead = vListObjAddFront(ctx, frame.listHead, frame.listHead);
+        frame.listHead = vListObjAddFront(ctx, (vListObjRef)frame.listHead, frame.listHead);
     }
 
     vMemoryPopFrame(ctx);
@@ -68,7 +68,7 @@ void testReaderEmptyList() {
     result = vReaderRead(ctx, src);
     // We should get a list with one element, an empty list.
     assert(vObjectGetType(ctx, result) == ctx->runtime->builtInTypes.list);
-    emptyList = ((vListObjRef)result)->data;
+	emptyList = (vListObjRef)((vListObjRef)result)->data;
     assert(vObjectGetType(ctx, emptyList) == ctx->runtime->builtInTypes.list);
     
     vRuntimeDestroy(runtime);

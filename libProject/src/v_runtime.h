@@ -46,6 +46,9 @@ struct vRuntime {
     struct {
         vFunctionRef equals;
     } builtInFunctions;
+	struct {
+		vSymbolRef readerNeedsMoreData;
+	} builtInConstants;
 };
 
 vRuntimeRef vRuntimeCreate(uword sharedHeapInitialSize,
