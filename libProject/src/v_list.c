@@ -135,4 +135,22 @@ vListObjRef vListObjReverse(vThreadContextRef ctx, vListObjRef lst) {
     return frame.newHead;
 }
 
+uword vListObjSize(vThreadContextRef ctx, vListObjRef lst) {
+    uword cnt = 0;
+    while (lst) {
+        ++cnt;
+        lst = lst->next;
+    }
+    return cnt;
+}
 
+vObject vListObjFirst(vThreadContextRef ctx, vListObjRef lst) {
+    return lst->data;
+}
+
+vListObjRef vListObjRest(vThreadContextRef ctx, vListObjRef lst) {
+    if(vListObjIsEmpty(ctx, lst)) {
+        return vListObjCreate(ctx, NULL);
+    }
+    return lst->next;
+}

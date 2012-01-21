@@ -226,8 +226,10 @@ static void collectGarbage(vThreadContextRef ctx, v_bool collectSharedHeap) {
             for(i = 0; i < roots->numUsed; ++i) {
                 for(j = 0; j < roots->frameInfos[i].numRoots; ++j) {
                     obj = roots->frameInfos[i].frame[j];
-                    block = getBlock(obj);
-                    traceAndMark(ctx, obj, getType(block));
+                    if(obj != NULL) {
+                        block = getBlock(obj);
+                        traceAndMark(ctx, obj, getType(block));
+                    }
                 }
             }
             roots = roots->prev;

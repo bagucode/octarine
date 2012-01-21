@@ -16,6 +16,9 @@ vArrayRef vArrayCreate(vThreadContextRef ctx,
 pointer vArrayDataPointer(vArrayRef arr);
 uword vArraySize(vArrayRef arr);
 
+// TODO: what return values to we want for this?
+vObject vArrayCopy(vArrayRef from, vArrayRef to);
+
 vArrayRef v_bootstrap_array_create(vThreadContextRef ctx,
                                    vTypeRef type,
                                    uword num_elements,

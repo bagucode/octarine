@@ -28,6 +28,20 @@ vArrayRef v_bootstrap_array_create(vThreadContextRef ctx,
     return v_bootstrap_array_alloc(ctx, type, num_elements, elem_size);
 }
 
+// There is currently no way to know if this went well or not.
+// TODO: need error handling.
+vObject vArrayCopy(vArrayRef from, vArrayRef to) {
+    if(from->element_type != to->element_type) {
+        return NULL;
+    }
+    if(from->num_elements > to->num_elements) {
+        return NULL;
+    }
+    
+    memcpy(&to->data[0], &from->data[0], from->element_type->size * from->num_elements);
+    return NULL;
+}
+
 void v_bootstrap_array_init_type(vThreadContextRef ctx) {
     ctx->runtime->builtInTypes.array->fields = NULL;
     ctx->runtime->builtInTypes.array->kind = V_T_OBJECT;

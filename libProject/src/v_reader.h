@@ -6,14 +6,12 @@
 #include "v_typedefs.h"
 
 struct vReader {
-	v_char lastChar;
-	vArrayRef stringBuffer;
 };
 
 vReaderRef vReaderCreate(vThreadContextRef ctx);
 
 /*
- Returns the symbol vlang/reader-needs-more-data if the source
+ Returns the symbol vlang/need-more-data if the source
  string does not parse to a complete object.
  Otherwise a vListObjRef of read objects is returned.
  */

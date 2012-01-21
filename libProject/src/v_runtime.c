@@ -124,6 +124,21 @@ static void init_builtInTypes(vThreadContextRef ctx) {
 	v_bootstrap_symbol_init_type(ctx);
 }
 
+static void init_builtInFunctions(vThreadContextRef ctx) {
+}
+
+static void init_builtInConstants(vThreadContextRef ctx) {
+    struct {
+        vStringRef str;
+    } frame;
+    vMemoryPushFrame(ctx, &frame, 1);
+    
+    frame.str = vStringCreate(ctx, "need-more-data");
+    ctx->runtime->builtInConstants.needMoreData = vSymbolCreate(ctx, frame.str);
+    
+    vMemoryPopFrame(ctx);
+}
+
 vRuntimeRef vRuntimeCreate(uword sharedHeapInitialSize,
                            uword threadHeapInitialSize) {
 	vRuntimeRef rt = (vRuntimeRef)vMalloc(sizeof(vRuntime));
@@ -144,6 +159,9 @@ vRuntimeRef vRuntimeCreate(uword sharedHeapInitialSize,
 	creating the reader for the main thread context to the end of this function.
 	*/
 	ctx->reader = vReaderCreate(ctx);
+    
+    init_builtInConstants(ctx);
+    init_builtInFunctions(ctx);
 
     return rt;
 }

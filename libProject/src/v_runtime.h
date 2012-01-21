@@ -48,7 +48,7 @@ struct vRuntime {
         vFunctionRef equals;
     } builtInFunctions;
 	struct {
-		vSymbolRef readerNeedsMoreData;
+		vSymbolRef needMoreData;
 	} builtInConstants;
 };
 

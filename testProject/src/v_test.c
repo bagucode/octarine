@@ -105,14 +105,87 @@ void testSymbolEquals() {
     vRuntimeDestroy(runtime);
 }
 
-int main(int argc, char** argv) {
+void testReadSymbol() {
+    vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024);
+    vThreadContextRef ctx = runtime->allContexts->ctx;
+    vSymbolRef bob;
+	struct {
+		vObject readResult;
+        vSymbolRef otherBob;
+		vStringRef src;
+	} frame;
+	vMemoryPushFrame(ctx, &frame, 3);
+
+    frame.src = vStringCreate(ctx, "Bob2Bob");
+    frame.otherBob = vSymbolCreate(ctx, frame.src);
+    frame.readResult = vReaderRead(ctx, frame.src);
     
+    // We should get a list with one element, the symbol Bob2Bob
+    assert(vObjectGetType(ctx, frame.readResult) == ctx->runtime->builtInTypes.list);
+	bob = (vSymbolRef)((vListObjRef)frame.readResult)->data;
+    assert(vObjectGetType(ctx, bob) == ctx->runtime->builtInTypes.symbol);
+	assert(vSymbolEquals(ctx, frame.otherBob, bob) == v_true);
+
+	vMemoryPopFrame(ctx);
+    vRuntimeDestroy(runtime);
+}
+
+void testReadOneListAndOneSymbol() {
+    vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024);
+    vThreadContextRef ctx = runtime->allContexts->ctx;
+    vSymbolRef bob;
+    vSymbolRef other;
+    vListObjRef lst;
+    vListObjRef bobLst;
+	struct {
+		vObject readResult;
+		vStringRef src;
+        vStringRef name;
+        vSymbolRef controlSym;
+	} frame;
+	vMemoryPushFrame(ctx, &frame, 4);
+
+    frame.name = vStringCreate(ctx, "Bob2Bob");
+    frame.src = vStringCreate(ctx, "(Bob2Bob) otherSym");
+    frame.controlSym = vSymbolCreate(ctx, frame.name);
+    
+    frame.readResult = vReaderRead(ctx, frame.src);
+    
+    // We should get a list with two elements, a list with a symbol in it and a symbol
+    assert(vObjectGetType(ctx, frame.readResult) == ctx->runtime->builtInTypes.list);
+
+    lst = (vListObjRef)frame.readResult;
+    assert(vListObjSize(ctx, lst) == 2);
+
+	bobLst = (vListObjRef)vListObjFirst(ctx, lst);
+    assert(vObjectGetType(ctx, bobLst) == ctx->runtime->builtInTypes.list);
+    assert(vListObjSize(ctx, bobLst) == 1);
+
+    bob = (vSymbolRef)vListObjFirst(ctx, bobLst);
+    assert(vObjectGetType(ctx, bob) == ctx->runtime->builtInTypes.symbol);
+	assert(vSymbolEquals(ctx, bob, frame.controlSym) == v_true);
+
+    lst = vListObjRest(ctx, lst);
+    other = (vSymbolRef)vListObjFirst(ctx, lst);
+    assert(vObjectGetType(ctx, other) == ctx->runtime->builtInTypes.symbol);
+    frame.name = vStringCreate(ctx, "otherSym");
+    frame.controlSym = vSymbolCreate(ctx, frame.name);
+	assert(vSymbolEquals(ctx, other, frame.controlSym) == v_true);
+    
+	vMemoryPopFrame(ctx);
+    vRuntimeDestroy(runtime);
+}
+
+int main(int argc, char** argv) {
+
     testCreateRuntime();
     testGCAllGarbage();
     testGCAllRetained();
     testGCFinalizer();
     testReaderEmptyList();
 	testSymbolEquals();
+    testReadSymbol();
+    testReadOneListAndOneSymbol();
     
 	return 0;
 }
