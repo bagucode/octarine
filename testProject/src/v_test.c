@@ -6,6 +6,7 @@
 #include "../../libProject/src/v_memory.h"
 #include "../../libProject/src/v_reader.h"
 #include "../../libProject/src/v_object.h"
+#include "../../libProject/src/v_symbol.h"
 #include <memory.h>
 #include <assert.h>
 
@@ -74,6 +75,36 @@ void testReaderEmptyList() {
     vRuntimeDestroy(runtime);
 }
 
+void testSymbolEquals() {
+    vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024);
+    vThreadContextRef ctx = runtime->allContexts->ctx;
+	struct {
+		vSymbolRef sym1;
+		vSymbolRef sym2;
+		vStringRef name;
+	} frame;
+	vMemoryPushFrame(ctx, &frame, 3);
+
+	frame.name = vStringCreate(ctx, "Bob2Bob");
+	frame.sym1 = vSymbolCreate(ctx, frame.name);
+	frame.sym2 = vSymbolCreate(ctx, frame.name);
+
+	assert(vSymbolEquals(ctx, frame.sym1, frame.sym2) == v_true);
+
+	frame.name = vStringCreate(ctx, "Bob2Bob"); // same name but different string instance
+	frame.sym1 = vSymbolCreate(ctx, frame.name);
+
+	assert(vSymbolEquals(ctx, frame.sym1, frame.sym2) == v_true);
+
+	frame.name = vStringCreate(ctx, "WRONG"); // other name
+	frame.sym2 = vSymbolCreate(ctx, frame.name);
+
+	assert(vSymbolEquals(ctx, frame.sym1, frame.sym2) == v_false);
+
+	vMemoryPopFrame(ctx);
+    vRuntimeDestroy(runtime);
+}
+
 int main(int argc, char** argv) {
     
     testCreateRuntime();
@@ -81,6 +112,7 @@ int main(int argc, char** argv) {
     testGCAllRetained();
     testGCFinalizer();
     testReaderEmptyList();
+	testSymbolEquals();
     
 	return 0;
 }

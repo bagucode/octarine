@@ -7,6 +7,7 @@
 #include "v_map.h"
 #include "v_thread_context.h"
 #include "v_reader.h"
+#include "v_symbol.h"
 
 static vTypeRef alloc_built_in(vThreadContextRef ctx) {
 	return (vTypeRef)v_bootstrap_object_alloc(ctx, ctx->runtime->builtInTypes.type, sizeof(vType));
@@ -41,6 +42,7 @@ static void alloc_builtInTypes(vThreadContextRef ctx) {
     ctx->runtime->builtInTypes.any = alloc_built_in(ctx);
     ctx->runtime->builtInTypes.map = alloc_built_in(ctx);
 	ctx->runtime->builtInTypes.reader = alloc_built_in(ctx);
+	ctx->runtime->builtInTypes.symbol = alloc_built_in(ctx);
 }
 
 static void init_builtInTypes(vThreadContextRef ctx) {
@@ -119,6 +121,7 @@ static void init_builtInTypes(vThreadContextRef ctx) {
     v_bootstrap_any_type_init(ctx);
     v_bootstrap_map_init_type(ctx);
 	v_bootstrap_reader_init_type(ctx);
+	v_bootstrap_symbol_init_type(ctx);
 }
 
 vRuntimeRef vRuntimeCreate(uword sharedHeapInitialSize,

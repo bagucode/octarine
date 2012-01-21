@@ -21,7 +21,7 @@ static void finalizer(vObject obj) {
 }
 
 int vStringCompare(vStringRef x, vStringRef y) {
-    return vNativeStringCompare(x->str, y->str);
+    return x == y ? 0 : vNativeStringCompare(x->str, y->str);
 }
 
 vArrayRef vStringUtf8Copy(vThreadContextRef ctx, vStringRef str) {
