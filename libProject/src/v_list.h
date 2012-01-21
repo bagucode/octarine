@@ -27,6 +27,8 @@ vListObjRef vListObjRemoveNth(vThreadContextRef ctx,
 
 v_bool vListObjIsEmpty(vThreadContextRef ctx, vListObjRef lst);
 
+vListObjRef vListObjReverse(vThreadContextRef ctx, vListObjRef lst);
+
 void v_bootstrap_list_init_type(vThreadContextRef ctx);
 
 #endif

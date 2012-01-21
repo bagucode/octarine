@@ -35,10 +35,12 @@ vListObjRef vListObjCreate(vThreadContextRef ctx, vObject data) {
 vListObjRef vListObjAddFront(vThreadContextRef ctx,
                              vListObjRef lst,
                              vObject data) {
-    vListObjRef head;
-    head = (vListObjRef)vHeapAlloc(ctx, v_false, ctx->runtime->builtInTypes.list);
+    vListObjRef head = (vListObjRef)vHeapAlloc(ctx, v_false, ctx->runtime->builtInTypes.list);
     head->data = data;
-    head->next = lst;
+    // Only set the next pointer to the node that got passed as an argument
+    // if argument node is not empty, to make it appear that the empty node
+    // got "filled" instead of having another link tacked on.
+    head->next = vListObjIsEmpty(ctx, lst) ? NULL : lst;
     return head;
 }
 
@@ -116,5 +118,21 @@ v_bool vListObjIsEmpty(vThreadContextRef ctx, vListObjRef lst) {
     return lst->data == NULL && lst->next == NULL;
 }
 
+vListObjRef vListObjReverse(vThreadContextRef ctx, vListObjRef lst) {
+    struct {
+        vListObjRef newHead;
+    } frame;
+    vMemoryPushFrame(ctx, &frame, 1);
+    
+    frame.newHead = vListObjCreate(ctx, lst->data);
+    lst = lst->next;
+    while (lst) {
+        frame.newHead = vListObjAddFront(ctx, frame.newHead, lst->data);
+        lst = lst->next;
+    }
+    
+    vMemoryPopFrame(ctx);
+    return frame.newHead;
+}
 
 

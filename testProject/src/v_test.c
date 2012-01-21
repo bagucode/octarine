@@ -1,9 +1,13 @@
 #include "v_test.h"
+#include "../../libProject/src/v_thread_context.h"
 #include "../../libProject/src/v_runtime.h"
 #include "../../libProject/src/v_list.h"
 #include "../../libProject/src/v_string.h"
 #include "../../libProject/src/v_memory.h"
+#include "../../libProject/src/v_reader.h"
+#include "../../libProject/src/v_object.h"
 #include <memory.h>
+#include <assert.h>
 
 void testCreateRuntime() {
     vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024);
@@ -53,12 +57,30 @@ void testGCFinalizer() {
     vRuntimeDestroy(runtime);
 }
 
+void testReaderEmptyList() {
+    vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024);
+    vThreadContextRef ctx = runtime->allContexts->ctx;
+    vObject result;
+    vStringRef src;
+    vListObjRef emptyList;
+
+    src = vStringCreate(ctx, "()");
+    result = vReaderRead(ctx, src);
+    // We should get a list with one element, an empty list.
+    assert(vObjectGetType(ctx, result) == ctx->runtime->builtInTypes.list);
+    emptyList = ((vListObjRef)result)->data;
+    assert(vObjectGetType(ctx, emptyList) == ctx->runtime->builtInTypes.list);
+    
+    vRuntimeDestroy(runtime);
+}
+
 int main(int argc, char** argv) {
     
     testCreateRuntime();
     testGCAllGarbage();
     testGCAllRetained();
     testGCFinalizer();
+    testReaderEmptyList();
     
 	return 0;
 }

@@ -52,15 +52,6 @@ typedef vRootSet* vRootSetRef;
 typedef struct vRuntime vRuntime;
 typedef vRuntime* vRuntimeRef;
 
-typedef struct vSymbol vSymbol;
-typedef vSymbol* vSymbolRef;
-
-typedef struct vThreadContext vThreadContext;
-typedef vThreadContext* vThreadContextRef;
-
-typedef struct vType vType;
-typedef vType* vTypeRef;
-
 typedef struct vSignature vSignature;
 typedef vSignature* vSignatureRef;
 
@@ -69,5 +60,11 @@ typedef vString* vStringRef;
 
 typedef struct vSymbol vSymbol;
 typedef vSymbol* vSymbolRef;
+
+typedef struct vThreadContext vThreadContext;
+typedef vThreadContext* vThreadContextRef;
+
+typedef struct vType vType;
+typedef vType* vTypeRef;
 
 #endif
