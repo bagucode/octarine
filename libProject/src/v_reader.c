@@ -61,7 +61,7 @@ static u8 getChar(vArrayRef arr, uword i) {
 }
 
 static v_bool isSpace(uword ch) {
-    return isspace(ch) || ch == ',';
+    return isspace((int)ch) || ch == ',';
 }
 
 static void skipSpace(vArrayRef src, uword *idx) {
@@ -104,7 +104,7 @@ static vObject readString(vThreadContextRef ctx, vArrayRef src, uword* idx) {
             frame.tmp = NULL;
         }
         chars = (char*)(&frame.charBuffer->data[0]);
-        chars[bufIdx++] = ch;
+        chars[bufIdx++] = (char)ch;
         ++(*idx);
     }
     if(bufIdx >= frame.charBuffer->num_elements) {
@@ -124,13 +124,13 @@ static vObject readString(vThreadContextRef ctx, vArrayRef src, uword* idx) {
 
 static vObject readSymbol(vThreadContextRef ctx, vArrayRef src, uword* idx) {
     struct {
-        vStringRef theString;
+        vObject theString;
         vSymbolRef theSymbol;
     } frame;
     vMemoryPushFrame(ctx, &frame, 2);
     
-    frame.theString = readString(ctx, src, idx);
-    frame.theSymbol = vSymbolCreate(ctx, frame.theString);
+	frame.theString = readString(ctx, src, idx);
+	frame.theSymbol = vSymbolCreate(ctx, (vStringRef)frame.theString);
     
     vMemoryPopFrame(ctx);
     return frame.theSymbol;
@@ -150,14 +150,14 @@ static vObject readList(vThreadContextRef ctx, vArrayRef src, uword* idx) {
               && eos(src, idx) == v_false) {
             frame.tmp = read(ctx, src, idx);
             if(frame.tmp != NULL)
-                frame.lst = vListObjAddFront(ctx, frame.lst, frame.tmp);
+				frame.lst = vListObjAddFront(ctx, (vListObjRef)frame.lst, frame.tmp);
             // else what?
         }
         if(eos(src, idx)) {
             frame.lst = ctx->runtime->builtInConstants.needMoreData;
         } else {
             ++(*idx); // eat )
-            frame.lst = vListObjReverse(ctx, frame.lst);
+            frame.lst = vListObjReverse(ctx, (vListObjRef)frame.lst);
         }
     }
     

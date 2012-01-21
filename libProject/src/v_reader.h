@@ -6,6 +6,7 @@
 #include "v_typedefs.h"
 
 struct vReader {
+	uword dummy;
 };
 
 vReaderRef vReaderCreate(vThreadContextRef ctx);
