@@ -6,14 +6,35 @@
 #include "v_array.h"
 #include <memory.h> /* TODO: replace this with some platform function */
 
+#define HEAP_ALIGN 16
+
 typedef struct HeapBlock {
     uword typeRefAndMark;
-    char data[0];
 } HeapBlock;
 typedef HeapBlock *HeapBlockRef;
 
+static vObject getObject(HeapBlockRef block) {
+    return (void*)(((uword)block + sizeof(void*) + HEAP_ALIGN - 1) & ~(HEAP_ALIGN - 1));
+}
+
+static uword calcBlockSize(uword dataSize) {
+    return sizeof(HeapBlock) + dataSize + (HEAP_ALIGN - 1) + sizeof(void*);
+}
+
+static HeapBlockRef allocBlock(uword dataSize) {
+    uword size = calcBlockSize(dataSize);
+    HeapBlockRef block = (HeapBlockRef)vMalloc(size);
+    vObject obj;
+    if(block == NULL) {
+        return NULL;
+    }
+    obj = getObject(block);
+    (*((void **)obj - 1)) = (void*)block;
+    return block;
+}
+
 static HeapBlockRef getBlock(vObject obj) {
-    return (HeapBlockRef)(((char*)obj) - sizeof(HeapBlock));
+    return (HeapBlockRef)(*((void **)obj - 1));
 }
 
 static v_bool isMarked(HeapBlockRef block) {
@@ -42,10 +63,6 @@ static vTypeRef getType(HeapBlockRef block) {
 
 static void setType(HeapBlockRef block, vTypeRef type) {
     block->typeRefAndMark = (uword)type;
-}
-
-static vObject getObject(HeapBlockRef block) {
-    return &(block->data[0]);
 }
 
 static uword getSize(HeapBlockRef block) {
@@ -305,7 +322,7 @@ static vObject internalAlloc(vThreadContextRef ctx,
     vHeapRef heap = sharedAlloc ? ctx->runtime->globals : ctx->heap;
     vObject ret;
     HeapBlockRef block;
-    uword allocSize = size + sizeof(HeapBlock);
+    uword allocSize = calcBlockSize(size);
     
     if(heap->mutex != NULL) {
         vMutexLock(heap->mutex);
@@ -318,7 +335,7 @@ static vObject internalAlloc(vThreadContextRef ctx,
         heap->gcThreshold *= 2;
     }
 
-    block = (HeapBlockRef)vMalloc(allocSize);
+    block = allocBlock(size);
     ret = getObject(block);
     setType(block, type == V_T_SELF ? ret : type);
     memset(ret, 0, size);
