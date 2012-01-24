@@ -38,6 +38,138 @@ v_bool vTypeIsObject(vThreadContextRef ctx, vTypeRef t) {
     return t->kind == V_T_OBJECT;
 }
 
+/* 8 bytes is the largest single primitive supported in 32 and 64 bit at
+ the moment.
+ TODO: user defined alignment of value types will need to be taken into
+ account when such types are members of other types. */
+#define LARGEST_POSSIBLE 8
+
+static uword findLargestMember(vThreadContextRef ctx,
+                               uword largest,
+                               vFieldRef field) {
+    vFieldRef* members;
+    uword i;
+    
+    if(largest == LARGEST_POSSIBLE)
+        return largest;
+    
+    if(vTypeIsPrimitive(ctx, field->type) && largest < field->type->size) {
+        return field->type->size;
+    }
+    
+    members = (vFieldRef*)vArrayDataPointer(field->type->fields);
+    for(i = 0; i < field->type->fields->num_elements; ++i) {
+        if(field->type->kind == V_T_OBJECT) {
+			if(largest < sizeof(void*))
+				largest = sizeof(void*);
+        } else {
+			largest = findLargestMember(ctx, largest, members[i]);
+		}
+    }
+    
+    return largest;
+}
+
+static uword nextLargerMultiple(uword of, uword largerThan) {
+    uword result = of;
+    while(result < largerThan) {
+        result += of;
+    }
+    return result;
+}
+
+static uword alignOffset(uword offset, uword on) {
+    return (offset + (on - 1)) & (~(on - 1));
+}
+
+vTypeRef vTypeCreateProtoType(vThreadContextRef ctx) {
+    return (vTypeRef)vHeapAlloc(ctx, v_false, ctx->runtime->builtInTypes.type);
+}
+
+vTypeRef vTypeCreate(vThreadContextRef ctx,
+                     u8 kind,
+                     vStringRef name,
+                     vArrayRef fields,
+                     vTypeRef protoType) {
+    vFieldRef mem;
+    vFieldRef* members = (vFieldRef*)vArrayDataPointer(fields);
+    uword i, largest = 0;
+    struct {
+        vTypeRef proto;
+    } frame;
+    vMemoryPushFrame(ctx, &frame, 1);
+    
+    frame.proto = protoType;
+    if(frame.proto == NULL) {
+        frame.proto = vTypeCreateProtoType(ctx);
+    }
+    
+    frame.proto->name = name;
+    frame.proto->kind = kind;
+    frame.proto->numFields = fieldArr->size;
+    if(kind == VTypObj) {
+        /* Add size of Object header if type is object */
+        frame.proto->size = sizeof(VObject);
+    }
+    
+    for(i = 0; i < fieldArr->size; ++i) {
+        if(fields[i].type == v_kTypSelf) {
+            if(largest < sizeof(void*))
+                largest = sizeof(void*);
+        } else {
+            largest = findLargestMember(largest, &fields[i]);
+        }
+    }
+    
+    if(frame.proto->numFields > 0) {
+        frame.proto->fields = v_createArray(rt, rt->builtInsInfo.fieldInfo, frame.proto->numFields);
+        fi = (VFieldInfo*)v_arrayData(frame.proto->fields);
+    }
+    
+    for(i = 0; i < frame.proto->numFields; ++i) {
+        if(fields[i].type == v_kTypSelf || fields[i].type->kind == VTypObj) {
+            if(fields[i].type == v_kTypSelf) {
+                fi[i].type = frame.proto;
+            } else {
+                fi[i].type = fields[i].type;
+            }
+            fi[i].name = fields[i].name;
+            frame.proto->size = align_offset(frame.proto->size, sizeof(void*));
+            fi[i].offset = frame.proto->size;
+            frame.proto->size += sizeof(void*);
+        } else if (fields[i].type->kind == VTypVal) {
+            fi[i].type = fields[i].type;
+            fi[i].name = fields[i].name;
+            if(isPrimitive(fields[i].type)) {
+                frame.proto->size = align_offset(frame.proto->size, fields[i].type->size);
+            } else {
+                /* composite type, align on pointer */
+                frame.proto->size = align_offset(frame.proto->size, sizeof(void*));
+            }
+            fi[i].offset = frame.proto->size;
+            frame.proto->size += fields[i].type->size;
+        }
+    }
+    
+    frame.proto->size = nextLargerMultiple(largest, frame.proto->size);
+
+    vMemoryPopFrame(ctx);
+    
+    return frame.proto;
+}
+
+VAny v_createInstance(VRuntime* rt, VTypeInfo* type) {
+    VAny ret;
+    ret.u64 = 0;
+    
+    if(isPrimitive(type)) {
+        return ret;
+    }
+    
+    ret.obj = v_gcAlloc(rt, type);
+    return ret;
+}
+
 vArrayRef v_bootstrap_type_create_field_array(vThreadContextRef ctx, uword numFields) {
     vArrayRef ret = v_bootstrap_array_create(ctx, ctx->runtime->builtInTypes.field, numFields, sizeof(pointer));
     uword i;

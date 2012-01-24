@@ -32,6 +32,12 @@ v_bool vTypeIsPrimitive(vThreadContextRef ctx, vTypeRef t);
 v_bool vTypeIsStruct(vThreadContextRef ctx, vTypeRef t);
 v_bool vTypeIsObject(vThreadContextRef ctx, vTypeRef t);
 v_bool vTypeEquals(vThreadContextRef ctx, vTypeRef t, vObject other);
+vTypeRef vTypeCreatePrototype(vThreadContextRef ctx);
+vTypeRef vTypeCreate(vThreadContextRef ctx,
+                     u8 kind,
+                     vStringRef name,
+                     vArrayRef fields,
+                     vTypeRef protoType);
 
 void v_bootstrap_type_init_type(vThreadContextRef ctx);
 void v_bootstrap_type_init_field(vThreadContextRef ctx);
