@@ -7,6 +7,8 @@
 #include "../../libProject/src/v_reader.h"
 #include "../../libProject/src/v_object.h"
 #include "../../libProject/src/v_symbol.h"
+#include "../../libProject/src/v_array.h"
+#include "../../libProject/src/v_type.h"
 #include <memory.h>
 #include <assert.h>
 
@@ -176,6 +178,60 @@ void testReadOneListAndOneSymbol() {
     vRuntimeDestroy(runtime);
 }
 
+typedef struct testStruct {
+    u8 one;
+    u16 two;
+    i64 three;
+    struct testStruct* self;
+    f64 five;
+} testStruct;
+
+void testCreateType() {
+    vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024);
+    vThreadContextRef ctx = runtime->allContexts->ctx;
+    vFieldRef* fields;
+    uword i;
+	struct {
+        vArrayRef fields;
+		vTypeRef myType;
+        vStringRef typeName;
+        testStruct* instance;
+	} frame;
+	vMemoryPushFrame(ctx, &frame, 3);
+    
+    frame.fields = vArrayCreate(ctx, ctx->runtime->builtInTypes.field, 5);
+    fields = (vFieldRef*)vArrayDataPointer(frame.fields);
+    for(i = 0; i < frame.fields->num_elements; ++i) {
+        fields[i] = vHeapAlloc(ctx, v_false, ctx->runtime->builtInTypes.field);
+    }
+    fields[0]->name = vStringCreate(ctx, "one");
+    fields[0]->type = ctx->runtime->builtInTypes.u8;
+    fields[1]->name = vStringCreate(ctx, "two");
+    fields[1]->type = ctx->runtime->builtInTypes.u16;
+    fields[2]->name = vStringCreate(ctx, "three");
+    fields[2]->type = ctx->runtime->builtInTypes.i64;
+    fields[3]->name = vStringCreate(ctx, "self");
+    fields[3]->type = V_T_SELF;
+    fields[4]->name = vStringCreate(ctx, "five");
+    fields[4]->type = ctx->runtime->builtInTypes.f64;
+    
+    frame.typeName = vStringCreate(ctx, "MyHappyTestType");
+    frame.myType = vTypeCreate(ctx, v_false, V_T_OBJECT, frame.typeName, frame.fields, NULL, NULL);
+    
+    assert(frame.myType->size == sizeof(testStruct));
+    
+    frame.instance = vHeapAlloc(ctx, v_false, frame.myType);
+    
+    frame.instance->one = 250;
+    frame.instance->two = 65500;
+    frame.instance->three = 5000000000;
+    frame.instance->self = frame.instance;
+    frame.instance->five = 0.01;
+    
+	vMemoryPopFrame(ctx);
+    vRuntimeDestroy(runtime);
+}
+
 int main(int argc, char** argv) {
 
     testCreateRuntime();
@@ -186,6 +242,7 @@ int main(int argc, char** argv) {
 	testSymbolEquals();
     testReadSymbol();
     testReadOneListAndOneSymbol();
+    testCreateType();
     
 	return 0;
 }
