@@ -82,18 +82,20 @@ static uword alignOffset(uword offset, uword on) {
     return (offset + (on - 1)) & (~(on - 1));
 }
 
-vTypeRef vTypeCreateProtoType(vThreadContextRef ctx) {
-    return (vTypeRef)vHeapAlloc(ctx, v_false, ctx->runtime->builtInTypes.type);
+vTypeRef vTypeCreateProtoType(vThreadContextRef ctx, v_bool shared) {
+    return (vTypeRef)vHeapAlloc(ctx, shared, ctx->runtime->builtInTypes.type);
 }
 
 vTypeRef vTypeCreate(vThreadContextRef ctx,
+                     v_bool shared,
                      u8 kind,
                      vStringRef name,
                      vArrayRef fields,
+                     vFinalizer finalizer,
                      vTypeRef protoType) {
-    vFieldRef mem;
-    vFieldRef* members = (vFieldRef*)vArrayDataPointer(fields);
-    uword i, largest = 0;
+    vFieldRef* inFields;
+    vFieldRef* members;
+    uword i, largest;
     struct {
         vTypeRef proto;
     } frame;
@@ -101,53 +103,45 @@ vTypeRef vTypeCreate(vThreadContextRef ctx,
     
     frame.proto = protoType;
     if(frame.proto == NULL) {
-        frame.proto = vTypeCreateProtoType(ctx);
+        frame.proto = vTypeCreateProtoType(ctx, shared);
     }
     
     frame.proto->name = name;
     frame.proto->kind = kind;
-    frame.proto->numFields = fieldArr->size;
-    if(kind == VTypObj) {
-        /* Add size of Object header if type is object */
-        frame.proto->size = sizeof(VObject);
-    }
-    
-    for(i = 0; i < fieldArr->size; ++i) {
-        if(fields[i].type == v_kTypSelf) {
+    frame.proto->finalizer = finalizer;
+    frame.proto->fields = vArrayCreate(ctx, ctx->runtime->builtInTypes.field, fields->num_elements);
+    frame.proto->size = 0;
+
+    // TODO: alignment support
+    largest = 0;
+    inFields = (vFieldRef*)vArrayDataPointer(fields);
+    members = (vFieldRef*)vArrayDataPointer(frame.proto->fields);
+
+    for(i = 0; i < frame.proto->fields->num_elements; ++i) {
+        members[i] = vHeapAlloc(ctx, shared, ctx->runtime->builtInTypes.field);
+        members[i]->name = inFields[i]->name;
+        if(inFields[i]->type == V_T_SELF) {
+            members[i]->type = frame.proto;
+        } else {
+            members[i]->type = inFields[i]->type;
+        }
+        if(members[i]->type->kind == V_T_OBJECT) {
+            frame.proto->size = alignOffset(frame.proto->size, sizeof(void*));
+            members[i]->offset = frame.proto->size;
+            frame.proto->size += sizeof(void*);
             if(largest < sizeof(void*))
                 largest = sizeof(void*);
-        } else {
-            largest = findLargestMember(largest, &fields[i]);
-        }
-    }
-    
-    if(frame.proto->numFields > 0) {
-        frame.proto->fields = v_createArray(rt, rt->builtInsInfo.fieldInfo, frame.proto->numFields);
-        fi = (VFieldInfo*)v_arrayData(frame.proto->fields);
-    }
-    
-    for(i = 0; i < frame.proto->numFields; ++i) {
-        if(fields[i].type == v_kTypSelf || fields[i].type->kind == VTypObj) {
-            if(fields[i].type == v_kTypSelf) {
-                fi[i].type = frame.proto;
+        } else { // struct type
+            if(vTypeIsPrimitive(ctx, members[i]->type)) {
+                frame.proto->size = alignOffset(frame.proto->size, members[i]->type->size);
             } else {
-                fi[i].type = fields[i].type;
+                /* composite type, align on pointer.
+                 TODO: support user defined alignment */
+                frame.proto->size = alignOffset(frame.proto->size, sizeof(void*));
             }
-            fi[i].name = fields[i].name;
-            frame.proto->size = align_offset(frame.proto->size, sizeof(void*));
-            fi[i].offset = frame.proto->size;
-            frame.proto->size += sizeof(void*);
-        } else if (fields[i].type->kind == VTypVal) {
-            fi[i].type = fields[i].type;
-            fi[i].name = fields[i].name;
-            if(isPrimitive(fields[i].type)) {
-                frame.proto->size = align_offset(frame.proto->size, fields[i].type->size);
-            } else {
-                /* composite type, align on pointer */
-                frame.proto->size = align_offset(frame.proto->size, sizeof(void*));
-            }
-            fi[i].offset = frame.proto->size;
-            frame.proto->size += fields[i].type->size;
+            members[i]->offset = frame.proto->size;
+            frame.proto->size += members[i]->type->size;
+            largest = findLargestMember(ctx, largest, members[i]);
         }
     }
     
@@ -156,18 +150,6 @@ vTypeRef vTypeCreate(vThreadContextRef ctx,
     vMemoryPopFrame(ctx);
     
     return frame.proto;
-}
-
-VAny v_createInstance(VRuntime* rt, VTypeInfo* type) {
-    VAny ret;
-    ret.u64 = 0;
-    
-    if(isPrimitive(type)) {
-        return ret;
-    }
-    
-    ret.obj = v_gcAlloc(rt, type);
-    return ret;
 }
 
 vArrayRef v_bootstrap_type_create_field_array(vThreadContextRef ctx, uword numFields) {
