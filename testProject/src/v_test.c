@@ -197,7 +197,7 @@ void testCreateType() {
         vStringRef typeName;
         testStruct* instance;
 	} frame;
-	vMemoryPushFrame(ctx, &frame, 3);
+	vMemoryPushFrame(ctx, &frame, 4);
     
     frame.fields = vArrayCreate(ctx, ctx->runtime->builtInTypes.field, 5);
     fields = (vFieldRef*)vArrayDataPointer(frame.fields);

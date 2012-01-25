@@ -38,34 +38,34 @@ v_bool vTypeIsObject(vThreadContextRef ctx, vTypeRef t) {
     return t->kind == V_T_OBJECT;
 }
 
-/* 8 bytes is the largest single primitive supported in 32 and 64 bit at
- the moment.
- TODO: user defined alignment of value types will need to be taken into
- account when such types are members of other types. */
-#define LARGEST_POSSIBLE 8
+static uword alignOffset(uword offset, uword on) {
+    return (offset + (on - 1)) & (~(on - 1));
+}
 
-static uword findLargestMember(vThreadContextRef ctx,
-                               uword largest,
-                               vFieldRef field) {
+static uword findLargestAlignment(vThreadContextRef ctx,
+					              uword largest,
+                                  vFieldRef field) {
     vFieldRef* members;
-    uword i;
-    
-    if(largest == LARGEST_POSSIBLE)
-        return largest;
-    
-    if(vTypeIsPrimitive(ctx, field->type) && largest < field->type->size) {
-        return field->type->size;
+    uword i, align;
+
+    if(vTypeIsPrimitive(ctx, field->type)) {
+		align = field->type->alignment != 0 ? field->type->alignment : field->type->size;
+		if(align > largest)
+			largest = align;
     }
-    
-    members = (vFieldRef*)vArrayDataPointer(field->type->fields);
-    for(i = 0; i < field->type->fields->num_elements; ++i) {
-        if(field->type->kind == V_T_OBJECT) {
-			if(largest < sizeof(void*))
-				largest = sizeof(void*);
-        } else {
-			largest = findLargestMember(ctx, largest, members[i]);
+	else {
+		if(field->type->alignment != 0) {
+			if(field->type->alignment > largest) {
+				largest = field->type->alignment;
+			}
 		}
-    }
+		else {
+			members = (vFieldRef*)vArrayDataPointer(field->type->fields);
+			for(i = 0; i < field->type->fields->num_elements; ++i) {
+				largest = findLargestAlignment(ctx, largest, members[i]);
+			}
+		}
+	}
     
     return largest;
 }
@@ -76,10 +76,6 @@ static uword nextLargerMultiple(uword of, uword largerThan) {
         result += of;
     }
     return result;
-}
-
-static uword alignOffset(uword offset, uword on) {
-    return (offset + (on - 1)) & (~(on - 1));
 }
 
 vTypeRef vTypeCreateProtoType(vThreadContextRef ctx, v_bool shared) {
@@ -119,7 +115,7 @@ vTypeRef vTypeCreate(vThreadContextRef ctx,
     members = (vFieldRef*)vArrayDataPointer(frame.proto->fields);
 
     for(i = 0; i < frame.proto->fields->num_elements; ++i) {
-        members[i] = vHeapAlloc(ctx, shared, ctx->runtime->builtInTypes.field);
+        members[i] = (vFieldRef)vHeapAlloc(ctx, shared, ctx->runtime->builtInTypes.field);
         members[i]->name = inFields[i]->name;
         if(inFields[i]->type == V_T_SELF) {
             members[i]->type = frame.proto;
@@ -142,7 +138,7 @@ vTypeRef vTypeCreate(vThreadContextRef ctx,
             frame.proto->size = alignOffset(frame.proto->size, align);
             members[i]->offset = frame.proto->size;
             frame.proto->size += members[i]->type->size;
-            largest = findLargestMember(ctx, largest, members[i]);
+            largest = findLargestAlignment(ctx, largest, members[i]);
         }
     }
     

@@ -28,6 +28,7 @@ static HeapBlockRef allocBlock(uword dataSize) {
     if(block == NULL) {
         return NULL;
     }
+	memset(block, 0, size);
     obj = getObject(block);
     (*((void **)obj - 1)) = (void*)block;
     return block;
@@ -174,7 +175,9 @@ static void traceAndMark(vThreadContextRef ctx, vObject obj, vTypeRef type) {
     vFieldRef* fields;
     vTypeRef fieldType;
     HeapBlockRef block;
-    uword i;
+    uword i, arrayStride;
+	vArrayRef array;
+	vObject* arrayObjs;
 
     /* TODO: for collecting the shared heap, we should check if a root
      points into the shared heap because we should skip it if it does not.
@@ -195,7 +198,7 @@ static void traceAndMark(vThreadContextRef ctx, vObject obj, vTypeRef type) {
             }
             /* Some types don't have fields */
             if(type->fields) {
-                fields = vArrayDataPointer(type->fields);
+                fields = (vFieldRef*)vArrayDataPointer(type->fields);
                 for(i = 0; i < type->fields->num_elements; ++i) {
                     field = fields[i];
                     if(!vTypeIsPrimitive(ctx, field->type)) {
@@ -215,6 +218,27 @@ static void traceAndMark(vThreadContextRef ctx, vObject obj, vTypeRef type) {
                     }
                 }
             }
+			/* else clause for field NULL check, array handling */
+			else if(type == ctx->runtime->builtInTypes.array) {
+				array = (vArrayRef)obj;
+				if(!vTypeIsPrimitive(ctx, array->element_type)) {
+					if(array->element_type->kind == V_T_OBJECT) {
+						arrayObjs = (vObject*)vArrayDataPointer(array);
+						for(i = 0; i < array->num_elements; ++i) {
+							traceAndMark(ctx, arrayObjs[i], array->element_type);
+						}
+					}
+					else {
+						// TODO: take array alignment into account once that is implemented
+						arrayStride = array->element_type->size;
+						fieldPtr = vArrayDataPointer(array);
+						for(i = 0; i < array->num_elements; ++i) {
+							traceAndMark(ctx, fieldPtr, array->element_type);
+							fieldPtr = ((char*)fieldPtr) + arrayStride;
+						}
+					}
+				}
+			}
         }
     }
 }
@@ -338,7 +362,6 @@ static vObject internalAlloc(vThreadContextRef ctx,
     block = allocBlock(size);
     ret = getObject(block);
     setType(block, type == V_T_SELF ? ret : type);
-    memset(ret, 0, size);
     addHeapEntry(heap, block);
     
     heap->currentSize += allocSize;
