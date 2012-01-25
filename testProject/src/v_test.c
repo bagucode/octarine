@@ -216,7 +216,7 @@ void testCreateType() {
     fields[4]->type = ctx->runtime->builtInTypes.f64;
     
     frame.typeName = vStringCreate(ctx, "MyHappyTestType");
-    frame.myType = vTypeCreate(ctx, v_false, V_T_OBJECT, frame.typeName, frame.fields, NULL, NULL);
+    frame.myType = vTypeCreate(ctx, v_false, V_T_OBJECT, 0, frame.typeName, frame.fields, NULL, NULL);
     
     assert(frame.myType->size == sizeof(testStruct));
     
@@ -224,7 +224,7 @@ void testCreateType() {
     
     frame.instance->one = 250;
     frame.instance->two = 65500;
-    frame.instance->three = 5000000000;
+    frame.instance->three = 500000;
     frame.instance->self = frame.instance;
     frame.instance->five = 0.01;
     

@@ -89,13 +89,14 @@ vTypeRef vTypeCreateProtoType(vThreadContextRef ctx, v_bool shared) {
 vTypeRef vTypeCreate(vThreadContextRef ctx,
                      v_bool shared,
                      u8 kind,
+                     u8 alignment,
                      vStringRef name,
                      vArrayRef fields,
                      vFinalizer finalizer,
                      vTypeRef protoType) {
     vFieldRef* inFields;
     vFieldRef* members;
-    uword i, largest;
+    uword i, largest, align;
     struct {
         vTypeRef proto;
     } frame;
@@ -111,8 +112,8 @@ vTypeRef vTypeCreate(vThreadContextRef ctx,
     frame.proto->finalizer = finalizer;
     frame.proto->fields = vArrayCreate(ctx, ctx->runtime->builtInTypes.field, fields->num_elements);
     frame.proto->size = 0;
+    frame.proto->alignment = alignment;
 
-    // TODO: alignment support
     largest = 0;
     inFields = (vFieldRef*)vArrayDataPointer(fields);
     members = (vFieldRef*)vArrayDataPointer(frame.proto->fields);
@@ -133,12 +134,12 @@ vTypeRef vTypeCreate(vThreadContextRef ctx,
                 largest = sizeof(void*);
         } else { // struct type
             if(vTypeIsPrimitive(ctx, members[i]->type)) {
-                frame.proto->size = alignOffset(frame.proto->size, members[i]->type->size);
+                align = members[i]->type->alignment != 0 ? members[i]->type->alignment : members[i]->type->size;
             } else {
-                /* composite type, align on pointer.
-                 TODO: support user defined alignment */
-                frame.proto->size = alignOffset(frame.proto->size, sizeof(void*));
+                // Align composite types on pointer if there is no explicit alignment
+                align = members[i]->type->alignment != 0 ? members[i]->type->alignment : sizeof(void*);
             }
+            frame.proto->size = alignOffset(frame.proto->size, align);
             members[i]->offset = frame.proto->size;
             frame.proto->size += members[i]->type->size;
             largest = findLargestMember(ctx, largest, members[i]);

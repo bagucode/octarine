@@ -26,6 +26,7 @@ struct vType {
     vFinalizer finalizer;
     uword size;
     u8 kind;
+    u8 alignment;
 };
 
 v_bool vTypeIsPrimitive(vThreadContextRef ctx, vTypeRef t);
@@ -36,6 +37,7 @@ vTypeRef vTypeCreatePrototype(vThreadContextRef ctx, v_bool shared);
 vTypeRef vTypeCreate(vThreadContextRef ctx,
                      v_bool shared,
                      u8 kind,
+                     u8 alignment,
                      vStringRef name,
                      vArrayRef fields,
                      vFinalizer finalizer,

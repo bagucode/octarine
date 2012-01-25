@@ -43,6 +43,12 @@ static void alloc_builtInTypes(vThreadContextRef ctx) {
     ctx->runtime->builtInTypes.map = alloc_built_in(ctx);
 	ctx->runtime->builtInTypes.reader = alloc_built_in(ctx);
 	ctx->runtime->builtInTypes.symbol = alloc_built_in(ctx);
+#ifdef __GNUC__
+#ifdef VLANG32
+	ctx->runtime->builtInTypes.i64->alignment = 4;
+	ctx->runtime->builtInTypes.u64->alignment = 4;
+#endif
+#endif
 }
 
 static void init_builtInTypes(vThreadContextRef ctx) {
