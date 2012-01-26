@@ -14,7 +14,7 @@ void v_bootstrap_list_init_type(vThreadContextRef ctx) {
     ctx->runtime->builtInTypes.list->name = v_bootstrap_string_create(ctx, "AnyList");
     ctx->runtime->builtInTypes.list->size = sizeof(vListObj);
 
-    fields = (vFieldRef*)ctx->runtime->builtInTypes.list->fields->data;
+    fields = (vFieldRef*)vArrayDataPointer(ctx->runtime->builtInTypes.list->fields);
     
     fields[0]->name = v_bootstrap_string_create(ctx, "data");
     fields[0]->offset = offsetof(vListObj, data);

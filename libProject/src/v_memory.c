@@ -385,22 +385,21 @@ vObject vHeapAlloc(vThreadContextRef ctx, v_bool useSharedHeap, vTypeRef t) {
     return ret;
 }
 
+static uword calcArraySize(uword elemSize, uword numElems, u8 align) {
+    return sizeof(vArray) + (elemSize * numElems) + align - 1;
+}
+
 vArrayRef vHeapAllocArray(vThreadContextRef ctx,
                           v_bool useSharedHeap,
                           vTypeRef elementType,
                           uword numElements) {
     vArrayRef arr;
-    uword size = sizeof(vArray);
-    
-    if(elementType->kind == V_T_OBJECT) {
-        size += sizeof(pointer) * numElements;
-    } else {
-        size += elementType->size * numElements;
-    }
-    
+    u8 align = elementType->alignment != 0 ? elementType->alignment : elementType->size;
+    uword size = calcArraySize(elementType->size, numElements, align);
     arr = (vArrayRef)internalAlloc(ctx, useSharedHeap, ctx->runtime->builtInTypes.array, size);
     arr->element_type = elementType;
     arr->num_elements = numElements;
+    arr->alignment = align;
     return arr;
 }
 
@@ -424,13 +423,15 @@ vObject v_bootstrap_object_alloc(vThreadContextRef ctx,
 vArrayRef v_bootstrap_array_alloc(vThreadContextRef ctx,
                                   vTypeRef proto_elem_type,
                                   uword num_elements,
-                                  uword elem_size) {
+                                  uword elem_size,
+                                  u8 alignment) {
     vArrayRef arr;
-    uword size = sizeof(vArray) + num_elements * elem_size;
+    uword size = calcArraySize(elem_size, num_elements, alignment);
     
     arr = (vArrayRef)internalAlloc(ctx, v_true, ctx->runtime->builtInTypes.array, size);
     arr->element_type = proto_elem_type;
     arr->num_elements = num_elements;
+    arr->alignment = alignment;
     return arr;
 }
 

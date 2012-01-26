@@ -18,6 +18,7 @@ struct vField {
 struct vType {
     vStringRef name;
     vArrayRef fields;
+    vArrayRef attributes; // TODO: use this for things like 'this is immutable'
     /* TODO: how to use this from the language?
      It should probably be changed to a vFunction
      but ... we can't allow overloads? There has to 

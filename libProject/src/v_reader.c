@@ -57,7 +57,7 @@ vReaderRef vReaderCreate(vThreadContextRef ctx) {
 }
 
 static u8 getChar(vArrayRef arr, uword i) {
-    return ((u8*)(&arr->data[0]))[i];
+    return ((u8*)(vArrayDataPointer(arr)))[i];
 }
 
 static v_bool isSpace(uword ch) {
@@ -103,7 +103,7 @@ static vObject readString(vThreadContextRef ctx, vArrayRef src, uword* idx) {
             frame.charBuffer = frame.tmp;
             frame.tmp = NULL;
         }
-        chars = (char*)(&frame.charBuffer->data[0]);
+        chars = (char*)vArrayDataPointer(frame.charBuffer);
         chars[bufIdx++] = (char)ch;
         ++(*idx);
     }
@@ -113,7 +113,7 @@ static vObject readString(vThreadContextRef ctx, vArrayRef src, uword* idx) {
         frame.charBuffer = frame.tmp;
         frame.tmp = NULL;
     }
-    chars = (char*)(&frame.charBuffer->data[0]);
+    chars = (char*)vArrayDataPointer(frame.charBuffer);
     chars[bufIdx] = 0;
 
     frame.theString = vStringCreate(ctx, chars);

@@ -28,7 +28,7 @@ vArrayRef vStringUtf8Copy(vThreadContextRef ctx, vStringRef str) {
     uword length;
     char* utf8String = vNativeStringToUtf8(str->str, &length);
     vArrayRef ret = vArrayCreate(ctx, ctx->runtime->builtInTypes.u8, length);
-    memcpy(&ret->data[0], utf8String, length);
+    memcpy(vArrayDataPointer(ret), utf8String, length);
     vFree(utf8String);
     return ret;
 }

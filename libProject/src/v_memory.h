@@ -40,6 +40,7 @@ vObject v_bootstrap_object_alloc(vThreadContextRef ctx,
 vArrayRef v_bootstrap_array_alloc(vThreadContextRef ctx,
                                   vTypeRef proto_elem_type,
                                   uword num_elements,
-                                  uword elem_size);
+                                  uword elem_size,
+                                  u8 alignment);
 
 #endif

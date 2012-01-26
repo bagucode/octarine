@@ -150,10 +150,11 @@ vTypeRef vTypeCreate(vThreadContextRef ctx,
 }
 
 vArrayRef v_bootstrap_type_create_field_array(vThreadContextRef ctx, uword numFields) {
-    vArrayRef ret = v_bootstrap_array_create(ctx, ctx->runtime->builtInTypes.field, numFields, sizeof(pointer));
+    vArrayRef ret = v_bootstrap_array_create(ctx, ctx->runtime->builtInTypes.field, numFields, sizeof(pointer), sizeof(pointer));
     uword i;
+    vFieldRef* fields = vArrayDataPointer(ret);
     for(i = 0; i < numFields; ++i) {
-        ((vFieldRef*)ret->data)[i] = (vFieldRef)v_bootstrap_object_alloc(ctx, ctx->runtime->builtInTypes.field, sizeof(vField));
+        fields[i] = (vFieldRef)v_bootstrap_object_alloc(ctx, ctx->runtime->builtInTypes.field, sizeof(vField));
     }
     return ret;
 }
@@ -165,7 +166,7 @@ void v_bootstrap_type_init_type(vThreadContextRef ctx) {
     ctx->runtime->builtInTypes.type->name = v_bootstrap_string_create(ctx, "Type");
     ctx->runtime->builtInTypes.type->size = sizeof(vType);
     
-    fields = (vFieldRef*)ctx->runtime->builtInTypes.type->fields->data;
+    fields = (vFieldRef*)vArrayDataPointer(ctx->runtime->builtInTypes.type->fields);
 
     fields[0]->name = v_bootstrap_string_create(ctx, "name");
     fields[0]->offset = offsetof(vType, name);
@@ -191,7 +192,7 @@ void v_bootstrap_type_init_field(vThreadContextRef ctx) {
     ctx->runtime->builtInTypes.field->name = v_bootstrap_string_create(ctx, "Field");
     ctx->runtime->builtInTypes.field->size = sizeof(vField);
 
-    fields = (vFieldRef*)ctx->runtime->builtInTypes.field->fields->data;
+    fields = (vFieldRef*)vArrayDataPointer(ctx->runtime->builtInTypes.field->fields);
     
     fields[0]->name = v_bootstrap_string_create(ctx, "name");
     fields[0]->offset = offsetof(vField, name);

@@ -15,7 +15,7 @@ void v_bootstrap_symbol_init_type(vThreadContextRef ctx) {
     ctx->runtime->builtInTypes.symbol->name = v_bootstrap_string_create(ctx, "Symbol");
 	ctx->runtime->builtInTypes.symbol->size = sizeof(vSymbol);
 
-    fields = (vFieldRef*)ctx->runtime->builtInTypes.symbol->fields->data;
+    fields = (vFieldRef*)vArrayDataPointer(ctx->runtime->builtInTypes.symbol->fields);
     
     fields[0]->name = v_bootstrap_string_create(ctx, "name");
 	fields[0]->offset = offsetof(vSymbol, name);

@@ -7,6 +7,10 @@
 #include "v_string.h"
 #include <memory.h>
 
+static uword alignOffset(uword offset, uword on) {
+    return (offset + (on - 1)) & (~(on - 1));
+}
+
 vArrayRef vArrayCreate(vThreadContextRef ctx,
                        vTypeRef elemType,
                        uword num_elements) {
@@ -14,7 +18,7 @@ vArrayRef vArrayCreate(vThreadContextRef ctx,
 }
 
 pointer vArrayDataPointer(vArrayRef arr) {
-    return arr->data;
+    return (pointer)alignOffset((uword)arr->data, arr->alignment);
 }
 
 uword vArraySize(vArrayRef arr) {
@@ -24,13 +28,16 @@ uword vArraySize(vArrayRef arr) {
 vArrayRef v_bootstrap_array_create(vThreadContextRef ctx,
                                    vTypeRef type,
                                    uword num_elements,
-                                   uword elem_size) {
-    return v_bootstrap_array_alloc(ctx, type, num_elements, elem_size);
+                                   uword elem_size,
+                                   u8 alignment) {
+    return v_bootstrap_array_alloc(ctx, type, num_elements, elem_size, alignment);
 }
 
 // There is currently no way to know if this went well or not.
 // TODO: need error handling.
 vObject vArrayCopy(vArrayRef from, vArrayRef to) {
+    pointer a1Data, a2Data;
+    
     if(from->element_type != to->element_type) {
         return NULL;
     }
@@ -38,7 +45,10 @@ vObject vArrayCopy(vArrayRef from, vArrayRef to) {
         return NULL;
     }
     
-    memcpy(&to->data[0], &from->data[0], from->element_type->size * from->num_elements);
+    a1Data = vArrayDataPointer(from);
+    a2Data = vArrayDataPointer(to);
+    
+    memcpy(a1Data, a2Data, from->element_type->size * from->num_elements);
     return NULL;
 }
 
