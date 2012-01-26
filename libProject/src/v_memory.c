@@ -186,7 +186,6 @@ static void traceAndMark(vThreadContextRef ctx, vObject obj, vTypeRef type) {
      Likewise, thread local roots that point into the shared heap need
      to be ignored when marking a thread local heap because there will
      be no sweep in the shared heap to reset the marks. */
-    
     if(obj) {
         block = NULL;
         if(vTypeIsObject(ctx, type)) {
@@ -240,6 +239,11 @@ static void traceAndMark(vThreadContextRef ctx, vObject obj, vTypeRef type) {
 				}
 			}
         }
+    }
+    // Also mark the type to make sure that does not disappear
+    block = getBlock(type);
+    if(!isMarked(block)) {
+        traceAndMark(ctx, type, ctx->runtime->builtInTypes.type);
     }
 }
 
