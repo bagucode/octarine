@@ -115,7 +115,7 @@ vHeapRef vHeapCreate(v_bool synchronized, uword gc_threshold) {
 
 typedef struct vFrameInfo {
     vObject* frame;
-    uword numRoots;
+    uword size;
 } vFrameInfo;
 
 #define MAX_FRAMES 500
@@ -149,7 +149,7 @@ void vMemoryPushFrame(vThreadContextRef ctx,
     
     if(ctx->roots->numUsed < MAX_FRAMES) {
         ctx->roots->frameInfos[ctx->roots->numUsed].frame = frame;
-        ctx->roots->frameInfos[ctx->roots->numUsed].numRoots = frameSize / sizeof(pointer);
+        ctx->roots->frameInfos[ctx->roots->numUsed].size = frameSize;
         ctx->roots->numUsed++;
    } else {
        newRoots = vMemoryCreateRootSet();
@@ -249,7 +249,7 @@ static void traceAndMark(vThreadContextRef ctx, vObject obj, vTypeRef type) {
 
 static void collectGarbage(vThreadContextRef ctx, v_bool collectSharedHeap) {
     vRootSetRef roots;
-    uword i, j;
+    uword i, j, nroots;
     vObject obj;
     HeapRecordRef newRecord;
     HeapRecordRef currentRecord;
@@ -269,7 +269,8 @@ static void collectGarbage(vThreadContextRef ctx, v_bool collectSharedHeap) {
         roots = ctx->roots;
         while (roots) {
             for(i = 0; i < roots->numUsed; ++i) {
-                for(j = 0; j < roots->frameInfos[i].numRoots; ++j) {
+                nroots = roots->frameInfos[i].size / sizeof(pointer);
+                for(j = 0; j < nroots; ++j) {
                     obj = roots->frameInfos[i].frame[j];
                     if(obj != NULL) {
                         block = getBlock(obj);
