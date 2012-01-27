@@ -122,7 +122,7 @@ vListObjRef vListObjReverse(vThreadContextRef ctx, vListObjRef lst) {
     struct {
         vListObjRef newHead;
     } frame;
-    vMemoryPushFrame(ctx, &frame, 1);
+    vMemoryPushFrame(ctx, &frame, sizeof(frame));
     
     frame.newHead = vListObjCreate(ctx, lst->data);
     lst = lst->next;

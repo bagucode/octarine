@@ -96,7 +96,7 @@ vTypeRef vTypeCreate(vThreadContextRef ctx,
     struct {
         vTypeRef proto;
     } frame;
-    vMemoryPushFrame(ctx, &frame, 1);
+    vMemoryPushFrame(ctx, &frame, sizeof(frame));
     
     frame.proto = protoType;
     if(frame.proto == NULL) {

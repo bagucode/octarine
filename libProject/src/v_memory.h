@@ -24,7 +24,7 @@ vTypeRef vMemoryGetObjectType(vThreadContextRef ctx, vObject obj);
 
 void vMemoryPushFrame(vThreadContextRef ctx,
                       pointer frame,
-                      uword numRootsInFrame);
+                      uword frameSize);
 
 void vMemoryPopFrame(vThreadContextRef ctx);
 

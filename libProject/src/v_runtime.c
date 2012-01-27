@@ -140,7 +140,7 @@ static void init_builtInConstants(vThreadContextRef ctx) {
     struct {
         vStringRef str;
     } frame;
-    vMemoryPushFrame(ctx, &frame, 1);
+    vMemoryPushFrame(ctx, &frame, sizeof(frame));
     
     frame.str = vStringCreate(ctx, "need-more-data");
     ctx->runtime->builtInConstants.needMoreData = vSymbolCreate(ctx, frame.str);

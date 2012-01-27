@@ -39,7 +39,7 @@ void testGCAllRetained() {
         vObject listHead;
     } frame;
 
-    vMemoryPushFrame(ctx, &frame, 1);
+    vMemoryPushFrame(ctx, &frame, sizeof(frame));
     
     frame.listHead = vListObjCreate(ctx, NULL);
     for(i = 0; i < 1024; ++i) {
@@ -86,7 +86,7 @@ void testSymbolEquals() {
 		vSymbolRef sym2;
 		vStringRef name;
 	} frame;
-	vMemoryPushFrame(ctx, &frame, 3);
+	vMemoryPushFrame(ctx, &frame, sizeof(frame));
 
 	frame.name = vStringCreate(ctx, "Bob2Bob");
 	frame.sym1 = vSymbolCreate(ctx, frame.name);
@@ -117,7 +117,7 @@ void testReadSymbol() {
         vSymbolRef otherBob;
 		vStringRef src;
 	} frame;
-	vMemoryPushFrame(ctx, &frame, 3);
+	vMemoryPushFrame(ctx, &frame, sizeof(frame));
 
     frame.src = vStringCreate(ctx, "Bob2Bob");
     frame.otherBob = vSymbolCreate(ctx, frame.src);
@@ -146,7 +146,7 @@ void testReadOneListAndOneSymbol() {
         vStringRef name;
         vSymbolRef controlSym;
 	} frame;
-	vMemoryPushFrame(ctx, &frame, 4);
+	vMemoryPushFrame(ctx, &frame, sizeof(frame));
 
     frame.name = vStringCreate(ctx, "Bob2Bob");
     frame.src = vStringCreate(ctx, "(Bob2Bob) otherSym");
@@ -198,7 +198,7 @@ void testCreateType() {
         vStringRef typeName;
         testStruct* instance;
 	} frame;
-	vMemoryPushFrame(ctx, &frame, 4);
+	vMemoryPushFrame(ctx, &frame, sizeof(frame));
     
     frame.fields = vArrayCreate(ctx, ctx->runtime->builtInTypes.field, 5);
     fields = (vFieldRef*)vArrayDataPointer(frame.fields);
@@ -246,7 +246,7 @@ void testArrayPutGet() {
         vObject tmp1;
         vObject tmp2;
     } frame;
-    vMemoryPushFrame(ctx, &frame, 4);
+    vMemoryPushFrame(ctx, &frame, sizeof(frame));
     
     frame.objArray = vArrayCreate(ctx, ctx->runtime->builtInTypes.any, 50);
     // Have no built in composite structs :(
@@ -295,7 +295,7 @@ void testVector() {
         vStringRef str;
         vStringRef checkStr;
     } frame;
-    vMemoryPushFrame(ctx, &frame, 4);
+    vMemoryPushFrame(ctx, &frame, sizeof(frame));
 
     frame.veci64 = vVectorCreate(ctx, v_false, i64_t);
     frame.vecStr = vVectorCreate(ctx, v_false, str_t);
@@ -334,6 +334,40 @@ void testVector() {
     vRuntimeDestroy(runtime);
 }
 
+void testReadVector() {
+    vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024);
+    vThreadContextRef ctx = runtime->allContexts->ctx;
+    vListObjRef lst;
+    vSymbolRef sym;
+    vVectorRef vec;
+	struct {
+		vObject readResult;
+		vStringRef src;
+        vSymbolRef ethel;
+	} frame;
+	vMemoryPushFrame(ctx, &frame, sizeof(frame));
+
+    frame.src = vStringCreate(ctx, "ethel");
+    frame.ethel = vSymbolCreate(ctx, frame.src);
+    frame.src = vStringCreate(ctx, "[bob fred ethel]");
+    frame.readResult = vReaderRead(ctx, frame.src);
+    
+    // We should get a list with one element, a vector of three symbols
+    assert(vObjectGetType(ctx, frame.readResult) == ctx->runtime->builtInTypes.list);
+    lst = (vListObjRef)frame.readResult;
+    assert(vListObjSize(ctx, lst) == 1);
+    
+    vec = vListObjFirst(ctx, lst);
+    assert(vObjectGetType(ctx, vec) == ctx->runtime->builtInTypes.vector);
+    assert(vVectorSize(ctx, vec) == 3);
+    
+    vVectorGet(ctx, vec, 2, &sym, ctx->runtime->builtInTypes.symbol);
+    assert(vSymbolEquals(ctx, sym, frame.ethel) == v_true);
+    
+	vMemoryPopFrame(ctx);
+    vRuntimeDestroy(runtime);
+}
+
 int main(int argc, char** argv) {
 
     testCreateRuntime();
@@ -347,6 +381,7 @@ int main(int argc, char** argv) {
     testCreateType();
     testArrayPutGet();
     testVector();
+    testReadVector();
     
 	return 0;
 }

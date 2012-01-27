@@ -142,20 +142,20 @@ void vMemoryDeleteRootSet(vRootSetRef roots) {
 
 void vMemoryPushFrame(vThreadContextRef ctx,
                       pointer frame,
-                      uword numRootsInFrame) {
+                      uword frameSize) {
     vRootSetRef newRoots;
     
-    memset(frame, 0, sizeof(pointer) * numRootsInFrame);
+    memset(frame, 0, frameSize);
     
     if(ctx->roots->numUsed < MAX_FRAMES) {
         ctx->roots->frameInfos[ctx->roots->numUsed].frame = frame;
-        ctx->roots->frameInfos[ctx->roots->numUsed].numRoots = numRootsInFrame;
+        ctx->roots->frameInfos[ctx->roots->numUsed].numRoots = frameSize / sizeof(pointer);
         ctx->roots->numUsed++;
    } else {
        newRoots = vMemoryCreateRootSet();
        newRoots->prev = ctx->roots;
        ctx->roots = newRoots;
-       vMemoryPushFrame(ctx, frame, numRootsInFrame);
+       vMemoryPushFrame(ctx, frame, frameSize);
     }
 }
 
