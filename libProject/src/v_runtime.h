@@ -43,6 +43,7 @@ struct vRuntime {
         vTypeRef map;
 		vTypeRef reader;
 		vTypeRef symbol;
+        vTypeRef vector;
     } builtInTypes;
     struct {
         vFunctionRef equals;

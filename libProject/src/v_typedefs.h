@@ -67,4 +67,7 @@ typedef vThreadContext* vThreadContextRef;
 typedef struct vType vType;
 typedef vType* vTypeRef;
 
+typedef struct vVector vVector;
+typedef vVector* vVectorRef;
+
 #endif

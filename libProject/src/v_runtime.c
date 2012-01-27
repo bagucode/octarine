@@ -8,6 +8,7 @@
 #include "v_thread_context.h"
 #include "v_reader.h"
 #include "v_symbol.h"
+#include "v_vector.h"
 
 static vTypeRef alloc_built_in(vThreadContextRef ctx) {
 	return (vTypeRef)v_bootstrap_object_alloc(ctx, ctx->runtime->builtInTypes.type, sizeof(vType));
@@ -43,6 +44,7 @@ static void alloc_builtInTypes(vThreadContextRef ctx) {
     ctx->runtime->builtInTypes.map = alloc_built_in(ctx);
 	ctx->runtime->builtInTypes.reader = alloc_built_in(ctx);
 	ctx->runtime->builtInTypes.symbol = alloc_built_in(ctx);
+    ctx->runtime->builtInTypes.vector = alloc_built_in(ctx);
 #ifdef __GNUC__
 #ifdef VLANG32
 	ctx->runtime->builtInTypes.i64->alignment = 4;
@@ -128,6 +130,7 @@ static void init_builtInTypes(vThreadContextRef ctx) {
     v_bootstrap_map_init_type(ctx);
 	v_bootstrap_reader_init_type(ctx);
 	v_bootstrap_symbol_init_type(ctx);
+    v_bootstrap_vector_init_type(ctx);
 }
 
 static void init_builtInFunctions(vThreadContextRef ctx) {
