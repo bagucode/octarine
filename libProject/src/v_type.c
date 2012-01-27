@@ -212,6 +212,16 @@ v_bool vTypeEquals(vThreadContextRef ctx, vTypeRef t, vObject other) {
     return t == other;
 }
 
+vFieldRef vFieldCreate(vThreadContextRef ctx,
+                       v_bool shared,
+                       vStringRef name,
+                       vTypeRef type) {
+    vFieldRef f = (vFieldRef)vHeapAlloc(ctx, shared, ctx->runtime->builtInTypes.field);
+    f->name = name;
+    f->type = type;
+    return f;
+}
+
 const u8 V_T_OBJECT = 0;
 const u8 V_T_STRUCT = 1;
 const vTypeRef V_T_SELF = NULL;

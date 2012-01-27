@@ -9,6 +9,7 @@
 #include "../../libProject/src/v_symbol.h"
 #include "../../libProject/src/v_array.h"
 #include "../../libProject/src/v_type.h"
+#include "../../libProject/src/v_vector.h"
 #include <memory.h>
 #include <assert.h>
 
@@ -278,6 +279,59 @@ void testArrayPutGet() {
     assert(check == three);
     
     vMemoryPopFrame(ctx);
+    vRuntimeDestroy(runtime);
+}
+
+void testVector() {
+    vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024);
+    vThreadContextRef ctx = runtime->allContexts->ctx;
+    vTypeRef str_t = ctx->runtime->builtInTypes.string;
+    vTypeRef i64_t = ctx->runtime->builtInTypes.i64;
+    i64 one;
+    i64 checki64;
+    struct {
+        vVectorRef veci64;
+        vVectorRef vecStr;
+        vStringRef str;
+        vStringRef checkStr;
+    } frame;
+    vMemoryPushFrame(ctx, &frame, 4);
+
+    frame.veci64 = vVectorCreate(ctx, v_false, i64_t);
+    frame.vecStr = vVectorCreate(ctx, v_false, str_t);
+    
+    frame.str = vStringCreate(ctx, "String One");
+    frame.vecStr = vVectorAddBack(ctx, frame.vecStr, frame.str, str_t);
+    assert(vVectorSize(ctx, frame.vecStr) == 1);
+    vVectorGet(ctx, frame.vecStr, 0, &frame.checkStr, str_t);
+    assert(vObjectGetType(ctx, frame.checkStr) == str_t);
+    assert(vStringCompare(frame.str, frame.checkStr) == 0);
+    assert(frame.str == frame.checkStr);
+
+    one = 1;
+    checki64 = 0;
+    frame.veci64 = vVectorAddBack(ctx, frame.veci64, &one, i64_t);
+    assert(vVectorSize(ctx, frame.veci64) == 1);
+    vVectorGet(ctx, frame.veci64, 0, &checki64, i64_t);
+    assert(one == checki64);
+
+    // Test put of object
+    frame.str = vStringCreate(ctx, "String Two");
+    frame.vecStr = vVectorPut(ctx, frame.vecStr, 0, frame.str, str_t);
+    vVectorGet(ctx, frame.vecStr, 0, &frame.checkStr, str_t);
+    assert(vObjectGetType(ctx, frame.checkStr) == str_t);
+    assert(vStringCompare(frame.str, frame.checkStr) == 0);
+    assert(frame.str == frame.checkStr);
+
+    // Test put of struct
+    one = 2;
+    checki64 = 0;
+    frame.veci64 = vVectorPut(ctx, frame.veci64, 0, &one, i64_t);
+    vVectorGet(ctx, frame.veci64, 0, &checki64, i64_t);
+    assert(one == checki64);
+    
+    vMemoryPopFrame(ctx);
+    vRuntimeDestroy(runtime);
 }
 
 int main(int argc, char** argv) {
@@ -292,6 +346,7 @@ int main(int argc, char** argv) {
     testReadOneListAndOneSymbol();
     testCreateType();
     testArrayPutGet();
+    testVector();
     
 	return 0;
 }

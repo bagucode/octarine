@@ -7,19 +7,18 @@
 #include "v_memory.h"
 
 void v_bootstrap_vector_init_type(vThreadContextRef ctx) {
-    vFieldRef* fields;
 	struct {
         vArrayRef fields;
 		vTypeRef theType;
         vStringRef typeName;
+        vFieldRef field;
 	} frame;
-	vMemoryPushFrame(ctx, &frame, 3);
+	vMemoryPushFrame(ctx, &frame, 4);
     
     frame.fields = vArrayCreate(ctx, ctx->runtime->builtInTypes.field, 1);
-    fields = (vFieldRef*)vArrayDataPointer(frame.fields);
-    fields[0] = vHeapAlloc(ctx, v_false, ctx->runtime->builtInTypes.field);
-    fields[0]->name = vStringCreate(ctx, "data");
-    fields[0]->type = ctx->runtime->builtInTypes.array;
+    frame.typeName = vStringCreate(ctx, "data");
+    frame.field = vFieldCreate(ctx, v_false, frame.typeName, ctx->runtime->builtInTypes.array);
+    vArrayPut(ctx, frame.fields, 0, frame.field, ctx->runtime->builtInTypes.field);
     
     frame.typeName = vStringCreate(ctx, "Vector");
     frame.theType = vTypeCreate(ctx, v_false, V_T_OBJECT, 0, frame.typeName, frame.fields, NULL, NULL);
@@ -30,17 +29,60 @@ void v_bootstrap_vector_init_type(vThreadContextRef ctx) {
 
 vVectorRef vVectorCreate(vThreadContextRef ctx,
                          v_bool shared,
-                         vTypeRef type,
-                         uword initialCap) {
+                         vTypeRef type) {
     struct {
         vVectorRef vec;
     } frame;
     vMemoryPushFrame(ctx, &frame, 1);
     
     frame.vec = vHeapAlloc(ctx, shared, ctx->runtime->builtInTypes.vector);
-    frame.vec->data = vArrayCreate(ctx, type, initialCap);
+    frame.vec->data = vArrayCreate(ctx, type, 0);
     
     vMemoryPopFrame(ctx);
     return frame.vec;
 }
 
+vVectorRef vVectorAddBack(vThreadContextRef ctx,
+                          vVectorRef vec,
+                          pointer data,
+                          vTypeRef dataType) {
+    struct {
+        vVectorRef newVec;
+    } frame;
+    vMemoryPushFrame(ctx, &frame, 1);
+    
+    frame.newVec = vHeapAlloc(ctx, v_false, ctx->runtime->builtInTypes.vector);
+    frame.newVec->data = vArrayCreate(ctx, vec->data->element_type, vec->data->num_elements + 1);
+
+    vArrayCopy(vec->data, frame.newVec->data);
+    vArrayPut(ctx, frame.newVec->data, vec->data->num_elements, data, dataType);
+    // TODO: ERROR HANDLING
+    
+    vMemoryPopFrame(ctx);
+    return frame.newVec;
+}
+
+uword vVectorSize(vThreadContextRef ctx, vVectorRef vec) {
+    return vec->data->num_elements;
+}
+
+vVectorRef vVectorPut(vThreadContextRef ctx, vVectorRef vec, uword idx, pointer src, vTypeRef srcType) {
+    struct {
+        vVectorRef newVec;
+    } frame;
+    vMemoryPushFrame(ctx, &frame, 1);
+
+    frame.newVec = vHeapAlloc(ctx, v_false, ctx->runtime->builtInTypes.vector);
+    frame.newVec->data = vArrayCreate(ctx, vec->data->element_type, vec->data->num_elements);
+
+    vArrayCopy(vec->data, frame.newVec->data);
+    vArrayPut(ctx, frame.newVec->data, idx, src, srcType);
+    // TODO: ERROR HANDLING
+
+    vMemoryPopFrame(ctx);
+    return frame.newVec;
+}
+
+void vVectorGet(vThreadContextRef ctx, vVectorRef vec, uword idx, pointer dest, vTypeRef destType) {
+    vArrayGet(ctx, vec->data, idx, dest, destType);
+}
