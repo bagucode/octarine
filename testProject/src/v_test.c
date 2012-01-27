@@ -232,6 +232,54 @@ void testCreateType() {
     vRuntimeDestroy(runtime);
 }
 
+void testArrayPutGet() {
+    vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024);
+    vThreadContextRef ctx = runtime->allContexts->ctx;
+    i64 one;
+    i64 two;
+    i64 three;
+    i64 check;
+    struct {
+        vArrayRef objArray;
+        vArrayRef structArray;
+        vObject tmp1;
+        vObject tmp2;
+    } frame;
+    vMemoryPushFrame(ctx, &frame, 4);
+    
+    frame.objArray = vArrayCreate(ctx, ctx->runtime->builtInTypes.any, 50);
+    // Have no built in composite structs :(
+    frame.structArray = vArrayCreate(ctx, ctx->runtime->builtInTypes.i64, 50);
+
+    vArrayGet(ctx, frame.objArray, 0, &frame.tmp1, ctx->runtime->builtInTypes.string);
+    assert(frame.tmp1 == NULL);
+
+    frame.tmp1 = vStringCreate(ctx, "a string");
+    vArrayPut(ctx, frame.objArray, 10, frame.tmp1, ctx->runtime->builtInTypes.string);
+    vArrayGet(ctx, frame.objArray, 10, &frame.tmp2, ctx->runtime->builtInTypes.string);
+    assert(vObjectGetType(ctx, frame.tmp2) == ctx->runtime->builtInTypes.string);
+    assert(vStringCompare(frame.tmp1, frame.tmp2) == 0);
+    assert(frame.tmp1 == frame.tmp2);
+    
+    one = 1;
+    two = 2;
+    three = -3;
+    check = 0;
+    
+    vArrayPut(ctx, frame.structArray, 1, &one, ctx->runtime->builtInTypes.i64);
+    vArrayPut(ctx, frame.structArray, 2, &two, ctx->runtime->builtInTypes.i64);
+    vArrayPut(ctx, frame.structArray, 3, &three, ctx->runtime->builtInTypes.i64);
+    
+    vArrayGet(ctx, frame.structArray, 1, &check, ctx->runtime->builtInTypes.i64);
+    assert(check == one);
+    vArrayGet(ctx, frame.structArray, 2, &check, ctx->runtime->builtInTypes.i64);
+    assert(check == two);
+    vArrayGet(ctx, frame.structArray, 3, &check, ctx->runtime->builtInTypes.i64);
+    assert(check == three);
+    
+    vMemoryPopFrame(ctx);
+}
+
 int main(int argc, char** argv) {
 
     testCreateRuntime();
@@ -243,6 +291,7 @@ int main(int argc, char** argv) {
     testReadSymbol();
     testReadOneListAndOneSymbol();
     testCreateType();
+    testArrayPutGet();
     
 	return 0;
 }

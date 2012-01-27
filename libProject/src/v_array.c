@@ -52,6 +52,75 @@ vObject vArrayCopy(vArrayRef from, vArrayRef to) {
     return NULL;
 }
 
+void vArrayPut(vThreadContextRef ctx, vArrayRef arr, uword idx, pointer src, vTypeRef srcType) {
+    char* data = (char*)vArrayDataPointer(arr);
+    pointer* datap;
+
+    if(vTypeIsObject(ctx, arr->element_type)
+       && arr->element_type != ctx->runtime->builtInTypes.any
+       && srcType != arr->element_type) {
+        // TODO: ERROR
+        return;
+    }
+    else if(vTypeIsStruct(ctx, srcType)
+            && srcType != arr->element_type) {
+        // TODO: ERROR
+        return;
+    }
+    if(arr->num_elements <= idx) {
+        // TODO: ERROR
+        return;
+    }
+    
+    if(vTypeIsObject(ctx, srcType)) {
+        datap = (pointer*)data;
+        datap[idx] = src;
+    }
+    else {
+        data = data + srcType->size * (idx + 1);
+        memcpy(data, src, srcType->size);
+    }
+}
+
+void vArrayGet(vThreadContextRef ctx, vArrayRef arr, uword idx, pointer dest, vTypeRef destType) {
+    char* data = (char*)vArrayDataPointer(arr);
+    pointer *datap, *destp;
+    vObject obj;
+
+    if(arr->num_elements <= idx) {
+        // TODO: ERROR
+        return;
+    }
+    
+    if(vTypeIsObject(ctx, destType)) {
+        datap = (pointer*)data;
+        destp = (pointer*)dest;
+        obj = datap[idx];
+        
+        if(arr->element_type == ctx->runtime->builtInTypes.any
+           && destType != ctx->runtime->builtInTypes.any) {
+            if(obj && vObjectGetType(ctx, obj) != destType) {
+                // TODO: ERROR
+                return;
+            }
+        }
+        else if(destType != ctx->runtime->builtInTypes.any
+                && destType != arr->element_type) {
+            // TODO: ERROR
+            return;
+        }
+        destp[0] = obj;
+    }
+    else {
+        if(arr->element_type != destType) {
+            // TODO: ERROR
+            return;
+        }
+        data = data + destType->size * (idx + 1);
+        memcpy(dest, data, destType->size);
+    }
+}
+
 void v_bootstrap_array_init_type(vThreadContextRef ctx) {
     ctx->runtime->builtInTypes.array->fields = NULL;
     ctx->runtime->builtInTypes.array->kind = V_T_OBJECT;
