@@ -23,7 +23,7 @@ void v_bootstrap_symbol_init_type(vThreadContextRef ctx) {
 }
 
 vSymbolRef vSymbolCreate(vThreadContextRef ctx, vStringRef name) {
-	vSymbolRef sym = (vSymbolRef)vHeapAlloc(ctx, v_false, ctx->runtime->builtInTypes.symbol);
+	vSymbolRef sym = (vSymbolRef)vHeapAlloc(ctx, ctx->runtime->builtInTypes.symbol);
 	sym->name = name;
 	return sym;
 }

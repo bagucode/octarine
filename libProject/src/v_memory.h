@@ -10,21 +10,23 @@ vHeapRef vHeapCreate(v_bool synchronized, uword gc_threshold);
 void vHeapDestroy(vHeapRef heap);
 
 vObject vHeapAlloc(vThreadContextRef ctx,
-                   v_bool useSharedHeap,
                    vTypeRef type);
 
 vArrayRef vHeapAllocArray(vThreadContextRef ctx,
-                          v_bool useSharedHeap,
                           vTypeRef elementType,
                           uword numElements);
 
 void vHeapForceGC(vThreadContextRef ctx, v_bool collectSharedHeap);
 
+/* Does a deep copy of the given object graph into the shared heap
+ and returns the shared heap copy */
+vObject vHeapCopyToShared(vThreadContextRef ctx, vObject obj);
+
 vTypeRef vMemoryGetObjectType(vThreadContextRef ctx, vObject obj);
 
 void vMemoryPushFrame(vThreadContextRef ctx,
                       pointer frame,
-                      uword numRootsInFrame);
+                      uword frameSize);
 
 void vMemoryPopFrame(vThreadContextRef ctx);
 

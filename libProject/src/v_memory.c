@@ -115,7 +115,7 @@ vHeapRef vHeapCreate(v_bool synchronized, uword gc_threshold) {
 
 typedef struct vFrameInfo {
     vObject* frame;
-    uword numRoots;
+    uword size;
 } vFrameInfo;
 
 #define MAX_FRAMES 500
@@ -142,20 +142,20 @@ void vMemoryDeleteRootSet(vRootSetRef roots) {
 
 void vMemoryPushFrame(vThreadContextRef ctx,
                       pointer frame,
-                      uword numRootsInFrame) {
+                      uword frameSize) {
     vRootSetRef newRoots;
     
-    memset(frame, 0, sizeof(pointer) * numRootsInFrame);
+    memset(frame, 0, frameSize);
     
     if(ctx->roots->numUsed < MAX_FRAMES) {
         ctx->roots->frameInfos[ctx->roots->numUsed].frame = frame;
-        ctx->roots->frameInfos[ctx->roots->numUsed].numRoots = numRootsInFrame;
+        ctx->roots->frameInfos[ctx->roots->numUsed].size = frameSize;
         ctx->roots->numUsed++;
    } else {
        newRoots = vMemoryCreateRootSet();
        newRoots->prev = ctx->roots;
        ctx->roots = newRoots;
-       vMemoryPushFrame(ctx, frame, numRootsInFrame);
+       vMemoryPushFrame(ctx, frame, frameSize);
     }
 }
 
@@ -249,7 +249,7 @@ static void traceAndMark(vThreadContextRef ctx, vObject obj, vTypeRef type) {
 
 static void collectGarbage(vThreadContextRef ctx, v_bool collectSharedHeap) {
     vRootSetRef roots;
-    uword i, j;
+    uword i, j, nroots;
     vObject obj;
     HeapRecordRef newRecord;
     HeapRecordRef currentRecord;
@@ -265,11 +265,53 @@ static void collectGarbage(vThreadContextRef ctx, v_bool collectSharedHeap) {
     } else {
         /* Phase 1, mark. */
         /* TODO: need to trace from the roots in all threads when doing
-         a collection of the shared heap. */
+         a collection of the shared heap.
+         It is also important to not actually mark objects in the shared
+         heap when doing a local collection or we may retain garbage
+         in the shared heap the next time it is collected. */
+        
+        // TODO: remove the tracing of the built ins here. They should all
+        // reside in the shared heap once copy to the shared heap is working
+        // which means there is no need to trace them when doing
+        // a local collection
+
+        // types
+        traceAndMark(ctx, ctx->runtime->builtInTypes.any, ctx->runtime->builtInTypes.type);
+        traceAndMark(ctx, ctx->runtime->builtInTypes.i8, ctx->runtime->builtInTypes.type);
+        traceAndMark(ctx, ctx->runtime->builtInTypes.u8, ctx->runtime->builtInTypes.type);
+        traceAndMark(ctx, ctx->runtime->builtInTypes.i16, ctx->runtime->builtInTypes.type);
+        traceAndMark(ctx, ctx->runtime->builtInTypes.u16, ctx->runtime->builtInTypes.type);
+        traceAndMark(ctx, ctx->runtime->builtInTypes.i32, ctx->runtime->builtInTypes.type);
+        traceAndMark(ctx, ctx->runtime->builtInTypes.u32, ctx->runtime->builtInTypes.type);
+        traceAndMark(ctx, ctx->runtime->builtInTypes.i64, ctx->runtime->builtInTypes.type);
+        traceAndMark(ctx, ctx->runtime->builtInTypes.u64, ctx->runtime->builtInTypes.type);
+        traceAndMark(ctx, ctx->runtime->builtInTypes.f32, ctx->runtime->builtInTypes.type);
+        traceAndMark(ctx, ctx->runtime->builtInTypes.f64, ctx->runtime->builtInTypes.type);
+        traceAndMark(ctx, ctx->runtime->builtInTypes.word, ctx->runtime->builtInTypes.type);
+        traceAndMark(ctx, ctx->runtime->builtInTypes.uword, ctx->runtime->builtInTypes.type);
+        traceAndMark(ctx, ctx->runtime->builtInTypes.pointer, ctx->runtime->builtInTypes.type);
+        traceAndMark(ctx, ctx->runtime->builtInTypes.v_bool, ctx->runtime->builtInTypes.type);
+        traceAndMark(ctx, ctx->runtime->builtInTypes.v_char, ctx->runtime->builtInTypes.type);
+        traceAndMark(ctx, ctx->runtime->builtInTypes.string, ctx->runtime->builtInTypes.type);
+        traceAndMark(ctx, ctx->runtime->builtInTypes.type, ctx->runtime->builtInTypes.type);
+        traceAndMark(ctx, ctx->runtime->builtInTypes.field, ctx->runtime->builtInTypes.type);
+        traceAndMark(ctx, ctx->runtime->builtInTypes.array, ctx->runtime->builtInTypes.type);
+        traceAndMark(ctx, ctx->runtime->builtInTypes.list, ctx->runtime->builtInTypes.type);
+        traceAndMark(ctx, ctx->runtime->builtInTypes.any, ctx->runtime->builtInTypes.type);
+        traceAndMark(ctx, ctx->runtime->builtInTypes.map, ctx->runtime->builtInTypes.type);
+        traceAndMark(ctx, ctx->runtime->builtInTypes.reader, ctx->runtime->builtInTypes.type);
+        traceAndMark(ctx, ctx->runtime->builtInTypes.symbol, ctx->runtime->builtInTypes.type);
+        traceAndMark(ctx, ctx->runtime->builtInTypes.vector, ctx->runtime->builtInTypes.type);
+        traceAndMark(ctx, ctx->runtime->builtInTypes.keyword, ctx->runtime->builtInTypes.type);
+
+        // constants
+        traceAndMark(ctx, ctx->runtime->builtInConstants.needMoreData, ctx->runtime->builtInTypes.symbol);
+
         roots = ctx->roots;
         while (roots) {
             for(i = 0; i < roots->numUsed; ++i) {
-                for(j = 0; j < roots->frameInfos[i].numRoots; ++j) {
+                nroots = roots->frameInfos[i].size / sizeof(pointer);
+                for(j = 0; j < nroots; ++j) {
                     obj = roots->frameInfos[i].frame[j];
                     if(obj != NULL) {
                         block = getBlock(obj);
@@ -344,47 +386,37 @@ static v_bool checkHeapSpace(vThreadContextRef ctx,
 }
 
 static vObject internalAlloc(vThreadContextRef ctx,
-                             v_bool sharedAlloc,
                              vTypeRef type,
                              uword size) {
-    vHeapRef heap = sharedAlloc ? ctx->runtime->globals : ctx->heap;
     vObject ret;
     HeapBlockRef block;
     uword allocSize = calcBlockSize(size);
     
-    if(heap->mutex != NULL) {
-        vMutexLock(heap->mutex);
-    }
-    
-    if(checkHeapSpace(ctx, sharedAlloc, allocSize) == v_false) {
+    if(checkHeapSpace(ctx, v_false, allocSize) == v_false) {
         /* Just expand blindly for now. Should really check if
          the system is out of memory and report some error if
          that is the case. */
-        heap->gcThreshold *= 2;
+        ctx->heap->gcThreshold *= 2;
     }
 
     block = allocBlock(size);
     ret = getObject(block);
     setType(block, type == V_T_SELF ? ret : type);
-    addHeapEntry(heap, block);
+    addHeapEntry(ctx->heap, block);
     
-    heap->currentSize += allocSize;
-    
-    if(heap->mutex != NULL) {
-		vMutexUnlock(heap->mutex);
-    }
+    ctx->heap->currentSize += allocSize;
     
     return ret;
 }
 
-vObject vHeapAlloc(vThreadContextRef ctx, v_bool useSharedHeap, vTypeRef t) {
+vObject vHeapAlloc(vThreadContextRef ctx, vTypeRef t) {
     vObject ret;
     
     if(vTypeIsPrimitive(ctx, t)) {
         ret = NULL;
     }
     else {
-        ret = internalAlloc(ctx, useSharedHeap, t, t->size);
+        ret = internalAlloc(ctx, t, t->size);
     }
     return ret;
 }
@@ -394,13 +426,12 @@ static uword calcArraySize(uword elemSize, uword numElems, u8 align) {
 }
 
 vArrayRef vHeapAllocArray(vThreadContextRef ctx,
-                          v_bool useSharedHeap,
                           vTypeRef elementType,
                           uword numElements) {
     vArrayRef arr;
     u8 align = (u8)(elementType->alignment != 0 ? elementType->alignment : elementType->size);
     uword size = calcArraySize(elementType->size, numElements, align);
-    arr = (vArrayRef)internalAlloc(ctx, useSharedHeap, ctx->runtime->builtInTypes.array, size);
+    arr = (vArrayRef)internalAlloc(ctx, ctx->runtime->builtInTypes.array, size);
     arr->element_type = elementType;
     arr->num_elements = numElements;
     arr->alignment = align;
@@ -421,7 +452,7 @@ static void addHeapEntry(vHeapRef heap, HeapBlockRef block) {
 vObject v_bootstrap_object_alloc(vThreadContextRef ctx,
                                  vTypeRef proto_type,
                                  uword size) {
-    return internalAlloc(ctx, v_true, proto_type, size);
+    return internalAlloc(ctx, proto_type, size);
 }
 
 vArrayRef v_bootstrap_array_alloc(vThreadContextRef ctx,
@@ -432,7 +463,7 @@ vArrayRef v_bootstrap_array_alloc(vThreadContextRef ctx,
     vArrayRef arr;
     uword size = calcArraySize(elem_size, num_elements, alignment);
     
-    arr = (vArrayRef)internalAlloc(ctx, v_true, ctx->runtime->builtInTypes.array, size);
+    arr = (vArrayRef)internalAlloc(ctx, ctx->runtime->builtInTypes.array, size);
     arr->element_type = proto_elem_type;
     arr->num_elements = num_elements;
     arr->alignment = alignment;
@@ -464,5 +495,13 @@ vTypeRef vMemoryGetObjectType(vThreadContextRef ctx, vObject obj) {
     return getType(getBlock(obj));
 }
 
-
+/* Does a deep copy of the given object graph into the shared heap
+ and returns the shared heap copy */
+vObject vHeapCopyToShared(vThreadContextRef ctx, vObject obj) {
+    vMutexLock(ctx->runtime->globals->mutex);
+    
+    
+    
+    vMutexUnlock(ctx->runtime->globals->mutex);
+}
 

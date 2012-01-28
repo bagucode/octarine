@@ -11,7 +11,8 @@ struct vListObj {
 };
 
 /* data parameter is used to fill first "cons cell" */
-vListObjRef vListObjCreate(vThreadContextRef ctx, vObject data);
+vListObjRef vListObjCreate(vThreadContextRef ctx,
+                           vObject data);
 
 vListObjRef vListObjAddFront(vThreadContextRef ctx,
                              vListObjRef lst,

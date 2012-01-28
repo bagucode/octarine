@@ -8,25 +8,34 @@
 #include "v_array.h"
 #include "v_list.h"
 #include "v_symbol.h"
+#include "v_vector.h"
+#include "v_keyword.h"
 #include <stddef.h>
 #include <ctype.h>
 #include <memory.h>
 
-static const v_char LPAREN = '(';
-static const v_char RPAREN = ')';
+#define LPAREN '('
+#define RPAREN ')'
+#define LSBRACKET '['
+#define RSBRACKET ']'
+#define LCBRACKET '{'
+#define RCBRACKET '}'
 
-// Have to use literals here because the const declared v_chars above
-// are not considered const by the C standard.
 static const char reservedChars[] = {
-    '(',
-    ')'
+    LPAREN,
+    RPAREN,
+    LSBRACKET,
+    RSBRACKET,
+    LCBRACKET,
+    RCBRACKET
 };
 
 typedef vObject (*ReadFn)(vThreadContextRef ctx, vArrayRef src, uword* idx);
 static ReadFn readTable[128];
 
 static vObject readList(vThreadContextRef ctx, vArrayRef src, uword* idx);
-static vObject readSymbol(vThreadContextRef ctx, vArrayRef src, uword* idx);
+static vObject readSymbolOrKeyword(vThreadContextRef ctx, vArrayRef src, uword* idx);
+static vObject readVector(vThreadContextRef ctx, vArrayRef src, uword* idx);
 
 void v_bootstrap_reader_init_type(vThreadContextRef ctx) {
     uword i;
@@ -37,9 +46,10 @@ void v_bootstrap_reader_init_type(vThreadContextRef ctx) {
 
     // Also init the read table here
     for(i = 0; i < 128; ++i) {
-        readTable[i] = readSymbol; // Default read action is to read a symbol
+        readTable[i] = readSymbolOrKeyword; // Default read action is to read a symbol
     }
     readTable[LPAREN] = readList;
+    readTable[LSBRACKET] = readVector;
 }
 
 v_bool isReserved(uword ch) {
@@ -53,7 +63,7 @@ v_bool isReserved(uword ch) {
 }
 
 vReaderRef vReaderCreate(vThreadContextRef ctx) {
-	return (vReaderRef)vHeapAlloc(ctx, v_false, ctx->runtime->builtInTypes.reader);
+	return (vReaderRef)vHeapAlloc(ctx, ctx->runtime->builtInTypes.reader);
 }
 
 static u8 getChar(vArrayRef arr, uword i) {
@@ -87,7 +97,7 @@ static vObject readString(vThreadContextRef ctx, vArrayRef src, uword* idx) {
         vArrayRef tmp;
         vObject theString;
     } frame;
-    vMemoryPushFrame(ctx, &frame, 3);
+    vMemoryPushFrame(ctx, &frame, sizeof(frame));
     
     frame.charBuffer = vArrayCreate(ctx, ctx->runtime->builtInTypes.u8, 1024);
     bufIdx = 0;
@@ -122,15 +132,21 @@ static vObject readString(vThreadContextRef ctx, vArrayRef src, uword* idx) {
     return frame.theString;
 }
 
-static vObject readSymbol(vThreadContextRef ctx, vArrayRef src, uword* idx) {
+static vObject readSymbolOrKeyword(vThreadContextRef ctx, vArrayRef src, uword* idx) {
     struct {
         vObject theString;
-        vSymbolRef theSymbol;
+        vObject theSymbol;
     } frame;
-    vMemoryPushFrame(ctx, &frame, 2);
+    vMemoryPushFrame(ctx, &frame, sizeof(frame));
     
 	frame.theString = readString(ctx, src, idx);
-	frame.theSymbol = vSymbolCreate(ctx, (vStringRef)frame.theString);
+    if(vStringCharAt(ctx, frame.theString, 0) == ':') {
+        frame.theString = vStringSubString(ctx, frame.theString, 1, vStringLength(ctx, frame.theString));
+        frame.theSymbol = vKeywordCreate(ctx, (vStringRef)frame.theString);
+    }
+    else {
+        frame.theSymbol = vSymbolCreate(ctx, (vStringRef)frame.theString);
+    }
     
     vMemoryPopFrame(ctx);
     return frame.theSymbol;
@@ -141,7 +157,7 @@ static vObject readList(vThreadContextRef ctx, vArrayRef src, uword* idx) {
         vObject tmp;
         vObject lst;
     } frame;
-	vMemoryPushFrame(ctx, &frame, 2);
+	vMemoryPushFrame(ctx, &frame, sizeof(frame));
     
     ++(*idx); // eat (
     if(eos(src, idx) == v_false) {
@@ -165,6 +181,34 @@ static vObject readList(vThreadContextRef ctx, vArrayRef src, uword* idx) {
     return frame.lst;
 }
 
+static vObject readVector(vThreadContextRef ctx, vArrayRef src, uword* idx) {
+    struct {
+        vObject tmp;
+        vObject vec;
+    } frame;
+	vMemoryPushFrame(ctx, &frame, sizeof(frame));
+    
+    ++(*idx); // eat [
+    if(eos(src, idx) == v_false) {
+        frame.vec = vVectorCreate(ctx, ctx->runtime->builtInTypes.any);
+        while(getChar(src, *idx) != RSBRACKET
+              && eos(src, idx) == v_false) {
+            frame.tmp = read(ctx, src, idx);
+            if(frame.tmp != NULL)
+				frame.vec = vVectorAddBack(ctx, frame.vec, frame.tmp, vObjectGetType(ctx, frame.tmp));
+            // else what?
+        }
+        if(eos(src, idx)) {
+            frame.vec = ctx->runtime->builtInConstants.needMoreData;
+        } else {
+            ++(*idx); // eat ]
+        }
+    }
+    
+    vMemoryPopFrame(ctx);
+    return frame.vec;
+}
+
 static vObject read(vThreadContextRef ctx, vArrayRef src, uword* idx) {
     ReadFn fn;
     uword ch;
@@ -183,7 +227,7 @@ static vObject read(vThreadContextRef ctx, vArrayRef src, uword* idx) {
         if(getChar(src, *idx) == RPAREN) {
             return NULL; // TODO: need to change this when more readable types are added
         }
-        return readSymbol(ctx, src, idx);
+        return readSymbolOrKeyword(ctx, src, idx);
     }
 }
 
@@ -195,7 +239,7 @@ vObject vReaderRead(vThreadContextRef ctx, vStringRef source) {
 		vArrayRef srcArr;
         vListObjRef objects;
 	} frame;
-	vMemoryPushFrame(ctx, &frame, 3);
+	vMemoryPushFrame(ctx, &frame, sizeof(frame));
 
 	frame.srcArr = vStringUtf8Copy(ctx, source);
     frame.objects = vListObjCreate(ctx, NULL);

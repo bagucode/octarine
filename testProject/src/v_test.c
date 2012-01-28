@@ -10,17 +10,18 @@
 #include "../../libProject/src/v_array.h"
 #include "../../libProject/src/v_type.h"
 #include "../../libProject/src/v_vector.h"
+#include "../../libProject/src/v_keyword.h"
 #include <memory.h>
 #include <assert.h>
 
 void testCreateRuntime() {
-    vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024);
+    vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024 * 1000);
     vRuntimeDestroy(runtime);
 }
 
 void testGCAllGarbage() {
     uword i;
-    vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024);
+    vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024 * 1000);
     vThreadContextRef ctx = runtime->allContexts->ctx;
     
     for(i = 0; i < 1000 * 1024; ++i) {
@@ -32,14 +33,14 @@ void testGCAllGarbage() {
 
 void testGCAllRetained() {
     uword i;
-    vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024);
+    vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024 * 1000);
     vThreadContextRef ctx = runtime->allContexts->ctx;
 
     struct {
         vObject listHead;
     } frame;
 
-    vMemoryPushFrame(ctx, &frame, 1);
+    vMemoryPushFrame(ctx, &frame, sizeof(frame));
     
     frame.listHead = vListObjCreate(ctx, NULL);
     for(i = 0; i < 1024; ++i) {
@@ -52,7 +53,7 @@ void testGCAllRetained() {
 }
 
 void testGCFinalizer() {
-    vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024);
+    vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024 * 1000);
     vThreadContextRef ctx = runtime->allContexts->ctx;
     
     vStringCreate(ctx, "Test string");
@@ -62,7 +63,7 @@ void testGCFinalizer() {
 }
 
 void testReaderEmptyList() {
-    vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024);
+    vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024 * 1000);
     vThreadContextRef ctx = runtime->allContexts->ctx;
     vObject result;
     vStringRef src;
@@ -79,14 +80,14 @@ void testReaderEmptyList() {
 }
 
 void testSymbolEquals() {
-    vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024);
+    vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024 * 1000);
     vThreadContextRef ctx = runtime->allContexts->ctx;
 	struct {
 		vSymbolRef sym1;
 		vSymbolRef sym2;
 		vStringRef name;
 	} frame;
-	vMemoryPushFrame(ctx, &frame, 3);
+	vMemoryPushFrame(ctx, &frame, sizeof(frame));
 
 	frame.name = vStringCreate(ctx, "Bob2Bob");
 	frame.sym1 = vSymbolCreate(ctx, frame.name);
@@ -109,7 +110,7 @@ void testSymbolEquals() {
 }
 
 void testReadSymbol() {
-    vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024);
+    vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024 * 1000);
     vThreadContextRef ctx = runtime->allContexts->ctx;
     vSymbolRef bob;
 	struct {
@@ -117,7 +118,7 @@ void testReadSymbol() {
         vSymbolRef otherBob;
 		vStringRef src;
 	} frame;
-	vMemoryPushFrame(ctx, &frame, 3);
+	vMemoryPushFrame(ctx, &frame, sizeof(frame));
 
     frame.src = vStringCreate(ctx, "Bob2Bob");
     frame.otherBob = vSymbolCreate(ctx, frame.src);
@@ -134,7 +135,7 @@ void testReadSymbol() {
 }
 
 void testReadOneListAndOneSymbol() {
-    vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024);
+    vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024 * 1000);
     vThreadContextRef ctx = runtime->allContexts->ctx;
     vSymbolRef bob;
     vSymbolRef other;
@@ -146,7 +147,7 @@ void testReadOneListAndOneSymbol() {
         vStringRef name;
         vSymbolRef controlSym;
 	} frame;
-	vMemoryPushFrame(ctx, &frame, 4);
+	vMemoryPushFrame(ctx, &frame, sizeof(frame));
 
     frame.name = vStringCreate(ctx, "Bob2Bob");
     frame.src = vStringCreate(ctx, "(Bob2Bob) otherSym");
@@ -188,7 +189,7 @@ typedef struct testStruct {
 } testStruct;
 
 void testCreateType() {
-    vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024);
+    vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024 * 1000);
     vThreadContextRef ctx = runtime->allContexts->ctx;
     vFieldRef* fields;
     uword i;
@@ -198,12 +199,12 @@ void testCreateType() {
         vStringRef typeName;
         testStruct* instance;
 	} frame;
-	vMemoryPushFrame(ctx, &frame, 4);
+	vMemoryPushFrame(ctx, &frame, sizeof(frame));
     
     frame.fields = vArrayCreate(ctx, ctx->runtime->builtInTypes.field, 5);
     fields = (vFieldRef*)vArrayDataPointer(frame.fields);
     for(i = 0; i < frame.fields->num_elements; ++i) {
-        fields[i] = vHeapAlloc(ctx, v_false, ctx->runtime->builtInTypes.field);
+        fields[i] = vHeapAlloc(ctx, ctx->runtime->builtInTypes.field);
     }
     fields[0]->name = vStringCreate(ctx, "one");
     fields[0]->type = ctx->runtime->builtInTypes.u8;
@@ -217,11 +218,11 @@ void testCreateType() {
     fields[4]->type = ctx->runtime->builtInTypes.f64;
     
     frame.typeName = vStringCreate(ctx, "MyHappyTestType");
-    frame.myType = vTypeCreate(ctx, v_false, V_T_OBJECT, 0, frame.typeName, frame.fields, NULL, NULL);
+    frame.myType = vTypeCreate(ctx, V_T_OBJECT, 0, frame.typeName, frame.fields, NULL, NULL);
     
     assert(frame.myType->size == sizeof(testStruct));
     
-    frame.instance = vHeapAlloc(ctx, v_false, frame.myType);
+    frame.instance = vHeapAlloc(ctx, frame.myType);
     
     frame.instance->one = 250;
     frame.instance->two = 65500;
@@ -234,7 +235,7 @@ void testCreateType() {
 }
 
 void testArrayPutGet() {
-    vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024);
+    vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024 * 1000);
     vThreadContextRef ctx = runtime->allContexts->ctx;
     i64 one;
     i64 two;
@@ -246,7 +247,7 @@ void testArrayPutGet() {
         vObject tmp1;
         vObject tmp2;
     } frame;
-    vMemoryPushFrame(ctx, &frame, 4);
+    vMemoryPushFrame(ctx, &frame, sizeof(frame));
     
     frame.objArray = vArrayCreate(ctx, ctx->runtime->builtInTypes.any, 50);
     // Have no built in composite structs :(
@@ -283,7 +284,7 @@ void testArrayPutGet() {
 }
 
 void testVector() {
-    vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024);
+    vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024 * 1000);
     vThreadContextRef ctx = runtime->allContexts->ctx;
     vTypeRef str_t = ctx->runtime->builtInTypes.string;
     vTypeRef i64_t = ctx->runtime->builtInTypes.i64;
@@ -295,10 +296,10 @@ void testVector() {
         vStringRef str;
         vStringRef checkStr;
     } frame;
-    vMemoryPushFrame(ctx, &frame, 4);
+    vMemoryPushFrame(ctx, &frame, sizeof(frame));
 
-    frame.veci64 = vVectorCreate(ctx, v_false, i64_t);
-    frame.vecStr = vVectorCreate(ctx, v_false, str_t);
+    frame.veci64 = vVectorCreate(ctx, i64_t);
+    frame.vecStr = vVectorCreate(ctx, str_t);
     
     frame.str = vStringCreate(ctx, "String One");
     frame.vecStr = vVectorAddBack(ctx, frame.vecStr, frame.str, str_t);
@@ -334,6 +335,69 @@ void testVector() {
     vRuntimeDestroy(runtime);
 }
 
+void testReadVector() {
+    vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024 * 1000);
+    vThreadContextRef ctx = runtime->allContexts->ctx;
+    vListObjRef lst;
+    vSymbolRef sym;
+    vVectorRef vec;
+	struct {
+		vObject readResult;
+		vStringRef src;
+        vSymbolRef ethel;
+	} frame;
+	vMemoryPushFrame(ctx, &frame, sizeof(frame));
+
+    frame.src = vStringCreate(ctx, "ethel");
+    frame.ethel = vSymbolCreate(ctx, frame.src);
+    frame.src = vStringCreate(ctx, "[bob fred ethel]");
+    frame.readResult = vReaderRead(ctx, frame.src);
+    
+    // We should get a list with one element, a vector of three symbols
+    assert(vObjectGetType(ctx, frame.readResult) == ctx->runtime->builtInTypes.list);
+    lst = (vListObjRef)frame.readResult;
+    assert(vListObjSize(ctx, lst) == 1);
+    
+    vec = vListObjFirst(ctx, lst);
+    assert(vObjectGetType(ctx, vec) == ctx->runtime->builtInTypes.vector);
+    assert(vVectorSize(ctx, vec) == 3);
+    
+    vVectorGet(ctx, vec, 2, &sym, ctx->runtime->builtInTypes.symbol);
+    assert(vSymbolEquals(ctx, sym, frame.ethel) == v_true);
+    
+	vMemoryPopFrame(ctx);
+    vRuntimeDestroy(runtime);
+}
+
+void testReadKeyword() {
+    vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024 * 1000);
+    vThreadContextRef ctx = runtime->allContexts->ctx;
+    vListObjRef lst;
+    vKeywordRef kw;
+	struct {
+		vObject readResult;
+        vStringRef src;
+		vStringRef name;
+	} frame;
+	vMemoryPushFrame(ctx, &frame, sizeof(frame));
+    
+    frame.name = vStringCreate(ctx, "lucy");
+    frame.src = vStringCreate(ctx, ":lucy");
+    frame.readResult = vReaderRead(ctx, frame.src);
+    
+    // We should get a list with one element, a vector of three symbols
+    assert(vObjectGetType(ctx, frame.readResult) == ctx->runtime->builtInTypes.list);
+    lst = (vListObjRef)frame.readResult;
+    assert(vListObjSize(ctx, lst) == 1);
+    
+    kw = vListObjFirst(ctx, lst);
+    assert(vObjectGetType(ctx, kw) == ctx->runtime->builtInTypes.keyword);
+    assert(vStringCompare(frame.name, vKeywordGetName(ctx, kw)) == 0);
+    
+	vMemoryPopFrame(ctx);
+    vRuntimeDestroy(runtime);
+}
+
 int main(int argc, char** argv) {
 
     testCreateRuntime();
@@ -347,6 +411,8 @@ int main(int argc, char** argv) {
     testCreateType();
     testArrayPutGet();
     testVector();
+    testReadVector();
+    testReadKeyword();
     
 	return 0;
 }

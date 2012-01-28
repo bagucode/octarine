@@ -10,7 +10,7 @@
 
 vStringRef vStringCreate(vThreadContextRef ctx, char *utf8) {
     vRuntimeRef rt = ctx->runtime;
-    vStringRef ret = (vStringRef)vHeapAlloc(ctx, v_false, rt->builtInTypes.string);
+    vStringRef ret = (vStringRef)vHeapAlloc(ctx, rt->builtInTypes.string);
     ret->str = vNativeStringFromUtf8(utf8, 0);
     return ret;
 }
@@ -33,10 +33,24 @@ vArrayRef vStringUtf8Copy(vThreadContextRef ctx, vStringRef str) {
     return ret;
 }
 
+v_char vStringCharAt(vThreadContextRef ctx, vStringRef str, uword idx) {
+    return vNativeStringCharAt(str->str, idx);
+}
+
+vStringRef vStringSubString(vThreadContextRef ctx, vStringRef str, uword start, uword end) {
+    vStringRef newStr = vHeapAlloc(ctx, ctx->runtime->builtInTypes.string);
+    newStr->str = vNativeStringSubstring(str->str, start, end);
+    return newStr;
+}
+
 vStringRef v_bootstrap_string_create(vThreadContextRef ctx, const char *utf8) {
     vStringRef str = (vStringRef)v_bootstrap_object_alloc(ctx, ctx->runtime->builtInTypes.string, sizeof(vString));
     str->str = vNativeStringFromUtf8(utf8, 0);
     return str;
+}
+
+uword vStringLength(vThreadContextRef ctx, vStringRef str) {
+    return vNativeStringLength(str->str);
 }
 
 void v_bootstrap_string_init_type(vThreadContextRef ctx) {

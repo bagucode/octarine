@@ -51,6 +51,24 @@ void vNativeStringDestroy(vNativeStringRef str) {
     vFree(str);
 }
 
+v_char vNativeStringCharAt(vNativeStringRef str, uword idx) {
+    return CFStringGetCharacterAtIndex(str->str, idx);
+}
+
+vNativeStringRef vNativeStringSubstring(vNativeStringRef str, uword start, uword end) {
+    vNativeStringRef subStr = vMalloc(sizeof(vNativeString));
+    CFRange range;
+    range.location = start;
+    range.length = end - start;
+    subStr->str = CFStringCreateWithSubstring(NULL, str->str, range);
+    return subStr;
+}
+
+uword vNativeStringLength(vNativeStringRef str) {
+    return CFStringGetLength(str->str);
+}
+
+
 /* Thread Locals */
 
 vTLSRef vTLSCreate() {
