@@ -17,25 +17,24 @@ void v_bootstrap_vector_init_type(vThreadContextRef ctx) {
     
     frame.fields = vArrayCreate(ctx, ctx->runtime->builtInTypes.field, 1);
     frame.typeName = vStringCreate(ctx, "data");
-    frame.field = vFieldCreate(ctx, v_false, frame.typeName, ctx->runtime->builtInTypes.array);
+    frame.field = vFieldCreate(ctx, frame.typeName, ctx->runtime->builtInTypes.array);
     vArrayPut(ctx, frame.fields, 0, frame.field, ctx->runtime->builtInTypes.field);
     
     frame.typeName = vStringCreate(ctx, "Vector");
-    frame.theType = vTypeCreate(ctx, v_false, V_T_OBJECT, 0, frame.typeName, frame.fields, NULL, NULL);
+    frame.theType = vTypeCreate(ctx, V_T_OBJECT, 0, frame.typeName, frame.fields, NULL, NULL);
 
     ctx->runtime->builtInTypes.vector = frame.theType;
 	vMemoryPopFrame(ctx);
 }
 
 vVectorRef vVectorCreate(vThreadContextRef ctx,
-                         v_bool shared,
                          vTypeRef type) {
     struct {
         vVectorRef vec;
     } frame;
     vMemoryPushFrame(ctx, &frame, sizeof(frame));
     
-    frame.vec = vHeapAlloc(ctx, shared, ctx->runtime->builtInTypes.vector);
+    frame.vec = vHeapAlloc(ctx, ctx->runtime->builtInTypes.vector);
     frame.vec->data = vArrayCreate(ctx, type, 0);
     
     vMemoryPopFrame(ctx);
@@ -51,7 +50,7 @@ vVectorRef vVectorAddBack(vThreadContextRef ctx,
     } frame;
     vMemoryPushFrame(ctx, &frame, sizeof(frame));
     
-    frame.newVec = vHeapAlloc(ctx, v_false, ctx->runtime->builtInTypes.vector);
+    frame.newVec = vHeapAlloc(ctx, ctx->runtime->builtInTypes.vector);
     frame.newVec->data = vArrayCreate(ctx, vec->data->element_type, vec->data->num_elements + 1);
 
     vArrayCopy(vec->data, frame.newVec->data);
@@ -72,7 +71,7 @@ vVectorRef vVectorPut(vThreadContextRef ctx, vVectorRef vec, uword idx, pointer 
     } frame;
     vMemoryPushFrame(ctx, &frame, sizeof(frame));
 
-    frame.newVec = vHeapAlloc(ctx, v_false, ctx->runtime->builtInTypes.vector);
+    frame.newVec = vHeapAlloc(ctx, ctx->runtime->builtInTypes.vector);
     frame.newVec->data = vArrayCreate(ctx, vec->data->element_type, vec->data->num_elements);
 
     vArrayCopy(vec->data, frame.newVec->data);

@@ -78,12 +78,11 @@ static uword nextLargerMultiple(uword of, uword largerThan) {
     return result;
 }
 
-vTypeRef vTypeCreateProtoType(vThreadContextRef ctx, v_bool shared) {
-    return (vTypeRef)vHeapAlloc(ctx, shared, ctx->runtime->builtInTypes.type);
+vTypeRef vTypeCreateProtoType(vThreadContextRef ctx) {
+    return (vTypeRef)vHeapAlloc(ctx, ctx->runtime->builtInTypes.type);
 }
 
 vTypeRef vTypeCreate(vThreadContextRef ctx,
-                     v_bool shared,
                      u8 kind,
                      u8 alignment,
                      vStringRef name,
@@ -100,7 +99,7 @@ vTypeRef vTypeCreate(vThreadContextRef ctx,
     
     frame.proto = protoType;
     if(frame.proto == NULL) {
-        frame.proto = vTypeCreateProtoType(ctx, shared);
+        frame.proto = vTypeCreateProtoType(ctx);
     }
     
     frame.proto->name = name;
@@ -115,7 +114,7 @@ vTypeRef vTypeCreate(vThreadContextRef ctx,
     members = (vFieldRef*)vArrayDataPointer(frame.proto->fields);
 
     for(i = 0; i < frame.proto->fields->num_elements; ++i) {
-        members[i] = (vFieldRef)vHeapAlloc(ctx, shared, ctx->runtime->builtInTypes.field);
+        members[i] = (vFieldRef)vHeapAlloc(ctx, ctx->runtime->builtInTypes.field);
         members[i]->name = inFields[i]->name;
         if(inFields[i]->type == V_T_SELF) {
             members[i]->type = frame.proto;
@@ -213,10 +212,9 @@ v_bool vTypeEquals(vThreadContextRef ctx, vTypeRef t, vObject other) {
 }
 
 vFieldRef vFieldCreate(vThreadContextRef ctx,
-                       v_bool shared,
                        vStringRef name,
                        vTypeRef type) {
-    vFieldRef f = (vFieldRef)vHeapAlloc(ctx, shared, ctx->runtime->builtInTypes.field);
+    vFieldRef f = (vFieldRef)vHeapAlloc(ctx, ctx->runtime->builtInTypes.field);
     f->name = name;
     f->type = type;
     return f;

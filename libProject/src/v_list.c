@@ -27,7 +27,7 @@ void v_bootstrap_list_init_type(vThreadContextRef ctx) {
 
 vListObjRef vListObjCreate(vThreadContextRef ctx, vObject data) {
     vListObjRef ret;
-    ret = (vListObjRef)vHeapAlloc(ctx, v_false, ctx->runtime->builtInTypes.list);
+    ret = (vListObjRef)vHeapAlloc(ctx, ctx->runtime->builtInTypes.list);
     ret->data = data;
     return ret;
 }
@@ -35,7 +35,7 @@ vListObjRef vListObjCreate(vThreadContextRef ctx, vObject data) {
 vListObjRef vListObjAddFront(vThreadContextRef ctx,
                              vListObjRef lst,
                              vObject data) {
-    vListObjRef head = (vListObjRef)vHeapAlloc(ctx, v_false, ctx->runtime->builtInTypes.list);
+    vListObjRef head = (vListObjRef)vHeapAlloc(ctx, ctx->runtime->builtInTypes.list);
     head->data = data;
     // Only set the next pointer to the node that got passed as an argument
     // if argument node is not empty, to make it appear that the empty node

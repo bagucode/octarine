@@ -10,7 +10,6 @@ struct vVector {
 };
 
 vVectorRef vVectorCreate(vThreadContextRef ctx,
-                         v_bool shared,
                          vTypeRef type);
 /* The pointer to the data and its type are passed separately so that
  it is possible to pass a pointer to the start of a value type and have

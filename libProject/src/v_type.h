@@ -31,7 +31,6 @@ struct vType {
 };
 
 vFieldRef vFieldCreate(vThreadContextRef ctx,
-                       v_bool shared,
                        vStringRef name,
                        vTypeRef type);
 
@@ -41,7 +40,6 @@ v_bool vTypeIsObject(vThreadContextRef ctx, vTypeRef t);
 v_bool vTypeEquals(vThreadContextRef ctx, vTypeRef t, vObject other);
 vTypeRef vTypeCreatePrototype(vThreadContextRef ctx, v_bool shared);
 vTypeRef vTypeCreate(vThreadContextRef ctx,
-                     v_bool shared,
                      u8 kind,
                      u8 alignment,
                      vStringRef name,
