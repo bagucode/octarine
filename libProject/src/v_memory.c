@@ -398,7 +398,7 @@ vArrayRef vHeapAllocArray(vThreadContextRef ctx,
                           vTypeRef elementType,
                           uword numElements) {
     vArrayRef arr;
-    u8 align = elementType->alignment != 0 ? elementType->alignment : elementType->size;
+    u8 align = (u8)(elementType->alignment != 0 ? elementType->alignment : elementType->size);
     uword size = calcArraySize(elementType->size, numElements, align);
     arr = (vArrayRef)internalAlloc(ctx, useSharedHeap, ctx->runtime->builtInTypes.array, size);
     arr->element_type = elementType;

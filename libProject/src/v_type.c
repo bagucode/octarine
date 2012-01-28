@@ -124,7 +124,7 @@ vTypeRef vTypeCreate(vThreadContextRef ctx,
         }
         if(members[i]->type->kind == V_T_OBJECT) {
             frame.proto->size = alignOffset(frame.proto->size, sizeof(void*));
-            members[i]->offset = frame.proto->size;
+            members[i]->offset = (u32)frame.proto->size;
             frame.proto->size += sizeof(void*);
             if(largest < sizeof(void*))
                 largest = sizeof(void*);
@@ -136,7 +136,7 @@ vTypeRef vTypeCreate(vThreadContextRef ctx,
                 align = members[i]->type->alignment != 0 ? members[i]->type->alignment : sizeof(void*);
             }
             frame.proto->size = alignOffset(frame.proto->size, align);
-            members[i]->offset = frame.proto->size;
+            members[i]->offset = (u32)frame.proto->size;
             frame.proto->size += members[i]->type->size;
             largest = findLargestAlignment(ctx, largest, members[i]);
         }
@@ -152,7 +152,7 @@ vTypeRef vTypeCreate(vThreadContextRef ctx,
 vArrayRef v_bootstrap_type_create_field_array(vThreadContextRef ctx, uword numFields) {
     vArrayRef ret = v_bootstrap_array_create(ctx, ctx->runtime->builtInTypes.field, numFields, sizeof(pointer), sizeof(pointer));
     uword i;
-    vFieldRef* fields = vArrayDataPointer(ret);
+    vFieldRef* fields = (vFieldRef*)vArrayDataPointer(ret);
     for(i = 0; i < numFields; ++i) {
         fields[i] = (vFieldRef)v_bootstrap_object_alloc(ctx, ctx->runtime->builtInTypes.field, sizeof(vField));
     }
