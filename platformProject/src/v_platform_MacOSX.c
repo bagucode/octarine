@@ -19,8 +19,8 @@ struct vNativeString {
     CFStringRef str;
 };
 
-vNativeStringRef vNativeStringFromUtf8(const char *utf8, uword length) {
-    uword len = length == 0 ? strlen(utf8) : length;
+vNativeStringRef vNativeStringFromUtf8(const char *utf8) {
+    uword len = strlen(utf8);
     vNativeString *str = vMalloc(sizeof(vNativeString));
     str->str = CFStringCreateWithBytes(NULL, (const UInt8*)utf8, len, kCFStringEncodingUTF8, false);
     return str;
@@ -52,6 +52,7 @@ void vNativeStringDestroy(vNativeStringRef str) {
 }
 
 v_char vNativeStringCharAt(vNativeStringRef str, uword idx) {
+    // TODO: THIS IS BROKEN! Unichar is 16 bits but codepoints are 32 bits...
     return CFStringGetCharacterAtIndex(str->str, idx);
 }
 
