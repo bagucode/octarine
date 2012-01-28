@@ -26,13 +26,13 @@ struct vNativeString {
 	int length;
 };
 
-vNativeStringRef vNativeStringFromUtf8(const char *utf8, uword length) {
+vNativeStringRef vNativeStringFromUtf8(const char *utf8) {
 	int result;
+	int cbMultiByte = (int)strlen(utf8);
 	vNativeStringRef str;
-	int cbMultiByte = length > 0 ? (int)length : -1;
 	int numWideChars = MultiByteToWideChar(CP_UTF8, 0, utf8, cbMultiByte, NULL, 0);
 
-	if(numWideChars == 0) {
+	if(numWideChars <= 0) {
 		return NULL;
 	}
 
@@ -67,7 +67,7 @@ char* vNativeStringToUtf8(vNativeStringRef str, uword* out_length) {
 		return NULL;
 	}
 
-	utf8Chars = (char*)vMalloc((*out_length) + 1);
+	utf8Chars = (char*)vMalloc(*out_length);
 	if(utf8Chars == NULL) {
 		return NULL;
 	}
@@ -78,8 +78,6 @@ char* vNativeStringToUtf8(vNativeStringRef str, uword* out_length) {
 		return NULL;
 	}
 
-	// Make sure the returned string is always null terminated
-	utf8Chars[(*out_length)] = 0;
 	return utf8Chars;
 }
 
@@ -99,6 +97,36 @@ int vNativeStringCompare(vNativeStringRef str1, vNativeStringRef str2) {
 void vNativeStringDestroy(vNativeStringRef str) {
 	vFree(str->str);
 	vFree(str);
+}
+
+v_char vNativeStringCharAt(vNativeStringRef str, uword idx) {
+	uword i;
+	LPWSTR ptr = str->str;
+	for(i = 0; i < idx; ++i) {
+		ptr = CharNextW(ptr);
+	}
+	// TODO: THIS IS BROKEN! Code points are 32 bits but LPWSTR uses UTF16
+	return ptr[0];
+}
+
+vNativeStringRef vNativeStringSubstring(vNativeStringRef str, uword start, uword end) {
+	uword i, size;
+	LPWSTR startP = str->str;
+	vNativeStringRef newStr;
+	size = (end - start) * sizeof(WCHAR);
+	for(i = 0; i < start; ++i) {
+		startP = CharNextW(startP);
+	}
+	newStr = (vNativeStringRef)vMalloc(sizeof(vNativeString));
+	newStr->length = (int)(end - start);
+	newStr->str = (LPWSTR)vMalloc(size + sizeof(WCHAR));
+	memcpy(newStr->str, startP, size);
+	newStr->str[size] = 0;
+	return newStr;
+}
+
+uword vNativeStringLength(vNativeStringRef str) {
+	return str->length;
 }
 
 /* Thread local storage */

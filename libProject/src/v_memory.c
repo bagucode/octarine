@@ -148,7 +148,7 @@ void vMemoryPushFrame(vThreadContextRef ctx,
     memset(frame, 0, frameSize);
     
     if(ctx->roots->numUsed < MAX_FRAMES) {
-        ctx->roots->frameInfos[ctx->roots->numUsed].frame = frame;
+        ctx->roots->frameInfos[ctx->roots->numUsed].frame = (vObject*)frame;
         ctx->roots->frameInfos[ctx->roots->numUsed].size = frameSize;
         ctx->roots->numUsed++;
    } else {
@@ -401,7 +401,7 @@ static vObject internalAlloc(vThreadContextRef ctx,
 
     block = allocBlock(size);
     ret = getObject(block);
-    setType(block, type == V_T_SELF ? ret : type);
+    setType(block, (vTypeRef)(type == V_T_SELF ? ret : type));
     addHeapEntry(ctx->heap, block);
     
     ctx->heap->currentSize += allocSize;
