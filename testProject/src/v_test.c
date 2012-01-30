@@ -350,7 +350,7 @@ void testReadVector() {
 
     frame.src = vStringCreate(ctx, "ethel");
     frame.ethel = vSymbolCreate(ctx, frame.src);
-    frame.src = vStringCreate(ctx, "[bob fred ethel]");
+    frame.src = vStringCreate(ctx, "[bob fred ethel]\n");
     frame.readResult = vReaderRead(ctx, frame.src);
     
     // We should get a list with one element, a vector of three symbols

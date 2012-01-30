@@ -215,9 +215,9 @@ static vObject read(vThreadContextRef ctx, vArrayRef src, uword* idx) {
 
     skipSpace(src, idx);
     if(eos(src, idx)) {
-        return ctx->runtime->builtInConstants.needMoreData;
+        return NULL;
     }
-    
+
     ch = getChar(src, *idx);
     if(ch < 128) {
         fn = readTable[ch];
