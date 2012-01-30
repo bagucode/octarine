@@ -46,6 +46,7 @@ vTypeRef vTypeCreate(vThreadContextRef ctx,
                      vArrayRef fields,
                      vFinalizer finalizer,
                      vTypeRef protoType);
+vStringRef vTypeGetName(vTypeRef type);
 
 void v_bootstrap_type_init_type(vThreadContextRef ctx);
 void v_bootstrap_type_init_field(vThreadContextRef ctx);

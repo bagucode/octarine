@@ -72,16 +72,27 @@ uword vNativeStringLength(vNativeStringRef str) {
 
 /* Thread Locals */
 
+struct vTLS {
+    pthread_key_t key;
+};
+
 vTLSRef vTLSCreate() {
+    vTLSRef tls = (vTLSRef)vMalloc(sizeof(vTLS));
+    pthread_key_create(&tls->key, NULL);
+    return tls;
 }
 
 void vTLSDestroy(vTLSRef tls) {
+    pthread_key_delete(tls->key);
+    vFree(tls);
 }
 
 pointer vTLSGet(vTLSRef tls) {
+    return pthread_getspecific(tls->key);
 }
 
 void vTLSSet(vTLSRef tls, pointer value) {
+    pthread_setspecific(tls->key, value);
 }
 
 

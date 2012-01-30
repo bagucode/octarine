@@ -192,3 +192,6 @@ void vRuntimeDestroy(vRuntimeRef rt) {
 	vFree(rt);
 }
 
+vThreadContextRef vRuntimeGetCurrentContext(vRuntimeRef rt) {
+    return (vThreadContextRef)vTLSGet(rt->currentContext);
+}

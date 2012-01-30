@@ -231,7 +231,7 @@ static vObject read(vThreadContextRef ctx, vArrayRef src, uword* idx) {
     }
 }
 
-vObject vReaderRead(vThreadContextRef ctx, vStringRef source) {
+vListObjRef vReaderRead(vThreadContextRef ctx, vStringRef source) {
     uword idx = 0;
     // Stack frame for GC roots
 	struct {

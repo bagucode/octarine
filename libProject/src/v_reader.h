@@ -16,7 +16,7 @@ vReaderRef vReaderCreate(vThreadContextRef ctx);
  string does not parse to a complete object.
  Otherwise a vListObjRef of read objects is returned.
  */
-vObject vReaderRead(vThreadContextRef ctx, vStringRef source);
+vListObjRef vReaderRead(vThreadContextRef ctx, vStringRef source);
 
 void v_bootstrap_reader_init_type(vThreadContextRef ctx);
 

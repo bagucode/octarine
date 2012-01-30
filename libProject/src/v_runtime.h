@@ -57,5 +57,6 @@ struct vRuntime {
 vRuntimeRef vRuntimeCreate(uword sharedHeapInitialSize,
                            uword threadHeapInitialSize);
 void vRuntimeDestroy(vRuntimeRef rt);
+vThreadContextRef vRuntimeGetCurrentContext(vRuntimeRef rt);
 
 #endif

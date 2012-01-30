@@ -220,6 +220,10 @@ vFieldRef vFieldCreate(vThreadContextRef ctx,
     return f;
 }
 
+vStringRef vTypeGetName(vTypeRef type) {
+    return type->name;
+}
+
 const u8 V_T_OBJECT = 0;
 const u8 V_T_STRUCT = 1;
 const vTypeRef V_T_SELF = NULL;
