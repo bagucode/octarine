@@ -131,28 +131,50 @@ uword vNativeStringLength(vNativeStringRef str) {
 
 /* Thread local storage */
 
+struct vTLS {
+	DWORD key;
+};
+
 vTLSRef vTLSCreate() {
+	vTLSRef tls = (vTLSRef)vMalloc(sizeof(vTLS));
+	tls->key = TlsAlloc();
+	return tls;
 }
 
 void vTLSDestroy(vTLSRef tls) {
+	TlsFree(tls->key);
+	vFree(tls);
 }
 
 pointer vTLSGet(vTLSRef tls) {
+	return TlsGetValue(tls->key);
 }
 
 void vTLSSet(vTLSRef tls, pointer value) {
+	TlsSetValue(tls->key, value);
 }
 
 /* Other threading stuff */
 
+struct vMutex {
+	HANDLE mutex;
+};
+
 vMutexRef vMutexCreate() {
+	vMutexRef mx = (vMutexRef)vMalloc(sizeof(vMutex));
+	mx->mutex = CreateMutexW(NULL, FALSE, NULL);
+	return mx;
 }
 
 void vMutexDestroy(vMutexRef mutex) {
+	CloseHandle(mutex->mutex);
+	vFree(mutex);
 }
 
 void vMutexLock(vMutexRef mutex) {
+	WaitForSingleObject(mutex->mutex, INFINITE);
 }
 
 void vMutexUnlock(vMutexRef mutex) {
+	ReleaseMutex(mutex->mutex);
 }
