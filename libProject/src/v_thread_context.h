@@ -10,6 +10,7 @@ struct vThreadContext {
     vHeapRef heap;
     vRootSetRef roots;
 	vReaderRef reader;
+	vErrorRef error;
 };
 
 vThreadContextRef vThreadContextGetCurrent(vRuntimeRef rt);
@@ -19,7 +20,8 @@ vThreadContextRef vThreadContextCreate(vRuntimeRef runtime,
 
 void vThreadContextDestroy(vThreadContextRef ctx);
 
-vThreadContextRef v_bootstrap_thread_context_create(vRuntimeRef runtime,
-													uword threadHeapInitialSize);
+void v_bootstrap_thread_context_type_init(vRuntimeRef rt, vHeapRef heap);
+
+vThreadContextRef v_bootstrap_thread_context_create(vRuntimeRef runtime, vHeapRef heap);
 
 #endif

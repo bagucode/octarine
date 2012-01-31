@@ -10,7 +10,7 @@
 
 vStringRef vStringCreate(vThreadContextRef ctx, char *utf8) {
     vRuntimeRef rt = ctx->runtime;
-    vStringRef ret = (vStringRef)vHeapAlloc(ctx, rt->builtInTypes.string);
+	vStringRef ret = (vStringRef)vHeapAlloc(ctx->runtime, ctx->heap, rt->builtInTypes.string);
     ret->str = vNativeStringFromUtf8(utf8);
     return ret;
 }
@@ -38,13 +38,13 @@ v_char vStringCharAt(vThreadContextRef ctx, vStringRef str, uword idx) {
 }
 
 vStringRef vStringSubString(vThreadContextRef ctx, vStringRef str, uword start, uword end) {
-    vStringRef newStr = (vStringRef)vHeapAlloc(ctx, ctx->runtime->builtInTypes.string);
+	vStringRef newStr = (vStringRef)vHeapAlloc(ctx->runtime, ctx->heap, ctx->runtime->builtInTypes.string);
     newStr->str = vNativeStringSubstring(str->str, start, end);
     return newStr;
 }
 
-vStringRef v_bootstrap_string_create(vThreadContextRef ctx, const char *utf8) {
-    vStringRef str = (vStringRef)v_bootstrap_object_alloc(ctx, ctx->runtime->builtInTypes.string, sizeof(vString));
+vStringRef v_bootstrap_string_create(vRuntimeRef rt, vHeapRef heap, const char *utf8) {
+    vStringRef str = (vStringRef)v_bootstrap_object_alloc(rt, heap, rt->builtInTypes.string, sizeof(vString));
     str->str = vNativeStringFromUtf8(utf8);
     return str;
 }
@@ -53,10 +53,10 @@ uword vStringLength(vThreadContextRef ctx, vStringRef str) {
     return vNativeStringLength(str->str);
 }
 
-void v_bootstrap_string_init_type(vThreadContextRef ctx) {
-    ctx->runtime->builtInTypes.string->fields = NULL;
-    ctx->runtime->builtInTypes.string->kind = V_T_OBJECT;
-    ctx->runtime->builtInTypes.string->name = v_bootstrap_string_create(ctx, "String");
-    ctx->runtime->builtInTypes.string->size = sizeof(vString);
-    ctx->runtime->builtInTypes.string->finalizer = finalizer;
+void v_bootstrap_string_init_type(vRuntimeRef rt, vHeapRef heap) {
+    rt->builtInTypes.string->fields = NULL;
+    rt->builtInTypes.string->kind = V_T_OBJECT;
+    rt->builtInTypes.string->name = v_bootstrap_string_create(rt, heap, "String");
+    rt->builtInTypes.string->size = sizeof(vString);
+    rt->builtInTypes.string->finalizer = finalizer;
 }

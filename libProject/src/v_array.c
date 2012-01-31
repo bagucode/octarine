@@ -14,7 +14,7 @@ static uword alignOffset(uword offset, uword on) {
 vArrayRef vArrayCreate(vThreadContextRef ctx,
                        vTypeRef elemType,
                        uword num_elements) {
-    return vHeapAllocArray(ctx, elemType, num_elements);
+	return vHeapAllocArray(ctx->runtime, ctx->heap, elemType, num_elements);
 }
 
 pointer vArrayDataPointer(vArrayRef arr) {
@@ -25,12 +25,13 @@ uword vArraySize(vArrayRef arr) {
     return arr->num_elements;
 }
 
-vArrayRef v_bootstrap_array_create(vThreadContextRef ctx,
+vArrayRef v_bootstrap_array_create(vRuntimeRef rt,
+	                               vHeapRef heap,
                                    vTypeRef type,
                                    uword num_elements,
                                    uword elem_size,
                                    u8 alignment) {
-    return v_bootstrap_array_alloc(ctx, type, num_elements, elem_size, alignment);
+    return v_bootstrap_array_alloc(rt, heap, type, num_elements, elem_size, alignment);
 }
 
 // There is currently no way to know if this went well or not.
@@ -56,13 +57,13 @@ void vArrayPut(vThreadContextRef ctx, vArrayRef arr, uword idx, pointer src, vTy
     char* data = (char*)vArrayDataPointer(arr);
     pointer* datap;
 
-    if(vTypeIsObject(ctx, arr->element_type)
+    if(vTypeIsObject(arr->element_type)
        && arr->element_type != ctx->runtime->builtInTypes.any
        && srcType != arr->element_type) {
         // TODO: ERROR
         return;
     }
-    else if(vTypeIsStruct(ctx, srcType)
+    else if(vTypeIsStruct(srcType)
             && srcType != arr->element_type) {
         // TODO: ERROR
         return;
@@ -72,7 +73,7 @@ void vArrayPut(vThreadContextRef ctx, vArrayRef arr, uword idx, pointer src, vTy
         return;
     }
     
-    if(vTypeIsObject(ctx, srcType)) {
+    if(vTypeIsObject(srcType)) {
         datap = (pointer*)data;
         datap[idx] = src;
     }
@@ -92,7 +93,7 @@ void vArrayGet(vThreadContextRef ctx, vArrayRef arr, uword idx, pointer dest, vT
         return;
     }
     
-    if(vTypeIsObject(ctx, destType)) {
+    if(vTypeIsObject(destType)) {
         datap = (pointer*)data;
         destp = (pointer*)dest;
         obj = datap[idx];
@@ -121,10 +122,10 @@ void vArrayGet(vThreadContextRef ctx, vArrayRef arr, uword idx, pointer dest, vT
     }
 }
 
-void v_bootstrap_array_init_type(vThreadContextRef ctx) {
-    ctx->runtime->builtInTypes.array->fields = NULL;
-    ctx->runtime->builtInTypes.array->kind = V_T_OBJECT;
-    ctx->runtime->builtInTypes.array->name = v_bootstrap_string_create(ctx, "Array");
-    ctx->runtime->builtInTypes.array->size = sizeof(vArray);
+void v_bootstrap_array_init_type(vRuntimeRef rt, vHeapRef heap) {
+    rt->builtInTypes.array->fields = NULL;
+    rt->builtInTypes.array->kind = V_T_OBJECT;
+    rt->builtInTypes.array->name = v_bootstrap_string_create(rt, heap, "Array");
+    rt->builtInTypes.array->size = sizeof(vArray);
 }
 

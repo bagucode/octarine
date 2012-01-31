@@ -5,6 +5,7 @@
 #include "../../platformProject/src/v_basic_types.h"
 #include "v_typedefs.h"
 
+// TODO: just remove?
 struct vReader {
 	uword dummy;
 };

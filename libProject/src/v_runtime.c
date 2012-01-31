@@ -11,8 +11,8 @@
 #include "v_vector.h"
 #include "v_keyword.h"
 
-static vTypeRef alloc_built_in(vThreadContextRef ctx) {
-	return (vTypeRef)v_bootstrap_object_alloc(ctx, ctx->runtime->builtInTypes.type, sizeof(vType));
+static vTypeRef alloc_built_in(vRuntimeRef rt, vHeapRef heap) {
+	return (vTypeRef)v_bootstrap_object_alloc(rt, heap, rt->builtInTypes.type, sizeof(vType));
 }
 
 static void set_shared_primitive_attributes(vTypeRef t) {
@@ -20,114 +20,119 @@ static void set_shared_primitive_attributes(vTypeRef t) {
     t->fields = NULL;
 }
 
-static void alloc_builtInTypes(vThreadContextRef ctx) {
-    ctx->runtime->builtInTypes.type = (vTypeRef)v_bootstrap_object_alloc(ctx, V_T_SELF, sizeof(vType));
-	ctx->runtime->builtInTypes.v_char = alloc_built_in(ctx);
-	ctx->runtime->builtInTypes.v_bool = alloc_built_in(ctx);
-	ctx->runtime->builtInTypes.f32 = alloc_built_in(ctx);
-	ctx->runtime->builtInTypes.f64 = alloc_built_in(ctx);
-	ctx->runtime->builtInTypes.i16 = alloc_built_in(ctx);
-	ctx->runtime->builtInTypes.i32 = alloc_built_in(ctx);
-	ctx->runtime->builtInTypes.i64 = alloc_built_in(ctx);
-	ctx->runtime->builtInTypes.i8 = alloc_built_in(ctx);
-	ctx->runtime->builtInTypes.pointer = alloc_built_in(ctx);
-	ctx->runtime->builtInTypes.u16 = alloc_built_in(ctx);
-	ctx->runtime->builtInTypes.u32 = alloc_built_in(ctx);
-	ctx->runtime->builtInTypes.u64 = alloc_built_in(ctx);
-	ctx->runtime->builtInTypes.u8 = alloc_built_in(ctx);
-	ctx->runtime->builtInTypes.uword = alloc_built_in(ctx);
-	ctx->runtime->builtInTypes.word = alloc_built_in(ctx);
-    ctx->runtime->builtInTypes.string = alloc_built_in(ctx);
-    ctx->runtime->builtInTypes.field = alloc_built_in(ctx);
-    ctx->runtime->builtInTypes.array = alloc_built_in(ctx);
-    ctx->runtime->builtInTypes.list = alloc_built_in(ctx);
-    ctx->runtime->builtInTypes.any = alloc_built_in(ctx);
-    ctx->runtime->builtInTypes.map = alloc_built_in(ctx);
-	ctx->runtime->builtInTypes.reader = alloc_built_in(ctx);
-	ctx->runtime->builtInTypes.symbol = alloc_built_in(ctx);
-    ctx->runtime->builtInTypes.vector = alloc_built_in(ctx);
-    ctx->runtime->builtInTypes.keyword = alloc_built_in(ctx);
+static void alloc_builtInTypes(vRuntimeRef rt, vHeapRef heap) {
+    rt->builtInTypes.type = (vTypeRef)v_bootstrap_object_alloc(rt, heap, V_T_SELF, sizeof(vType));
+	rt->builtInTypes.v_char = alloc_built_in(rt, heap);
+	rt->builtInTypes.v_bool = alloc_built_in(rt, heap);
+	rt->builtInTypes.f32 = alloc_built_in(rt, heap);
+	rt->builtInTypes.f64 = alloc_built_in(rt, heap);
+	rt->builtInTypes.i16 = alloc_built_in(rt, heap);
+	rt->builtInTypes.i32 = alloc_built_in(rt, heap);
+	rt->builtInTypes.i64 = alloc_built_in(rt, heap);
+	rt->builtInTypes.i8 = alloc_built_in(rt, heap);
+	rt->builtInTypes.pointer = alloc_built_in(rt, heap);
+	rt->builtInTypes.u16 = alloc_built_in(rt, heap);
+	rt->builtInTypes.u32 = alloc_built_in(rt, heap);
+	rt->builtInTypes.u64 = alloc_built_in(rt, heap);
+	rt->builtInTypes.u8 = alloc_built_in(rt, heap);
+	rt->builtInTypes.uword = alloc_built_in(rt, heap);
+	rt->builtInTypes.word = alloc_built_in(rt, heap);
+    rt->builtInTypes.string = alloc_built_in(rt, heap);
+    rt->builtInTypes.field = alloc_built_in(rt, heap);
+    rt->builtInTypes.array = alloc_built_in(rt, heap);
+    rt->builtInTypes.list = alloc_built_in(rt, heap);
+    rt->builtInTypes.any = alloc_built_in(rt, heap);
+    rt->builtInTypes.map = alloc_built_in(rt, heap);
+	rt->builtInTypes.reader = alloc_built_in(rt, heap);
+	rt->builtInTypes.symbol = alloc_built_in(rt, heap);
+    rt->builtInTypes.vector = alloc_built_in(rt, heap);
+    rt->builtInTypes.keyword = alloc_built_in(rt, heap);
+	rt->builtInTypes.threadContext = alloc_built_in(rt, heap);
 #ifdef __GNUC__
 #ifdef VLANG32
-	ctx->runtime->builtInTypes.i64->alignment = 4;
-	ctx->runtime->builtInTypes.u64->alignment = 4;
+	rt->builtInTypes.i64->alignment = 4;
+	rt->builtInTypes.u64->alignment = 4;
 #endif
 #endif
 }
 
-static void init_builtInTypes(vThreadContextRef ctx) {
+static void init_builtInTypes1(vRuntimeRef rt, vHeapRef heap) {
 
     /* primitives */
 
-	set_shared_primitive_attributes(ctx->runtime->builtInTypes.v_char);
-    ctx->runtime->builtInTypes.v_char->name = v_bootstrap_string_create(ctx, "char");
-	ctx->runtime->builtInTypes.v_char->size = 4; /* i32 - unicode code point */
+	set_shared_primitive_attributes(rt->builtInTypes.v_char);
+    rt->builtInTypes.v_char->name = v_bootstrap_string_create(rt, heap, "char");
+	rt->builtInTypes.v_char->size = 4; /* i32 - unicode code point */
 
-	set_shared_primitive_attributes(ctx->runtime->builtInTypes.v_bool);
-  	ctx->runtime->builtInTypes.v_bool->name = v_bootstrap_string_create(ctx, "bool");
-	ctx->runtime->builtInTypes.v_bool->size = 1; /* i8 */
+	set_shared_primitive_attributes(rt->builtInTypes.v_bool);
+  	rt->builtInTypes.v_bool->name = v_bootstrap_string_create(rt, heap, "bool");
+	rt->builtInTypes.v_bool->size = 1; /* i8 */
 
-	set_shared_primitive_attributes(ctx->runtime->builtInTypes.f32);
-  	ctx->runtime->builtInTypes.f32->name = v_bootstrap_string_create(ctx, "f32");
-	ctx->runtime->builtInTypes.f32->size = 4;
+	set_shared_primitive_attributes(rt->builtInTypes.f32);
+  	rt->builtInTypes.f32->name = v_bootstrap_string_create(rt, heap, "f32");
+	rt->builtInTypes.f32->size = 4;
 
-	set_shared_primitive_attributes(ctx->runtime->builtInTypes.f64);
-  	ctx->runtime->builtInTypes.f64->name = v_bootstrap_string_create(ctx, "f64");
-	ctx->runtime->builtInTypes.f64->size = 8;
+	set_shared_primitive_attributes(rt->builtInTypes.f64);
+  	rt->builtInTypes.f64->name = v_bootstrap_string_create(rt, heap, "f64");
+	rt->builtInTypes.f64->size = 8;
 
-	set_shared_primitive_attributes(ctx->runtime->builtInTypes.i16);
-  	ctx->runtime->builtInTypes.i16->name = v_bootstrap_string_create(ctx, "i16");
-	ctx->runtime->builtInTypes.i16->size = 2;
+	set_shared_primitive_attributes(rt->builtInTypes.i16);
+  	rt->builtInTypes.i16->name = v_bootstrap_string_create(rt, heap, "i16");
+	rt->builtInTypes.i16->size = 2;
 
-	set_shared_primitive_attributes(ctx->runtime->builtInTypes.i32);
-  	ctx->runtime->builtInTypes.i32->name = v_bootstrap_string_create(ctx, "i32");
-	ctx->runtime->builtInTypes.i32->size = 4;
+	set_shared_primitive_attributes(rt->builtInTypes.i32);
+  	rt->builtInTypes.i32->name = v_bootstrap_string_create(rt, heap, "i32");
+	rt->builtInTypes.i32->size = 4;
 
-	set_shared_primitive_attributes(ctx->runtime->builtInTypes.i64);
-  	ctx->runtime->builtInTypes.i64->name = v_bootstrap_string_create(ctx, "i64");
-	ctx->runtime->builtInTypes.i64->size = 8;
+	set_shared_primitive_attributes(rt->builtInTypes.i64);
+  	rt->builtInTypes.i64->name = v_bootstrap_string_create(rt, heap, "i64");
+	rt->builtInTypes.i64->size = 8;
 
-	set_shared_primitive_attributes(ctx->runtime->builtInTypes.i8);
-  	ctx->runtime->builtInTypes.i8->name = v_bootstrap_string_create(ctx, "i8");
-	ctx->runtime->builtInTypes.i8->size = 1;
+	set_shared_primitive_attributes(rt->builtInTypes.i8);
+  	rt->builtInTypes.i8->name = v_bootstrap_string_create(rt, heap, "i8");
+	rt->builtInTypes.i8->size = 1;
 
-	set_shared_primitive_attributes(ctx->runtime->builtInTypes.pointer);
-  	ctx->runtime->builtInTypes.pointer->name = v_bootstrap_string_create(ctx, "pointer");
-	ctx->runtime->builtInTypes.pointer->size = sizeof(pointer);
+	set_shared_primitive_attributes(rt->builtInTypes.pointer);
+  	rt->builtInTypes.pointer->name = v_bootstrap_string_create(rt, heap, "pointer");
+	rt->builtInTypes.pointer->size = sizeof(pointer);
 
-	set_shared_primitive_attributes(ctx->runtime->builtInTypes.u16);
-  	ctx->runtime->builtInTypes.u16->name = v_bootstrap_string_create(ctx, "u16");
-	ctx->runtime->builtInTypes.u16->size = 2;
+	set_shared_primitive_attributes(rt->builtInTypes.u16);
+  	rt->builtInTypes.u16->name = v_bootstrap_string_create(rt, heap, "u16");
+	rt->builtInTypes.u16->size = 2;
 
-	set_shared_primitive_attributes(ctx->runtime->builtInTypes.u32);
-  	ctx->runtime->builtInTypes.u32->name = v_bootstrap_string_create(ctx, "u32");
-	ctx->runtime->builtInTypes.u32->size = 4;
+	set_shared_primitive_attributes(rt->builtInTypes.u32);
+  	rt->builtInTypes.u32->name = v_bootstrap_string_create(rt, heap, "u32");
+	rt->builtInTypes.u32->size = 4;
 
-	set_shared_primitive_attributes(ctx->runtime->builtInTypes.u64);
-  	ctx->runtime->builtInTypes.u64->name = v_bootstrap_string_create(ctx, "u64");
-	ctx->runtime->builtInTypes.u64->size = 8;
+	set_shared_primitive_attributes(rt->builtInTypes.u64);
+  	rt->builtInTypes.u64->name = v_bootstrap_string_create(rt, heap, "u64");
+	rt->builtInTypes.u64->size = 8;
 
-	set_shared_primitive_attributes(ctx->runtime->builtInTypes.u8);
-  	ctx->runtime->builtInTypes.u8->name = v_bootstrap_string_create(ctx, "u8");
-	ctx->runtime->builtInTypes.u8->size = 1;
+	set_shared_primitive_attributes(rt->builtInTypes.u8);
+  	rt->builtInTypes.u8->name = v_bootstrap_string_create(rt, heap, "u8");
+	rt->builtInTypes.u8->size = 1;
 
-	set_shared_primitive_attributes(ctx->runtime->builtInTypes.uword);
-  	ctx->runtime->builtInTypes.uword->name = v_bootstrap_string_create(ctx, "uword");
-	ctx->runtime->builtInTypes.uword->size = sizeof(uword);
+	set_shared_primitive_attributes(rt->builtInTypes.uword);
+  	rt->builtInTypes.uword->name = v_bootstrap_string_create(rt, heap, "uword");
+	rt->builtInTypes.uword->size = sizeof(uword);
 
-	set_shared_primitive_attributes(ctx->runtime->builtInTypes.word);
-  	ctx->runtime->builtInTypes.word->name = v_bootstrap_string_create(ctx, "word");
-	ctx->runtime->builtInTypes.word->size = sizeof(word);
+	set_shared_primitive_attributes(rt->builtInTypes.word);
+  	rt->builtInTypes.word->name = v_bootstrap_string_create(rt, heap, "word");
+	rt->builtInTypes.word->size = sizeof(word);
 
     /* aggregate structs */
 
     /* objects */
 
-    v_bootstrap_string_init_type(ctx);
-    v_bootstrap_type_init_type(ctx);
-    v_bootstrap_type_init_field(ctx);
-    v_bootstrap_array_init_type(ctx);
-    v_bootstrap_list_init_type(ctx);
+    v_bootstrap_string_init_type(rt, heap);
+    v_bootstrap_type_init_type(rt, heap);
+    v_bootstrap_type_init_field(rt, heap);
+    v_bootstrap_array_init_type(rt, heap);
+	v_bootstrap_thread_context_type_init(rt, heap);
+}
+
+static void init_builtInTypes2(vThreadContextRef ctx) {
+	v_bootstrap_list_init_type(ctx);
     v_bootstrap_any_type_init(ctx);
     v_bootstrap_map_init_type(ctx);
 	v_bootstrap_reader_init_type(ctx);
@@ -154,21 +159,28 @@ static void init_builtInConstants(vThreadContextRef ctx) {
 vRuntimeRef vRuntimeCreate(uword sharedHeapInitialSize,
                            uword threadHeapInitialSize) {
 	vRuntimeRef rt = (vRuntimeRef)vMalloc(sizeof(vRuntime));
-	vThreadContextRef ctx = v_bootstrap_thread_context_create(rt, threadHeapInitialSize);
+	vHeapRef mtHeap = vHeapCreate(v_false, threadHeapInitialSize);
+	vThreadContextRef ctx;
 
     rt->globals = vHeapCreate(v_true, sharedHeapInitialSize);
     rt->currentContext = vTLSCreate();
-    vTLSSet(rt->currentContext, ctx);
+
+	alloc_builtInTypes(rt, mtHeap);
+	init_builtInTypes1(rt, mtHeap);
+
+	ctx = v_bootstrap_thread_context_create(rt, mtHeap);
+	ctx->heap = mtHeap;
+	vTLSSet(rt->currentContext, ctx);
     rt->allContexts = (vThreadContextListRef)vMalloc(sizeof(vThreadContextList));
 	rt->allContexts->next = NULL;
     rt->allContexts->ctx = ctx;
 
-    alloc_builtInTypes(ctx);
-	init_builtInTypes(ctx);
+	init_builtInTypes2(ctx);
 
 	/*
 	Since ReaderCreate depends upon the types being defined we have to postpone
 	creating the reader for the main thread context to the end of this function.
+	TODO: do we even need a reader object? Should probably just get rid of it.
 	*/
 	ctx->reader = vReaderCreate(ctx);
     

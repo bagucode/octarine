@@ -169,7 +169,7 @@ void vMemoryPopFrame(vThreadContextRef ctx) {
     }
 }
 
-static void traceAndMark(vThreadContextRef ctx, vObject obj, vTypeRef type) {
+static void traceAndMark(vRuntimeRef rt, vHeapRef heap, vObject obj, vTypeRef type) {
     vObject fieldPtr;
     vFieldRef field;
     vFieldRef* fields;
@@ -188,7 +188,7 @@ static void traceAndMark(vThreadContextRef ctx, vObject obj, vTypeRef type) {
      be no sweep in the shared heap to reset the marks. */
     if(obj) {
         block = NULL;
-        if(vTypeIsObject(ctx, type)) {
+        if(vTypeIsObject(type)) {
             block = getBlock(obj);
         }
         if(block == NULL || isMarked(block) == v_false) {
@@ -200,31 +200,31 @@ static void traceAndMark(vThreadContextRef ctx, vObject obj, vTypeRef type) {
                 fields = (vFieldRef*)vArrayDataPointer(type->fields);
                 for(i = 0; i < type->fields->num_elements; ++i) {
                     field = fields[i];
-                    if(!vTypeIsPrimitive(ctx, field->type)) {
+                    if(!vTypeIsPrimitive(field->type)) {
                         fieldPtr = *((vObject*)(((char*)obj) + field->offset));
                         if(fieldPtr) {
                             /* if the type is Any we have to get the actual runtime
                              type of the object here */
-                            if(field->type == ctx->runtime->builtInTypes.any) {
+                            if(field->type == rt->builtInTypes.any) {
                                 fieldType = getType(getBlock(fieldPtr));
                             } else {
                                 fieldType = field->type;
                             }
                             /* TODO: make this iterative instead of recursive.
                              It segfaults now if the object graph is too large. */
-                            traceAndMark(ctx, fieldPtr, fieldType);
+                            traceAndMark(rt, heap, fieldPtr, fieldType);
                         }
                     }
                 }
             }
 			/* else clause for field NULL check, array handling */
-			else if(type == ctx->runtime->builtInTypes.array) {
+			else if(type == rt->builtInTypes.array) {
 				array = (vArrayRef)obj;
-				if(!vTypeIsPrimitive(ctx, array->element_type)) {
+				if(!vTypeIsPrimitive(array->element_type)) {
 					if(array->element_type->kind == V_T_OBJECT) {
 						arrayObjs = (vObject*)vArrayDataPointer(array);
 						for(i = 0; i < array->num_elements; ++i) {
-							traceAndMark(ctx, arrayObjs[i], array->element_type);
+							traceAndMark(rt, heap, arrayObjs[i], array->element_type);
 						}
 					}
 					else {
@@ -232,7 +232,7 @@ static void traceAndMark(vThreadContextRef ctx, vObject obj, vTypeRef type) {
 						arrayStride = array->element_type->size;
 						fieldPtr = vArrayDataPointer(array);
 						for(i = 0; i < array->num_elements; ++i) {
-							traceAndMark(ctx, fieldPtr, array->element_type);
+							traceAndMark(rt, heap, fieldPtr, array->element_type);
 							fieldPtr = ((char*)fieldPtr) + arrayStride;
 						}
 					}
@@ -243,11 +243,11 @@ static void traceAndMark(vThreadContextRef ctx, vObject obj, vTypeRef type) {
     // Also mark the type to make sure that does not disappear
     block = getBlock(type);
     if(!isMarked(block)) {
-        traceAndMark(ctx, type, ctx->runtime->builtInTypes.type);
+        traceAndMark(rt, heap, type, rt->builtInTypes.type);
     }
 }
 
-static void collectGarbage(vThreadContextRef ctx, v_bool collectSharedHeap) {
+static void collectGarbage(vRuntimeRef rt, vHeapRef heap) {
     vRootSetRef roots;
     uword i, j, nroots;
     vObject obj;
@@ -257,126 +257,127 @@ static void collectGarbage(vThreadContextRef ctx, v_bool collectSharedHeap) {
     HeapBlockRef block;
     vTypeRef type;
     
-    if(collectSharedHeap) {
-        /* This thread initiated a collection of the shared heap.
-           we need to signal the other threads to stop and then
-           wait for them. */
-        /* TODO: implement */
-    } else {
-        /* Phase 1, mark. */
-        /* TODO: need to trace from the roots in all threads when doing
-         a collection of the shared heap.
-         It is also important to not actually mark objects in the shared
-         heap when doing a local collection or we may retain garbage
-         in the shared heap the next time it is collected. */
+	vThreadContextListRef lst, next;
+
+    /* Phase 1, mark. */
+    /* TODO: need to trace from the roots in all threads when doing
+        a collection of the shared heap (a heap with mutex set).
+        It is also important to not actually mark objects in the shared
+        heap when doing a local collection or we may retain garbage
+        in the shared heap the next time it is collected. */
         
-        // TODO: remove the tracing of the built ins here. They should all
-        // reside in the shared heap once copy to the shared heap is working
-        // which means there is no need to trace them when doing
-        // a local collection
+    // TODO: remove the tracing of the built ins here. They should all
+    // reside in the shared heap once copy to the shared heap is working
+    // which means there is no need to trace them when doing
+    // a local collection
 
-        // types
-        traceAndMark(ctx, ctx->runtime->builtInTypes.any, ctx->runtime->builtInTypes.type);
-        traceAndMark(ctx, ctx->runtime->builtInTypes.i8, ctx->runtime->builtInTypes.type);
-        traceAndMark(ctx, ctx->runtime->builtInTypes.u8, ctx->runtime->builtInTypes.type);
-        traceAndMark(ctx, ctx->runtime->builtInTypes.i16, ctx->runtime->builtInTypes.type);
-        traceAndMark(ctx, ctx->runtime->builtInTypes.u16, ctx->runtime->builtInTypes.type);
-        traceAndMark(ctx, ctx->runtime->builtInTypes.i32, ctx->runtime->builtInTypes.type);
-        traceAndMark(ctx, ctx->runtime->builtInTypes.u32, ctx->runtime->builtInTypes.type);
-        traceAndMark(ctx, ctx->runtime->builtInTypes.i64, ctx->runtime->builtInTypes.type);
-        traceAndMark(ctx, ctx->runtime->builtInTypes.u64, ctx->runtime->builtInTypes.type);
-        traceAndMark(ctx, ctx->runtime->builtInTypes.f32, ctx->runtime->builtInTypes.type);
-        traceAndMark(ctx, ctx->runtime->builtInTypes.f64, ctx->runtime->builtInTypes.type);
-        traceAndMark(ctx, ctx->runtime->builtInTypes.word, ctx->runtime->builtInTypes.type);
-        traceAndMark(ctx, ctx->runtime->builtInTypes.uword, ctx->runtime->builtInTypes.type);
-        traceAndMark(ctx, ctx->runtime->builtInTypes.pointer, ctx->runtime->builtInTypes.type);
-        traceAndMark(ctx, ctx->runtime->builtInTypes.v_bool, ctx->runtime->builtInTypes.type);
-        traceAndMark(ctx, ctx->runtime->builtInTypes.v_char, ctx->runtime->builtInTypes.type);
-        traceAndMark(ctx, ctx->runtime->builtInTypes.string, ctx->runtime->builtInTypes.type);
-        traceAndMark(ctx, ctx->runtime->builtInTypes.type, ctx->runtime->builtInTypes.type);
-        traceAndMark(ctx, ctx->runtime->builtInTypes.field, ctx->runtime->builtInTypes.type);
-        traceAndMark(ctx, ctx->runtime->builtInTypes.array, ctx->runtime->builtInTypes.type);
-        traceAndMark(ctx, ctx->runtime->builtInTypes.list, ctx->runtime->builtInTypes.type);
-        traceAndMark(ctx, ctx->runtime->builtInTypes.any, ctx->runtime->builtInTypes.type);
-        traceAndMark(ctx, ctx->runtime->builtInTypes.map, ctx->runtime->builtInTypes.type);
-        traceAndMark(ctx, ctx->runtime->builtInTypes.reader, ctx->runtime->builtInTypes.type);
-        traceAndMark(ctx, ctx->runtime->builtInTypes.symbol, ctx->runtime->builtInTypes.type);
-        traceAndMark(ctx, ctx->runtime->builtInTypes.vector, ctx->runtime->builtInTypes.type);
-        traceAndMark(ctx, ctx->runtime->builtInTypes.keyword, ctx->runtime->builtInTypes.type);
+    // types
+    traceAndMark(rt, heap, rt->builtInTypes.any, rt->builtInTypes.type);
+    traceAndMark(rt, heap, rt->builtInTypes.i8, rt->builtInTypes.type);
+    traceAndMark(rt, heap, rt->builtInTypes.u8, rt->builtInTypes.type);
+    traceAndMark(rt, heap, rt->builtInTypes.i16, rt->builtInTypes.type);
+    traceAndMark(rt, heap, rt->builtInTypes.u16, rt->builtInTypes.type);
+    traceAndMark(rt, heap, rt->builtInTypes.i32, rt->builtInTypes.type);
+    traceAndMark(rt, heap, rt->builtInTypes.u32, rt->builtInTypes.type);
+    traceAndMark(rt, heap, rt->builtInTypes.i64, rt->builtInTypes.type);
+    traceAndMark(rt, heap, rt->builtInTypes.u64, rt->builtInTypes.type);
+    traceAndMark(rt, heap, rt->builtInTypes.f32, rt->builtInTypes.type);
+    traceAndMark(rt, heap, rt->builtInTypes.f64, rt->builtInTypes.type);
+    traceAndMark(rt, heap, rt->builtInTypes.word, rt->builtInTypes.type);
+    traceAndMark(rt, heap, rt->builtInTypes.uword, rt->builtInTypes.type);
+    traceAndMark(rt, heap, rt->builtInTypes.pointer, rt->builtInTypes.type);
+    traceAndMark(rt, heap, rt->builtInTypes.v_bool, rt->builtInTypes.type);
+    traceAndMark(rt, heap, rt->builtInTypes.v_char, rt->builtInTypes.type);
+    traceAndMark(rt, heap, rt->builtInTypes.string, rt->builtInTypes.type);
+    traceAndMark(rt, heap, rt->builtInTypes.type, rt->builtInTypes.type);
+    traceAndMark(rt, heap, rt->builtInTypes.field, rt->builtInTypes.type);
+    traceAndMark(rt, heap, rt->builtInTypes.array, rt->builtInTypes.type);
+    traceAndMark(rt, heap, rt->builtInTypes.list, rt->builtInTypes.type);
+    traceAndMark(rt, heap, rt->builtInTypes.any, rt->builtInTypes.type);
+    traceAndMark(rt, heap, rt->builtInTypes.map, rt->builtInTypes.type);
+    traceAndMark(rt, heap, rt->builtInTypes.reader, rt->builtInTypes.type);
+    traceAndMark(rt, heap, rt->builtInTypes.symbol, rt->builtInTypes.type);
+    traceAndMark(rt, heap, rt->builtInTypes.vector, rt->builtInTypes.type);
+    traceAndMark(rt, heap, rt->builtInTypes.keyword, rt->builtInTypes.type);
+	traceAndMark(rt, heap, rt->builtInTypes.threadContext, rt->builtInTypes.type);
+	lst = rt->allContexts;
+    while(lst) {
+		next = lst->next;
+		traceAndMark(rt, heap, lst->ctx, rt->builtInTypes.threadContext);
+		lst = next;
+	}
 
-        // constants
-        traceAndMark(ctx, ctx->runtime->builtInConstants.needMoreData, ctx->runtime->builtInTypes.symbol);
+    // constants
+    traceAndMark(rt, heap, rt->builtInConstants.needMoreData, rt->builtInTypes.symbol);
 
-        roots = ctx->roots;
-        while (roots) {
-            for(i = 0; i < roots->numUsed; ++i) {
-                nroots = roots->frameInfos[i].size / sizeof(pointer);
-                for(j = 0; j < nroots; ++j) {
-                    obj = roots->frameInfos[i].frame[j];
-                    if(obj != NULL) {
-                        block = getBlock(obj);
-                        traceAndMark(ctx, obj, getType(block));
-                    }
+	roots = vRuntimeGetCurrentContext(rt)->roots;
+    while (roots) {
+        for(i = 0; i < roots->numUsed; ++i) {
+            nroots = roots->frameInfos[i].size / sizeof(pointer);
+            for(j = 0; j < nroots; ++j) {
+                obj = roots->frameInfos[i].frame[j];
+                if(obj != NULL) {
+                    block = getBlock(obj);
+                    traceAndMark(rt, heap, obj, getType(block));
                 }
             }
-            roots = roots->prev;
         }
-        
-        /* Phase 2, sweep. */
-        newRecord = createRecord();
-        currentRecord = ctx->heap->record;
-        while (currentRecord) {
-            for(i = 0; i < currentRecord->numBlocks; ++i) {
-                block = currentRecord->blocks[i];
-                if(!isMarked(block)) {
-                    ctx->heap->currentSize -= getSize(block);
-                    /* Call finalizer if there is one.
-                     TODO: make sure the finalizers don't allocate memory
-                     or resurrect objects */
-                    type = getType(block);
-                    if(type->finalizer) {
-                        type->finalizer(getObject(block));
-                    }
-                    vFree(block);
-                } else {
-                    clearMark(block);
-                    if(recordEntry(newRecord, block) == v_false) {
-                        tmpRecord = newRecord;
-                        newRecord = createRecord();
-                        newRecord->prev = tmpRecord;
-                        recordEntry(newRecord, block);
-                    }
-                }
-            }
-            tmpRecord = currentRecord;
-            currentRecord = currentRecord->prev;
-            vFree(tmpRecord);
-        }
-        ctx->heap->record = newRecord;
+        roots = roots->prev;
     }
+        
+    /* Phase 2, sweep. */
+    newRecord = createRecord();
+    currentRecord = heap->record;
+    while (currentRecord) {
+        for(i = 0; i < currentRecord->numBlocks; ++i) {
+            block = currentRecord->blocks[i];
+            if(!isMarked(block)) {
+                heap->currentSize -= getSize(block);
+                /* Call finalizer if there is one.
+                    TODO: make sure the finalizers don't allocate memory
+                    or resurrect objects */
+                type = getType(block);
+                if(type->finalizer) {
+                    type->finalizer(getObject(block));
+                }
+                vFree(block);
+            } else {
+                clearMark(block);
+                if(recordEntry(newRecord, block) == v_false) {
+                    tmpRecord = newRecord;
+                    newRecord = createRecord();
+                    newRecord->prev = tmpRecord;
+                    recordEntry(newRecord, block);
+                }
+            }
+        }
+        tmpRecord = currentRecord;
+        currentRecord = currentRecord->prev;
+        vFree(tmpRecord);
+    }
+    heap->record = newRecord;
 }
 
-void vHeapForceGC(vThreadContextRef ctx, v_bool collectSharedHeap) {
-    vHeapRef heap = collectSharedHeap ? ctx->runtime->globals : ctx->heap;
-    
+void vHeapForceGC(vRuntimeRef rt, vHeapRef heap) {
     if(heap->mutex != NULL) {
         vMutexLock(heap->mutex);
+		// TODO: if the heap has a mutex field then we assume that all threads
+		// need to wait for the collection so we have to signal all threads to
+		// wait for a GC here.
     }
 
-    collectGarbage(ctx, collectSharedHeap);
+    collectGarbage(rt, heap);
     
     if(heap->mutex != NULL) {
         vMutexUnlock(heap->mutex);
     }
 }
 
-static v_bool checkHeapSpace(vThreadContextRef ctx,
-                             v_bool checkSharedHeap,
+static v_bool checkHeapSpace(vRuntimeRef rt,
+							 vHeapRef heap,
                              uword size) {
-    vHeapRef heap = checkSharedHeap ? ctx->runtime->globals : ctx->heap;
-
     if((heap->gcThreshold - heap->currentSize) < size) {
-        collectGarbage(ctx, checkSharedHeap);
+        collectGarbage(rt, heap);
 
         if((heap->gcThreshold - heap->currentSize) < size) {
             return v_false;
@@ -385,53 +386,47 @@ static v_bool checkHeapSpace(vThreadContextRef ctx,
     return v_true;
 }
 
-static vObject internalAlloc(vThreadContextRef ctx,
+static vObject internalAlloc(vRuntimeRef rt,
+	                         vHeapRef heap,
                              vTypeRef type,
                              uword size) {
     vObject ret;
     HeapBlockRef block;
     uword allocSize = calcBlockSize(size);
     
-    if(checkHeapSpace(ctx, v_false, allocSize) == v_false) {
+    if(checkHeapSpace(rt, heap, allocSize) == v_false) {
         /* Just expand blindly for now. Should really check if
          the system is out of memory and report some error if
          that is the case. */
-        ctx->heap->gcThreshold *= 2;
+        heap->gcThreshold *= 2;
     }
 
     block = allocBlock(size);
     ret = getObject(block);
     setType(block, (vTypeRef)(type == V_T_SELF ? ret : type));
-    addHeapEntry(ctx->heap, block);
+    addHeapEntry(heap, block);
     
-    ctx->heap->currentSize += allocSize;
+    heap->currentSize += allocSize;
     
     return ret;
 }
 
-vObject vHeapAlloc(vThreadContextRef ctx, vTypeRef t) {
-    vObject ret;
-    
-    if(vTypeIsPrimitive(ctx, t)) {
-        ret = NULL;
-    }
-    else {
-        ret = internalAlloc(ctx, t, t->size);
-    }
-    return ret;
+vObject vHeapAlloc(vRuntimeRef rt, vHeapRef heap, vTypeRef t) {
+    return internalAlloc(rt, heap, t, t->size);
 }
 
 static uword calcArraySize(uword elemSize, uword numElems, u8 align) {
     return sizeof(vArray) + (elemSize * numElems) + align - 1;
 }
 
-vArrayRef vHeapAllocArray(vThreadContextRef ctx,
+vArrayRef vHeapAllocArray(vRuntimeRef rt,
+	                      vHeapRef heap,
                           vTypeRef elementType,
                           uword numElements) {
     vArrayRef arr;
     u8 align = (u8)(elementType->alignment != 0 ? elementType->alignment : elementType->size);
     uword size = calcArraySize(elementType->size, numElements, align);
-    arr = (vArrayRef)internalAlloc(ctx, ctx->runtime->builtInTypes.array, size);
+    arr = (vArrayRef)internalAlloc(rt, heap, rt->builtInTypes.array, size);
     arr->element_type = elementType;
     arr->num_elements = numElements;
     arr->alignment = align;
@@ -449,13 +444,15 @@ static void addHeapEntry(vHeapRef heap, HeapBlockRef block) {
     }
 }
 
-vObject v_bootstrap_object_alloc(vThreadContextRef ctx,
+vObject v_bootstrap_object_alloc(vRuntimeRef rt,
+		                         vHeapRef heap,
                                  vTypeRef proto_type,
                                  uword size) {
-    return internalAlloc(ctx, proto_type, size);
+    return internalAlloc(rt, heap, proto_type, size);
 }
 
-vArrayRef v_bootstrap_array_alloc(vThreadContextRef ctx,
+vArrayRef v_bootstrap_array_alloc(vRuntimeRef rt,
+	                              vHeapRef heap,
                                   vTypeRef proto_elem_type,
                                   uword num_elements,
                                   uword elem_size,
@@ -463,7 +460,7 @@ vArrayRef v_bootstrap_array_alloc(vThreadContextRef ctx,
     vArrayRef arr;
     uword size = calcArraySize(elem_size, num_elements, alignment);
     
-    arr = (vArrayRef)internalAlloc(ctx, ctx->runtime->builtInTypes.array, size);
+    arr = (vArrayRef)internalAlloc(rt, heap, rt->builtInTypes.array, size);
     arr->element_type = proto_elem_type;
     arr->num_elements = num_elements;
     arr->alignment = alignment;
@@ -495,13 +492,19 @@ vTypeRef vMemoryGetObjectType(vThreadContextRef ctx, vObject obj) {
     return getType(getBlock(obj));
 }
 
-/* Does a deep copy of the given object graph into the shared heap
- and returns the shared heap copy */
-vObject vHeapCopyToShared(vThreadContextRef ctx, vObject obj) {
-    vMutexLock(ctx->runtime->globals->mutex);
-    
-    
-    
-    vMutexUnlock(ctx->runtime->globals->mutex);
+vObject vHeapCopyObject(vHeapRef from, vHeapRef to, vObject obj) {
+	if(from->mutex) {
+		vMutexLock(from->mutex);
+	}
+	if(to->mutex) {
+		vMutexLock(to->mutex);
+	}
+
+	if(to->mutex) {
+		vMutexUnlock(to->mutex);
+	}
+	if(from->mutex) {
+		vMutexUnlock(from->mutex);
+	}
 }
 

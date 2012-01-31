@@ -57,7 +57,7 @@ void testGCFinalizer() {
     vThreadContextRef ctx = runtime->allContexts->ctx;
     
     vStringCreate(ctx, "Test string");
-    vHeapForceGC(ctx, v_false);
+	vHeapForceGC(ctx->runtime, ctx->heap);
     
     vRuntimeDestroy(runtime);
 }
@@ -204,7 +204,7 @@ void testCreateType() {
     frame.fields = vArrayCreate(ctx, ctx->runtime->builtInTypes.field, 5);
     fields = (vFieldRef*)vArrayDataPointer(frame.fields);
     for(i = 0; i < frame.fields->num_elements; ++i) {
-        fields[i] = vHeapAlloc(ctx, ctx->runtime->builtInTypes.field);
+		fields[i] = vHeapAlloc(ctx->runtime, ctx->heap, ctx->runtime->builtInTypes.field);
     }
     fields[0]->name = vStringCreate(ctx, "one");
     fields[0]->type = ctx->runtime->builtInTypes.u8;
@@ -222,7 +222,7 @@ void testCreateType() {
     
     assert(frame.myType->size == sizeof(testStruct));
     
-    frame.instance = vHeapAlloc(ctx, frame.myType);
+	frame.instance = vHeapAlloc(ctx->runtime, ctx->heap, frame.myType);
     
     frame.instance->one = 250;
     frame.instance->two = 65500;

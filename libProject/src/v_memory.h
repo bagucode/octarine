@@ -9,18 +9,16 @@ vHeapRef vHeapCreate(v_bool synchronized, uword gc_threshold);
 
 void vHeapDestroy(vHeapRef heap);
 
-vObject vHeapAlloc(vThreadContextRef ctx,
-                   vTypeRef type);
+vObject vHeapAlloc(vRuntimeRef rt, vHeapRef heap, vTypeRef t);
 
-vArrayRef vHeapAllocArray(vThreadContextRef ctx,
+vArrayRef vHeapAllocArray(vRuntimeRef rt,
+	                      vHeapRef heap,
                           vTypeRef elementType,
                           uword numElements);
 
-void vHeapForceGC(vThreadContextRef ctx, v_bool collectSharedHeap);
+void vHeapForceGC(vRuntimeRef rt, vHeapRef heap);
 
-/* Does a deep copy of the given object graph into the shared heap
- and returns the shared heap copy */
-vObject vHeapCopyToShared(vThreadContextRef ctx, vObject obj);
+vObject vHeapCopyObject(vHeapRef from, vHeapRef to, vObject obj);
 
 vTypeRef vMemoryGetObjectType(vThreadContextRef ctx, vObject obj);
 
@@ -35,11 +33,13 @@ vRootSetRef vMemoryCreateRootSet();
 
 void vMemoryDeleteRootSet(vRootSetRef roots);
 
-vObject v_bootstrap_object_alloc(vThreadContextRef ctx,
+vObject v_bootstrap_object_alloc(vRuntimeRef rt,
+		                         vHeapRef heap,
                                  vTypeRef proto_type,
                                  uword size);
 
-vArrayRef v_bootstrap_array_alloc(vThreadContextRef ctx,
+vArrayRef v_bootstrap_array_alloc(vRuntimeRef rt,
+	                              vHeapRef heap,
                                   vTypeRef proto_elem_type,
                                   uword num_elements,
                                   uword elem_size,

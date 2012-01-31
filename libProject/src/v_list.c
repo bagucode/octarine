@@ -9,25 +9,25 @@
 
 void v_bootstrap_list_init_type(vThreadContextRef ctx) {
     vFieldRef *fields;
-    ctx->runtime->builtInTypes.list->fields = v_bootstrap_type_create_field_array(ctx, 2);
+    ctx->runtime->builtInTypes.list->fields = v_bootstrap_type_create_field_array(ctx->runtime, ctx->heap, 2);
     ctx->runtime->builtInTypes.list->kind = V_T_OBJECT;
-    ctx->runtime->builtInTypes.list->name = v_bootstrap_string_create(ctx, "AnyList");
+    ctx->runtime->builtInTypes.list->name = v_bootstrap_string_create(ctx->runtime, ctx->heap, "AnyList");
     ctx->runtime->builtInTypes.list->size = sizeof(vListObj);
 
     fields = (vFieldRef*)vArrayDataPointer(ctx->runtime->builtInTypes.list->fields);
     
-    fields[0]->name = v_bootstrap_string_create(ctx, "data");
+    fields[0]->name = v_bootstrap_string_create(ctx->runtime, ctx->heap, "data");
     fields[0]->offset = offsetof(vListObj, data);
     fields[0]->type = ctx->runtime->builtInTypes.any;
 
-    fields[1]->name = v_bootstrap_string_create(ctx, "next");
+    fields[1]->name = v_bootstrap_string_create(ctx->runtime, ctx->heap, "next");
     fields[1]->offset = offsetof(vListObj, next);
     fields[1]->type = ctx->runtime->builtInTypes.list;
 }
 
 vListObjRef vListObjCreate(vThreadContextRef ctx, vObject data) {
     vListObjRef ret;
-    ret = (vListObjRef)vHeapAlloc(ctx, ctx->runtime->builtInTypes.list);
+	ret = (vListObjRef)vHeapAlloc(ctx->runtime, ctx->heap, ctx->runtime->builtInTypes.list);
     ret->data = data;
     return ret;
 }
@@ -35,7 +35,7 @@ vListObjRef vListObjCreate(vThreadContextRef ctx, vObject data) {
 vListObjRef vListObjAddFront(vThreadContextRef ctx,
                              vListObjRef lst,
                              vObject data) {
-    vListObjRef head = (vListObjRef)vHeapAlloc(ctx, ctx->runtime->builtInTypes.list);
+								 vListObjRef head = (vListObjRef)vHeapAlloc(ctx->runtime, ctx->heap, ctx->runtime->builtInTypes.list);
     head->data = data;
     // Only set the next pointer to the node that got passed as an argument
     // if argument node is not empty, to make it appear that the empty node

@@ -34,9 +34,9 @@ vFieldRef vFieldCreate(vThreadContextRef ctx,
                        vStringRef name,
                        vTypeRef type);
 
-v_bool vTypeIsPrimitive(vThreadContextRef ctx, vTypeRef t);
-v_bool vTypeIsStruct(vThreadContextRef ctx, vTypeRef t);
-v_bool vTypeIsObject(vThreadContextRef ctx, vTypeRef t);
+v_bool vTypeIsPrimitive(vTypeRef t);
+v_bool vTypeIsStruct(vTypeRef t);
+v_bool vTypeIsObject(vTypeRef t);
 v_bool vTypeEquals(vThreadContextRef ctx, vTypeRef t, vObject other);
 vTypeRef vTypeCreatePrototype(vThreadContextRef ctx, v_bool shared);
 vTypeRef vTypeCreate(vThreadContextRef ctx,
@@ -48,9 +48,10 @@ vTypeRef vTypeCreate(vThreadContextRef ctx,
                      vTypeRef protoType);
 vStringRef vTypeGetName(vTypeRef type);
 
-void v_bootstrap_type_init_type(vThreadContextRef ctx);
-void v_bootstrap_type_init_field(vThreadContextRef ctx);
-vArrayRef v_bootstrap_type_create_field_array(vThreadContextRef ctx,
+void v_bootstrap_type_init_type(vRuntimeRef rt, vHeapRef heap);
+void v_bootstrap_type_init_field(vRuntimeRef rt, vHeapRef heap);
+vArrayRef v_bootstrap_type_create_field_array(vRuntimeRef rt,
+	                                          vHeapRef heap,
                                               uword numFields);
 
 #endif

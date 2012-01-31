@@ -34,7 +34,7 @@ vVectorRef vVectorCreate(vThreadContextRef ctx,
     } frame;
     vMemoryPushFrame(ctx, &frame, sizeof(frame));
     
-    frame.vec = vHeapAlloc(ctx, ctx->runtime->builtInTypes.vector);
+	frame.vec = vHeapAlloc(ctx->runtime, ctx->heap, ctx->runtime->builtInTypes.vector);
     frame.vec->data = vArrayCreate(ctx, type, 0);
     
     vMemoryPopFrame(ctx);
@@ -50,7 +50,7 @@ vVectorRef vVectorAddBack(vThreadContextRef ctx,
     } frame;
     vMemoryPushFrame(ctx, &frame, sizeof(frame));
     
-    frame.newVec = vHeapAlloc(ctx, ctx->runtime->builtInTypes.vector);
+	frame.newVec = vHeapAlloc(ctx->runtime, ctx->heap, ctx->runtime->builtInTypes.vector);
     frame.newVec->data = vArrayCreate(ctx, vec->data->element_type, vec->data->num_elements + 1);
 
     vArrayCopy(vec->data, frame.newVec->data);
@@ -71,7 +71,7 @@ vVectorRef vVectorPut(vThreadContextRef ctx, vVectorRef vec, uword idx, pointer 
     } frame;
     vMemoryPushFrame(ctx, &frame, sizeof(frame));
 
-    frame.newVec = vHeapAlloc(ctx, ctx->runtime->builtInTypes.vector);
+	frame.newVec = vHeapAlloc(ctx->runtime, ctx->heap, ctx->runtime->builtInTypes.vector);
     frame.newVec->data = vArrayCreate(ctx, vec->data->element_type, vec->data->num_elements);
 
     vArrayCopy(vec->data, frame.newVec->data);

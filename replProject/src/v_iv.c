@@ -2,6 +2,7 @@
 #include "stdio.h"
 #include "stdlib.h"
 #include "memory.h"
+#include "string.h"
 #include "../../libProject/src/v_string.h"
 #include "../../libProject/src/v_runtime.h"
 #include "../../libProject/src/v_memory.h"
@@ -43,7 +44,7 @@ char* readLine(FILE* f, size_t* read, char* fname) {
         }
         line[(*read)++] = c;
         if(((*read) + 1) >= lineSize) {
-            line = realloc(line, lineSize *= 2);
+            line = (char*)realloc(line, lineSize *= 2);
         }
     };
 }
@@ -94,7 +95,7 @@ int main(int argc, char** argv) {
     }
     while((line = readLine(input, &read, inputName))) {
         if(prevLine) {
-            tmp = malloc(strlen(prevLine) + strlen(line) + 1);
+            tmp = (char*)malloc(strlen(prevLine) + strlen(line) + 1);
             strcpy(tmp, prevLine);
             strcat(tmp, line);
             free(prevLine);
@@ -103,9 +104,9 @@ int main(int argc, char** argv) {
             prevLine = NULL;
         }
         oFrame.src = vStringCreate(ctx, line);
-        oFrame.result = vReaderRead(ctx, oFrame.src);
+		oFrame.result = (vListObjRef)vReaderRead(ctx, oFrame.src);
         if(((vSymbolRef)oFrame.result) == rt->builtInConstants.needMoreData) {
-            prevLine = malloc(strlen(line) + 1);
+            prevLine = (char*)malloc(strlen(line) + 1);
             strcpy(prevLine, line);
             if(input == stdin) {
                 putc('>', stdout);

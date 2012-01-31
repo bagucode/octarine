@@ -41,7 +41,7 @@ void v_bootstrap_reader_init_type(vThreadContextRef ctx) {
     uword i;
     ctx->runtime->builtInTypes.reader->fields = NULL;
     ctx->runtime->builtInTypes.reader->kind = V_T_OBJECT;
-    ctx->runtime->builtInTypes.reader->name = v_bootstrap_string_create(ctx, "Reader");
+	ctx->runtime->builtInTypes.reader->name = v_bootstrap_string_create(ctx->runtime, ctx->heap, "Reader");
     ctx->runtime->builtInTypes.reader->size = sizeof(vReader);
 
     // Also init the read table here
@@ -63,7 +63,7 @@ v_bool isReserved(uword ch) {
 }
 
 vReaderRef vReaderCreate(vThreadContextRef ctx) {
-	return (vReaderRef)vHeapAlloc(ctx, ctx->runtime->builtInTypes.reader);
+	return (vReaderRef)vHeapAlloc(ctx->runtime, ctx->heap, ctx->runtime->builtInTypes.reader);
 }
 
 static u8 getChar(vArrayRef arr, uword i) {

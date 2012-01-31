@@ -25,12 +25,13 @@ vObject vArrayCopy(vArrayRef from, vArrayRef to);
 void vArrayPut(vThreadContextRef ctx, vArrayRef arr, uword idx, pointer src, vTypeRef srcType);
 void vArrayGet(vThreadContextRef ctx, vArrayRef arr, uword idx, pointer dest, vTypeRef destType);
 
-vArrayRef v_bootstrap_array_create(vThreadContextRef ctx,
+vArrayRef v_bootstrap_array_create(vRuntimeRef rt,
+	                               vHeapRef heap,
                                    vTypeRef type,
                                    uword num_elements,
                                    uword elem_size,
                                    u8 alignment);
 
-void v_bootstrap_array_init_type(vThreadContextRef ctx);
+void v_bootstrap_array_init_type(vRuntimeRef rt, vHeapRef heap);
 
 #endif
