@@ -224,20 +224,23 @@ static vObject read(vThreadContextRef ctx, vArrayRef src, uword* idx) {
         return fn(ctx, src, idx);
     }
     else {
+        // TODO: fix this, needs to check for any of the collection terminators
+        // and signal an error if any is found since that means there was
+        // a mismatch.
         if(getChar(src, *idx) == RPAREN) {
-            return NULL; // TODO: need to change this when more readable types are added
+            return NULL;
         }
         return readSymbolOrKeyword(ctx, src, idx);
     }
 }
 
-vListObjRef vReaderRead(vThreadContextRef ctx, vStringRef source) {
+vObject vReaderRead(vThreadContextRef ctx, vStringRef source) {
     uword idx = 0;
     // Stack frame for GC roots
 	struct {
         vObject tmp;
 		vArrayRef srcArr;
-        vListObjRef objects;
+        vObject objects;
 	} frame;
 	vMemoryPushFrame(ctx, &frame, sizeof(frame));
 
@@ -246,10 +249,17 @@ vListObjRef vReaderRead(vThreadContextRef ctx, vStringRef source) {
     while (idx < frame.srcArr->num_elements) {
         frame.tmp = read(ctx, frame.srcArr, &idx);
         if(frame.tmp != NULL) {
-            frame.objects = vListObjAddFront(ctx, frame.objects, frame.tmp);
+            if(frame.tmp == ctx->runtime->builtInConstants.needMoreData) {
+                frame.objects = frame.tmp;
+            }
+            else {
+                frame.objects = vListObjAddFront(ctx, frame.objects, frame.tmp);
+            }
         }
     }
-    frame.objects = vListObjReverse(ctx, frame.objects);
+    if(frame.objects != ctx->runtime->builtInConstants.needMoreData) {
+        frame.objects = vListObjReverse(ctx, frame.objects);
+    }
 
 	vMemoryPopFrame(ctx);
     return frame.objects;

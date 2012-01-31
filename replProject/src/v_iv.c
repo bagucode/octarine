@@ -9,6 +9,7 @@
 #include "../../libProject/src/v_list.h"
 #include "../../libProject/src/v_type.h"
 #include "../../libProject/src/v_array.h"
+#include "../../libProject/src/v_thread_context.h"
 
 int checkError(FILE* in, char* name) {
     if(ferror(in)) {
@@ -19,15 +20,45 @@ int checkError(FILE* in, char* name) {
     return 0;
 }
 
+char* readLine(FILE* f, size_t* read, char* fname) {
+    size_t lineSize = 250;
+    char* line;
+    int c;
+
+    (*read) = 0;
+    line = (char*)malloc(lineSize);
+    while(1) {
+        c = fgetc(f);
+        if(checkError(f, fname)) {
+            free(line);
+            return NULL;
+        }
+        if(c == EOF || c == '\n' || c == '\r') {
+            if((*read) == 0) {
+                free(line);
+                return NULL;
+            }
+            line[(*read)] = 0;
+            return line;
+        }
+        line[(*read)++] = c;
+        if(((*read) + 1) >= lineSize) {
+            line = realloc(line, lineSize *= 2);
+        }
+    };
+}
+
 int main(int argc, char** argv) {
-    size_t bufSize = 4096, bufPos = 0;
-    char inBuf[4096];
-    char* srcBuf;
     FILE* input;
     size_t read;
     int ret = 0;
     int i;
     int numObjs;
+    char* inputName;
+    char* line;
+    char* prevLine = NULL;
+    char* tmp;
+    char* typeName;
 
     vRuntimeRef rt;
     vThreadContextRef ctx;
@@ -44,48 +75,60 @@ int main(int argc, char** argv) {
     vMemoryPushFrame(ctx, &oFrame, sizeof(oFrame));
     
     if(argc < 2) {
-        
+        input = stdin;
+        inputName = "stdin";
     }
     else {
-        input = fopen(argv[1], "rb");
+        inputName = argv[1];
+        input = fopen(inputName, "rb");
         if(!input) {
-            printf("Could not open %s\n", argv[1]);
+            printf("Could not open %s\n", inputName);
             ret = -1;
             goto end;
         }
-
-        srcBuf = (char*)malloc(bufSize);
-        do {
-            read = fread(inBuf, 1, 4096, input);
-            if(checkError(input, argv[1])) {
-                free(srcBuf);
-                ret = -1;
-                goto end;
-            }
-            if((bufPos + read + 1) > bufSize) {
-                bufSize *= 2;
-                srcBuf = (char*)realloc(srcBuf, bufSize);
-            }
-            memcpy(srcBuf + bufPos, inBuf, read);
-            bufPos += read;
-        } while (read >= 4096);
-        fclose(input);
-        
-        srcBuf[bufPos] = 0;
-        oFrame.src = vStringCreate(ctx, srcBuf);
-        free(srcBuf);
-        
+    }
+    
+    if(input == stdin) {
+        putc('>', stdout);
+        putc(' ', stdout);
+    }
+    while((line = readLine(input, &read, inputName))) {
+        if(prevLine) {
+            tmp = malloc(strlen(prevLine) + strlen(line) + 1);
+            strcpy(tmp, prevLine);
+            strcat(tmp, line);
+            free(prevLine);
+            free(line);
+            line = tmp;
+            prevLine = NULL;
+        }
+        oFrame.src = vStringCreate(ctx, line);
         oFrame.result = vReaderRead(ctx, oFrame.src);
-        numObjs = (int)vListObjSize(ctx, oFrame.result);
-        printf("Read %d objects:\n", numObjs);
-        for(i = 0; i < numObjs; ++i) {
-            oFrame.obj = vListObjFirst(ctx, oFrame.result);
-            oFrame.result = vListObjRest(ctx, oFrame.result);
-            oFrame.utf8 = vStringUtf8Copy(ctx, vTypeGetName(vObjectGetType(ctx, oFrame.obj)));
-            srcBuf = (char*)vArrayDataPointer(oFrame.utf8);
-            printf("%s\n", srcBuf);
+        if(((vSymbolRef)oFrame.result) == rt->builtInConstants.needMoreData) {
+            prevLine = malloc(strlen(line) + 1);
+            strcpy(prevLine, line);
+            if(input == stdin) {
+                putc('>', stdout);
+            }
+        }
+        else {
+            numObjs = (int)vListObjSize(ctx, oFrame.result);
+            printf("Read %d objects:\n", numObjs);
+            for(i = 0; i < numObjs; ++i) {
+                oFrame.obj = vListObjFirst(ctx, oFrame.result);
+                oFrame.result = vListObjRest(ctx, oFrame.result);
+                oFrame.utf8 = vStringUtf8Copy(ctx, vTypeGetName(vObjectGetType(ctx, oFrame.obj)));
+                typeName = (char*)vArrayDataPointer(oFrame.utf8);
+                printf("%s\n", typeName);
+            }
+        }
+        free(line);
+        if(input == stdin) {
+            putc('>', stdout);
+            putc(' ', stdout);
         }
     }
+
 end:
     vMemoryPopFrame(ctx);
     vRuntimeDestroy(rt);
