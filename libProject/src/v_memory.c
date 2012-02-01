@@ -492,19 +492,20 @@ vTypeRef vMemoryGetObjectType(vThreadContextRef ctx, vObject obj) {
     return getType(getBlock(obj));
 }
 
-vObject vHeapCopyObject(vHeapRef from, vHeapRef to, vObject obj) {
-	if(from->mutex) {
-		vMutexLock(from->mutex);
-	}
-	if(to->mutex) {
-		vMutexLock(to->mutex);
-	}
-
-	if(to->mutex) {
-		vMutexUnlock(to->mutex);
-	}
-	if(from->mutex) {
-		vMutexUnlock(from->mutex);
-	}
+// Does a deep copy of obj into the specified heap, but only if the given heap
+// is a shared (synchronized) heap.
+// A pointer to the new object is returned or NULL if there is an error, in
+// which case vErrorGet can be used to get the error object.
+// The type needs to be supplied separately to support copying of value types.
+vObject vHeapCopyObjectShared(vThreadContextRef ctx,
+                              vObject obj,
+                              vTypeRef type,
+                              vHeapRef sharedHeap) {
+    if(sharedHeap->mutex == NULL) {
+        // TODO: ERROR
+        return NULL;
+    }
+    
+    
 }
 
