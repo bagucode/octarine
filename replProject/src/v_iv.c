@@ -93,7 +93,21 @@ int main(int argc, char** argv) {
         putc('>', stdout);
         putc(' ', stdout);
     }
-    while((line = readLine(input, &read, inputName))) {
+    while(1) {
+        line = readLine(input, &read, inputName);
+        if(feof(input)) {
+            if(input == stdin) {
+                putc('\n', stdout);
+            }
+            break;
+        }
+        if(line == NULL) {
+            if(input == stdin) {
+                putc('>', stdout);
+                putc(' ', stdout);
+            }
+            continue; // blank line
+        }
         if(prevLine) {
             tmp = (char*)malloc(strlen(prevLine) + strlen(line) + 1);
             strcpy(tmp, prevLine);
