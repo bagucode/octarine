@@ -28,16 +28,16 @@ void o_bootstrap_keyword_type_init(vThreadContextRef ctx) {
     oENDVOIDFN
 }
 
-vKeywordRef vKeywordCreate(vThreadContextRef ctx, vStringRef name) {
+oKeywordRef oKeywordCreate(vThreadContextRef ctx, vStringRef name) {
     oROOTS(ctx)
     oENDROOTS
     if(ctx->error) return NULL;
     oSETRET(oHeapAlloc(ctx->runtime->builtInTypes.keyword));
-    oGETRETT(vKeywordRef)->name = name;
-    oENDFN(vKeywordRef)
+    oGETRETT(oKeywordRef)->name = name;
+    oENDFN(oKeywordRef)
 }
 
-vStringRef vKeywordGetName(vThreadContextRef ctx, vKeywordRef kw) {
+vStringRef oKeywordGetName(vThreadContextRef ctx, oKeywordRef kw) {
     if(ctx->error) return NULL;
     return kw->name;
 }

@@ -156,11 +156,11 @@ static void init_builtInConstants(vThreadContextRef ctx) {
     vMemoryPushFrame(ctx, &frame, sizeof(frame));
     
     frame.str = vStringCreate(ctx, "need-more-data");
-    ctx->runtime->builtInConstants.needMoreData = vKeywordCreate(ctx, frame.str);
+    ctx->runtime->builtInConstants.needMoreData = oKeywordCreate(ctx, frame.str);
     frame.str = vStringCreate(ctx, "type-mismatch");
-    ctx->runtime->builtInConstants.typeMismatch = vKeywordCreate(ctx, frame.str);
+    ctx->runtime->builtInConstants.typeMismatch = oKeywordCreate(ctx, frame.str);
     frame.str = vStringCreate(ctx, "index-out-of-bounds");
-    ctx->runtime->builtInConstants.indexOutOfBounds = vKeywordCreate(ctx, frame.str);
+    ctx->runtime->builtInConstants.indexOutOfBounds = oKeywordCreate(ctx, frame.str);
     
     vMemoryPopFrame(ctx);
 }
@@ -168,11 +168,11 @@ static void init_builtInConstants(vThreadContextRef ctx) {
 static oErrorRef initError(vThreadContextRef ctx, char* name) {
     oROOTS(ctx)
     vStringRef str;
-    vKeywordRef kw;
+    oKeywordRef kw;
     oENDROOTS
 
     oRoots.str = vStringCreate(ctx, name);
-    oRoots.kw = vKeywordCreate(ctx, oRoots.str);
+    oRoots.kw = oKeywordCreate(ctx, oRoots.str);
     oSETRET(oHeapAlloc(ctx->runtime->builtInTypes.error));
     oGETRETT(oErrorRef)->data = oRoots.kw;
 

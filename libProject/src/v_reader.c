@@ -140,7 +140,7 @@ static vObject readSymbolOrKeyword(vThreadContextRef ctx, oArrayRef src, uword* 
 	oRoots.theString = readString(ctx, src, idx);
     if(vStringCharAt(ctx, oRoots.theString, 0) == ':') {
         oRoots.theString = vStringSubString(ctx, oRoots.theString, 1, vStringLength(ctx, oRoots.theString));
-        oRETURN(vKeywordCreate(ctx, (vStringRef)oRoots.theString));
+        oRETURN(oKeywordCreate(ctx, (vStringRef)oRoots.theString));
     }
     else {
         oRETURN(vSymbolCreate(ctx, (vStringRef)oRoots.theString));

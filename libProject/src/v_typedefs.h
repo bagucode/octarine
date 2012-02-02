@@ -24,8 +24,8 @@ typedef oFunctionOverload* oFunctionOverloadRef;
 typedef struct oHeap oHeap;
 typedef oHeap* oHeapRef;
 
-typedef struct vKeyword vKeyword;
-typedef vKeyword* vKeywordRef;
+typedef struct oKeyword oKeyword;
+typedef oKeyword* oKeywordRef;
 
 typedef struct vListObj vListObj;
 typedef vListObj* vListObjRef;

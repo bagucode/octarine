@@ -4,12 +4,12 @@
 #include "../../platformProject/src/v_basic_types.h"
 #include "v_typedefs.h"
 
-struct vKeyword {
+struct oKeyword {
     vStringRef name;
 };
 
-vKeywordRef vKeywordCreate(vThreadContextRef ctx, vStringRef name);
-vStringRef vKeywordGetName(vThreadContextRef ctx, vKeywordRef kw);
+oKeywordRef oKeywordCreate(vThreadContextRef ctx, vStringRef name);
+vStringRef oKeywordGetName(vThreadContextRef ctx, oKeywordRef kw);
 
 void o_bootstrap_keyword_type_init(vThreadContextRef ctx);
 

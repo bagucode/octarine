@@ -373,7 +373,7 @@ void testReadKeyword() {
     vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024 * 1000);
     vThreadContextRef ctx = runtime->allContexts->ctx;
     vListObjRef lst;
-    vKeywordRef kw;
+    oKeywordRef kw;
 	struct {
 		vObject readResult;
         vStringRef src;
@@ -392,7 +392,7 @@ void testReadKeyword() {
     
     kw = vListObjFirst(ctx, lst);
     assert(vObjectGetType(ctx, kw) == ctx->runtime->builtInTypes.keyword);
-    assert(vStringCompare(frame.name, vKeywordGetName(ctx, kw)) == 0);
+    assert(vStringCompare(frame.name, oKeywordGetName(ctx, kw)) == 0);
     
 	vMemoryPopFrame(ctx);
     vRuntimeDestroy(runtime);
