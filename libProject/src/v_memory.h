@@ -10,12 +10,12 @@ oHeapRef oHeapCreate(v_bool synchronized, uword gc_threshold);
 void oHeapDestroy(oHeapRef heap);
 
 vObject _oHeapAlloc(vThreadContextRef ctx, vTypeRef t);
-#define oHeapAlloc(...) _oC(_oHeapAlloc, __VA_ARGS__)
+#define oHeapAlloc(type) _oC(_oHeapAlloc, type)
 
 oArrayRef _oHeapAllocArray(vThreadContextRef ctx,
                            vTypeRef elementType,
                            uword numElements);
-#define oHeapAllocArray(...) _oC(_oHeapAllocArray, __VA_ARGS__)
+#define oHeapAllocArray(type, size) _oC(_oHeapAllocArray, type, size)
 
 void oHeapForceGC(vRuntimeRef rt, oHeapRef heap);
 
