@@ -409,7 +409,7 @@ void testOutOfMemory() {
     assert(v_false); // should never get here
     
     oENDVOIDFN
-    assert(vErrorGet(ctx) == rt->builtInErrors.outOfMemory);
+    assert(oErrorGet(ctx) == rt->builtInErrors.outOfMemory);
     vRuntimeDestroy(rt);
 }
 

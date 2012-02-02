@@ -10,7 +10,7 @@ struct vThreadContext {
     oHeapRef heap;
     vRootSetRef roots;
 	vReaderRef reader;
-	vErrorRef error;
+	oErrorRef error;
 };
 
 vThreadContextRef vThreadContextGetCurrent(vRuntimeRef rt);

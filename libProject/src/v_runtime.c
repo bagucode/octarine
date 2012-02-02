@@ -165,7 +165,7 @@ static void init_builtInConstants(vThreadContextRef ctx) {
     vMemoryPopFrame(ctx);
 }
 
-static vErrorRef initError(vThreadContextRef ctx, char* name) {
+static oErrorRef initError(vThreadContextRef ctx, char* name) {
     oROOTS(ctx)
     vStringRef str;
     vKeywordRef kw;
@@ -174,9 +174,9 @@ static vErrorRef initError(vThreadContextRef ctx, char* name) {
     oRoots.str = vStringCreate(ctx, name);
     oRoots.kw = vKeywordCreate(ctx, oRoots.str);
     oSETRET(oHeapAlloc(ctx->runtime->builtInTypes.error));
-    oGETRETT(vErrorRef)->data = oRoots.kw;
+    oGETRETT(oErrorRef)->data = oRoots.kw;
 
-    oENDFN(vErrorRef)
+    oENDFN(oErrorRef)
 }
 
 static void init_builtInErrors(vThreadContextRef ctx) {

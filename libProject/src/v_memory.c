@@ -492,7 +492,7 @@ vTypeRef vMemoryGetObjectType(vThreadContextRef ctx, vObject obj) {
 // Does a deep copy of obj into the specified heap, but only if the given heap
 // is a shared (synchronized) heap.
 // A pointer to the new object is returned or NULL if there is an error, in
-// which case vErrorGet can be used to get the error object.
+// which case oErrorGet can be used to get the error object.
 // The type needs to be supplied separately to support copying of value types.
 vObject oHeapCopyObjectShared(vThreadContextRef ctx,
                               vObject obj,

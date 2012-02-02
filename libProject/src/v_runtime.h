@@ -56,7 +56,7 @@ typedef struct vRuntimeBuiltInConstants {
 } vRuntimeBuiltInConstants;
 
 typedef struct vRuntimeBuiltInErrors {
-    vErrorRef outOfMemory;
+    oErrorRef outOfMemory;
 } vRuntimeBuiltInErrors;
 
 struct vRuntime {

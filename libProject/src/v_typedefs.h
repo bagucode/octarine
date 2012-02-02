@@ -9,8 +9,8 @@ typedef oArray* oArrayRef;
 typedef struct vClosure vClosure;
 typedef vClosure* vClosureRef;
 
-typedef struct vError vError;
-typedef vError* vErrorRef;
+typedef struct oError oError;
+typedef oError* oErrorRef;
 
 typedef struct vField vField;
 typedef vField* vFieldRef;
@@ -81,7 +81,7 @@ typedef vVector* vVectorRef;
 
 #define oRETURN(expression) oRoots._oRET = expression; goto _oENDFNL;
 
-#define oRETURNERROR(expression) oRoots._oRET = NULL; vErrorSet(_oCTX, expression); goto _oENDFNL;
+#define oRETURNERROR(expression) oRoots._oRET = NULL; oErrorSet(_oCTX, expression); goto _oENDFNL;
 
 #define oSETRET(expression) oRoots._oRET = expression
 
@@ -95,6 +95,6 @@ typedef vVector* vVectorRef;
 
 #define oENDVOIDFN _oENDFN
 
-#define _oC(fn, ...) fn(_oCTX, __VA_ARGS__); if(vErrorGet(ctx)) { oRoots._oRET = NULL; goto _oENDFNL; }
+#define _oC(fn, ...) fn(_oCTX, __VA_ARGS__); if(oErrorGet(ctx)) { oRoots._oRET = NULL; goto _oENDFNL; }
 
 #endif

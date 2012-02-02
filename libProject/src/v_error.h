@@ -4,21 +4,21 @@
 #include "../../platformProject/src/v_platform.h"
 #include "v_typedefs.h"
 
-struct vError {
+struct oError {
     vObject data;
 };
 
 // Returns NULL if there was no error set for this context
-vErrorRef vErrorGet(vThreadContextRef ctx);
+oErrorRef oErrorGet(vThreadContextRef ctx);
 
 // Set an error for the given thread context
-void vErrorSet(vThreadContextRef ctx, vObject data);
+void oErrorSet(vThreadContextRef ctx, vObject data);
 
 // Clears the error condition from the thread context.
-void vErrorClear(vThreadContextRef ctx);
+void oErrorClear(vThreadContextRef ctx);
 
 // Get the error "message"
-vObject vErrorGetData(vErrorRef err);
+vObject oErrorGetData(oErrorRef err);
 
 void o_bootstrap_error_type_init(vThreadContextRef ctx);
 
