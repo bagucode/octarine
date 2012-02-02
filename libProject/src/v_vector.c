@@ -26,51 +26,51 @@ void o_bootstrap_vector_init_type(oThreadContextRef ctx) {
     oENDVOIDFN
 }
 
-vVectorRef vVectorCreate(oThreadContextRef ctx,
+oVectorRef oVectorCreate(oThreadContextRef ctx,
                          oTypeRef type) {
     oROOTS(ctx)
     oENDROOTS
     
 	oSETRET(oHeapAlloc(ctx->runtime->builtInTypes.vector));
-    oGETRETT(vVectorRef)->data = oArrayCreate(type, 0);
+    oGETRETT(oVectorRef)->data = oArrayCreate(type, 0);
 
-	oENDFN(vVectorRef)
+	oENDFN(oVectorRef)
 }
 
-vVectorRef vVectorAddBack(oThreadContextRef ctx,
-                          vVectorRef vec,
+oVectorRef oVectorAddBack(oThreadContextRef ctx,
+                          oVectorRef vec,
                           pointer data,
                           oTypeRef dataType) {
     oROOTS(ctx)
     oENDROOTS
     
 	oSETRET(oHeapAlloc(ctx->runtime->builtInTypes.vector));
-    oGETRETT(vVectorRef)->data = oArrayCreate(vec->data->element_type, vec->data->num_elements + 1);
+    oGETRETT(oVectorRef)->data = oArrayCreate(vec->data->element_type, vec->data->num_elements + 1);
 
-    oArrayCopy(vec->data, oGETRETT(vVectorRef)->data);
-    oArrayPut(oGETRETT(vVectorRef)->data, vec->data->num_elements, data, dataType);
+    oArrayCopy(vec->data, oGETRETT(oVectorRef)->data);
+    oArrayPut(oGETRETT(oVectorRef)->data, vec->data->num_elements, data, dataType);
 
-	oENDFN(vVectorRef)
+	oENDFN(oVectorRef)
 }
 
-uword vVectorSize(oThreadContextRef ctx, vVectorRef vec) {
+uword oVectorSize(oThreadContextRef ctx, oVectorRef vec) {
     return vec->data->num_elements;
 }
 
-vVectorRef vVectorPut(oThreadContextRef ctx, vVectorRef vec, uword idx, pointer src, oTypeRef srcType) {
+oVectorRef oVectorPut(oThreadContextRef ctx, oVectorRef vec, uword idx, pointer src, oTypeRef srcType) {
     oROOTS(ctx)
     oENDROOTS
 
 	oSETRET(oHeapAlloc(ctx->runtime->builtInTypes.vector));
-    oGETRETT(vVectorRef)->data = oArrayCreate(vec->data->element_type, vec->data->num_elements);
+    oGETRETT(oVectorRef)->data = oArrayCreate(vec->data->element_type, vec->data->num_elements);
 
-    oArrayCopy(vec->data, oGETRETT(vVectorRef)->data);
-    oArrayPut(oGETRETT(vVectorRef)->data, idx, src, srcType);
+    oArrayCopy(vec->data, oGETRETT(oVectorRef)->data);
+    oArrayPut(oGETRETT(oVectorRef)->data, idx, src, srcType);
 
-	oENDFN(vVectorRef)
+	oENDFN(oVectorRef)
 }
 
-void vVectorGet(oThreadContextRef ctx, vVectorRef vec, uword idx, pointer dest, oTypeRef destType) {
+void oVectorGet(oThreadContextRef ctx, oVectorRef vec, uword idx, pointer dest, oTypeRef destType) {
     oROOTS(ctx)
     oENDROOTS
     oArrayGet(vec->data, idx, dest, destType);

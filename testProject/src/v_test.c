@@ -291,35 +291,35 @@ void testVector() {
     i64 one;
     i64 checki64;
     struct {
-        vVectorRef veci64;
-        vVectorRef vecStr;
+        oVectorRef veci64;
+        oVectorRef vecStr;
         oStringRef str;
         oStringRef checkStr;
     } frame;
     oMemoryPushFrame(ctx, &frame, sizeof(frame));
 
-    frame.veci64 = vVectorCreate(ctx, i64_t);
-    frame.vecStr = vVectorCreate(ctx, str_t);
+    frame.veci64 = oVectorCreate(ctx, i64_t);
+    frame.vecStr = oVectorCreate(ctx, str_t);
     
     frame.str = oStringCreate(ctx, "String One");
-    frame.vecStr = vVectorAddBack(ctx, frame.vecStr, frame.str, str_t);
-    assert(vVectorSize(ctx, frame.vecStr) == 1);
-    vVectorGet(ctx, frame.vecStr, 0, &frame.checkStr, str_t);
+    frame.vecStr = oVectorAddBack(ctx, frame.vecStr, frame.str, str_t);
+    assert(oVectorSize(ctx, frame.vecStr) == 1);
+    oVectorGet(ctx, frame.vecStr, 0, &frame.checkStr, str_t);
     assert(oObjectGetType(ctx, frame.checkStr) == str_t);
     assert(oStringCompare(frame.str, frame.checkStr) == 0);
     assert(frame.str == frame.checkStr);
 
     one = 1;
     checki64 = 0;
-    frame.veci64 = vVectorAddBack(ctx, frame.veci64, &one, i64_t);
-    assert(vVectorSize(ctx, frame.veci64) == 1);
-    vVectorGet(ctx, frame.veci64, 0, &checki64, i64_t);
+    frame.veci64 = oVectorAddBack(ctx, frame.veci64, &one, i64_t);
+    assert(oVectorSize(ctx, frame.veci64) == 1);
+    oVectorGet(ctx, frame.veci64, 0, &checki64, i64_t);
     assert(one == checki64);
 
     // Test put of object
     frame.str = oStringCreate(ctx, "String Two");
-    frame.vecStr = vVectorPut(ctx, frame.vecStr, 0, frame.str, str_t);
-    vVectorGet(ctx, frame.vecStr, 0, &frame.checkStr, str_t);
+    frame.vecStr = oVectorPut(ctx, frame.vecStr, 0, frame.str, str_t);
+    oVectorGet(ctx, frame.vecStr, 0, &frame.checkStr, str_t);
     assert(oObjectGetType(ctx, frame.checkStr) == str_t);
     assert(oStringCompare(frame.str, frame.checkStr) == 0);
     assert(frame.str == frame.checkStr);
@@ -327,8 +327,8 @@ void testVector() {
     // Test put of struct
     one = 2;
     checki64 = 0;
-    frame.veci64 = vVectorPut(ctx, frame.veci64, 0, &one, i64_t);
-    vVectorGet(ctx, frame.veci64, 0, &checki64, i64_t);
+    frame.veci64 = oVectorPut(ctx, frame.veci64, 0, &one, i64_t);
+    oVectorGet(ctx, frame.veci64, 0, &checki64, i64_t);
     assert(one == checki64);
     
     oMemoryPopFrame(ctx);
@@ -340,7 +340,7 @@ void testReadVector() {
     oThreadContextRef ctx = runtime->allContexts->ctx;
     oListObjRef lst;
     oSymbolRef sym;
-    vVectorRef vec;
+    oVectorRef vec;
 	struct {
 		oObject readResult;
 		oStringRef src;
@@ -360,9 +360,9 @@ void testReadVector() {
     
     vec = oListObjFirst(ctx, lst);
     assert(oObjectGetType(ctx, vec) == ctx->runtime->builtInTypes.vector);
-    assert(vVectorSize(ctx, vec) == 3);
+    assert(oVectorSize(ctx, vec) == 3);
     
-    vVectorGet(ctx, vec, 2, &sym, ctx->runtime->builtInTypes.symbol);
+    oVectorGet(ctx, vec, 2, &sym, ctx->runtime->builtInTypes.symbol);
     assert(oSymbolEquals(ctx, sym, frame.ethel) == v_true);
     
 	oMemoryPopFrame(ctx);

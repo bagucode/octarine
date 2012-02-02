@@ -67,8 +67,8 @@ typedef oThreadContext* oThreadContextRef;
 typedef struct oType oType;
 typedef oType* oTypeRef;
 
-typedef struct vVector vVector;
-typedef vVector* vVectorRef;
+typedef struct oVector oVector;
+typedef oVector* oVectorRef;
 
 // Some macros for handling stack frames and errors
 
