@@ -42,12 +42,12 @@ vRootSetRef vMemoryCreateRootSet();
 
 void vMemoryDeleteRootSet(vRootSetRef roots);
 
-vObject v_bootstrap_object_alloc(vRuntimeRef rt,
+vObject o_bootstrap_object_alloc(vRuntimeRef rt,
 		                         oHeapRef heap,
                                  vTypeRef proto_type,
                                  uword size);
 
-oArrayRef v_bootstrap_array_alloc(vRuntimeRef rt,
+oArrayRef o_bootstrap_array_alloc(vRuntimeRef rt,
 	                              oHeapRef heap,
                                   vTypeRef proto_elem_type,
                                   uword num_elements,

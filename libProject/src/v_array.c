@@ -30,13 +30,13 @@ uword oArraySize(oArrayRef arr) {
     return arr->num_elements;
 }
 
-oArrayRef v_bootstrap_array_create(vRuntimeRef rt,
+oArrayRef o_bootstrap_array_create(vRuntimeRef rt,
 	                               oHeapRef heap,
                                    vTypeRef type,
                                    uword num_elements,
                                    uword elem_size,
                                    u8 alignment) {
-    return v_bootstrap_array_alloc(rt, heap, type, num_elements, elem_size, alignment);
+    return o_bootstrap_array_alloc(rt, heap, type, num_elements, elem_size, alignment);
 }
 
 void _oArrayCopy(vThreadContextRef ctx, oArrayRef from, oArrayRef to) {
@@ -130,10 +130,10 @@ void _oArrayGet(vThreadContextRef ctx, oArrayRef arr, uword idx, pointer dest, v
     }
 }
 
-void v_bootstrap_array_init_type(vRuntimeRef rt, oHeapRef heap) {
+void o_bootstrap_array_init_type(vRuntimeRef rt, oHeapRef heap) {
     rt->builtInTypes.array->fields = NULL;
     rt->builtInTypes.array->kind = V_T_OBJECT;
-    rt->builtInTypes.array->name = v_bootstrap_string_create(rt, heap, "Array");
+    rt->builtInTypes.array->name = o_bootstrap_string_create(rt, heap, "Array");
     rt->builtInTypes.array->size = sizeof(oArray);
 }
 

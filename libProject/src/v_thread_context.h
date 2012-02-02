@@ -20,8 +20,8 @@ vThreadContextRef vThreadContextCreate(vRuntimeRef runtime,
 
 void vThreadContextDestroy(vThreadContextRef ctx);
 
-void v_bootstrap_thread_context_type_init(vRuntimeRef rt, oHeapRef heap);
+void o_bootstrap_thread_context_type_init(vRuntimeRef rt, oHeapRef heap);
 
-vThreadContextRef v_bootstrap_thread_context_create(vRuntimeRef runtime, oHeapRef heap);
+vThreadContextRef o_bootstrap_thread_context_create(vRuntimeRef runtime, oHeapRef heap);
 
 #endif

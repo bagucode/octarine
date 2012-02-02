@@ -128,62 +128,62 @@ vTypeRef vTypeCreate(vThreadContextRef ctx,
     oENDFN(vTypeRef)
 }
 
-oArrayRef v_bootstrap_type_create_field_array(vRuntimeRef rt,
+oArrayRef o_bootstrap_type_create_field_array(vRuntimeRef rt,
 	                                          oHeapRef heap,
                                               uword numFields) {
-    oArrayRef ret = v_bootstrap_array_create(rt, heap, rt->builtInTypes.field, numFields, sizeof(pointer), sizeof(pointer));
+    oArrayRef ret = o_bootstrap_array_create(rt, heap, rt->builtInTypes.field, numFields, sizeof(pointer), sizeof(pointer));
     uword i;
     vFieldRef* fields = (vFieldRef*)oArrayDataPointer(ret);
     for(i = 0; i < numFields; ++i) {
-        fields[i] = (vFieldRef)v_bootstrap_object_alloc(rt, heap, rt->builtInTypes.field, sizeof(vField));
+        fields[i] = (vFieldRef)o_bootstrap_object_alloc(rt, heap, rt->builtInTypes.field, sizeof(vField));
     }
     return ret;
 }
 
-void v_bootstrap_type_init_type(vRuntimeRef rt, oHeapRef heap) {
+void o_bootstrap_type_init_type(vRuntimeRef rt, oHeapRef heap) {
     vFieldRef *fields;
-    rt->builtInTypes.type->fields = v_bootstrap_type_create_field_array(rt, heap, 4);
+    rt->builtInTypes.type->fields = o_bootstrap_type_create_field_array(rt, heap, 4);
     rt->builtInTypes.type->kind = V_T_OBJECT;
-    rt->builtInTypes.type->name = v_bootstrap_string_create(rt, heap, "Type");
+    rt->builtInTypes.type->name = o_bootstrap_string_create(rt, heap, "Type");
     rt->builtInTypes.type->size = sizeof(vType);
     
     fields = (vFieldRef*)oArrayDataPointer(rt->builtInTypes.type->fields);
 
-    fields[0]->name = v_bootstrap_string_create(rt, heap, "name");
+    fields[0]->name = o_bootstrap_string_create(rt, heap, "name");
     fields[0]->offset = offsetof(vType, name);
     fields[0]->type = rt->builtInTypes.string;
 
-    fields[1]->name = v_bootstrap_string_create(rt, heap, "fields");
+    fields[1]->name = o_bootstrap_string_create(rt, heap, "fields");
     fields[1]->offset = offsetof(vType, fields);
     fields[1]->type = rt->builtInTypes.array;
     
-    fields[2]->name = v_bootstrap_string_create(rt, heap, "size");
+    fields[2]->name = o_bootstrap_string_create(rt, heap, "size");
     fields[2]->offset = offsetof(vType, size);
     fields[2]->type = rt->builtInTypes.uword;
     
-    fields[3]->name = v_bootstrap_string_create(rt, heap, "kind");
+    fields[3]->name = o_bootstrap_string_create(rt, heap, "kind");
     fields[3]->offset = offsetof(vType, kind);
     fields[3]->type = rt->builtInTypes.u8;
 }
 
-void v_bootstrap_type_init_field(vRuntimeRef rt, oHeapRef heap) {
+void o_bootstrap_type_init_field(vRuntimeRef rt, oHeapRef heap) {
     vFieldRef *fields;
-    rt->builtInTypes.field->fields = v_bootstrap_type_create_field_array(rt, heap, 3);
+    rt->builtInTypes.field->fields = o_bootstrap_type_create_field_array(rt, heap, 3);
     rt->builtInTypes.field->kind = V_T_OBJECT;
-    rt->builtInTypes.field->name = v_bootstrap_string_create(rt, heap, "Field");
+    rt->builtInTypes.field->name = o_bootstrap_string_create(rt, heap, "Field");
     rt->builtInTypes.field->size = sizeof(vField);
 
     fields = (vFieldRef*)oArrayDataPointer(rt->builtInTypes.field->fields);
     
-    fields[0]->name = v_bootstrap_string_create(rt, heap, "name");
+    fields[0]->name = o_bootstrap_string_create(rt, heap, "name");
     fields[0]->offset = offsetof(vField, name);
     fields[0]->type = rt->builtInTypes.string;
     
-    fields[1]->name = v_bootstrap_string_create(rt, heap, "type");
+    fields[1]->name = o_bootstrap_string_create(rt, heap, "type");
     fields[1]->offset = offsetof(vField, type);
     fields[1]->type = rt->builtInTypes.type;
     
-    fields[2]->name = v_bootstrap_string_create(rt, heap, "offset");
+    fields[2]->name = o_bootstrap_string_create(rt, heap, "offset");
     fields[2]->offset = offsetof(vField, offset);
     fields[2]->type = rt->builtInTypes.u32;
 }

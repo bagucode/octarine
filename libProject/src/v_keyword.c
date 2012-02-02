@@ -7,7 +7,7 @@
 #include "v_string.h"
 #include "v_error.h"
 
-void v_bootstrap_keyword_type_init(vThreadContextRef ctx) {
+void o_bootstrap_keyword_type_init(vThreadContextRef ctx) {
     oROOTS(ctx)
     oArrayRef fields;
     vTypeRef theType;

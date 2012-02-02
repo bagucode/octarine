@@ -36,6 +36,6 @@ vObject vListObjFirst(vThreadContextRef ctx, vListObjRef lst);
 
 vListObjRef vListObjRest(vThreadContextRef ctx, vListObjRef lst);
 
-void v_bootstrap_list_init_type(vThreadContextRef ctx);
+void o_bootstrap_list_init_type(vThreadContextRef ctx);
 
 #endif

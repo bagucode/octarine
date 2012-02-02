@@ -7,22 +7,22 @@
 #include "v_runtime.h"
 #include <stddef.h>
 
-void v_bootstrap_thread_context_type_init(vRuntimeRef rt, oHeapRef heap) {
+void o_bootstrap_thread_context_type_init(vRuntimeRef rt, oHeapRef heap) {
     vFieldRef *fields;
-    rt->builtInTypes.threadContext->fields = v_bootstrap_type_create_field_array(rt, heap, 1);
+    rt->builtInTypes.threadContext->fields = o_bootstrap_type_create_field_array(rt, heap, 1);
     rt->builtInTypes.threadContext->kind = V_T_OBJECT;
-    rt->builtInTypes.threadContext->name = v_bootstrap_string_create(rt, heap, "ThreadContext");
+    rt->builtInTypes.threadContext->name = o_bootstrap_string_create(rt, heap, "ThreadContext");
     rt->builtInTypes.threadContext->size = sizeof(vThreadContext);
 
     fields = (vFieldRef*)oArrayDataPointer(rt->builtInTypes.threadContext->fields);
     
-    fields[0]->name = v_bootstrap_string_create(rt, heap, "error");
+    fields[0]->name = o_bootstrap_string_create(rt, heap, "error");
     fields[0]->offset = offsetof(vThreadContext, error);
     fields[0]->type = rt->builtInTypes.any;
 }
 
-vThreadContextRef v_bootstrap_thread_context_create(vRuntimeRef runtime, oHeapRef heap) {
-	vThreadContextRef ctx = (vThreadContextRef)v_bootstrap_object_alloc(runtime, heap, runtime->builtInTypes.threadContext, sizeof(vThreadContext));
+vThreadContextRef o_bootstrap_thread_context_create(vRuntimeRef runtime, oHeapRef heap) {
+	vThreadContextRef ctx = (vThreadContextRef)o_bootstrap_object_alloc(runtime, heap, runtime->builtInTypes.threadContext, sizeof(vThreadContext));
     ctx->heap = NULL;
     ctx->runtime = runtime;
     ctx->roots = vMemoryCreateRootSet();

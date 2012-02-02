@@ -7,7 +7,7 @@
 #include "v_memory.h"
 #include "v_error.h"
 
-void v_bootstrap_vector_init_type(vThreadContextRef ctx) {
+void o_bootstrap_vector_init_type(vThreadContextRef ctx) {
     oROOTS(ctx)
     oArrayRef fields;
     vStringRef typeName;

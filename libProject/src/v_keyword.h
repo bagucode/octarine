@@ -11,6 +11,6 @@ struct vKeyword {
 vKeywordRef vKeywordCreate(vThreadContextRef ctx, vStringRef name);
 vStringRef vKeywordGetName(vThreadContextRef ctx, vKeywordRef kw);
 
-void v_bootstrap_keyword_type_init(vThreadContextRef ctx);
+void o_bootstrap_keyword_type_init(vThreadContextRef ctx);
 
 #endif

@@ -22,6 +22,6 @@ vVectorRef vVectorPut(vThreadContextRef ctx, vVectorRef vec, uword idx, pointer 
 void vVectorGet(vThreadContextRef ctx, vVectorRef vec, uword idx, pointer dest, vTypeRef destType);
 uword vVectorSize(vThreadContextRef ctx, vVectorRef vec);
 
-void v_bootstrap_vector_init_type(vThreadContextRef ctx);
+void o_bootstrap_vector_init_type(vThreadContextRef ctx);
 
 #endif

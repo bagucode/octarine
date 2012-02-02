@@ -8,20 +8,20 @@
 #include "v_error.h"
 #include <stddef.h>
 
-void v_bootstrap_list_init_type(vThreadContextRef ctx) {
+void o_bootstrap_list_init_type(vThreadContextRef ctx) {
     vFieldRef *fields;
-    ctx->runtime->builtInTypes.list->fields = v_bootstrap_type_create_field_array(ctx->runtime, ctx->heap, 2);
+    ctx->runtime->builtInTypes.list->fields = o_bootstrap_type_create_field_array(ctx->runtime, ctx->heap, 2);
     ctx->runtime->builtInTypes.list->kind = V_T_OBJECT;
-    ctx->runtime->builtInTypes.list->name = v_bootstrap_string_create(ctx->runtime, ctx->heap, "AnyList");
+    ctx->runtime->builtInTypes.list->name = o_bootstrap_string_create(ctx->runtime, ctx->heap, "AnyList");
     ctx->runtime->builtInTypes.list->size = sizeof(vListObj);
 
     fields = (vFieldRef*)oArrayDataPointer(ctx->runtime->builtInTypes.list->fields);
     
-    fields[0]->name = v_bootstrap_string_create(ctx->runtime, ctx->heap, "data");
+    fields[0]->name = o_bootstrap_string_create(ctx->runtime, ctx->heap, "data");
     fields[0]->offset = offsetof(vListObj, data);
     fields[0]->type = ctx->runtime->builtInTypes.any;
 
-    fields[1]->name = v_bootstrap_string_create(ctx->runtime, ctx->heap, "next");
+    fields[1]->name = o_bootstrap_string_create(ctx->runtime, ctx->heap, "next");
     fields[1]->offset = offsetof(vListObj, next);
     fields[1]->type = ctx->runtime->builtInTypes.list;
 }

@@ -30,13 +30,13 @@ void _oArrayPut(vThreadContextRef ctx, oArrayRef arr, uword idx, pointer src, vT
 void _oArrayGet(vThreadContextRef ctx, oArrayRef arr, uword idx, pointer dest, vTypeRef destType);
 #define oArrayGet(arr, idx, dest, destType) _oC(_oArrayGet, arr, idx, dest, destType)
 
-oArrayRef v_bootstrap_array_create(vRuntimeRef rt,
+oArrayRef o_bootstrap_array_create(vRuntimeRef rt,
 	                               oHeapRef heap,
                                    vTypeRef type,
                                    uword num_elements,
                                    uword elem_size,
                                    u8 alignment);
 
-void v_bootstrap_array_init_type(vRuntimeRef rt, oHeapRef heap);
+void o_bootstrap_array_init_type(vRuntimeRef rt, oHeapRef heap);
 
 #endif

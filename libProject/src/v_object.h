@@ -10,6 +10,6 @@ struct vAny {
 
 vTypeRef vObjectGetType(vThreadContextRef ctx, vObject obj);
 
-void v_bootstrap_any_type_init(vThreadContextRef ctx);
+void o_bootstrap_any_type_init(vThreadContextRef ctx);
 
 #endif

@@ -22,6 +22,6 @@ void vMapStrObjPut(vMapStrObjRef map, vStringRef key, vObject value);
 /* Type of returned object is Nothing if there was no entry. */
 vObject vMapStrObjGet(vMapStrObjRef map, vStringRef key);
 
-void v_bootstrap_map_init_type(vThreadContextRef ctx);
+void o_bootstrap_map_init_type(vThreadContextRef ctx);
 
 #endif

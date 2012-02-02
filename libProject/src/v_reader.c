@@ -38,11 +38,11 @@ static vObject readList(vThreadContextRef ctx, oArrayRef src, uword* idx);
 static vObject readSymbolOrKeyword(vThreadContextRef ctx, oArrayRef src, uword* idx);
 static vObject readVector(vThreadContextRef ctx, oArrayRef src, uword* idx);
 
-void v_bootstrap_reader_init_type(vThreadContextRef ctx) {
+void o_bootstrap_reader_init_type(vThreadContextRef ctx) {
     uword i;
     ctx->runtime->builtInTypes.reader->fields = NULL;
     ctx->runtime->builtInTypes.reader->kind = V_T_OBJECT;
-	ctx->runtime->builtInTypes.reader->name = v_bootstrap_string_create(ctx->runtime, ctx->heap, "Reader");
+	ctx->runtime->builtInTypes.reader->name = o_bootstrap_string_create(ctx->runtime, ctx->heap, "Reader");
     ctx->runtime->builtInTypes.reader->size = sizeof(vReader);
 
     // Also init the read table here

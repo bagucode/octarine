@@ -29,7 +29,7 @@ void vErrorSet(vThreadContextRef ctx, vObject data) {
     oENDVOIDFN
 }
 
-void v_bootstrap_error_type_init(vThreadContextRef ctx) {
+void o_bootstrap_error_type_init(vThreadContextRef ctx) {
     oROOTS(ctx)
     oArrayRef fields;
     vTypeRef theType;

@@ -20,6 +20,6 @@ void vErrorClear(vThreadContextRef ctx);
 // Get the error "message"
 vObject vErrorGetData(vErrorRef err);
 
-void v_bootstrap_error_type_init(vThreadContextRef ctx);
+void o_bootstrap_error_type_init(vThreadContextRef ctx);
 
 #endif

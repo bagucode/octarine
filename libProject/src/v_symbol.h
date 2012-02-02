@@ -14,6 +14,6 @@ v_bool vSymbolEquals(vThreadContextRef ctx,
                      vSymbolRef sym1,
                      vSymbolRef sym2);
 
-void v_bootstrap_symbol_init_type(vThreadContextRef ctx);
+void o_bootstrap_symbol_init_type(vThreadContextRef ctx);
 
 #endif

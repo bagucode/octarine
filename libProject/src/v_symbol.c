@@ -9,9 +9,9 @@
 #include "v_error.h"
 #include <stddef.h>
 
-void v_bootstrap_symbol_init_type(vThreadContextRef ctx) {
+void o_bootstrap_symbol_init_type(vThreadContextRef ctx) {
     vFieldRef *fields;
-	ctx->runtime->builtInTypes.symbol->fields = v_bootstrap_type_create_field_array(ctx->runtime, ctx->heap, 1);
+	ctx->runtime->builtInTypes.symbol->fields = o_bootstrap_type_create_field_array(ctx->runtime, ctx->heap, 1);
     ctx->runtime->builtInTypes.symbol->kind = V_T_OBJECT;
 	ctx->runtime->builtInTypes.symbol->name = vStringCreate(ctx, "Symbol");
 	ctx->runtime->builtInTypes.symbol->size = sizeof(vSymbol);

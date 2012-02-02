@@ -14,6 +14,6 @@ vReaderRef vReaderCreate(vThreadContextRef ctx);
 
 vObject vReaderRead(vThreadContextRef ctx, vStringRef source);
 
-void v_bootstrap_reader_init_type(vThreadContextRef ctx);
+void o_bootstrap_reader_init_type(vThreadContextRef ctx);
 
 #endif
