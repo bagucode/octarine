@@ -55,8 +55,8 @@ typedef vRootSet* vRootSetRef;
 typedef struct vRuntime vRuntime;
 typedef vRuntime* vRuntimeRef;
 
-typedef struct vSignature vSignature;
-typedef vSignature* vSignatureRef;
+typedef struct oSignature oSignature;
+typedef oSignature* oSignatureRef;
 
 typedef struct vString vString;
 typedef vString* vStringRef;

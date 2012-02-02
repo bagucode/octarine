@@ -11,19 +11,19 @@ struct oParameter {
 
 oParameterRef oParameterCreate(vStringRef name, vTypeRef type);
 
-struct vSignature {
+struct oSignature {
     oArrayRef returns; /* array of vType */
     oArrayRef parameters; /* array of oParameter */
 };
 
-vSignatureRef vSignatureCreate(oArrayRef returnTypes, oArrayRef parameters);
+oSignatureRef oSignatureCreate(oArrayRef returnTypes, oArrayRef parameters);
 
-v_bool vSignatureEquals(vThreadContextRef ctx,
-                        vSignatureRef sig1,
-                        vSignatureRef sig2);
+v_bool oSignatureEquals(vThreadContextRef ctx,
+                        oSignatureRef sig1,
+                        oSignatureRef sig2);
 
 struct vFunctionOverload {
-    vSignatureRef signature;
+    oSignatureRef signature;
 
     /* TODO: Change sideEffects to a map? */
     oArrayRef sideEffects;
@@ -49,7 +49,7 @@ vFunctionRef vFunctionCreate(vFunctionOverloadRef initialImpl);
 
 void vFunctionAddOverload(vFunctionRef fn, vFunctionOverloadRef impl);
 
-vFunctionOverloadRef vFunctionFindOverload(vFunctionRef fn, vSignatureRef sig);
+vFunctionOverloadRef vFunctionFindOverload(vFunctionRef fn, oSignatureRef sig);
 
 vObject vFunctionInvoke(vThreadContextRef ctx,
                         vFunctionOverloadRef fnImpl,
