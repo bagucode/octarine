@@ -46,7 +46,7 @@ typedef struct vRuntimeBuiltInTypes {
 } vRuntimeBuiltInTypes;
 
 typedef struct vRuntimeBuiltInFunctions {
-    vFunctionRef equals;
+    oFunctionRef equals;
 } vRuntimeBuiltInFunctions;
 
 typedef struct vRuntimeBuiltInConstants {

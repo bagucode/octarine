@@ -6,8 +6,8 @@
 typedef struct oArray oArray;
 typedef oArray* oArrayRef;
 
-typedef struct vClosure vClosure;
-typedef vClosure* vClosureRef;
+typedef struct oClosure oClosure;
+typedef oClosure* oClosureRef;
 
 typedef struct oError oError;
 typedef oError* oErrorRef;
@@ -15,8 +15,8 @@ typedef oError* oErrorRef;
 typedef struct vField vField;
 typedef vField* vFieldRef;
 
-typedef struct vFunction vFunction;
-typedef vFunction* vFunctionRef;
+typedef struct oFunction oFunction;
+typedef oFunction* oFunctionRef;
 
 typedef struct oFunctionOverload oFunctionOverload;
 typedef oFunctionOverload* oFunctionOverloadRef;

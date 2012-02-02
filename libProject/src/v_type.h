@@ -20,7 +20,7 @@ struct vType {
     oArrayRef fields;
     oArrayRef attributes; // TODO: use this for things like 'this is immutable'
     /* TODO: how to use this from the language?
-     It should probably be changed to a vFunction
+     It should probably be changed to a oFunction
      but ... we can't allow overloads? There has to 
      be a single signature that has no return value
      and takes only an Any as parameter. */

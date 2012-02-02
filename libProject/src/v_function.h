@@ -39,28 +39,28 @@ struct oFunctionOverload {
     pointer nativeCode;
 };
 
-struct vFunction {
+struct oFunction {
     /* List of oFunctionOverloadRef
      TODO: change this to a vector? */
     vListObjRef overloads;
 };
 
-vFunctionRef vFunctionCreate(oFunctionOverloadRef initialImpl);
+oFunctionRef oFunctionCreate(oFunctionOverloadRef initialImpl);
 
-void vFunctionAddOverload(vFunctionRef fn, oFunctionOverloadRef impl);
+void oFunctionAddOverload(oFunctionRef fn, oFunctionOverloadRef impl);
 
-oFunctionOverloadRef vFunctionFindOverload(vFunctionRef fn, oSignatureRef sig);
+oFunctionOverloadRef oFunctionFindOverload(oFunctionRef fn, oSignatureRef sig);
 
-vObject vFunctionInvoke(vThreadContextRef ctx,
+vObject oFunctionInvoke(vThreadContextRef ctx,
                         oFunctionOverloadRef fnImpl,
                         oArrayRef args);
 
-struct vClosure {
+struct oClosure {
     oFunctionOverloadRef function;
     oArrayRef arguments;
 };
 
-vClosureRef vClosureCreate(vThreadContextRef ctx,
+oClosureRef oClosureCreate(vThreadContextRef ctx,
 					       oFunctionOverloadRef fnImpl,
                            oArrayRef args);
 
