@@ -140,7 +140,7 @@ static oObject readSymbolOrKeyword(oThreadContextRef ctx, oArrayRef src, uword* 
 	oRoots.theString = readString(ctx, src, idx);
     if(oStringCharAt(ctx, oRoots.theString, 0) == ':') {
         oRoots.theString = oStringSubString(ctx, oRoots.theString, 1, oStringLength(ctx, oRoots.theString));
-        oRETURN(oKeywordCreate(ctx, (oStringRef)oRoots.theString));
+        oRETURN(oKeywordCreate((oStringRef)oRoots.theString));
     }
     else {
         oRETURN(oSymbolCreate(ctx, (oStringRef)oRoots.theString));

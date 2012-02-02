@@ -374,28 +374,29 @@ void testReadKeyword() {
     oThreadContextRef ctx = runtime->allContexts->ctx;
     oListObjRef lst;
     oKeywordRef kw;
-	struct {
-		oObject readResult;
-        oStringRef src;
-		oStringRef name;
-	} frame;
-	oMemoryPushFrame(ctx, &frame, sizeof(frame));
+    oROOTS(ctx)
+    oObject readResult;
+    oStringRef src;
+    oStringRef name;
+    oENDROOTS
     
-    frame.name = oStringCreate(ctx, "lucy");
-    frame.src = oStringCreate(ctx, ":lucy");
-    frame.readResult = oReaderRead(ctx, frame.src);
+    oRoots.name = oStringCreate(ctx, "lucy");
+    oRoots.src = oStringCreate(ctx, ":lucy");
+    oRoots.readResult = oReaderRead(ctx, oRoots.src);
     
     // We should get a list with one element, a vector of three symbols
-    assert(oObjectGetType(ctx, frame.readResult) == ctx->runtime->builtInTypes.list);
-    lst = (oListObjRef)frame.readResult;
+    assert(oObjectGetType(ctx, oRoots.readResult) == ctx->runtime->builtInTypes.list);
+    lst = (oListObjRef)oRoots.readResult;
     assert(oListObjSize(ctx, lst) == 1);
     
     kw = oListObjFirst(ctx, lst);
     assert(oObjectGetType(ctx, kw) == ctx->runtime->builtInTypes.keyword);
-    assert(oStringCompare(frame.name, oKeywordGetName(ctx, kw)) == 0);
+    oRoots.src = oKeywordGetName(kw);
+    assert(oStringCompare(oRoots.name, oRoots.src) == 0);
     
 	oMemoryPopFrame(ctx);
     oRuntimeDestroy(runtime);
+    oENDVOIDFN
 }
 
 void testOutOfMemory() {

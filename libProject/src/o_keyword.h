@@ -8,8 +8,11 @@ struct oKeyword {
     oStringRef name;
 };
 
-oKeywordRef oKeywordCreate(oThreadContextRef ctx, oStringRef name);
-oStringRef oKeywordGetName(oThreadContextRef ctx, oKeywordRef kw);
+oKeywordRef _oKeywordCreate(oThreadContextRef ctx, oStringRef name);
+#define oKeywordCreate(name) _oC(_oKeywordCreate, name)
+
+oStringRef _oKeywordGetName(oThreadContextRef ctx, oKeywordRef kw);
+#define oKeywordGetName(kw) _oC(_oKeywordGetName, kw)
 
 void o_bootstrap_keyword_type_init(oThreadContextRef ctx);
 

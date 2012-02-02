@@ -28,7 +28,7 @@ void o_bootstrap_keyword_type_init(oThreadContextRef ctx) {
     oENDVOIDFN
 }
 
-oKeywordRef oKeywordCreate(oThreadContextRef ctx, oStringRef name) {
+oKeywordRef _oKeywordCreate(oThreadContextRef ctx, oStringRef name) {
     oROOTS(ctx)
     oENDROOTS
     if(ctx->error) return NULL;
@@ -37,7 +37,7 @@ oKeywordRef oKeywordCreate(oThreadContextRef ctx, oStringRef name) {
     oENDFN(oKeywordRef)
 }
 
-oStringRef oKeywordGetName(oThreadContextRef ctx, oKeywordRef kw) {
+oStringRef _oKeywordGetName(oThreadContextRef ctx, oKeywordRef kw) {
     if(ctx->error) return NULL;
     return kw->name;
 }
