@@ -15,6 +15,7 @@ static uword alignOffset(uword offset, uword on) {
 vArrayRef vArrayCreate(vThreadContextRef ctx,
                        vTypeRef elemType,
                        uword num_elements) {
+    if(ctx->error) return NULL;
 	return vHeapAllocArray(ctx->runtime, ctx->heap, elemType, num_elements);
 }
 
@@ -37,7 +38,8 @@ vArrayRef v_bootstrap_array_create(vRuntimeRef rt,
 
 void vArrayCopy(vThreadContextRef ctx, vArrayRef from, vArrayRef to) {
     pointer a1Data, a2Data;
-    
+
+    if(ctx->error) return;
     if(from->element_type != to->element_type) {
         vErrorSet(ctx, ctx->runtime->builtInConstants.typeMismatch);
         return;
@@ -58,6 +60,7 @@ void vArrayPut(vThreadContextRef ctx, vArrayRef arr, uword idx, pointer src, vTy
     char* data = (char*)vArrayDataPointer(arr);
     pointer* datap;
 
+    if(ctx->error) return;
     if(vTypeIsObject(arr->element_type)
        && arr->element_type != ctx->runtime->builtInTypes.any
        && srcType != arr->element_type) {
@@ -89,6 +92,7 @@ void vArrayGet(vThreadContextRef ctx, vArrayRef arr, uword idx, pointer dest, vT
     pointer *datap, *destp;
     vObject obj;
 
+    if(ctx->error) return;
     if(arr->num_elements <= idx) {
         vErrorSet(ctx, ctx->runtime->builtInConstants.indexOutOfBounds);
         return;
