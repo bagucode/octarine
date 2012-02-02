@@ -153,7 +153,7 @@ static void init_builtInConstants(vThreadContextRef ctx) {
     struct {
         vStringRef str;
     } frame;
-    vMemoryPushFrame(ctx, &frame, sizeof(frame));
+    oMemoryPushFrame(ctx, &frame, sizeof(frame));
     
     frame.str = vStringCreate(ctx, "need-more-data");
     ctx->runtime->builtInConstants.needMoreData = oKeywordCreate(ctx, frame.str);
@@ -162,7 +162,7 @@ static void init_builtInConstants(vThreadContextRef ctx) {
     frame.str = vStringCreate(ctx, "index-out-of-bounds");
     ctx->runtime->builtInConstants.indexOutOfBounds = oKeywordCreate(ctx, frame.str);
     
-    vMemoryPopFrame(ctx);
+    oMemoryPopFrame(ctx);
 }
 
 static oErrorRef initError(vThreadContextRef ctx, char* name) {

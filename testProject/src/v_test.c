@@ -42,14 +42,14 @@ void testGCAllRetained() {
         vObject listHead;
     } frame;
 
-    vMemoryPushFrame(ctx, &frame, sizeof(frame));
+    oMemoryPushFrame(ctx, &frame, sizeof(frame));
     
     frame.listHead = oListObjCreate(ctx, NULL);
     for(i = 0; i < 1024; ++i) {
         frame.listHead = oListObjAddFront(ctx, (oListObjRef)frame.listHead, frame.listHead);
     }
 
-    vMemoryPopFrame(ctx);
+    oMemoryPopFrame(ctx);
 
     vRuntimeDestroy(runtime);
 }
@@ -89,7 +89,7 @@ void testSymbolEquals() {
 		vSymbolRef sym2;
 		vStringRef name;
 	} frame;
-	vMemoryPushFrame(ctx, &frame, sizeof(frame));
+	oMemoryPushFrame(ctx, &frame, sizeof(frame));
 
 	frame.name = vStringCreate(ctx, "Bob2Bob");
 	frame.sym1 = vSymbolCreate(ctx, frame.name);
@@ -107,7 +107,7 @@ void testSymbolEquals() {
 
 	assert(vSymbolEquals(ctx, frame.sym1, frame.sym2) == v_false);
 
-	vMemoryPopFrame(ctx);
+	oMemoryPopFrame(ctx);
     vRuntimeDestroy(runtime);
 }
 
@@ -120,7 +120,7 @@ void testReadSymbol() {
         vSymbolRef otherBob;
 		vStringRef src;
 	} frame;
-	vMemoryPushFrame(ctx, &frame, sizeof(frame));
+	oMemoryPushFrame(ctx, &frame, sizeof(frame));
 
     frame.src = vStringCreate(ctx, "Bob2Bob");
     frame.otherBob = vSymbolCreate(ctx, frame.src);
@@ -132,7 +132,7 @@ void testReadSymbol() {
     assert(vObjectGetType(ctx, bob) == ctx->runtime->builtInTypes.symbol);
 	assert(vSymbolEquals(ctx, frame.otherBob, bob) == v_true);
 
-	vMemoryPopFrame(ctx);
+	oMemoryPopFrame(ctx);
     vRuntimeDestroy(runtime);
 }
 
@@ -149,7 +149,7 @@ void testReadOneListAndOneSymbol() {
         vStringRef name;
         vSymbolRef controlSym;
 	} frame;
-	vMemoryPushFrame(ctx, &frame, sizeof(frame));
+	oMemoryPushFrame(ctx, &frame, sizeof(frame));
 
     frame.name = vStringCreate(ctx, "Bob2Bob");
     frame.src = vStringCreate(ctx, "(Bob2Bob) otherSym");
@@ -178,7 +178,7 @@ void testReadOneListAndOneSymbol() {
     frame.controlSym = vSymbolCreate(ctx, frame.name);
 	assert(vSymbolEquals(ctx, other, frame.controlSym) == v_true);
     
-	vMemoryPopFrame(ctx);
+	oMemoryPopFrame(ctx);
     vRuntimeDestroy(runtime);
 }
 
@@ -296,7 +296,7 @@ void testVector() {
         vStringRef str;
         vStringRef checkStr;
     } frame;
-    vMemoryPushFrame(ctx, &frame, sizeof(frame));
+    oMemoryPushFrame(ctx, &frame, sizeof(frame));
 
     frame.veci64 = vVectorCreate(ctx, i64_t);
     frame.vecStr = vVectorCreate(ctx, str_t);
@@ -331,7 +331,7 @@ void testVector() {
     vVectorGet(ctx, frame.veci64, 0, &checki64, i64_t);
     assert(one == checki64);
     
-    vMemoryPopFrame(ctx);
+    oMemoryPopFrame(ctx);
     vRuntimeDestroy(runtime);
 }
 
@@ -346,7 +346,7 @@ void testReadVector() {
 		vStringRef src;
         vSymbolRef ethel;
 	} frame;
-	vMemoryPushFrame(ctx, &frame, sizeof(frame));
+	oMemoryPushFrame(ctx, &frame, sizeof(frame));
 
     frame.src = vStringCreate(ctx, "ethel");
     frame.ethel = vSymbolCreate(ctx, frame.src);
@@ -365,7 +365,7 @@ void testReadVector() {
     vVectorGet(ctx, vec, 2, &sym, ctx->runtime->builtInTypes.symbol);
     assert(vSymbolEquals(ctx, sym, frame.ethel) == v_true);
     
-	vMemoryPopFrame(ctx);
+	oMemoryPopFrame(ctx);
     vRuntimeDestroy(runtime);
 }
 
@@ -379,7 +379,7 @@ void testReadKeyword() {
         vStringRef src;
 		vStringRef name;
 	} frame;
-	vMemoryPushFrame(ctx, &frame, sizeof(frame));
+	oMemoryPushFrame(ctx, &frame, sizeof(frame));
     
     frame.name = vStringCreate(ctx, "lucy");
     frame.src = vStringCreate(ctx, ":lucy");
@@ -394,7 +394,7 @@ void testReadKeyword() {
     assert(vObjectGetType(ctx, kw) == ctx->runtime->builtInTypes.keyword);
     assert(vStringCompare(frame.name, oKeywordGetName(ctx, kw)) == 0);
     
-	vMemoryPopFrame(ctx);
+	oMemoryPopFrame(ctx);
     vRuntimeDestroy(runtime);
 }
 

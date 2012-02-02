@@ -125,13 +125,13 @@ struct vRootSet {
     vRootSetRef prev;
 };
 
-vRootSetRef vMemoryCreateRootSet() {
+vRootSetRef oMemoryCreateRootSet() {
     vRootSetRef rootSet = (vRootSetRef)vMalloc(sizeof(vRootSet));
     memset(rootSet, 0, sizeof(vRootSet));
     return rootSet;
 }
 
-void vMemoryDeleteRootSet(vRootSetRef roots) {
+void oMemoryDeleteRootSet(vRootSetRef roots) {
     vRootSetRef tmp;
     while(roots) {
         tmp = roots->prev;
@@ -140,7 +140,7 @@ void vMemoryDeleteRootSet(vRootSetRef roots) {
     }
 }
 
-void vMemoryPushFrame(vThreadContextRef ctx,
+void oMemoryPushFrame(vThreadContextRef ctx,
                       pointer frame,
                       uword frameSize) {
     vRootSetRef newRoots;
@@ -152,14 +152,14 @@ void vMemoryPushFrame(vThreadContextRef ctx,
         ctx->roots->frameInfos[ctx->roots->numUsed].size = frameSize;
         ctx->roots->numUsed++;
    } else {
-       newRoots = vMemoryCreateRootSet();
+       newRoots = oMemoryCreateRootSet();
        newRoots->prev = ctx->roots;
        ctx->roots = newRoots;
-       vMemoryPushFrame(ctx, frame, frameSize);
+       oMemoryPushFrame(ctx, frame, frameSize);
     }
 }
 
-void vMemoryPopFrame(vThreadContextRef ctx) {
+void oMemoryPopFrame(vThreadContextRef ctx) {
     vRootSetRef prev;
     ctx->roots->numUsed--;
     if(ctx->roots->numUsed == 0 && ctx->roots->prev != NULL) {
@@ -485,7 +485,7 @@ void oHeapDestroy(oHeapRef heap) {
     vFree(heap);
 }
 
-vTypeRef vMemoryGetObjectType(vThreadContextRef ctx, vObject obj) {
+vTypeRef oMemoryGetObjectType(vThreadContextRef ctx, vObject obj) {
     return getType(getBlock(obj));
 }
 

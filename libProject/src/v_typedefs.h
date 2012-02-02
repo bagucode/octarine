@@ -77,7 +77,7 @@ typedef vVector* vVectorRef;
 
 #define oROOTS(context) vThreadContextRef _oCTX = context; struct {
 
-#define oENDROOTS vObject _oRET; } oRoots; vMemoryPushFrame(_oCTX, &oRoots, sizeof(oRoots));
+#define oENDROOTS vObject _oRET; } oRoots; oMemoryPushFrame(_oCTX, &oRoots, sizeof(oRoots));
 
 #define oRETURN(expression) oRoots._oRET = expression; goto _oENDFNL;
 
@@ -89,7 +89,7 @@ typedef vVector* vVectorRef;
 
 #define oGETRETT(type) ((type)oRoots._oRET)
 
-#define _oENDFN goto _oENDFNL; _oENDFNL: vMemoryPopFrame(_oCTX);
+#define _oENDFN goto _oENDFNL; _oENDFNL: oMemoryPopFrame(_oCTX);
 
 #define oENDFN(type) _oENDFN return (type)oRoots._oRET;
 

@@ -25,7 +25,7 @@ vThreadContextRef o_bootstrap_thread_context_create(vRuntimeRef runtime, oHeapRe
 	vThreadContextRef ctx = (vThreadContextRef)o_bootstrap_object_alloc(runtime, heap, runtime->builtInTypes.threadContext, sizeof(vThreadContext));
     ctx->heap = NULL;
     ctx->runtime = runtime;
-    ctx->roots = vMemoryCreateRootSet();
+    ctx->roots = oMemoryCreateRootSet();
 	ctx->reader = NULL;
 	ctx->error = NULL;
     return ctx;
@@ -37,14 +37,14 @@ vThreadContextRef vThreadContextCreate(vRuntimeRef runtime,
     vThreadContextRef ctx = (vThreadContextRef)vMalloc(sizeof(vThreadContext));
     ctx->heap = oHeapCreate(v_false, threadHeapInitialSize);
     ctx->runtime = runtime;
-    ctx->roots = vMemoryCreateRootSet();
+    ctx->roots = oMemoryCreateRootSet();
 	ctx->reader = vReaderCreate(ctx);
 	ctx->error = NULL;
     return ctx;
 }
 
 void vThreadContextDestroy(vThreadContextRef ctx) {
-    vMemoryDeleteRootSet(ctx->roots);
+    oMemoryDeleteRootSet(ctx->roots);
 	// the thread context is contained in the heap which means this
 	// call will also destroy the context object
     oHeapDestroy(ctx->heap);

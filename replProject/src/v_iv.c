@@ -73,7 +73,7 @@ int main(int argc, char** argv) {
 
     rt = vRuntimeCreate(1024 * 1000, 1024 * 1000);
     ctx = vRuntimeGetCurrentContext(rt);
-    vMemoryPushFrame(ctx, &oFrame, sizeof(oFrame));
+    oMemoryPushFrame(ctx, &oFrame, sizeof(oFrame));
     
     if(argc < 2) {
         input = stdin;
@@ -145,7 +145,7 @@ int main(int argc, char** argv) {
     }
 
 end:
-    vMemoryPopFrame(ctx);
+    oMemoryPopFrame(ctx);
     vRuntimeDestroy(rt);
 	return ret;
 }

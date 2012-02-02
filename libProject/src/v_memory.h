@@ -29,18 +29,18 @@ vObject oHeapCopyObjectShared(vThreadContextRef ctx,
                               vTypeRef type,
                               oHeapRef sharedHeap);
 
-vTypeRef vMemoryGetObjectType(vThreadContextRef ctx, vObject obj);
+vTypeRef oMemoryGetObjectType(vThreadContextRef ctx, vObject obj);
 
-void vMemoryPushFrame(vThreadContextRef ctx,
+void oMemoryPushFrame(vThreadContextRef ctx,
                       pointer frame,
                       uword frameSize);
 
-void vMemoryPopFrame(vThreadContextRef ctx);
+void oMemoryPopFrame(vThreadContextRef ctx);
 
 /* This is a little bit internal right? Invent naming convention? */
-vRootSetRef vMemoryCreateRootSet();
+vRootSetRef oMemoryCreateRootSet();
 
-void vMemoryDeleteRootSet(vRootSetRef roots);
+void oMemoryDeleteRootSet(vRootSetRef roots);
 
 vObject o_bootstrap_object_alloc(vRuntimeRef rt,
 		                         oHeapRef heap,

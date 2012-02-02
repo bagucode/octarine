@@ -13,6 +13,6 @@ void o_bootstrap_any_type_init(vThreadContextRef ctx) {
 }
 
 vTypeRef vObjectGetType(vThreadContextRef ctx, vObject obj) {
-    return vMemoryGetObjectType(ctx, obj);
+    return oMemoryGetObjectType(ctx, obj);
 }
 
