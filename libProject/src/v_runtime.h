@@ -11,7 +11,7 @@ typedef struct oThreadContextList {
 } oThreadContextList;
 typedef oThreadContextList* oThreadContextListRef;
 
-typedef struct vRuntimeBuiltInTypes {
+typedef struct oRuntimeBuiltInTypes {
     /* primitive types */
     vTypeRef i8;
     vTypeRef u8;
@@ -43,35 +43,35 @@ typedef struct vRuntimeBuiltInTypes {
     vTypeRef keyword;
     vTypeRef threadContext;
     vTypeRef error;
-} vRuntimeBuiltInTypes;
+} oRuntimeBuiltInTypes;
 
-typedef struct vRuntimeBuiltInFunctions {
+typedef struct oRuntimeBuiltInFunctions {
     oFunctionRef equals;
-} vRuntimeBuiltInFunctions;
+} oRuntimeBuiltInFunctions;
 
-typedef struct vRuntimeBuiltInConstants {
+typedef struct oRuntimeBuiltInConstants {
     oKeywordRef needMoreData;
     oKeywordRef typeMismatch;
     oKeywordRef indexOutOfBounds;
-} vRuntimeBuiltInConstants;
+} oRuntimeBuiltInConstants;
 
-typedef struct vRuntimeBuiltInErrors {
+typedef struct oRuntimeBuiltInErrors {
     oErrorRef outOfMemory;
-} vRuntimeBuiltInErrors;
+} oRuntimeBuiltInErrors;
 
-struct vRuntime {
+struct oRuntime {
     oHeapRef globals;
     vTLSRef currentContext;
     oThreadContextListRef allContexts;
-    vRuntimeBuiltInTypes builtInTypes;
-    vRuntimeBuiltInFunctions builtInFunctions;
-    vRuntimeBuiltInConstants builtInConstants;
-    vRuntimeBuiltInErrors builtInErrors;
+    oRuntimeBuiltInTypes builtInTypes;
+    oRuntimeBuiltInFunctions builtInFunctions;
+    oRuntimeBuiltInConstants builtInConstants;
+    oRuntimeBuiltInErrors builtInErrors;
 };
 
-vRuntimeRef vRuntimeCreate(uword sharedHeapInitialSize,
+oRuntimeRef oRuntimeCreate(uword sharedHeapInitialSize,
                            uword threadHeapInitialSize);
-void vRuntimeDestroy(vRuntimeRef rt);
-oThreadContextRef vRuntimeGetCurrentContext(vRuntimeRef rt);
+void oRuntimeDestroy(oRuntimeRef rt);
+oThreadContextRef oRuntimeGetCurrentContext(oRuntimeRef rt);
 
 #endif

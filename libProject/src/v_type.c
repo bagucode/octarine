@@ -128,7 +128,7 @@ vTypeRef vTypeCreate(oThreadContextRef ctx,
     oENDFN(vTypeRef)
 }
 
-oArrayRef o_bootstrap_type_create_field_array(vRuntimeRef rt,
+oArrayRef o_bootstrap_type_create_field_array(oRuntimeRef rt,
 	                                          oHeapRef heap,
                                               uword numFields) {
     oArrayRef ret = o_bootstrap_array_create(rt, heap, rt->builtInTypes.field, numFields, sizeof(pointer), sizeof(pointer));
@@ -140,7 +140,7 @@ oArrayRef o_bootstrap_type_create_field_array(vRuntimeRef rt,
     return ret;
 }
 
-void o_bootstrap_type_init_type(vRuntimeRef rt, oHeapRef heap) {
+void o_bootstrap_type_init_type(oRuntimeRef rt, oHeapRef heap) {
     vFieldRef *fields;
     rt->builtInTypes.type->fields = o_bootstrap_type_create_field_array(rt, heap, 4);
     rt->builtInTypes.type->kind = V_T_OBJECT;
@@ -166,7 +166,7 @@ void o_bootstrap_type_init_type(vRuntimeRef rt, oHeapRef heap) {
     fields[3]->type = rt->builtInTypes.u8;
 }
 
-void o_bootstrap_type_init_field(vRuntimeRef rt, oHeapRef heap) {
+void o_bootstrap_type_init_field(oRuntimeRef rt, oHeapRef heap) {
     vFieldRef *fields;
     rt->builtInTypes.field->fields = o_bootstrap_type_create_field_array(rt, heap, 3);
     rt->builtInTypes.field->kind = V_T_OBJECT;

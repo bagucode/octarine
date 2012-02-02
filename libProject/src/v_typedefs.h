@@ -52,8 +52,8 @@ typedef oReader* oReaderRef;
 typedef struct vRootSet vRootSet;
 typedef vRootSet* vRootSetRef;
 
-typedef struct vRuntime vRuntime;
-typedef vRuntime* vRuntimeRef;
+typedef struct oRuntime oRuntime;
+typedef oRuntime* oRuntimeRef;
 
 typedef struct oSignature oSignature;
 typedef oSignature* oSignatureRef;

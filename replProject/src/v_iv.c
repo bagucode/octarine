@@ -61,7 +61,7 @@ int main(int argc, char** argv) {
     char* tmp;
     char* typeName;
 
-    vRuntimeRef rt;
+    oRuntimeRef rt;
     oThreadContextRef ctx;
     
     struct {
@@ -71,8 +71,8 @@ int main(int argc, char** argv) {
         oArrayRef utf8;
     } oFrame;
 
-    rt = vRuntimeCreate(1024 * 1000, 1024 * 1000);
-    ctx = vRuntimeGetCurrentContext(rt);
+    rt = oRuntimeCreate(1024 * 1000, 1024 * 1000);
+    ctx = oRuntimeGetCurrentContext(rt);
     oMemoryPushFrame(ctx, &oFrame, sizeof(oFrame));
     
     if(argc < 2) {
@@ -146,6 +146,6 @@ int main(int argc, char** argv) {
 
 end:
     oMemoryPopFrame(ctx);
-    vRuntimeDestroy(rt);
+    oRuntimeDestroy(rt);
 	return ret;
 }

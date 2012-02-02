@@ -48,9 +48,9 @@ vTypeRef vTypeCreate(oThreadContextRef ctx,
                      vTypeRef protoType);
 vStringRef vTypeGetName(vTypeRef type);
 
-void o_bootstrap_type_init_type(vRuntimeRef rt, oHeapRef heap);
-void o_bootstrap_type_init_field(vRuntimeRef rt, oHeapRef heap);
-oArrayRef o_bootstrap_type_create_field_array(vRuntimeRef rt,
+void o_bootstrap_type_init_type(oRuntimeRef rt, oHeapRef heap);
+void o_bootstrap_type_init_field(oRuntimeRef rt, oHeapRef heap);
+oArrayRef o_bootstrap_type_create_field_array(oRuntimeRef rt,
 	                                          oHeapRef heap,
                                               uword numFields);
 

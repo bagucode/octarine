@@ -14,7 +14,7 @@
 
 #include <memory.h>
 
-static vTypeRef alloc_built_in(vRuntimeRef rt, oHeapRef heap) {
+static vTypeRef alloc_built_in(oRuntimeRef rt, oHeapRef heap) {
 	return (vTypeRef)o_bootstrap_object_alloc(rt, heap, rt->builtInTypes.type, sizeof(vType));
 }
 
@@ -23,7 +23,7 @@ static void set_shared_primitive_attributes(vTypeRef t) {
     t->fields = NULL;
 }
 
-static void alloc_builtInTypes(vRuntimeRef rt, oHeapRef heap) {
+static void alloc_builtInTypes(oRuntimeRef rt, oHeapRef heap) {
     rt->builtInTypes.type = (vTypeRef)o_bootstrap_object_alloc(rt, heap, V_T_SELF, sizeof(vType));
 	rt->builtInTypes.v_char = alloc_built_in(rt, heap);
 	rt->builtInTypes.v_bool = alloc_built_in(rt, heap);
@@ -60,7 +60,7 @@ static void alloc_builtInTypes(vRuntimeRef rt, oHeapRef heap) {
 #endif
 }
 
-static void init_builtInTypes1(vRuntimeRef rt, oHeapRef heap) {
+static void init_builtInTypes1(oRuntimeRef rt, oHeapRef heap) {
 
     /* primitives */
 
@@ -183,13 +183,13 @@ static void init_builtInErrors(oThreadContextRef ctx) {
     ctx->runtime->builtInErrors.outOfMemory = initError(ctx, "out-of-memory");
 }
 
-vRuntimeRef vRuntimeCreate(uword sharedHeapInitialSize,
+oRuntimeRef oRuntimeCreate(uword sharedHeapInitialSize,
                            uword threadHeapInitialSize) {
-	vRuntimeRef rt = (vRuntimeRef)vMalloc(sizeof(vRuntime));
+	oRuntimeRef rt = (oRuntimeRef)vMalloc(sizeof(oRuntime));
 	oHeapRef mtHeap = oHeapCreate(v_false, threadHeapInitialSize);
 	oThreadContextRef ctx;
     
-    memset(rt, 0, sizeof(vRuntime));
+    memset(rt, 0, sizeof(oRuntime));
 
     rt->globals = oHeapCreate(v_true, sharedHeapInitialSize);
     rt->currentContext = vTLSCreate();
@@ -220,7 +220,7 @@ vRuntimeRef vRuntimeCreate(uword sharedHeapInitialSize,
     return rt;
 }
 
-void vRuntimeDestroy(vRuntimeRef rt) {
+void oRuntimeDestroy(oRuntimeRef rt) {
     /* TODO: synchronize stopping of all threads before deleting the heaps */
     oThreadContextListRef lst = rt->allContexts;
 	oThreadContextListRef next;
@@ -234,6 +234,6 @@ void vRuntimeDestroy(vRuntimeRef rt) {
 	vFree(rt);
 }
 
-oThreadContextRef vRuntimeGetCurrentContext(vRuntimeRef rt) {
+oThreadContextRef oRuntimeGetCurrentContext(oRuntimeRef rt) {
     return (oThreadContextRef)vTLSGet(rt->currentContext);
 }

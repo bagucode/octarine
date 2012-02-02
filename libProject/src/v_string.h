@@ -15,8 +15,8 @@ v_char vStringCharAt(oThreadContextRef ctx, vStringRef str, uword idx);
 vStringRef vStringSubString(oThreadContextRef ctx, vStringRef str, uword start, uword end);
 uword vStringLength(oThreadContextRef ctx, vStringRef str);
 
-vStringRef o_bootstrap_string_create(vRuntimeRef rt, oHeapRef heap, const char *utf8);
-void o_bootstrap_string_init_type(vRuntimeRef rt, oHeapRef heap);
+vStringRef o_bootstrap_string_create(oRuntimeRef rt, oHeapRef heap, const char *utf8);
+void o_bootstrap_string_init_type(oRuntimeRef rt, oHeapRef heap);
 
 #endif
 

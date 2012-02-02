@@ -30,7 +30,7 @@ uword oArraySize(oArrayRef arr) {
     return arr->num_elements;
 }
 
-oArrayRef o_bootstrap_array_create(vRuntimeRef rt,
+oArrayRef o_bootstrap_array_create(oRuntimeRef rt,
 	                               oHeapRef heap,
                                    vTypeRef type,
                                    uword num_elements,
@@ -130,7 +130,7 @@ void _oArrayGet(oThreadContextRef ctx, oArrayRef arr, uword idx, pointer dest, v
     }
 }
 
-void o_bootstrap_array_init_type(vRuntimeRef rt, oHeapRef heap) {
+void o_bootstrap_array_init_type(oRuntimeRef rt, oHeapRef heap) {
     rt->builtInTypes.array->fields = NULL;
     rt->builtInTypes.array->kind = V_T_OBJECT;
     rt->builtInTypes.array->name = o_bootstrap_string_create(rt, heap, "Array");

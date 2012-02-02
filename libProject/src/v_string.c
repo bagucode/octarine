@@ -51,7 +51,7 @@ vStringRef vStringSubString(oThreadContextRef ctx, vStringRef str, uword start, 
     oENDFN(vStringRef)
 }
 
-vStringRef o_bootstrap_string_create(vRuntimeRef rt, oHeapRef heap, const char *utf8) {
+vStringRef o_bootstrap_string_create(oRuntimeRef rt, oHeapRef heap, const char *utf8) {
     vStringRef str = (vStringRef)o_bootstrap_object_alloc(rt, heap, rt->builtInTypes.string, sizeof(vString));
     str->str = vNativeStringFromUtf8(utf8);
     return str;
@@ -61,7 +61,7 @@ uword vStringLength(oThreadContextRef ctx, vStringRef str) {
     return vNativeStringLength(str->str);
 }
 
-void o_bootstrap_string_init_type(vRuntimeRef rt, oHeapRef heap) {
+void o_bootstrap_string_init_type(oRuntimeRef rt, oHeapRef heap) {
     rt->builtInTypes.string->fields = NULL;
     rt->builtInTypes.string->kind = V_T_OBJECT;
     rt->builtInTypes.string->name = o_bootstrap_string_create(rt, heap, "String");

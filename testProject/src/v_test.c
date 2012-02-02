@@ -17,25 +17,25 @@
 #include <assert.h>
 
 void testCreateRuntime() {
-    vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024 * 1000);
-    vRuntimeDestroy(runtime);
+    oRuntimeRef runtime = oRuntimeCreate(2000 * 1024, 1024 * 1000);
+    oRuntimeDestroy(runtime);
 }
 
 void testGCAllGarbage() {
     uword i;
-    vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024 * 1000);
+    oRuntimeRef runtime = oRuntimeCreate(2000 * 1024, 1024 * 1000);
     oThreadContextRef ctx = runtime->allContexts->ctx;
     
     for(i = 0; i < 1000 * 1024; ++i) {
         oListObjCreate(ctx, NULL);
     }
     
-    vRuntimeDestroy(runtime);
+    oRuntimeDestroy(runtime);
 }
 
 void testGCAllRetained() {
     uword i;
-    vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024 * 1000);
+    oRuntimeRef runtime = oRuntimeCreate(2000 * 1024, 1024 * 1000);
     oThreadContextRef ctx = runtime->allContexts->ctx;
 
     struct {
@@ -51,21 +51,21 @@ void testGCAllRetained() {
 
     oMemoryPopFrame(ctx);
 
-    vRuntimeDestroy(runtime);
+    oRuntimeDestroy(runtime);
 }
 
 void testGCFinalizer() {
-    vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024 * 1000);
+    oRuntimeRef runtime = oRuntimeCreate(2000 * 1024, 1024 * 1000);
     oThreadContextRef ctx = runtime->allContexts->ctx;
     
     vStringCreate(ctx, "Test string");
 	oHeapForceGC(ctx->runtime, ctx->heap);
     
-    vRuntimeDestroy(runtime);
+    oRuntimeDestroy(runtime);
 }
 
 void testReaderEmptyList() {
-    vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024 * 1000);
+    oRuntimeRef runtime = oRuntimeCreate(2000 * 1024, 1024 * 1000);
     oThreadContextRef ctx = runtime->allContexts->ctx;
     vObject result;
     vStringRef src;
@@ -78,11 +78,11 @@ void testReaderEmptyList() {
 	emptyList = (oListObjRef)((oListObjRef)result)->data;
     assert(vObjectGetType(ctx, emptyList) == ctx->runtime->builtInTypes.list);
     
-    vRuntimeDestroy(runtime);
+    oRuntimeDestroy(runtime);
 }
 
 void testSymbolEquals() {
-    vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024 * 1000);
+    oRuntimeRef runtime = oRuntimeCreate(2000 * 1024, 1024 * 1000);
     oThreadContextRef ctx = runtime->allContexts->ctx;
 	struct {
 		vSymbolRef sym1;
@@ -108,11 +108,11 @@ void testSymbolEquals() {
 	assert(vSymbolEquals(ctx, frame.sym1, frame.sym2) == v_false);
 
 	oMemoryPopFrame(ctx);
-    vRuntimeDestroy(runtime);
+    oRuntimeDestroy(runtime);
 }
 
 void testReadSymbol() {
-    vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024 * 1000);
+    oRuntimeRef runtime = oRuntimeCreate(2000 * 1024, 1024 * 1000);
     oThreadContextRef ctx = runtime->allContexts->ctx;
     vSymbolRef bob;
 	struct {
@@ -133,11 +133,11 @@ void testReadSymbol() {
 	assert(vSymbolEquals(ctx, frame.otherBob, bob) == v_true);
 
 	oMemoryPopFrame(ctx);
-    vRuntimeDestroy(runtime);
+    oRuntimeDestroy(runtime);
 }
 
 void testReadOneListAndOneSymbol() {
-    vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024 * 1000);
+    oRuntimeRef runtime = oRuntimeCreate(2000 * 1024, 1024 * 1000);
     oThreadContextRef ctx = runtime->allContexts->ctx;
     vSymbolRef bob;
     vSymbolRef other;
@@ -179,7 +179,7 @@ void testReadOneListAndOneSymbol() {
 	assert(vSymbolEquals(ctx, other, frame.controlSym) == v_true);
     
 	oMemoryPopFrame(ctx);
-    vRuntimeDestroy(runtime);
+    oRuntimeDestroy(runtime);
 }
 
 typedef struct testStruct {
@@ -191,7 +191,7 @@ typedef struct testStruct {
 } testStruct;
 
 void testCreateType() {
-    vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024 * 1000);
+    oRuntimeRef runtime = oRuntimeCreate(2000 * 1024, 1024 * 1000);
     oThreadContextRef ctx = runtime->allContexts->ctx;
     vFieldRef* fields;
     uword i;
@@ -232,11 +232,11 @@ void testCreateType() {
     oRoots.instance->five = 0.01;
 
     oENDVOIDFN
-    vRuntimeDestroy(runtime);
+    oRuntimeDestroy(runtime);
 }
 
 void testArrayPutGet() {
-    vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024 * 1000);
+    oRuntimeRef runtime = oRuntimeCreate(2000 * 1024, 1024 * 1000);
     oThreadContextRef ctx = runtime->allContexts->ctx;
     i64 one;
     i64 two;
@@ -280,11 +280,11 @@ void testArrayPutGet() {
     assert(check == three);
     
     oENDVOIDFN
-    vRuntimeDestroy(runtime);
+    oRuntimeDestroy(runtime);
 }
 
 void testVector() {
-    vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024 * 1000);
+    oRuntimeRef runtime = oRuntimeCreate(2000 * 1024, 1024 * 1000);
     oThreadContextRef ctx = runtime->allContexts->ctx;
     vTypeRef str_t = ctx->runtime->builtInTypes.string;
     vTypeRef i64_t = ctx->runtime->builtInTypes.i64;
@@ -332,11 +332,11 @@ void testVector() {
     assert(one == checki64);
     
     oMemoryPopFrame(ctx);
-    vRuntimeDestroy(runtime);
+    oRuntimeDestroy(runtime);
 }
 
 void testReadVector() {
-    vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024 * 1000);
+    oRuntimeRef runtime = oRuntimeCreate(2000 * 1024, 1024 * 1000);
     oThreadContextRef ctx = runtime->allContexts->ctx;
     oListObjRef lst;
     vSymbolRef sym;
@@ -366,11 +366,11 @@ void testReadVector() {
     assert(vSymbolEquals(ctx, sym, frame.ethel) == v_true);
     
 	oMemoryPopFrame(ctx);
-    vRuntimeDestroy(runtime);
+    oRuntimeDestroy(runtime);
 }
 
 void testReadKeyword() {
-    vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024 * 1000);
+    oRuntimeRef runtime = oRuntimeCreate(2000 * 1024, 1024 * 1000);
     oThreadContextRef ctx = runtime->allContexts->ctx;
     oListObjRef lst;
     oKeywordRef kw;
@@ -395,12 +395,12 @@ void testReadKeyword() {
     assert(vStringCompare(frame.name, oKeywordGetName(ctx, kw)) == 0);
     
 	oMemoryPopFrame(ctx);
-    vRuntimeDestroy(runtime);
+    oRuntimeDestroy(runtime);
 }
 
 void testOutOfMemory() {
-    vRuntimeRef rt = vRuntimeCreate(1024 * 1000, 1024 * 1000);
-    oThreadContextRef ctx = vRuntimeGetCurrentContext(rt);
+    oRuntimeRef rt = oRuntimeCreate(1024 * 1000, 1024 * 1000);
+    oThreadContextRef ctx = oRuntimeGetCurrentContext(rt);
     oROOTS(ctx)
     oENDROOTS
     
@@ -410,7 +410,7 @@ void testOutOfMemory() {
     
     oENDVOIDFN
     assert(oErrorGet(ctx) == rt->builtInErrors.outOfMemory);
-    vRuntimeDestroy(rt);
+    oRuntimeDestroy(rt);
 }
 
 int main(int argc, char** argv) {

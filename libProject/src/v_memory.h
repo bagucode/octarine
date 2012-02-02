@@ -17,7 +17,7 @@ oArrayRef _oHeapAllocArray(oThreadContextRef ctx,
                            uword numElements);
 #define oHeapAllocArray(type, size) _oC(_oHeapAllocArray, type, size)
 
-void oHeapForceGC(vRuntimeRef rt, oHeapRef heap);
+void oHeapForceGC(oRuntimeRef rt, oHeapRef heap);
 
 // Does a deep copy of obj into the specified heap, but only if the given heap
 // is a shared (synchronized) heap.
@@ -42,12 +42,12 @@ vRootSetRef oMemoryCreateRootSet();
 
 void oMemoryDeleteRootSet(vRootSetRef roots);
 
-vObject o_bootstrap_object_alloc(vRuntimeRef rt,
+vObject o_bootstrap_object_alloc(oRuntimeRef rt,
 		                         oHeapRef heap,
                                  vTypeRef proto_type,
                                  uword size);
 
-oArrayRef o_bootstrap_array_alloc(vRuntimeRef rt,
+oArrayRef o_bootstrap_array_alloc(oRuntimeRef rt,
 	                              oHeapRef heap,
                                   vTypeRef proto_elem_type,
                                   uword num_elements,

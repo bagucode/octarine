@@ -7,7 +7,7 @@
 #include "v_runtime.h"
 #include <stddef.h>
 
-void o_bootstrap_thread_context_type_init(vRuntimeRef rt, oHeapRef heap) {
+void o_bootstrap_thread_context_type_init(oRuntimeRef rt, oHeapRef heap) {
     vFieldRef *fields;
     rt->builtInTypes.threadContext->fields = o_bootstrap_type_create_field_array(rt, heap, 1);
     rt->builtInTypes.threadContext->kind = V_T_OBJECT;
@@ -21,7 +21,7 @@ void o_bootstrap_thread_context_type_init(vRuntimeRef rt, oHeapRef heap) {
     fields[0]->type = rt->builtInTypes.any;
 }
 
-oThreadContextRef o_bootstrap_thread_context_create(vRuntimeRef runtime, oHeapRef heap) {
+oThreadContextRef o_bootstrap_thread_context_create(oRuntimeRef runtime, oHeapRef heap) {
 	oThreadContextRef ctx = (oThreadContextRef)o_bootstrap_object_alloc(runtime, heap, runtime->builtInTypes.threadContext, sizeof(oThreadContext));
     ctx->heap = NULL;
     ctx->runtime = runtime;
@@ -31,7 +31,7 @@ oThreadContextRef o_bootstrap_thread_context_create(vRuntimeRef runtime, oHeapRe
     return ctx;
 }
 
-oThreadContextRef oThreadContextCreate(vRuntimeRef runtime,
+oThreadContextRef oThreadContextCreate(oRuntimeRef runtime,
                                        uword threadHeapInitialSize) {
 	/* TODO: Don't malloc here. Use the regular shared heap to store these? */
     oThreadContextRef ctx = (oThreadContextRef)vMalloc(sizeof(oThreadContext));

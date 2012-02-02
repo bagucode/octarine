@@ -169,7 +169,7 @@ void oMemoryPopFrame(oThreadContextRef ctx) {
     }
 }
 
-static void traceAndMark(vRuntimeRef rt, oHeapRef heap, vObject obj, vTypeRef type) {
+static void traceAndMark(oRuntimeRef rt, oHeapRef heap, vObject obj, vTypeRef type) {
     vObject fieldPtr;
     vFieldRef field;
     vFieldRef* fields;
@@ -247,7 +247,7 @@ static void traceAndMark(vRuntimeRef rt, oHeapRef heap, vObject obj, vTypeRef ty
     }
 }
 
-static void collectGarbage(vRuntimeRef rt, oHeapRef heap) {
+static void collectGarbage(oRuntimeRef rt, oHeapRef heap) {
     vRootSetRef roots;
     uword i, j, nroots;
     vObject obj, *objArr;
@@ -272,7 +272,7 @@ static void collectGarbage(vRuntimeRef rt, oHeapRef heap) {
     // a local collection
 
     // types
-    j = sizeof(vRuntimeBuiltInTypes) / sizeof(pointer);
+    j = sizeof(oRuntimeBuiltInTypes) / sizeof(pointer);
     objArr = (vObject*)&rt->builtInTypes;
     for(i = 0; i < j; ++i) {
         traceAndMark(rt, heap, objArr[i], rt->builtInTypes.type);
@@ -285,20 +285,20 @@ static void collectGarbage(vRuntimeRef rt, oHeapRef heap) {
 		lst = next;
 	}
     // constants
-    j = sizeof(vRuntimeBuiltInConstants) / sizeof(pointer);
+    j = sizeof(oRuntimeBuiltInConstants) / sizeof(pointer);
     objArr = (vObject*)&rt->builtInConstants;
     for(i = 0; i < j; ++i) {
         // TODO: this will break when there are constants other than keywords
         traceAndMark(rt, heap, objArr[i], rt->builtInTypes.keyword);
     }
     // errors
-    j = sizeof(vRuntimeBuiltInErrors) / sizeof(pointer);
+    j = sizeof(oRuntimeBuiltInErrors) / sizeof(pointer);
     objArr = (vObject*)&rt->builtInErrors;
     for(i = 0; i < j; ++i) {
         traceAndMark(rt, heap, objArr[i], rt->builtInTypes.error);
     }
 
-	roots = vRuntimeGetCurrentContext(rt)->roots;
+	roots = oRuntimeGetCurrentContext(rt)->roots;
     while (roots) {
         for(i = 0; i < roots->numUsed; ++i) {
             nroots = roots->frameInfos[i].size / sizeof(pointer);
@@ -346,7 +346,7 @@ static void collectGarbage(vRuntimeRef rt, oHeapRef heap) {
     heap->record = newRecord;
 }
 
-void oHeapForceGC(vRuntimeRef rt, oHeapRef heap) {
+void oHeapForceGC(oRuntimeRef rt, oHeapRef heap) {
     if(heap->mutex != NULL) {
         vMutexLock(heap->mutex);
 		// TODO: if the heap has a mutex field then we assume that all threads
@@ -361,7 +361,7 @@ void oHeapForceGC(vRuntimeRef rt, oHeapRef heap) {
     }
 }
 
-static v_bool checkHeapSpace(vRuntimeRef rt,
+static v_bool checkHeapSpace(oRuntimeRef rt,
 							 oHeapRef heap,
                              uword size) {
     if((heap->gcThreshold - heap->currentSize) < size) {
@@ -374,7 +374,7 @@ static v_bool checkHeapSpace(vRuntimeRef rt,
     return v_true;
 }
 
-static vObject internalAlloc(vRuntimeRef rt,
+static vObject internalAlloc(oRuntimeRef rt,
                              oThreadContextRef ctx,
 	                         oHeapRef heap,
                              vTypeRef type,
@@ -441,14 +441,14 @@ static void addHeapEntry(oHeapRef heap, HeapBlockRef block) {
     }
 }
 
-vObject o_bootstrap_object_alloc(vRuntimeRef rt,
+vObject o_bootstrap_object_alloc(oRuntimeRef rt,
 		                         oHeapRef heap,
                                  vTypeRef proto_type,
                                  uword size) {
     return internalAlloc(rt, NULL, heap, proto_type, size);
 }
 
-oArrayRef o_bootstrap_array_alloc(vRuntimeRef rt,
+oArrayRef o_bootstrap_array_alloc(oRuntimeRef rt,
 	                              oHeapRef heap,
                                   vTypeRef proto_elem_type,
                                   uword num_elements,
