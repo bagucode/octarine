@@ -126,7 +126,7 @@ oListObjRef oListObjRemoveNth(oThreadContextRef ctx,
     return lst;
 }
 
-v_bool oListObjIsEmpty(oThreadContextRef ctx, oListObjRef lst) {
+o_bool oListObjIsEmpty(oThreadContextRef ctx, oListObjRef lst) {
     return lst->data == NULL && lst->next == NULL;
 }
 

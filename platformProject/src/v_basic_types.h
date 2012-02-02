@@ -15,9 +15,9 @@ typedef unsigned __int64 uint64_t;
 #endif
 
 #if defined(_WIN64) || defined(__LP64__)
-# define VLANG64
+# define OCTARINE64
 #else
-# define VLANG32
+# define OCTARINE32
 #endif
 
 typedef int8_t   i8;
@@ -31,7 +31,7 @@ typedef uint64_t u64;
 typedef float    f32;
 typedef double   f64;
 
-#ifdef VLANG64
+#ifdef OCTARINE64
 typedef int64_t  word;
 typedef uint64_t uword;
 #else
@@ -41,11 +41,11 @@ typedef uint32_t uword;
 
 typedef void* pointer;
 
-typedef i8 v_bool;
+typedef i8 o_bool;
 #define v_true 1
 #define v_false 0
 
-typedef int32_t v_char;
+typedef int32_t o_char;
 
 #ifndef NULL
 # define NULL 0

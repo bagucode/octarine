@@ -31,7 +31,7 @@ oSymbolRef oSymbolCreate(oThreadContextRef ctx, oStringRef name) {
     oENDFN(oSymbolRef)
 }
 
-v_bool oSymbolEquals(oThreadContextRef ctx,
+o_bool oSymbolEquals(oThreadContextRef ctx,
                      oSymbolRef sym1,
 					 oSymbolRef sym2) {
 	return sym1 == sym2 || oStringCompare(sym1->name, sym2->name) == 0;

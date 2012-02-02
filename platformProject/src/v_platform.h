@@ -33,7 +33,7 @@ vNativeStringRef vNativeStringFromUtf8(const char *utf8);
 char* vNativeStringToUtf8(vNativeStringRef str, uword* out_length);
 int vNativeStringCompare(vNativeStringRef str1, vNativeStringRef str2);
 void vNativeStringDestroy(vNativeStringRef str);
-v_char vNativeStringCharAt(vNativeStringRef str, uword idx);
+o_char vNativeStringCharAt(vNativeStringRef str, uword idx);
 vNativeStringRef vNativeStringSubstring(vNativeStringRef str, uword start, uword end);
 uword vNativeStringLength(vNativeStringRef str);
 

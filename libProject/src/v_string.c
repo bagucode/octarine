@@ -39,7 +39,7 @@ oArrayRef oStringUtf8Copy(oThreadContextRef ctx, oStringRef str) {
 	oENDFN(oArrayRef)
 }
 
-v_char oStringCharAt(oThreadContextRef ctx, oStringRef str, uword idx) {
+o_char oStringCharAt(oThreadContextRef ctx, oStringRef str, uword idx) {
     return vNativeStringCharAt(str->str, idx);
 }
 

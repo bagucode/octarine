@@ -53,7 +53,7 @@ void o_bootstrap_reader_init_type(oThreadContextRef ctx) {
     readTable[LSBRACKET] = readVector;
 }
 
-v_bool isReserved(uword ch) {
+o_bool isReserved(uword ch) {
     uword i;
     for(i = 0; i < sizeof(reservedChars); ++i) {
         if(reservedChars[i] == ch) {
@@ -74,7 +74,7 @@ static u8 getChar(oArrayRef arr, uword i) {
     return ((u8*)(oArrayDataPointer(arr)))[i];
 }
 
-static v_bool isSpace(uword ch) {
+static o_bool isSpace(uword ch) {
     return isspace((int)ch) || ch == ',';
 }
 
@@ -85,7 +85,7 @@ static void skipSpace(oArrayRef src, uword *idx) {
     }
 }
 
-static v_bool eos(oArrayRef src, uword* idx) {
+static o_bool eos(oArrayRef src, uword* idx) {
     return src->num_elements == (*idx);
 }
 

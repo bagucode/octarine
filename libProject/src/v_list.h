@@ -26,7 +26,7 @@ oListObjRef oListObjRemoveNth(oThreadContextRef ctx,
                               oListObjRef lst,
                               uword idx);
 
-v_bool oListObjIsEmpty(oThreadContextRef ctx, oListObjRef lst);
+o_bool oListObjIsEmpty(oThreadContextRef ctx, oListObjRef lst);
 
 oListObjRef oListObjReverse(oThreadContextRef ctx, oListObjRef lst);
 

@@ -11,7 +11,7 @@ struct oString {
 oStringRef oStringCreate(oThreadContextRef ctx, char *utf8);
 int oStringCompare(oStringRef str1, oStringRef str2);
 oArrayRef oStringUtf8Copy(oThreadContextRef ctx, oStringRef str);
-v_char oStringCharAt(oThreadContextRef ctx, oStringRef str, uword idx);
+o_char oStringCharAt(oThreadContextRef ctx, oStringRef str, uword idx);
 oStringRef oStringSubString(oThreadContextRef ctx, oStringRef str, uword start, uword end);
 uword oStringLength(oThreadContextRef ctx, oStringRef str);
 

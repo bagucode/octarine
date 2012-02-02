@@ -51,7 +51,7 @@ void vNativeStringDestroy(vNativeStringRef str) {
     vFree(str);
 }
 
-v_char vNativeStringCharAt(vNativeStringRef str, uword idx) {
+o_char vNativeStringCharAt(vNativeStringRef str, uword idx) {
     // TODO: THIS IS BROKEN! Unichar is 16 bits but codepoints are 32 bits...
     return CFStringGetCharacterAtIndex(str->str, idx);
 }

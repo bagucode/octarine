@@ -10,7 +10,7 @@ struct oSymbol {
 };
 
 oSymbolRef oSymbolCreate(oThreadContextRef ctx, oStringRef name);
-v_bool oSymbolEquals(oThreadContextRef ctx,
+o_bool oSymbolEquals(oThreadContextRef ctx,
                      oSymbolRef sym1,
                      oSymbolRef sym2);
 

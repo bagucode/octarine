@@ -25,8 +25,8 @@ static void set_shared_primitive_attributes(oTypeRef t) {
 
 static void alloc_builtInTypes(oRuntimeRef rt, oHeapRef heap) {
     rt->builtInTypes.type = (oTypeRef)o_bootstrap_object_alloc(rt, heap, V_T_SELF, sizeof(oType));
-	rt->builtInTypes.v_char = alloc_built_in(rt, heap);
-	rt->builtInTypes.v_bool = alloc_built_in(rt, heap);
+	rt->builtInTypes.o_char = alloc_built_in(rt, heap);
+	rt->builtInTypes.o_bool = alloc_built_in(rt, heap);
 	rt->builtInTypes.f32 = alloc_built_in(rt, heap);
 	rt->builtInTypes.f64 = alloc_built_in(rt, heap);
 	rt->builtInTypes.i16 = alloc_built_in(rt, heap);
@@ -53,7 +53,7 @@ static void alloc_builtInTypes(oRuntimeRef rt, oHeapRef heap) {
 	rt->builtInTypes.threadContext = alloc_built_in(rt, heap);
     rt->builtInTypes.error = alloc_built_in(rt, heap);
 #ifdef __GNUC__
-#ifdef VLANG32
+#ifdef OCTARINE32
 	rt->builtInTypes.i64->alignment = 4;
 	rt->builtInTypes.u64->alignment = 4;
 #endif
@@ -64,13 +64,13 @@ static void init_builtInTypes1(oRuntimeRef rt, oHeapRef heap) {
 
     /* primitives */
 
-	set_shared_primitive_attributes(rt->builtInTypes.v_char);
-    rt->builtInTypes.v_char->name = o_bootstrap_string_create(rt, heap, "char");
-	rt->builtInTypes.v_char->size = 4; /* i32 - unicode code point */
+	set_shared_primitive_attributes(rt->builtInTypes.o_char);
+    rt->builtInTypes.o_char->name = o_bootstrap_string_create(rt, heap, "char");
+	rt->builtInTypes.o_char->size = 4; /* i32 - unicode code point */
 
-	set_shared_primitive_attributes(rt->builtInTypes.v_bool);
-  	rt->builtInTypes.v_bool->name = o_bootstrap_string_create(rt, heap, "bool");
-	rt->builtInTypes.v_bool->size = 1; /* i8 */
+	set_shared_primitive_attributes(rt->builtInTypes.o_bool);
+  	rt->builtInTypes.o_bool->name = o_bootstrap_string_create(rt, heap, "bool");
+	rt->builtInTypes.o_bool->size = 1; /* i8 */
 
 	set_shared_primitive_attributes(rt->builtInTypes.f32);
   	rt->builtInTypes.f32->name = o_bootstrap_string_create(rt, heap, "f32");

@@ -7,15 +7,15 @@
 #include "v_error.h"
 #include <stddef.h>
 
-v_bool oTypeIsPrimitive(oTypeRef t) {
+o_bool oTypeIsPrimitive(oTypeRef t) {
 	return oTypeIsStruct(t) && t->fields == NULL;
 }
 
-v_bool oTypeIsStruct(oTypeRef t) {
+o_bool oTypeIsStruct(oTypeRef t) {
     return t->kind == V_T_STRUCT;
 }
 
-v_bool oTypeIsObject(oTypeRef t) {
+o_bool oTypeIsObject(oTypeRef t) {
     return t->kind == V_T_OBJECT;
 }
 
@@ -188,7 +188,7 @@ void o_bootstrap_type_init_field(oRuntimeRef rt, oHeapRef heap) {
     fields[2]->type = rt->builtInTypes.u32;
 }
 
-v_bool oTypeEquals(oThreadContextRef ctx, oTypeRef t, oObject other) {
+o_bool oTypeEquals(oThreadContextRef ctx, oTypeRef t, oObject other) {
     /* Types are only equal if they are the same type */
     return t == other;
 }

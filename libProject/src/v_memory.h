@@ -5,7 +5,7 @@
 #include "v_object.h"
 #include "v_typedefs.h"
 
-oHeapRef oHeapCreate(v_bool synchronized, uword gc_threshold);
+oHeapRef oHeapCreate(o_bool synchronized, uword gc_threshold);
 
 void oHeapDestroy(oHeapRef heap);
 

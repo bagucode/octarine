@@ -26,8 +26,8 @@ typedef struct oRuntimeBuiltInTypes {
     oTypeRef word;
     oTypeRef uword;
     oTypeRef pointer;
-    oTypeRef v_bool;
-    oTypeRef v_char;
+    oTypeRef o_bool;
+    oTypeRef o_char;
     /* aggregate value types */
     /* object types */
     oTypeRef string;

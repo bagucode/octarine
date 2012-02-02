@@ -38,7 +38,7 @@ static HeapBlockRef getBlock(oObject obj) {
     return (HeapBlockRef)(*((void **)obj - 1));
 }
 
-static v_bool isMarked(HeapBlockRef block) {
+static o_bool isMarked(HeapBlockRef block) {
     return block->typeRefAndMark & 1;
 }
 
@@ -47,7 +47,7 @@ static void setMark(HeapBlockRef block) {
 }
 
 static void clearMark(HeapBlockRef block) {
-#ifdef VLANG64
+#ifdef OCTARINE64
     block->typeRefAndMark &= 0xFFFFFFFFFFFFFFFE;
 #else
     block->typeRefAndMark &= 0xFFFFFFFE;
@@ -55,7 +55,7 @@ static void clearMark(HeapBlockRef block) {
 }
 
 static oTypeRef getType(HeapBlockRef block) {
-#ifdef VLANG64
+#ifdef OCTARINE64
     return (oTypeRef)(block->typeRefAndMark & 0xFFFFFFFFFFFFFFFE);
 #else
     return (oTypeRef)(block->typeRefAndMark & 0xFFFFFFFE);
@@ -96,7 +96,7 @@ static HeapRecordRef createRecord() {
     return rec;
 }
 
-static v_bool recordEntry(HeapRecordRef record, HeapBlockRef block) {
+static o_bool recordEntry(HeapRecordRef record, HeapBlockRef block) {
     if(record->numBlocks == MAX_BLOCKS) {
         return v_false;
     }
@@ -104,7 +104,7 @@ static v_bool recordEntry(HeapRecordRef record, HeapBlockRef block) {
     return v_true;
 }
 
-oHeapRef oHeapCreate(v_bool synchronized, uword gc_threshold) {
+oHeapRef oHeapCreate(o_bool synchronized, uword gc_threshold) {
     oHeapRef heap = (oHeapRef)vMalloc(sizeof(oHeap));
 	heap->mutex = synchronized ? vMutexCreate() : NULL;
     heap->gcThreshold = gc_threshold;
@@ -361,7 +361,7 @@ void oHeapForceGC(oRuntimeRef rt, oHeapRef heap) {
     }
 }
 
-static v_bool checkHeapSpace(oRuntimeRef rt,
+static o_bool checkHeapSpace(oRuntimeRef rt,
 							 oHeapRef heap,
                              uword size) {
     if((heap->gcThreshold - heap->currentSize) < size) {

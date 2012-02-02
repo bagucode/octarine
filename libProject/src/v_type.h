@@ -34,11 +34,11 @@ oFieldRef oFieldCreate(oThreadContextRef ctx,
                        oStringRef name,
                        oTypeRef type);
 
-v_bool oTypeIsPrimitive(oTypeRef t);
-v_bool oTypeIsStruct(oTypeRef t);
-v_bool oTypeIsObject(oTypeRef t);
-v_bool oTypeEquals(oThreadContextRef ctx, oTypeRef t, oObject other);
-oTypeRef oTypeCreatePrototype(oThreadContextRef ctx, v_bool shared);
+o_bool oTypeIsPrimitive(oTypeRef t);
+o_bool oTypeIsStruct(oTypeRef t);
+o_bool oTypeIsObject(oTypeRef t);
+o_bool oTypeEquals(oThreadContextRef ctx, oTypeRef t, oObject other);
+oTypeRef oTypeCreatePrototype(oThreadContextRef ctx, o_bool shared);
 oTypeRef oTypeCreate(oThreadContextRef ctx,
                      u8 kind,
                      u8 alignment,

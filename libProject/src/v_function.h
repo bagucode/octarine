@@ -18,7 +18,7 @@ struct oSignature {
 
 oSignatureRef oSignatureCreate(oArrayRef returnTypes, oArrayRef parameters);
 
-v_bool oSignatureEquals(oThreadContextRef ctx,
+o_bool oSignatureEquals(oThreadContextRef ctx,
                         oSignatureRef sig1,
                         oSignatureRef sig2);
 
