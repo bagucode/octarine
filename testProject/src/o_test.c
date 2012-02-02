@@ -1,17 +1,17 @@
-#include "v_test.h"
-#include "../../libProject/src/v_thread_context.h"
-#include "../../libProject/src/v_runtime.h"
-#include "../../libProject/src/v_list.h"
-#include "../../libProject/src/v_string.h"
-#include "../../libProject/src/v_memory.h"
-#include "../../libProject/src/v_reader.h"
-#include "../../libProject/src/v_object.h"
-#include "../../libProject/src/v_symbol.h"
-#include "../../libProject/src/v_array.h"
-#include "../../libProject/src/v_type.h"
-#include "../../libProject/src/v_vector.h"
-#include "../../libProject/src/v_keyword.h"
-#include "../../libProject/src/v_error.h"
+#include "o_test.h"
+#include "../../libProject/src/o_thread_context.h"
+#include "../../libProject/src/o_runtime.h"
+#include "../../libProject/src/o_list.h"
+#include "../../libProject/src/o_string.h"
+#include "../../libProject/src/o_memory.h"
+#include "../../libProject/src/o_reader.h"
+#include "../../libProject/src/o_object.h"
+#include "../../libProject/src/o_symbol.h"
+#include "../../libProject/src/o_array.h"
+#include "../../libProject/src/o_type.h"
+#include "../../libProject/src/o_vector.h"
+#include "../../libProject/src/o_keyword.h"
+#include "../../libProject/src/o_error.h"
 
 #include <memory.h>
 #include <assert.h>
@@ -95,17 +95,17 @@ void testSymbolEquals() {
 	frame.sym1 = oSymbolCreate(ctx, frame.name);
 	frame.sym2 = oSymbolCreate(ctx, frame.name);
 
-	assert(oSymbolEquals(ctx, frame.sym1, frame.sym2) == v_true);
+	assert(oSymbolEquals(ctx, frame.sym1, frame.sym2) == o_true);
 
 	frame.name = oStringCreate(ctx, "Bob2Bob"); // same name but different string instance
 	frame.sym1 = oSymbolCreate(ctx, frame.name);
 
-	assert(oSymbolEquals(ctx, frame.sym1, frame.sym2) == v_true);
+	assert(oSymbolEquals(ctx, frame.sym1, frame.sym2) == o_true);
 
 	frame.name = oStringCreate(ctx, "WRONG"); // other name
 	frame.sym2 = oSymbolCreate(ctx, frame.name);
 
-	assert(oSymbolEquals(ctx, frame.sym1, frame.sym2) == v_false);
+	assert(oSymbolEquals(ctx, frame.sym1, frame.sym2) == o_false);
 
 	oMemoryPopFrame(ctx);
     oRuntimeDestroy(runtime);
@@ -130,7 +130,7 @@ void testReadSymbol() {
     assert(oObjectGetType(ctx, frame.readResult) == ctx->runtime->builtInTypes.list);
 	bob = (oSymbolRef)((oListObjRef)frame.readResult)->data;
     assert(oObjectGetType(ctx, bob) == ctx->runtime->builtInTypes.symbol);
-	assert(oSymbolEquals(ctx, frame.otherBob, bob) == v_true);
+	assert(oSymbolEquals(ctx, frame.otherBob, bob) == o_true);
 
 	oMemoryPopFrame(ctx);
     oRuntimeDestroy(runtime);
@@ -169,14 +169,14 @@ void testReadOneListAndOneSymbol() {
 
     bob = (oSymbolRef)oListObjFirst(ctx, bobLst);
     assert(oObjectGetType(ctx, bob) == ctx->runtime->builtInTypes.symbol);
-	assert(oSymbolEquals(ctx, bob, frame.controlSym) == v_true);
+	assert(oSymbolEquals(ctx, bob, frame.controlSym) == o_true);
 
     lst = oListObjRest(ctx, lst);
     other = (oSymbolRef)oListObjFirst(ctx, lst);
     assert(oObjectGetType(ctx, other) == ctx->runtime->builtInTypes.symbol);
     frame.name = oStringCreate(ctx, "otherSym");
     frame.controlSym = oSymbolCreate(ctx, frame.name);
-	assert(oSymbolEquals(ctx, other, frame.controlSym) == v_true);
+	assert(oSymbolEquals(ctx, other, frame.controlSym) == o_true);
     
 	oMemoryPopFrame(ctx);
     oRuntimeDestroy(runtime);
@@ -214,12 +214,12 @@ void testCreateType() {
     fields[2]->name = oStringCreate(ctx, "three");
     fields[2]->type = ctx->runtime->builtInTypes.i64;
     fields[3]->name = oStringCreate(ctx, "self");
-    fields[3]->type = V_T_SELF;
+    fields[3]->type = o_T_SELF;
     fields[4]->name = oStringCreate(ctx, "five");
     fields[4]->type = ctx->runtime->builtInTypes.f64;
     
     oRoots.typeName = oStringCreate(ctx, "MyHappyTestType");
-    oRoots.myType = oTypeCreate(ctx, V_T_OBJECT, 0, oRoots.typeName, oRoots.fields, NULL, NULL);
+    oRoots.myType = oTypeCreate(ctx, o_T_OBJECT, 0, oRoots.typeName, oRoots.fields, NULL, NULL);
     
     assert(oRoots.myType->size == sizeof(testStruct));
     
@@ -363,7 +363,7 @@ void testReadVector() {
     assert(oVectorSize(ctx, vec) == 3);
     
     oVectorGet(ctx, vec, 2, &sym, ctx->runtime->builtInTypes.symbol);
-    assert(oSymbolEquals(ctx, sym, frame.ethel) == v_true);
+    assert(oSymbolEquals(ctx, sym, frame.ethel) == o_true);
     
 	oMemoryPopFrame(ctx);
     oRuntimeDestroy(runtime);
@@ -406,7 +406,7 @@ void testOutOfMemory() {
     
     ctx->error = rt->builtInErrors.outOfMemory;
     oArrayCreate(rt->builtInTypes.i64, 10000);
-    assert(v_false); // should never get here
+    assert(o_false); // should never get here
     
     oENDVOIDFN
     assert(oErrorGet(ctx) == rt->builtInErrors.outOfMemory);

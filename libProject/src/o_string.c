@@ -1,12 +1,12 @@
-#include "v_string.h"
-#include "v_memory.h"
-#include "v_thread_context.h"
-#include "v_runtime.h"
-#include "v_object.h"
-#include "v_runtime.h"
-#include "v_type.h"
-#include "v_array.h"
-#include "v_error.h"
+#include "o_string.h"
+#include "o_memory.h"
+#include "o_thread_context.h"
+#include "o_runtime.h"
+#include "o_object.h"
+#include "o_runtime.h"
+#include "o_type.h"
+#include "o_array.h"
+#include "o_error.h"
 #include <memory.h>
 
 oStringRef oStringCreate(oThreadContextRef ctx, char *utf8) {
@@ -63,7 +63,7 @@ uword oStringLength(oThreadContextRef ctx, oStringRef str) {
 
 void o_bootstrap_string_init_type(oRuntimeRef rt, oHeapRef heap) {
     rt->builtInTypes.string->fields = NULL;
-    rt->builtInTypes.string->kind = V_T_OBJECT;
+    rt->builtInTypes.string->kind = o_T_OBJECT;
     rt->builtInTypes.string->name = o_bootstrap_string_create(rt, heap, "String");
     rt->builtInTypes.string->size = sizeof(oString);
     rt->builtInTypes.string->finalizer = finalizer;

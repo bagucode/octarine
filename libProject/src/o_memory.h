@@ -1,9 +1,9 @@
-#ifndef vlang_memory_h
-#define vlang_memory_h
+#ifndef octarine_memory_h
+#define octarine_memory_h
 
-#include "../../platformProject/src/v_basic_types.h"
-#include "v_object.h"
-#include "v_typedefs.h"
+#include "../../platformProject/src/o_basic_types.h"
+#include "o_object.h"
+#include "o_typedefs.h"
 
 oHeapRef oHeapCreate(o_bool synchronized, uword gc_threshold);
 

@@ -1,5 +1,5 @@
-#ifndef vlang_basic_types_h
-#define vlang_basic_types_h
+#ifndef octarine_basic_types_h
+#define octarine_basic_types_h
 
 #ifndef WIN32
 # include <inttypes.h>
@@ -42,8 +42,8 @@ typedef uint32_t uword;
 typedef void* pointer;
 
 typedef i8 o_bool;
-#define v_true 1
-#define v_false 0
+#define o_true 1
+#define o_false 0
 
 typedef int32_t o_char;
 

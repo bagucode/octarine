@@ -1,8 +1,8 @@
-#ifndef vlang_object_h
-#define vlang_object_h
+#ifndef octarine_object_h
+#define octarine_object_h
 
-#include "../../platformProject/src/v_basic_types.h"
-#include "v_typedefs.h"
+#include "../../platformProject/src/o_basic_types.h"
+#include "o_typedefs.h"
 
 struct oAny {
     pointer ptr;

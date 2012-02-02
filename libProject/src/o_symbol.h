@@ -1,9 +1,9 @@
 
-#ifndef vlang_symbol_h
-#define vlang_symbol_h
+#ifndef octarine_symbol_h
+#define octarine_symbol_h
 
-#include "v_typedefs.h"
-#include "../../platformProject/src/v_basic_types.h"
+#include "o_typedefs.h"
+#include "../../platformProject/src/o_basic_types.h"
 
 struct oSymbol {
     oStringRef name;

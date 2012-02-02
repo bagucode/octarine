@@ -1,9 +1,9 @@
 
-#ifndef vlang_runtime_h
-#define vlang_runtime_h
+#ifndef octarine_runtime_h
+#define octarine_runtime_h
 
-#include "v_typedefs.h"
-#include "../../platformProject/src/v_platform.h"
+#include "o_typedefs.h"
+#include "../../platformProject/src/o_platform.h"
     
 typedef struct oThreadContextList {
     oThreadContextRef ctx;

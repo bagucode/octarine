@@ -1,10 +1,10 @@
-#include "v_type.h"
-#include "v_thread_context.h"
-#include "v_runtime.h"
-#include "v_string.h"
-#include "v_array.h"
-#include "v_memory.h"
-#include "v_error.h"
+#include "o_type.h"
+#include "o_thread_context.h"
+#include "o_runtime.h"
+#include "o_string.h"
+#include "o_array.h"
+#include "o_memory.h"
+#include "o_error.h"
 #include <stddef.h>
 
 o_bool oTypeIsPrimitive(oTypeRef t) {
@@ -12,11 +12,11 @@ o_bool oTypeIsPrimitive(oTypeRef t) {
 }
 
 o_bool oTypeIsStruct(oTypeRef t) {
-    return t->kind == V_T_STRUCT;
+    return t->kind == o_T_STRUCT;
 }
 
 o_bool oTypeIsObject(oTypeRef t) {
-    return t->kind == V_T_OBJECT;
+    return t->kind == o_T_OBJECT;
 }
 
 static uword alignOffset(uword offset, uword on) {
@@ -98,12 +98,12 @@ oTypeRef oTypeCreate(oThreadContextRef ctx,
     for(i = 0; i < oGETRETT(oTypeRef)->fields->num_elements; ++i) {
 		members[i] = (oFieldRef)oHeapAlloc(ctx->runtime->builtInTypes.field);
         members[i]->name = inFields[i]->name;
-        if(inFields[i]->type == V_T_SELF) {
+        if(inFields[i]->type == o_T_SELF) {
             members[i]->type = oGETRET;
         } else {
             members[i]->type = inFields[i]->type;
         }
-        if(members[i]->type->kind == V_T_OBJECT) {
+        if(members[i]->type->kind == o_T_OBJECT) {
             oGETRETT(oTypeRef)->size = alignOffset(oGETRETT(oTypeRef)->size, sizeof(void*));
             members[i]->offset = (u32)oGETRETT(oTypeRef)->size;
             oGETRETT(oTypeRef)->size += sizeof(void*);
@@ -143,7 +143,7 @@ oArrayRef o_bootstrap_type_create_field_array(oRuntimeRef rt,
 void o_bootstrap_type_init_type(oRuntimeRef rt, oHeapRef heap) {
     oFieldRef *fields;
     rt->builtInTypes.type->fields = o_bootstrap_type_create_field_array(rt, heap, 4);
-    rt->builtInTypes.type->kind = V_T_OBJECT;
+    rt->builtInTypes.type->kind = o_T_OBJECT;
     rt->builtInTypes.type->name = o_bootstrap_string_create(rt, heap, "Type");
     rt->builtInTypes.type->size = sizeof(oType);
     
@@ -169,7 +169,7 @@ void o_bootstrap_type_init_type(oRuntimeRef rt, oHeapRef heap) {
 void o_bootstrap_type_init_field(oRuntimeRef rt, oHeapRef heap) {
     oFieldRef *fields;
     rt->builtInTypes.field->fields = o_bootstrap_type_create_field_array(rt, heap, 3);
-    rt->builtInTypes.field->kind = V_T_OBJECT;
+    rt->builtInTypes.field->kind = o_T_OBJECT;
     rt->builtInTypes.field->name = o_bootstrap_string_create(rt, heap, "Field");
     rt->builtInTypes.field->size = sizeof(oField);
 
@@ -208,9 +208,9 @@ oStringRef oTypeGetName(oTypeRef type) {
     return type->name;
 }
 
-const u8 V_T_OBJECT = 0;
-const u8 V_T_STRUCT = 1;
-const oTypeRef V_T_SELF = NULL;
+const u8 o_T_OBJECT = 0;
+const u8 o_T_STRUCT = 1;
+const oTypeRef o_T_SELF = NULL;
 
 
 

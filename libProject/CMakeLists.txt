@@ -1,9 +1,9 @@
 
-# This is the main project so it's name is simply vlang.
+# This is the main project so it's name is simply octarine.
 # This project builds the library that contains the language runtime and standard library.
 # The artifact produced is a shared library (.dll/.so/.dylib), there is a separate
 # project for building this library as statically linked.
-project(vlang)
+project(octarine)
 
 set(SOURCE_DIR src)
 include(../globfiles.cmake)

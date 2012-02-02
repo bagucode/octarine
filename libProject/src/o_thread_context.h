@@ -1,9 +1,9 @@
 
-#ifndef vlang_thread_context_h
-#define vlang_thread_context_h
+#ifndef octarine_thread_context_h
+#define octarine_thread_context_h
 
-#include "v_typedefs.h"
-#include "../../platformProject/src/v_platform.h"
+#include "o_typedefs.h"
+#include "../../platformProject/src/o_platform.h"
 
 struct oThreadContext {
     oRuntimeRef runtime;

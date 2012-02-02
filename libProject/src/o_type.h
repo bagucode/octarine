@@ -1,13 +1,13 @@
 
-#ifndef vlang_type_h
-#define vlang_type_h
+#ifndef octarine_type_h
+#define octarine_type_h
 
-#include "../../platformProject/src/v_basic_types.h"
-#include "v_typedefs.h"
+#include "../../platformProject/src/o_basic_types.h"
+#include "o_typedefs.h"
 
-extern const u8 V_T_OBJECT;
-extern const u8 V_T_STRUCT;
-extern const oTypeRef V_T_SELF;
+extern const u8 o_T_OBJECT;
+extern const u8 o_T_STRUCT;
+extern const oTypeRef o_T_SELF;
 
 struct oField {
     oStringRef name;

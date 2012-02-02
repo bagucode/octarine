@@ -1,16 +1,16 @@
-#include "v_runtime.h"
-#include "v_memory.h"
-#include "v_type.h"
-#include "v_string.h"
-#include "v_array.h"
-#include "v_list.h"
-#include "v_map.h"
-#include "v_thread_context.h"
-#include "v_reader.h"
-#include "v_symbol.h"
-#include "v_vector.h"
-#include "v_keyword.h"
-#include "v_error.h"
+#include "o_runtime.h"
+#include "o_memory.h"
+#include "o_type.h"
+#include "o_string.h"
+#include "o_array.h"
+#include "o_list.h"
+#include "o_map.h"
+#include "o_thread_context.h"
+#include "o_reader.h"
+#include "o_symbol.h"
+#include "o_vector.h"
+#include "o_keyword.h"
+#include "o_error.h"
 
 #include <memory.h>
 
@@ -19,12 +19,12 @@ static oTypeRef alloc_built_in(oRuntimeRef rt, oHeapRef heap) {
 }
 
 static void set_shared_primitive_attributes(oTypeRef t) {
-	t->kind = V_T_STRUCT;
+	t->kind = o_T_STRUCT;
     t->fields = NULL;
 }
 
 static void alloc_builtInTypes(oRuntimeRef rt, oHeapRef heap) {
-    rt->builtInTypes.type = (oTypeRef)o_bootstrap_object_alloc(rt, heap, V_T_SELF, sizeof(oType));
+    rt->builtInTypes.type = (oTypeRef)o_bootstrap_object_alloc(rt, heap, o_T_SELF, sizeof(oType));
 	rt->builtInTypes.o_char = alloc_built_in(rt, heap);
 	rt->builtInTypes.o_bool = alloc_built_in(rt, heap);
 	rt->builtInTypes.f32 = alloc_built_in(rt, heap);
@@ -186,12 +186,12 @@ static void init_builtInErrors(oThreadContextRef ctx) {
 oRuntimeRef oRuntimeCreate(uword sharedHeapInitialSize,
                            uword threadHeapInitialSize) {
 	oRuntimeRef rt = (oRuntimeRef)vMalloc(sizeof(oRuntime));
-	oHeapRef mtHeap = oHeapCreate(v_false, threadHeapInitialSize);
+	oHeapRef mtHeap = oHeapCreate(o_false, threadHeapInitialSize);
 	oThreadContextRef ctx;
     
     memset(rt, 0, sizeof(oRuntime));
 
-    rt->globals = oHeapCreate(v_true, sharedHeapInitialSize);
+    rt->globals = oHeapCreate(o_true, sharedHeapInitialSize);
     rt->currentContext = vTLSCreate();
 
 	alloc_builtInTypes(rt, mtHeap);

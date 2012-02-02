@@ -1,8 +1,8 @@
-#include "v_map.h"
-#include "v_memory.h"
-#include "v_string.h"
-#include "v_thread_context.h"
-#include "v_runtime.h"
+#include "o_map.h"
+#include "o_memory.h"
+#include "o_string.h"
+#include "o_thread_context.h"
+#include "o_runtime.h"
 
 oMapStrObjRef oMapStrObjCreate(oThreadContextRef ctx) {
 	return NULL;

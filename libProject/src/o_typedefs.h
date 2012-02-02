@@ -1,5 +1,5 @@
-#ifndef vlang_typedefs_h
-#define vlang_typedefs_h
+#ifndef octarine_typedefs_h
+#define octarine_typedefs_h
 
 /* Please put in alphabetical order. */
 

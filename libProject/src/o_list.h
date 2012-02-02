@@ -1,8 +1,8 @@
-#ifndef vlang_list_h
-#define vlang_list_h
+#ifndef octarine_list_h
+#define octarine_list_h
 
-#include "v_object.h"
-#include "v_typedefs.h"
+#include "o_object.h"
+#include "o_typedefs.h"
 
 /* List of objects of any type */
 struct oListObj {

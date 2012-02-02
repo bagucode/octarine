@@ -1,8 +1,8 @@
-#ifndef vlang_string_h
-#define vlang_string_h
+#ifndef octarine_string_h
+#define octarine_string_h
 
-#include "../../platformProject/src/v_platform.h"
-#include "v_typedefs.h"
+#include "../../platformProject/src/o_platform.h"
+#include "o_typedefs.h"
 
 struct oString {
 	vNativeStringRef str;

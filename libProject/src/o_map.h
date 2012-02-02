@@ -1,8 +1,8 @@
-#ifndef vlang_map_h
-#define vlang_map_h
+#ifndef octarine_map_h
+#define octarine_map_h
 
-#include "v_object.h"
-#include "v_typedefs.h"
+#include "o_object.h"
+#include "o_typedefs.h"
 
 /* A hash map where the keys are strings and the values objects of any type */
 

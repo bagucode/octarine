@@ -1,8 +1,8 @@
-#ifndef vlang_array_h
-#define vlang_array_h
+#ifndef octarine_array_h
+#define octarine_array_h
 
-#include "../../platformProject/src/v_platform.h"
-#include "v_typedefs.h"
+#include "../../platformProject/src/o_platform.h"
+#include "o_typedefs.h"
 
 struct oArray {
     oTypeRef element_type;

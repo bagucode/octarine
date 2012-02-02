@@ -1,8 +1,8 @@
-#ifndef vlang_keyword_h
-#define vlang_keyword_h
+#ifndef octarine_keyword_h
+#define octarine_keyword_h
 
-#include "../../platformProject/src/v_basic_types.h"
-#include "v_typedefs.h"
+#include "../../platformProject/src/o_basic_types.h"
+#include "o_typedefs.h"
 
 struct oKeyword {
     oStringRef name;

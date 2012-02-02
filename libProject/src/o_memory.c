@@ -1,9 +1,9 @@
-#include "v_memory.h"
-#include "v_type.h"
-#include "v_thread_context.h"
-#include "v_runtime.h"
-#include "../../platformProject/src/v_platform.h"
-#include "v_array.h"
+#include "o_memory.h"
+#include "o_type.h"
+#include "o_thread_context.h"
+#include "o_runtime.h"
+#include "../../platformProject/src/o_platform.h"
+#include "o_array.h"
 #include <memory.h> /* TODO: replace this with some platform function */
 
 #define HEAP_ALIGN 16
@@ -98,10 +98,10 @@ static HeapRecordRef createRecord() {
 
 static o_bool recordEntry(HeapRecordRef record, HeapBlockRef block) {
     if(record->numBlocks == MAX_BLOCKS) {
-        return v_false;
+        return o_false;
     }
     record->blocks[record->numBlocks++] = block;
-    return v_true;
+    return o_true;
 }
 
 oHeapRef oHeapCreate(o_bool synchronized, uword gc_threshold) {
@@ -191,7 +191,7 @@ static void traceAndMark(oRuntimeRef rt, oHeapRef heap, oObject obj, oTypeRef ty
         if(oTypeIsObject(type)) {
             block = getBlock(obj);
         }
-        if(block == NULL || isMarked(block) == v_false) {
+        if(block == NULL || isMarked(block) == o_false) {
             if(block) {
                 setMark(block);
             }
@@ -221,7 +221,7 @@ static void traceAndMark(oRuntimeRef rt, oHeapRef heap, oObject obj, oTypeRef ty
 			else if(type == rt->builtInTypes.array) {
 				array = (oArrayRef)obj;
 				if(!oTypeIsPrimitive(array->element_type)) {
-					if(array->element_type->kind == V_T_OBJECT) {
+					if(array->element_type->kind == o_T_OBJECT) {
 						arrayObjs = (oObject*)oArrayDataPointer(array);
 						for(i = 0; i < array->num_elements; ++i) {
 							traceAndMark(rt, heap, arrayObjs[i], array->element_type);
@@ -331,7 +331,7 @@ static void collectGarbage(oRuntimeRef rt, oHeapRef heap) {
                 vFree(block);
             } else {
                 clearMark(block);
-                if(recordEntry(newRecord, block) == v_false) {
+                if(recordEntry(newRecord, block) == o_false) {
                     tmpRecord = newRecord;
                     newRecord = createRecord();
                     newRecord->prev = tmpRecord;
@@ -368,10 +368,10 @@ static o_bool checkHeapSpace(oRuntimeRef rt,
         collectGarbage(rt, heap);
 
         if((heap->gcThreshold - heap->currentSize) < size) {
-            return v_false;
+            return o_false;
         }
     }
-    return v_true;
+    return o_true;
 }
 
 static oObject internalAlloc(oRuntimeRef rt,
@@ -383,7 +383,7 @@ static oObject internalAlloc(oRuntimeRef rt,
     HeapBlockRef block;
     uword allocSize = calcBlockSize(size);
     
-    if(checkHeapSpace(rt, heap, allocSize) == v_false) {
+    if(checkHeapSpace(rt, heap, allocSize) == o_false) {
         /* Just expand blindly for now. Should really check if
          the system is out of memory and report some error if
          that is the case. */
@@ -398,7 +398,7 @@ static oObject internalAlloc(oRuntimeRef rt,
         return NULL;
     }
     ret = getObject(block);
-    setType(block, (oTypeRef)(type == V_T_SELF ? ret : type));
+    setType(block, (oTypeRef)(type == o_T_SELF ? ret : type));
     addHeapEntry(heap, block);
     
     heap->currentSize += allocSize;
@@ -433,7 +433,7 @@ oArrayRef _oHeapAllocArray(oThreadContextRef ctx,
 static void addHeapEntry(oHeapRef heap, HeapBlockRef block) {
     HeapRecordRef tmp;
     
-    if(recordEntry(heap->record, block) == v_false) {
+    if(recordEntry(heap->record, block) == o_false) {
         tmp = createRecord();
         tmp->prev = heap->record;
         heap->record = tmp;

@@ -1,18 +1,18 @@
 
-#include "v_symbol.h"
-#include "v_type.h"
-#include "v_thread_context.h"
-#include "v_runtime.h"
-#include "v_string.h"
-#include "v_array.h"
-#include "v_memory.h"
-#include "v_error.h"
+#include "o_symbol.h"
+#include "o_type.h"
+#include "o_thread_context.h"
+#include "o_runtime.h"
+#include "o_string.h"
+#include "o_array.h"
+#include "o_memory.h"
+#include "o_error.h"
 #include <stddef.h>
 
 void o_bootstrap_symbol_init_type(oThreadContextRef ctx) {
     oFieldRef *fields;
 	ctx->runtime->builtInTypes.symbol->fields = o_bootstrap_type_create_field_array(ctx->runtime, ctx->heap, 1);
-    ctx->runtime->builtInTypes.symbol->kind = V_T_OBJECT;
+    ctx->runtime->builtInTypes.symbol->kind = o_T_OBJECT;
 	ctx->runtime->builtInTypes.symbol->name = oStringCreate(ctx, "Symbol");
 	ctx->runtime->builtInTypes.symbol->size = sizeof(oSymbol);
 

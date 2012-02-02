@@ -1,8 +1,8 @@
-#ifndef vlang_error_h
-#define vlang_error_h
+#ifndef octarine_error_h
+#define octarine_error_h
 
-#include "../../platformProject/src/v_platform.h"
-#include "v_typedefs.h"
+#include "../../platformProject/src/o_platform.h"
+#include "o_typedefs.h"
 
 struct oError {
     oObject data;

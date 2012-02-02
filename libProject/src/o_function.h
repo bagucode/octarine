@@ -1,8 +1,8 @@
-#ifndef vlang_function_h
-#define vlang_function_h
+#ifndef octarine_function_h
+#define octarine_function_h
 
-#include "../../platformProject/src/v_platform.h"
-#include "v_typedefs.h"
+#include "../../platformProject/src/o_platform.h"
+#include "o_typedefs.h"
 
 struct oParameter {
     oStringRef name;

@@ -1,16 +1,16 @@
 
-#include "v_reader.h"
-#include "v_memory.h"
-#include "v_thread_context.h"
-#include "v_type.h"
-#include "v_string.h"
-#include "v_runtime.h"
-#include "v_array.h"
-#include "v_list.h"
-#include "v_symbol.h"
-#include "v_vector.h"
-#include "v_keyword.h"
-#include "v_error.h"
+#include "o_reader.h"
+#include "o_memory.h"
+#include "o_thread_context.h"
+#include "o_type.h"
+#include "o_string.h"
+#include "o_runtime.h"
+#include "o_array.h"
+#include "o_list.h"
+#include "o_symbol.h"
+#include "o_vector.h"
+#include "o_keyword.h"
+#include "o_error.h"
 #include <stddef.h>
 #include <ctype.h>
 #include <memory.h>
@@ -41,7 +41,7 @@ static oObject readVector(oThreadContextRef ctx, oArrayRef src, uword* idx);
 void o_bootstrap_reader_init_type(oThreadContextRef ctx) {
     uword i;
     ctx->runtime->builtInTypes.reader->fields = NULL;
-    ctx->runtime->builtInTypes.reader->kind = V_T_OBJECT;
+    ctx->runtime->builtInTypes.reader->kind = o_T_OBJECT;
 	ctx->runtime->builtInTypes.reader->name = o_bootstrap_string_create(ctx->runtime, ctx->heap, "Reader");
     ctx->runtime->builtInTypes.reader->size = sizeof(oReader);
 
@@ -57,10 +57,10 @@ o_bool isReserved(uword ch) {
     uword i;
     for(i = 0; i < sizeof(reservedChars); ++i) {
         if(reservedChars[i] == ch) {
-            return v_true;
+            return o_true;
         }
     }
-    return v_false;
+    return o_false;
 }
 
 oReaderRef oReaderCreate(oThreadContextRef ctx) {
@@ -155,10 +155,10 @@ static oObject readList(oThreadContextRef ctx, oArrayRef src, uword* idx) {
     oENDROOTS
     
     ++(*idx); // eat (
-    if(eos(src, idx) == v_false) {
+    if(eos(src, idx) == o_false) {
         oSETRET(oListObjCreate(ctx, NULL));
         while(getChar(src, *idx) != RPAREN
-              && eos(src, idx) == v_false) {
+              && eos(src, idx) == o_false) {
             oRoots.tmp = read(ctx, src, idx);
             if(oRoots.tmp != NULL)
 				oSETRET(oListObjAddFront(ctx, (oListObjRef)oGETRET, oRoots.tmp));
@@ -181,10 +181,10 @@ static oObject readVector(oThreadContextRef ctx, oArrayRef src, uword* idx) {
     oENDROOTS
     
     ++(*idx); // eat [
-    if(eos(src, idx) == v_false) {
+    if(eos(src, idx) == o_false) {
         oSETRET(oVectorCreate(ctx, ctx->runtime->builtInTypes.any));
         while(getChar(src, *idx) != RSBRACKET
-              && eos(src, idx) == v_false) {
+              && eos(src, idx) == o_false) {
             oRoots.tmp = read(ctx, src, idx);
             if(oRoots.tmp != NULL)
 				oSETRET(oVectorAddBack(ctx, oGETRET, oRoots.tmp, oObjectGetType(ctx, oRoots.tmp)));

@@ -1,10 +1,10 @@
-#include "v_error.h"
-#include "v_thread_context.h"
-#include "v_memory.h"
-#include "v_runtime.h"
-#include "v_array.h"
-#include "v_string.h"
-#include "v_type.h"
+#include "o_error.h"
+#include "o_thread_context.h"
+#include "o_memory.h"
+#include "o_runtime.h"
+#include "o_array.h"
+#include "o_string.h"
+#include "o_type.h"
 
 // Returns NULL if there was no error set for this context
 oErrorRef oErrorGet(oThreadContextRef ctx) {
@@ -43,7 +43,7 @@ void o_bootstrap_error_type_init(oThreadContextRef ctx) {
     oArrayPut(oRoots.fields, 0, oRoots.field, ctx->runtime->builtInTypes.field);
     
     oRoots.typeName = oStringCreate(ctx, "Error");
-    oRoots.theType = oTypeCreate(ctx, V_T_OBJECT, 0, oRoots.typeName, oRoots.fields, NULL, NULL);
+    oRoots.theType = oTypeCreate(ctx, o_T_OBJECT, 0, oRoots.typeName, oRoots.fields, NULL, NULL);
     
     ctx->runtime->builtInTypes.error = oRoots.theType;
     oENDVOIDFN

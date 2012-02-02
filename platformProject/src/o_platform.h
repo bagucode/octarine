@@ -1,7 +1,7 @@
-#ifndef vlang_platform_h
-#define vlang_platform_h
+#ifndef octarine_platform_h
+#define octarine_platform_h
 
-#include "v_basic_types.h"
+#include "o_basic_types.h"
 
 /* Thread local storage */
 typedef struct vTLS vTLS;
