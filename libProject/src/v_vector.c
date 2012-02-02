@@ -71,5 +71,8 @@ vVectorRef vVectorPut(vThreadContextRef ctx, vVectorRef vec, uword idx, pointer 
 }
 
 void vVectorGet(vThreadContextRef ctx, vVectorRef vec, uword idx, pointer dest, vTypeRef destType) {
+    oROOTS(ctx)
+    oENDROOTS
     oArrayGet(ctx, vec->data, idx, dest, destType);
+    oENDVOIDFN
 }

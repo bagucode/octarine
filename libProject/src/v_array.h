@@ -16,17 +16,19 @@ struct oArray {
 oArrayRef _oArrayCreate(vThreadContextRef ctx,
                         vTypeRef elemType,
                         uword num_elements);
-#define oArrayCreate(...) _oArrayCreate(__VA_ARGS__); \
-                          if(vErrorGet(ctx)) { oRoots._oRET = NULL; goto _oENDFNL; }
+#define oArrayCreate(...) _oC(_oArrayCreate, __VA_ARGS__)
 
 pointer oArrayDataPointer(oArrayRef arr);
 
 uword oArraySize(oArrayRef arr);
 
-void oArrayCopy(vThreadContextRef ctx, oArrayRef from, oArrayRef to);
+void _oArrayCopy(vThreadContextRef ctx, oArrayRef from, oArrayRef to);
+#define oArrayCopy(...) _oC(_oArrayCopy, __VA_ARGS__)
 
-void oArrayPut(vThreadContextRef ctx, oArrayRef arr, uword idx, pointer src, vTypeRef srcType);
-void oArrayGet(vThreadContextRef ctx, oArrayRef arr, uword idx, pointer dest, vTypeRef destType);
+void _oArrayPut(vThreadContextRef ctx, oArrayRef arr, uword idx, pointer src, vTypeRef srcType);
+#define oArrayPut(...) _oC(_oArrayPut, __VA_ARGS__)
+void _oArrayGet(vThreadContextRef ctx, oArrayRef arr, uword idx, pointer dest, vTypeRef destType);
+#define oArrayGet(...) _oC(_oArrayGet, __VA_ARGS__)
 
 oArrayRef v_bootstrap_array_create(vRuntimeRef rt,
 	                               vHeapRef heap,

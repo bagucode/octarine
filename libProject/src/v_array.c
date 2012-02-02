@@ -36,7 +36,7 @@ oArrayRef v_bootstrap_array_create(vRuntimeRef rt,
     return v_bootstrap_array_alloc(rt, heap, type, num_elements, elem_size, alignment);
 }
 
-void oArrayCopy(vThreadContextRef ctx, oArrayRef from, oArrayRef to) {
+void _oArrayCopy(vThreadContextRef ctx, oArrayRef from, oArrayRef to) {
     pointer a1Data, a2Data;
 
     if(ctx->error) return;
@@ -56,7 +56,7 @@ void oArrayCopy(vThreadContextRef ctx, oArrayRef from, oArrayRef to) {
     return;
 }
 
-void oArrayPut(vThreadContextRef ctx, oArrayRef arr, uword idx, pointer src, vTypeRef srcType) {
+void _oArrayPut(vThreadContextRef ctx, oArrayRef arr, uword idx, pointer src, vTypeRef srcType) {
     char* data = (char*)oArrayDataPointer(arr);
     pointer* datap;
 
@@ -87,7 +87,7 @@ void oArrayPut(vThreadContextRef ctx, oArrayRef arr, uword idx, pointer src, vTy
     }
 }
 
-void oArrayGet(vThreadContextRef ctx, oArrayRef arr, uword idx, pointer dest, vTypeRef destType) {
+void _oArrayGet(vThreadContextRef ctx, oArrayRef arr, uword idx, pointer dest, vTypeRef destType) {
     char* data = (char*)oArrayDataPointer(arr);
     pointer *datap, *destp;
     vObject obj;
