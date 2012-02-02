@@ -67,7 +67,7 @@ int main(int argc, char** argv) {
     struct {
         oStringRef src;
         oListObjRef result;
-        vObject obj;
+        oObject obj;
         oArrayRef utf8;
     } oFrame;
 
@@ -132,7 +132,7 @@ int main(int argc, char** argv) {
             for(i = 0; i < numObjs; ++i) {
                 oFrame.obj = oListObjFirst(ctx, oFrame.result);
                 oFrame.result = oListObjRest(ctx, oFrame.result);
-                oFrame.utf8 = oStringUtf8Copy(ctx, oTypeGetName(vObjectGetType(ctx, oFrame.obj)));
+                oFrame.utf8 = oStringUtf8Copy(ctx, oTypeGetName(oObjectGetType(ctx, oFrame.obj)));
                 typeName = (char*)oArrayDataPointer(oFrame.utf8);
                 printf("%s\n", typeName);
             }

@@ -39,7 +39,7 @@ void testGCAllRetained() {
     oThreadContextRef ctx = runtime->allContexts->ctx;
 
     struct {
-        vObject listHead;
+        oObject listHead;
     } frame;
 
     oMemoryPushFrame(ctx, &frame, sizeof(frame));
@@ -67,16 +67,16 @@ void testGCFinalizer() {
 void testReaderEmptyList() {
     oRuntimeRef runtime = oRuntimeCreate(2000 * 1024, 1024 * 1000);
     oThreadContextRef ctx = runtime->allContexts->ctx;
-    vObject result;
+    oObject result;
     oStringRef src;
     oListObjRef emptyList;
 
     src = oStringCreate(ctx, "()");
     result = oReaderRead(ctx, src);
     // We should get a list with one element, an empty list.
-    assert(vObjectGetType(ctx, result) == ctx->runtime->builtInTypes.list);
+    assert(oObjectGetType(ctx, result) == ctx->runtime->builtInTypes.list);
 	emptyList = (oListObjRef)((oListObjRef)result)->data;
-    assert(vObjectGetType(ctx, emptyList) == ctx->runtime->builtInTypes.list);
+    assert(oObjectGetType(ctx, emptyList) == ctx->runtime->builtInTypes.list);
     
     oRuntimeDestroy(runtime);
 }
@@ -116,7 +116,7 @@ void testReadSymbol() {
     oThreadContextRef ctx = runtime->allContexts->ctx;
     oSymbolRef bob;
 	struct {
-		vObject readResult;
+		oObject readResult;
         oSymbolRef otherBob;
 		oStringRef src;
 	} frame;
@@ -127,9 +127,9 @@ void testReadSymbol() {
     frame.readResult = oReaderRead(ctx, frame.src);
     
     // We should get a list with one element, the symbol Bob2Bob
-    assert(vObjectGetType(ctx, frame.readResult) == ctx->runtime->builtInTypes.list);
+    assert(oObjectGetType(ctx, frame.readResult) == ctx->runtime->builtInTypes.list);
 	bob = (oSymbolRef)((oListObjRef)frame.readResult)->data;
-    assert(vObjectGetType(ctx, bob) == ctx->runtime->builtInTypes.symbol);
+    assert(oObjectGetType(ctx, bob) == ctx->runtime->builtInTypes.symbol);
 	assert(oSymbolEquals(ctx, frame.otherBob, bob) == v_true);
 
 	oMemoryPopFrame(ctx);
@@ -144,7 +144,7 @@ void testReadOneListAndOneSymbol() {
     oListObjRef lst;
     oListObjRef bobLst;
 	struct {
-		vObject readResult;
+		oObject readResult;
 		oStringRef src;
         oStringRef name;
         oSymbolRef controlSym;
@@ -158,22 +158,22 @@ void testReadOneListAndOneSymbol() {
     frame.readResult = oReaderRead(ctx, frame.src);
     
     // We should get a list with two elements, a list with a symbol in it and a symbol
-    assert(vObjectGetType(ctx, frame.readResult) == ctx->runtime->builtInTypes.list);
+    assert(oObjectGetType(ctx, frame.readResult) == ctx->runtime->builtInTypes.list);
 
     lst = (oListObjRef)frame.readResult;
     assert(oListObjSize(ctx, lst) == 2);
 
 	bobLst = (oListObjRef)oListObjFirst(ctx, lst);
-    assert(vObjectGetType(ctx, bobLst) == ctx->runtime->builtInTypes.list);
+    assert(oObjectGetType(ctx, bobLst) == ctx->runtime->builtInTypes.list);
     assert(oListObjSize(ctx, bobLst) == 1);
 
     bob = (oSymbolRef)oListObjFirst(ctx, bobLst);
-    assert(vObjectGetType(ctx, bob) == ctx->runtime->builtInTypes.symbol);
+    assert(oObjectGetType(ctx, bob) == ctx->runtime->builtInTypes.symbol);
 	assert(oSymbolEquals(ctx, bob, frame.controlSym) == v_true);
 
     lst = oListObjRest(ctx, lst);
     other = (oSymbolRef)oListObjFirst(ctx, lst);
-    assert(vObjectGetType(ctx, other) == ctx->runtime->builtInTypes.symbol);
+    assert(oObjectGetType(ctx, other) == ctx->runtime->builtInTypes.symbol);
     frame.name = oStringCreate(ctx, "otherSym");
     frame.controlSym = oSymbolCreate(ctx, frame.name);
 	assert(oSymbolEquals(ctx, other, frame.controlSym) == v_true);
@@ -245,8 +245,8 @@ void testArrayPutGet() {
     oROOTS(ctx)
     oArrayRef objArray;
     oArrayRef structArray;
-    vObject tmp1;
-    vObject tmp2;
+    oObject tmp1;
+    oObject tmp2;
     oENDROOTS
     
     oRoots.objArray = oArrayCreate(ctx->runtime->builtInTypes.any, 50);
@@ -259,7 +259,7 @@ void testArrayPutGet() {
     oRoots.tmp1 = oStringCreate(ctx, "a string");
     oArrayPut(oRoots.objArray, 10, oRoots.tmp1, ctx->runtime->builtInTypes.string);
     oArrayGet(oRoots.objArray, 10, &oRoots.tmp2, ctx->runtime->builtInTypes.string);
-    assert(vObjectGetType(ctx, oRoots.tmp2) == ctx->runtime->builtInTypes.string);
+    assert(oObjectGetType(ctx, oRoots.tmp2) == ctx->runtime->builtInTypes.string);
     assert(oStringCompare(oRoots.tmp1, oRoots.tmp2) == 0);
     assert(oRoots.tmp1 == oRoots.tmp2);
     
@@ -305,7 +305,7 @@ void testVector() {
     frame.vecStr = vVectorAddBack(ctx, frame.vecStr, frame.str, str_t);
     assert(vVectorSize(ctx, frame.vecStr) == 1);
     vVectorGet(ctx, frame.vecStr, 0, &frame.checkStr, str_t);
-    assert(vObjectGetType(ctx, frame.checkStr) == str_t);
+    assert(oObjectGetType(ctx, frame.checkStr) == str_t);
     assert(oStringCompare(frame.str, frame.checkStr) == 0);
     assert(frame.str == frame.checkStr);
 
@@ -320,7 +320,7 @@ void testVector() {
     frame.str = oStringCreate(ctx, "String Two");
     frame.vecStr = vVectorPut(ctx, frame.vecStr, 0, frame.str, str_t);
     vVectorGet(ctx, frame.vecStr, 0, &frame.checkStr, str_t);
-    assert(vObjectGetType(ctx, frame.checkStr) == str_t);
+    assert(oObjectGetType(ctx, frame.checkStr) == str_t);
     assert(oStringCompare(frame.str, frame.checkStr) == 0);
     assert(frame.str == frame.checkStr);
 
@@ -342,7 +342,7 @@ void testReadVector() {
     oSymbolRef sym;
     vVectorRef vec;
 	struct {
-		vObject readResult;
+		oObject readResult;
 		oStringRef src;
         oSymbolRef ethel;
 	} frame;
@@ -354,12 +354,12 @@ void testReadVector() {
     frame.readResult = oReaderRead(ctx, frame.src);
     
     // We should get a list with one element, a vector of three symbols
-    assert(vObjectGetType(ctx, frame.readResult) == ctx->runtime->builtInTypes.list);
+    assert(oObjectGetType(ctx, frame.readResult) == ctx->runtime->builtInTypes.list);
     lst = (oListObjRef)frame.readResult;
     assert(oListObjSize(ctx, lst) == 1);
     
     vec = oListObjFirst(ctx, lst);
-    assert(vObjectGetType(ctx, vec) == ctx->runtime->builtInTypes.vector);
+    assert(oObjectGetType(ctx, vec) == ctx->runtime->builtInTypes.vector);
     assert(vVectorSize(ctx, vec) == 3);
     
     vVectorGet(ctx, vec, 2, &sym, ctx->runtime->builtInTypes.symbol);
@@ -375,7 +375,7 @@ void testReadKeyword() {
     oListObjRef lst;
     oKeywordRef kw;
 	struct {
-		vObject readResult;
+		oObject readResult;
         oStringRef src;
 		oStringRef name;
 	} frame;
@@ -386,12 +386,12 @@ void testReadKeyword() {
     frame.readResult = oReaderRead(ctx, frame.src);
     
     // We should get a list with one element, a vector of three symbols
-    assert(vObjectGetType(ctx, frame.readResult) == ctx->runtime->builtInTypes.list);
+    assert(oObjectGetType(ctx, frame.readResult) == ctx->runtime->builtInTypes.list);
     lst = (oListObjRef)frame.readResult;
     assert(oListObjSize(ctx, lst) == 1);
     
     kw = oListObjFirst(ctx, lst);
-    assert(vObjectGetType(ctx, kw) == ctx->runtime->builtInTypes.keyword);
+    assert(oObjectGetType(ctx, kw) == ctx->runtime->builtInTypes.keyword);
     assert(oStringCompare(frame.name, oKeywordGetName(ctx, kw)) == 0);
     
 	oMemoryPopFrame(ctx);

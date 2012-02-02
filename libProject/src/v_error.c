@@ -17,11 +17,11 @@ void oErrorClear(oThreadContextRef ctx) {
 }
 
 // Get the error "message"
-vObject oErrorGetData(oErrorRef err) {
+oObject oErrorGetData(oErrorRef err) {
     return err->data;
 }
 
-void oErrorSet(oThreadContextRef ctx, vObject data) {
+void oErrorSet(oThreadContextRef ctx, oObject data) {
     oROOTS(ctx)
     oENDROOTS
     ctx->error = oHeapAlloc(ctx->runtime->builtInTypes.error);

@@ -11,10 +11,10 @@ oMapStrObjRef oMapStrObjCreate(oThreadContextRef ctx) {
 void oMapStrObjDestroy(oMapStrObjRef map) {
 }
 
-void oMapStrObjPut(oMapStrObjRef map, oStringRef key, vObject value) {
+void oMapStrObjPut(oMapStrObjRef map, oStringRef key, oObject value) {
 }
 
-vObject oMapStrObjGet(oMapStrObjRef map, oStringRef key) {
+oObject oMapStrObjGet(oMapStrObjRef map, oStringRef key) {
 	return NULL;
 }
 

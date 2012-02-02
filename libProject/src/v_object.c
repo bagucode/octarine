@@ -12,7 +12,7 @@ void o_bootstrap_any_type_init(oThreadContextRef ctx) {
     ctx->runtime->builtInTypes.any->size = sizeof(pointer);
 }
 
-oTypeRef vObjectGetType(oThreadContextRef ctx, vObject obj) {
+oTypeRef oObjectGetType(oThreadContextRef ctx, oObject obj) {
     return oMemoryGetObjectType(ctx, obj);
 }
 

@@ -71,7 +71,7 @@ oTypeRef oTypeCreate(oThreadContextRef ctx,
                      u8 alignment,
                      oStringRef name,
                      oArrayRef fields,
-                     vFinalizer finalizer,
+                     oFinalizer finalizer,
                      oTypeRef protoType) {
     oFieldRef* inFields;
     oFieldRef* members;
@@ -188,7 +188,7 @@ void o_bootstrap_type_init_field(oRuntimeRef rt, oHeapRef heap) {
     fields[2]->type = rt->builtInTypes.u32;
 }
 
-v_bool oTypeEquals(oThreadContextRef ctx, oTypeRef t, vObject other) {
+v_bool oTypeEquals(oThreadContextRef ctx, oTypeRef t, oObject other) {
     /* Types are only equal if they are the same type */
     return t == other;
 }

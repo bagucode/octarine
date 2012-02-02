@@ -6,21 +6,21 @@
 
 /* List of objects of any type */
 struct oListObj {
-    vObject data;
+    oObject data;
     oListObjRef next;
 };
 
 /* data parameter is used to fill first "cons cell" */
 oListObjRef oListObjCreate(oThreadContextRef ctx,
-                           vObject data);
+                           oObject data);
 
 oListObjRef oListObjAddFront(oThreadContextRef ctx,
                              oListObjRef lst,
-                             vObject data);
+                             oObject data);
 
 oListObjRef oListObjRemove(oThreadContextRef ctx,
                            oListObjRef lst,
-                           vObject data);
+                           oObject data);
 
 oListObjRef oListObjRemoveNth(oThreadContextRef ctx,
                               oListObjRef lst,
@@ -32,7 +32,7 @@ oListObjRef oListObjReverse(oThreadContextRef ctx, oListObjRef lst);
 
 uword oListObjSize(oThreadContextRef ctx, oListObjRef lst);
 
-vObject oListObjFirst(oThreadContextRef ctx, oListObjRef lst);
+oObject oListObjFirst(oThreadContextRef ctx, oListObjRef lst);
 
 oListObjRef oListObjRest(oThreadContextRef ctx, oListObjRef lst);
 

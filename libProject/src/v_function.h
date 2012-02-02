@@ -28,7 +28,7 @@ struct oFunctionOverload {
     /* TODO: Change sideEffects to a map? */
     oArrayRef sideEffects;
 
-    /* instructions is an array of vObjects that define the implementation
+    /* instructions is an array of oObjects that define the implementation
      of the function overload. It is used by eval implementations that do
      not generate native code. */
     oArrayRef instructions;
@@ -51,7 +51,7 @@ void oFunctionAddOverload(oFunctionRef fn, oFunctionOverloadRef impl);
 
 oFunctionOverloadRef oFunctionFindOverload(oFunctionRef fn, oSignatureRef sig);
 
-vObject oFunctionInvoke(oThreadContextRef ctx,
+oObject oFunctionInvoke(oThreadContextRef ctx,
                         oFunctionOverloadRef fnImpl,
                         oArrayRef args);
 

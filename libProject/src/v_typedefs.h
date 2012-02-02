@@ -36,12 +36,9 @@ typedef oMapStrObj* oMapStrObjRef;
 typedef struct oMapStrObjEntry oMapStrObjEntry;
 typedef oMapStrObjEntry* oMapStrObjEntryRef;
 
-typedef struct vNothing vNothing;
-typedef vNothing* vNothingRef;
+typedef void* oObject;
 
-typedef void* vObject;
-
-typedef void (*vFinalizer)(vObject obj);
+typedef void (*oFinalizer)(oObject obj);
 
 typedef struct oParameter oParameter;
 typedef oParameter* oParameterRef;
@@ -77,7 +74,7 @@ typedef vVector* vVectorRef;
 
 #define oROOTS(context) oThreadContextRef _oCTX = context; struct {
 
-#define oENDROOTS vObject _oRET; } oRoots; oMemoryPushFrame(_oCTX, &oRoots, sizeof(oRoots));
+#define oENDROOTS oObject _oRET; } oRoots; oMemoryPushFrame(_oCTX, &oRoots, sizeof(oRoots));
 
 #define oRETURN(expression) oRoots._oRET = expression; goto _oENDFNL;
 

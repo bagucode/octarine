@@ -12,7 +12,7 @@ struct oReader {
 
 oReaderRef oReaderCreate(oThreadContextRef ctx);
 
-vObject oReaderRead(oThreadContextRef ctx, oStringRef source);
+oObject oReaderRead(oThreadContextRef ctx, oStringRef source);
 
 void o_bootstrap_reader_init_type(oThreadContextRef ctx);
 

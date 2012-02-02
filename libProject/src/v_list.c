@@ -26,7 +26,7 @@ void o_bootstrap_list_init_type(oThreadContextRef ctx) {
     fields[1]->type = ctx->runtime->builtInTypes.list;
 }
 
-oListObjRef oListObjCreate(oThreadContextRef ctx, vObject data) {
+oListObjRef oListObjCreate(oThreadContextRef ctx, oObject data) {
     oROOTS(ctx)
     oENDROOTS
     if(ctx->error) return NULL;
@@ -37,7 +37,7 @@ oListObjRef oListObjCreate(oThreadContextRef ctx, vObject data) {
 
 oListObjRef oListObjAddFront(oThreadContextRef ctx,
                              oListObjRef lst,
-                             vObject data) {
+                             oObject data) {
     oROOTS(ctx)
     oENDROOTS
     if(ctx->error) return NULL;
@@ -99,7 +99,7 @@ static oListObjRef removeInternal(oThreadContextRef ctx,
 
 oListObjRef oListObjRemove(oThreadContextRef ctx,
                           oListObjRef lst,
-                          vObject obj) {
+                          oObject obj) {
     if(ctx->error) return NULL;
     /* TODO: implement, need equals function. */
     return lst;
@@ -153,7 +153,7 @@ uword oListObjSize(oThreadContextRef ctx, oListObjRef lst) {
     return cnt;
 }
 
-vObject oListObjFirst(oThreadContextRef ctx, oListObjRef lst) {
+oObject oListObjFirst(oThreadContextRef ctx, oListObjRef lst) {
     return lst->data;
 }
 

@@ -17,7 +17,7 @@ oStringRef oStringCreate(oThreadContextRef ctx, char *utf8) {
     oENDFN(oStringRef)
 }
 
-static void finalizer(vObject obj) {
+static void finalizer(oObject obj) {
     oStringRef str = (oStringRef)obj;
     vNativeStringDestroy(str->str);
 }

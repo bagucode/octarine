@@ -8,7 +8,7 @@
 
 struct oMapStrObjEntry {
     oStringRef key;
-    vObject value;
+    oObject value;
 };
 
 struct oMapStrObj {
@@ -18,9 +18,9 @@ struct oMapStrObj {
 
 oMapStrObjRef oMapStrObjCreate(oThreadContextRef ctx);
 void oMapStrObjDestroy(oMapStrObjRef map);
-void oMapStrObjPut(oMapStrObjRef map, oStringRef key, vObject value);
+void oMapStrObjPut(oMapStrObjRef map, oStringRef key, oObject value);
 /* Type of returned object is Nothing if there was no entry. */
-vObject oMapStrObjGet(oMapStrObjRef map, oStringRef key);
+oObject oMapStrObjGet(oMapStrObjRef map, oStringRef key);
 
 void o_bootstrap_map_init_type(oThreadContextRef ctx);
 

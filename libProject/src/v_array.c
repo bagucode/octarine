@@ -93,7 +93,7 @@ void _oArrayPut(oThreadContextRef ctx, oArrayRef arr, uword idx, pointer src, oT
 void _oArrayGet(oThreadContextRef ctx, oArrayRef arr, uword idx, pointer dest, oTypeRef destType) {
     char* data = (char*)oArrayDataPointer(arr);
     pointer *datap, *destp;
-    vObject obj;
+    oObject obj;
 
     if(ctx->error) return;
     if(arr->num_elements <= idx) {
@@ -108,7 +108,7 @@ void _oArrayGet(oThreadContextRef ctx, oArrayRef arr, uword idx, pointer dest, o
         
         if(arr->element_type == ctx->runtime->builtInTypes.any
            && destType != ctx->runtime->builtInTypes.any) {
-            if(obj && vObjectGetType(ctx, obj) != destType) {
+            if(obj && oObjectGetType(ctx, obj) != destType) {
                 oErrorSet(ctx, ctx->runtime->builtInConstants.typeMismatch);
                 return;
             }

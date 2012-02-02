@@ -9,7 +9,7 @@ oHeapRef oHeapCreate(v_bool synchronized, uword gc_threshold);
 
 void oHeapDestroy(oHeapRef heap);
 
-vObject _oHeapAlloc(oThreadContextRef ctx, oTypeRef t);
+oObject _oHeapAlloc(oThreadContextRef ctx, oTypeRef t);
 #define oHeapAlloc(type) _oC(_oHeapAlloc, type)
 
 oArrayRef _oHeapAllocArray(oThreadContextRef ctx,
@@ -24,12 +24,12 @@ void oHeapForceGC(oRuntimeRef rt, oHeapRef heap);
 // A pointer to the new object is returned or NULL if there is an error, in
 // which case oErrorGet can be used to get the error object.
 // The type needs to be supplied separately to support copying of value types.
-vObject oHeapCopyObjectShared(oThreadContextRef ctx,
-                              vObject obj,
+oObject oHeapCopyObjectShared(oThreadContextRef ctx,
+                              oObject obj,
                               oTypeRef type,
                               oHeapRef sharedHeap);
 
-oTypeRef oMemoryGetObjectType(oThreadContextRef ctx, vObject obj);
+oTypeRef oMemoryGetObjectType(oThreadContextRef ctx, oObject obj);
 
 void oMemoryPushFrame(oThreadContextRef ctx,
                       pointer frame,
@@ -42,7 +42,7 @@ vRootSetRef oMemoryCreateRootSet();
 
 void oMemoryDeleteRootSet(vRootSetRef roots);
 
-vObject o_bootstrap_object_alloc(oRuntimeRef rt,
+oObject o_bootstrap_object_alloc(oRuntimeRef rt,
 		                         oHeapRef heap,
                                  oTypeRef proto_type,
                                  uword size);

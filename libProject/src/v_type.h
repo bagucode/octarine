@@ -24,7 +24,7 @@ struct oType {
      but ... we can't allow overloads? There has to 
      be a single signature that has no return value
      and takes only an Any as parameter. */
-    vFinalizer finalizer;
+    oFinalizer finalizer;
     uword size;
     u8 kind;
     u8 alignment;
@@ -37,14 +37,14 @@ oFieldRef oFieldCreate(oThreadContextRef ctx,
 v_bool oTypeIsPrimitive(oTypeRef t);
 v_bool oTypeIsStruct(oTypeRef t);
 v_bool oTypeIsObject(oTypeRef t);
-v_bool oTypeEquals(oThreadContextRef ctx, oTypeRef t, vObject other);
+v_bool oTypeEquals(oThreadContextRef ctx, oTypeRef t, oObject other);
 oTypeRef oTypeCreatePrototype(oThreadContextRef ctx, v_bool shared);
 oTypeRef oTypeCreate(oThreadContextRef ctx,
                      u8 kind,
                      u8 alignment,
                      oStringRef name,
                      oArrayRef fields,
-                     vFinalizer finalizer,
+                     oFinalizer finalizer,
                      oTypeRef protoType);
 oStringRef oTypeGetName(oTypeRef type);
 
