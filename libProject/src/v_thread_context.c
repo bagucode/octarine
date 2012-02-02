@@ -14,7 +14,7 @@ void v_bootstrap_thread_context_type_init(vRuntimeRef rt, vHeapRef heap) {
     rt->builtInTypes.threadContext->name = v_bootstrap_string_create(rt, heap, "ThreadContext");
     rt->builtInTypes.threadContext->size = sizeof(vThreadContext);
 
-    fields = (vFieldRef*)vArrayDataPointer(rt->builtInTypes.threadContext->fields);
+    fields = (vFieldRef*)oArrayDataPointer(rt->builtInTypes.threadContext->fields);
     
     fields[0]->name = v_bootstrap_string_create(rt, heap, "error");
     fields[0]->offset = offsetof(vThreadContext, error);

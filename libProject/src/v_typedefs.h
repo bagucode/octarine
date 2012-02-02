@@ -3,8 +3,8 @@
 
 /* Please put in alphabetical order. */
 
-typedef struct vArray vArray;
-typedef vArray* vArrayRef;
+typedef struct oArray oArray;
+typedef oArray* oArrayRef;
 
 typedef struct vClosure vClosure;
 typedef vClosure* vClosureRef;
@@ -74,15 +74,31 @@ typedef struct vVector vVector;
 typedef vVector* vVectorRef;
 
 // Some macros for handling stack frames and errors
-// For these to work, the threadcontext pointer must be named ctx,
-// the frame struct must be named frame and the frame struct must
-// contain a member called ret which holds the return value of
-// the function.
-#define oPUSHFRAME vMemoryPushFrame(ctx, &frame, sizeof(frame));
-// Dummy goto right before the label to make the compiler stfu when
-// there is no actual goto used.
-#define oPOPFRAME goto popframe; popframe: vMemoryPopFrame(ctx);
-#define oERRORCHECK if(vErrorGet(ctx)) { frame.ret = NULL; goto popframe; }
-#define oC(fn, ...) fn(__VA_ARGS__); oERRORCHECK
+
+#define oROOTS(context) vThreadContextRef _oCTX = context; \
+                        struct {
+
+#define oENDROOTS vObject _oRET; \
+                  } oRoots; \
+                  vMemoryPushFrame(_oCTX, &oRoots, sizeof(oRoots));
+
+#define oRETURN(expression) oRoots._oRET = expression; goto _oENDFNL;
+
+#define oSETRET(expression) oRoots._oRET = (vObject)expression;
+
+#define oGETRET oRoots._oRET
+
+#define oGETRETT(type) ((type)oRoots._oRET)
+
+#define _oENDFN goto _oENDFNL; \
+                _oENDFNL: vMemoryPopFrame(_oCTX);
+
+#define oENDFN _oENDFN \
+               return oRoots._oRET;
+
+#define oENDVOIDFN _oENDFN
+
+#define _oC(fn, ...) fn(__VA_ARGS__); \
+                     if(vErrorGet(ctx)) { oRoots._oRET = NULL; goto _oENDFNL; }
 
 #endif

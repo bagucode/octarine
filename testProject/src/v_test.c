@@ -11,6 +11,8 @@
 #include "../../libProject/src/v_type.h"
 #include "../../libProject/src/v_vector.h"
 #include "../../libProject/src/v_keyword.h"
+#include "../../libProject/src/v_error.h"
+
 #include <memory.h>
 #include <assert.h>
 
@@ -193,17 +195,16 @@ void testCreateType() {
     vThreadContextRef ctx = runtime->allContexts->ctx;
     vFieldRef* fields;
     uword i;
-	struct {
-        vArrayRef fields;
-		vTypeRef myType;
-        vStringRef typeName;
-        testStruct* instance;
-	} frame;
-	vMemoryPushFrame(ctx, &frame, sizeof(frame));
+    oROOTS(ctx)
+    oArrayRef fields;
+    vTypeRef myType;
+    vStringRef typeName;
+    testStruct* instance;
+    oENDROOTS
     
-    frame.fields = vArrayCreate(ctx, ctx->runtime->builtInTypes.field, 5);
-    fields = (vFieldRef*)vArrayDataPointer(frame.fields);
-    for(i = 0; i < frame.fields->num_elements; ++i) {
+    oRoots.fields = oArrayCreate(ctx, ctx->runtime->builtInTypes.field, 5);
+    fields = (vFieldRef*)oArrayDataPointer(oRoots.fields);
+    for(i = 0; i < oRoots.fields->num_elements; ++i) {
 		fields[i] = vHeapAlloc(ctx->runtime, ctx->heap, ctx->runtime->builtInTypes.field);
     }
     fields[0]->name = vStringCreate(ctx, "one");
@@ -217,20 +218,20 @@ void testCreateType() {
     fields[4]->name = vStringCreate(ctx, "five");
     fields[4]->type = ctx->runtime->builtInTypes.f64;
     
-    frame.typeName = vStringCreate(ctx, "MyHappyTestType");
-    frame.myType = vTypeCreate(ctx, V_T_OBJECT, 0, frame.typeName, frame.fields, NULL, NULL);
+    oRoots.typeName = vStringCreate(ctx, "MyHappyTestType");
+    oRoots.myType = vTypeCreate(ctx, V_T_OBJECT, 0, oRoots.typeName, oRoots.fields, NULL, NULL);
     
-    assert(frame.myType->size == sizeof(testStruct));
+    assert(oRoots.myType->size == sizeof(testStruct));
     
-	frame.instance = vHeapAlloc(ctx->runtime, ctx->heap, frame.myType);
+	oRoots.instance = vHeapAlloc(ctx->runtime, ctx->heap, oRoots.myType);
     
-    frame.instance->one = 250;
-    frame.instance->two = 65500;
-    frame.instance->three = 500000;
-    frame.instance->self = frame.instance;
-    frame.instance->five = 0.01;
-    
-	vMemoryPopFrame(ctx);
+    oRoots.instance->one = 250;
+    oRoots.instance->two = 65500;
+    oRoots.instance->three = 500000;
+    oRoots.instance->self = oRoots.instance;
+    oRoots.instance->five = 0.01;
+
+    oENDVOIDFN
     vRuntimeDestroy(runtime);
 }
 
@@ -241,45 +242,44 @@ void testArrayPutGet() {
     i64 two;
     i64 three;
     i64 check;
-    struct {
-        vArrayRef objArray;
-        vArrayRef structArray;
-        vObject tmp1;
-        vObject tmp2;
-    } frame;
-    vMemoryPushFrame(ctx, &frame, sizeof(frame));
+    oROOTS(ctx)
+    oArrayRef objArray;
+    oArrayRef structArray;
+    vObject tmp1;
+    vObject tmp2;
+    oENDROOTS
     
-    frame.objArray = vArrayCreate(ctx, ctx->runtime->builtInTypes.any, 50);
+    oRoots.objArray = oArrayCreate(ctx, ctx->runtime->builtInTypes.any, 50);
     // Have no built in composite structs :(
-    frame.structArray = vArrayCreate(ctx, ctx->runtime->builtInTypes.i64, 50);
+    oRoots.structArray = oArrayCreate(ctx, ctx->runtime->builtInTypes.i64, 50);
 
-    vArrayGet(ctx, frame.objArray, 0, &frame.tmp1, ctx->runtime->builtInTypes.string);
-    assert(frame.tmp1 == NULL);
+    oArrayGet(ctx, oRoots.objArray, 0, &oRoots.tmp1, ctx->runtime->builtInTypes.string);
+    assert(oRoots.tmp1 == NULL);
 
-    frame.tmp1 = vStringCreate(ctx, "a string");
-    vArrayPut(ctx, frame.objArray, 10, frame.tmp1, ctx->runtime->builtInTypes.string);
-    vArrayGet(ctx, frame.objArray, 10, &frame.tmp2, ctx->runtime->builtInTypes.string);
-    assert(vObjectGetType(ctx, frame.tmp2) == ctx->runtime->builtInTypes.string);
-    assert(vStringCompare(frame.tmp1, frame.tmp2) == 0);
-    assert(frame.tmp1 == frame.tmp2);
+    oRoots.tmp1 = vStringCreate(ctx, "a string");
+    oArrayPut(ctx, oRoots.objArray, 10, oRoots.tmp1, ctx->runtime->builtInTypes.string);
+    oArrayGet(ctx, oRoots.objArray, 10, &oRoots.tmp2, ctx->runtime->builtInTypes.string);
+    assert(vObjectGetType(ctx, oRoots.tmp2) == ctx->runtime->builtInTypes.string);
+    assert(vStringCompare(oRoots.tmp1, oRoots.tmp2) == 0);
+    assert(oRoots.tmp1 == oRoots.tmp2);
     
     one = 1;
     two = 2;
     three = -3;
     check = 0;
     
-    vArrayPut(ctx, frame.structArray, 1, &one, ctx->runtime->builtInTypes.i64);
-    vArrayPut(ctx, frame.structArray, 2, &two, ctx->runtime->builtInTypes.i64);
-    vArrayPut(ctx, frame.structArray, 3, &three, ctx->runtime->builtInTypes.i64);
+    oArrayPut(ctx, oRoots.structArray, 1, &one, ctx->runtime->builtInTypes.i64);
+    oArrayPut(ctx, oRoots.structArray, 2, &two, ctx->runtime->builtInTypes.i64);
+    oArrayPut(ctx, oRoots.structArray, 3, &three, ctx->runtime->builtInTypes.i64);
     
-    vArrayGet(ctx, frame.structArray, 1, &check, ctx->runtime->builtInTypes.i64);
+    oArrayGet(ctx, oRoots.structArray, 1, &check, ctx->runtime->builtInTypes.i64);
     assert(check == one);
-    vArrayGet(ctx, frame.structArray, 2, &check, ctx->runtime->builtInTypes.i64);
+    oArrayGet(ctx, oRoots.structArray, 2, &check, ctx->runtime->builtInTypes.i64);
     assert(check == two);
-    vArrayGet(ctx, frame.structArray, 3, &check, ctx->runtime->builtInTypes.i64);
+    oArrayGet(ctx, oRoots.structArray, 3, &check, ctx->runtime->builtInTypes.i64);
     assert(check == three);
     
-    vMemoryPopFrame(ctx);
+    oENDVOIDFN
     vRuntimeDestroy(runtime);
 }
 

@@ -68,7 +68,7 @@ int main(int argc, char** argv) {
         vStringRef src;
         vListObjRef result;
         vObject obj;
-        vArrayRef utf8;
+        oArrayRef utf8;
     } oFrame;
 
     rt = vRuntimeCreate(1024 * 1000, 1024 * 1000);
@@ -133,7 +133,7 @@ int main(int argc, char** argv) {
                 oFrame.obj = vListObjFirst(ctx, oFrame.result);
                 oFrame.result = vListObjRest(ctx, oFrame.result);
                 oFrame.utf8 = vStringUtf8Copy(ctx, vTypeGetName(vObjectGetType(ctx, oFrame.obj)));
-                typeName = (char*)vArrayDataPointer(oFrame.utf8);
+                typeName = (char*)oArrayDataPointer(oFrame.utf8);
                 printf("%s\n", typeName);
             }
         }

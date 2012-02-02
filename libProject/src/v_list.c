@@ -14,7 +14,7 @@ void v_bootstrap_list_init_type(vThreadContextRef ctx) {
     ctx->runtime->builtInTypes.list->name = v_bootstrap_string_create(ctx->runtime, ctx->heap, "AnyList");
     ctx->runtime->builtInTypes.list->size = sizeof(vListObj);
 
-    fields = (vFieldRef*)vArrayDataPointer(ctx->runtime->builtInTypes.list->fields);
+    fields = (vFieldRef*)oArrayDataPointer(ctx->runtime->builtInTypes.list->fields);
     
     fields[0]->name = v_bootstrap_string_create(ctx->runtime, ctx->heap, "data");
     fields[0]->offset = offsetof(vListObj, data);
@@ -51,13 +51,11 @@ static vListObjRef removeInternal(vThreadContextRef ctx,
                                   vListObjRef head,
                                   vListObjRef elem,
                                   vListObjRef prev) {
-    struct {
-        vListObjRef oldTmp;
-        vListObjRef ret;
-        vListObjRef newTmp;
-        vListObjRef prev;
-    } frame;
-    oPUSHFRAME;
+    oROOTS(ctx)
+    vListObjRef oldTmp;
+    vListObjRef newTmp;
+    vListObjRef prev;
+    oENDROOTS
     
     if(prev == NULL) {
         /* Removing head. */
@@ -66,35 +64,34 @@ static vListObjRef removeInternal(vThreadContextRef ctx,
              last element. If it is empty already, just return it. Otherwise
              return a new empty element. */
             if(elem->data == NULL) {
-                frame.ret = elem;
+                oRETURN(elem);
             }
             else {
-                frame.ret = vListObjCreate(ctx, NULL);
+                oRETURN(vListObjCreate(ctx, NULL));
             }
         }
         else {
             /* Just drop list head. */
-            frame.ret = elem->next;
+            oRETURN(elem->next);
         }
     }
     else {
         /* Removing non-head element. Have to duplicate the list up to the
          point where the element to remove is. */
-        frame.ret = vListObjCreate(ctx, head->data);
-        frame.prev = frame.ret;
-        frame.oldTmp = head->next;
-        while (frame.oldTmp != elem) {
-            frame.newTmp = vListObjCreate(ctx, frame.oldTmp->data);
-            frame.prev->next = frame.newTmp;
-            frame.prev = frame.newTmp;
-            frame.oldTmp = frame.oldTmp->next;
+        oSETRET(vListObjCreate(ctx, head->data));
+        oRoots.prev = oGETRET;
+        oRoots.oldTmp = head->next;
+        while (oRoots.oldTmp != elem) {
+            oRoots.newTmp = vListObjCreate(ctx, oRoots.oldTmp->data);
+            oRoots.prev->next = oRoots.newTmp;
+            oRoots.prev = oRoots.newTmp;
+            oRoots.oldTmp = oRoots.oldTmp->next;
         }
         /* Skip past elem in new list */
-        frame.prev->next = elem->next;
+        oRoots.prev->next = elem->next;
     }
-    
-    oPOPFRAME;
-    return frame.ret;
+
+    oENDFN
 }
 
 vListObjRef vListObjRemove(vThreadContextRef ctx,
@@ -131,20 +128,17 @@ v_bool vListObjIsEmpty(vThreadContextRef ctx, vListObjRef lst) {
 }
 
 vListObjRef vListObjReverse(vThreadContextRef ctx, vListObjRef lst) {
-    struct {
-        vListObjRef ret;
-    } frame;
-    oPUSHFRAME;
+    oROOTS(ctx)
+    oENDROOTS
     
-    frame.ret = vListObjCreate(ctx, lst->data);
+    oSETRET(vListObjCreate(ctx, lst->data));
     lst = lst->next;
     while (lst) {
-        frame.ret = vListObjAddFront(ctx, frame.ret, lst->data);
+        oSETRET(vListObjAddFront(ctx, oGETRET, lst->data));
         lst = lst->next;
     }
 
-    oPOPFRAME;
-    return frame.ret;
+    oENDFN
 }
 
 uword vListObjSize(vThreadContextRef ctx, vListObjRef lst) {

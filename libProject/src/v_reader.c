@@ -31,12 +31,12 @@ static const char reservedChars[] = {
     RCBRACKET
 };
 
-typedef vObject (*ReadFn)(vThreadContextRef ctx, vArrayRef src, uword* idx);
+typedef vObject (*ReadFn)(vThreadContextRef ctx, oArrayRef src, uword* idx);
 static ReadFn readTable[128];
 
-static vObject readList(vThreadContextRef ctx, vArrayRef src, uword* idx);
-static vObject readSymbolOrKeyword(vThreadContextRef ctx, vArrayRef src, uword* idx);
-static vObject readVector(vThreadContextRef ctx, vArrayRef src, uword* idx);
+static vObject readList(vThreadContextRef ctx, oArrayRef src, uword* idx);
+static vObject readSymbolOrKeyword(vThreadContextRef ctx, oArrayRef src, uword* idx);
+static vObject readVector(vThreadContextRef ctx, oArrayRef src, uword* idx);
 
 void v_bootstrap_reader_init_type(vThreadContextRef ctx) {
     uword i;
@@ -67,40 +67,38 @@ vReaderRef vReaderCreate(vThreadContextRef ctx) {
 	return (vReaderRef)vHeapAlloc(ctx->runtime, ctx->heap, ctx->runtime->builtInTypes.reader);
 }
 
-static u8 getChar(vArrayRef arr, uword i) {
-    return ((u8*)(vArrayDataPointer(arr)))[i];
+static u8 getChar(oArrayRef arr, uword i) {
+    return ((u8*)(oArrayDataPointer(arr)))[i];
 }
 
 static v_bool isSpace(uword ch) {
     return isspace((int)ch) || ch == ',';
 }
 
-static void skipSpace(vArrayRef src, uword *idx) {
+static void skipSpace(oArrayRef src, uword *idx) {
     while (isSpace(getChar(src, *idx))
            && (*idx) < src->num_elements) {
         ++(*idx);
     }
 }
 
-static v_bool eos(vArrayRef src, uword* idx) {
+static v_bool eos(oArrayRef src, uword* idx) {
     return src->num_elements == (*idx);
 }
 
-static vObject read(vThreadContextRef ctx, vArrayRef src, uword* idx);
+static vObject read(vThreadContextRef ctx, oArrayRef src, uword* idx);
 
-static vObject readString(vThreadContextRef ctx, vArrayRef src, uword* idx) {
+static vObject readString(vThreadContextRef ctx, oArrayRef src, uword* idx) {
     uword ch;
     uword bufIdx;
     char* chars;
-    struct {
-        // TODO: exchange these manually expanded arrays for vectors
-        vArrayRef charBuffer;
-        vArrayRef tmp;
-        vObject ret;
-    } frame;
-    oPUSHFRAME;
+    oROOTS(ctx)
+    // TODO: exchange these manually expanded arrays for vectors
+    oArrayRef charBuffer;
+    oArrayRef tmp;
+    oENDROOTS
     
-    frame.charBuffer = vArrayCreate(ctx, ctx->runtime->builtInTypes.u8, 1024);
+    oRoots.charBuffer = oArrayCreate(ctx, ctx->runtime->builtInTypes.u8, 1024);
     bufIdx = 0;
     
     while ((*idx) < src->num_elements) {
@@ -108,109 +106,98 @@ static vObject readString(vThreadContextRef ctx, vArrayRef src, uword* idx) {
         if(isSpace(ch) || isReserved(ch)) {
             break;
         }
-        if(bufIdx >= frame.charBuffer->num_elements) {
-            frame.tmp = vArrayCreate(ctx, ctx->runtime->builtInTypes.u8, frame.charBuffer->num_elements << 1);
-            oC(vArrayCopy, ctx, frame.charBuffer, frame.tmp);
-            frame.charBuffer = frame.tmp;
-            frame.tmp = NULL;
+        if(bufIdx >= oRoots.charBuffer->num_elements) {
+            oRoots.tmp = oArrayCreate(ctx, ctx->runtime->builtInTypes.u8, oRoots.charBuffer->num_elements << 1);
+            oArrayCopy(ctx, oRoots.charBuffer, oRoots.tmp);
+            oRoots.charBuffer = oRoots.tmp;
+            oRoots.tmp = NULL;
         }
-        chars = (char*)vArrayDataPointer(frame.charBuffer);
+        chars = (char*)oArrayDataPointer(oRoots.charBuffer);
         chars[bufIdx++] = (char)ch;
         ++(*idx);
     }
-    if(bufIdx >= frame.charBuffer->num_elements) {
-        frame.tmp = vArrayCreate(ctx, ctx->runtime->builtInTypes.u8, frame.charBuffer->num_elements << 1);
-        oC(vArrayCopy, ctx, frame.charBuffer, frame.tmp);
-        frame.charBuffer = frame.tmp;
-        frame.tmp = NULL;
+    if(bufIdx >= oRoots.charBuffer->num_elements) {
+        oRoots.tmp = oArrayCreate(ctx, ctx->runtime->builtInTypes.u8, oRoots.charBuffer->num_elements << 1);
+        oArrayCopy(ctx, oRoots.charBuffer, oRoots.tmp);
+        oRoots.charBuffer = oRoots.tmp;
+        oRoots.tmp = NULL;
     }
-    chars = (char*)vArrayDataPointer(frame.charBuffer);
+    chars = (char*)oArrayDataPointer(oRoots.charBuffer);
     chars[bufIdx] = 0;
 
-    frame.ret = vStringCreate(ctx, chars);
-
-    oPOPFRAME;
-    return frame.ret;
+    oRETURN(vStringCreate(ctx, chars));
+    oENDFN
 }
 
-static vObject readSymbolOrKeyword(vThreadContextRef ctx, vArrayRef src, uword* idx) {
-    struct {
-        vObject theString;
-        vObject theSymbol;
-    } frame;
-    vMemoryPushFrame(ctx, &frame, sizeof(frame));
+static vObject readSymbolOrKeyword(vThreadContextRef ctx, oArrayRef src, uword* idx) {
+    oROOTS(ctx)
+    vObject theString;
+    oENDROOTS
     
-	frame.theString = readString(ctx, src, idx);
-    if(vStringCharAt(ctx, frame.theString, 0) == ':') {
-        frame.theString = vStringSubString(ctx, frame.theString, 1, vStringLength(ctx, frame.theString));
-        frame.theSymbol = vKeywordCreate(ctx, (vStringRef)frame.theString);
+	oRoots.theString = readString(ctx, src, idx);
+    if(vStringCharAt(ctx, oRoots.theString, 0) == ':') {
+        oRoots.theString = vStringSubString(ctx, oRoots.theString, 1, vStringLength(ctx, oRoots.theString));
+        oRETURN(vKeywordCreate(ctx, (vStringRef)oRoots.theString));
     }
     else {
-        frame.theSymbol = vSymbolCreate(ctx, (vStringRef)frame.theString);
+        oRETURN(vSymbolCreate(ctx, (vStringRef)oRoots.theString));
     }
-    
-    vMemoryPopFrame(ctx);
-    return frame.theSymbol;
+
+    oENDFN
 }
 
-static vObject readList(vThreadContextRef ctx, vArrayRef src, uword* idx) {
-    struct {
-        vObject tmp;
-        vObject lst;
-    } frame;
-	vMemoryPushFrame(ctx, &frame, sizeof(frame));
+static vObject readList(vThreadContextRef ctx, oArrayRef src, uword* idx) {
+    oROOTS(ctx)
+    vObject tmp;
+    oENDROOTS
     
     ++(*idx); // eat (
     if(eos(src, idx) == v_false) {
-        frame.lst = vListObjCreate(ctx, NULL);
+        oSETRET(vListObjCreate(ctx, NULL));
         while(getChar(src, *idx) != RPAREN
               && eos(src, idx) == v_false) {
-            frame.tmp = read(ctx, src, idx);
-            if(frame.tmp != NULL)
-				frame.lst = vListObjAddFront(ctx, (vListObjRef)frame.lst, frame.tmp);
+            oRoots.tmp = read(ctx, src, idx);
+            if(oRoots.tmp != NULL)
+				oSETRET(vListObjAddFront(ctx, (vListObjRef)oGETRET, oRoots.tmp));
             // else what?
         }
         if(eos(src, idx)) {
-            frame.lst = ctx->runtime->builtInConstants.needMoreData;
+            oSETRET(ctx->runtime->builtInConstants.needMoreData);
         } else {
             ++(*idx); // eat )
-            frame.lst = vListObjReverse(ctx, (vListObjRef)frame.lst);
+            oSETRET(vListObjReverse(ctx, (vListObjRef)oGETRET));
         }
     }
-    
-    vMemoryPopFrame(ctx);
-    return frame.lst;
+
+    oENDFN
 }
 
-static vObject readVector(vThreadContextRef ctx, vArrayRef src, uword* idx) {
-    struct {
-        vObject tmp;
-        vObject vec;
-    } frame;
-	vMemoryPushFrame(ctx, &frame, sizeof(frame));
+static vObject readVector(vThreadContextRef ctx, oArrayRef src, uword* idx) {
+    oROOTS(ctx)
+    vObject tmp;
+    oENDROOTS
     
     ++(*idx); // eat [
     if(eos(src, idx) == v_false) {
-        frame.vec = vVectorCreate(ctx, ctx->runtime->builtInTypes.any);
+        oSETRET(vVectorCreate(ctx, ctx->runtime->builtInTypes.any));
         while(getChar(src, *idx) != RSBRACKET
               && eos(src, idx) == v_false) {
-            frame.tmp = read(ctx, src, idx);
-            if(frame.tmp != NULL)
-				frame.vec = vVectorAddBack(ctx, frame.vec, frame.tmp, vObjectGetType(ctx, frame.tmp));
+            oRoots.tmp = read(ctx, src, idx);
+            if(oRoots.tmp != NULL)
+				oSETRET(vVectorAddBack(ctx, oGETRET, oRoots.tmp, vObjectGetType(ctx, oRoots.tmp)));
             // else what?
         }
         if(eos(src, idx)) {
-            frame.vec = ctx->runtime->builtInConstants.needMoreData;
+            oSETRET(ctx->runtime->builtInConstants.needMoreData);
         } else {
             ++(*idx); // eat ]
         }
     }
-    
-    vMemoryPopFrame(ctx);
-    return frame.vec;
+
+    oENDFN
 }
 
-static vObject read(vThreadContextRef ctx, vArrayRef src, uword* idx) {
+static vObject read(vThreadContextRef ctx, oArrayRef src, uword* idx) {
     ReadFn fn;
     uword ch;
 
@@ -237,32 +224,28 @@ static vObject read(vThreadContextRef ctx, vArrayRef src, uword* idx) {
 
 vObject vReaderRead(vThreadContextRef ctx, vStringRef source) {
     uword idx = 0;
-    // Stack frame for GC roots
-	struct {
-        vObject tmp;
-		vArrayRef srcArr;
-        vObject objects;
-	} frame;
-	vMemoryPushFrame(ctx, &frame, sizeof(frame));
+    oROOTS(ctx)
+    vObject tmp;
+    oArrayRef srcArr;
+    oENDROOTS
 
-	frame.srcArr = vStringUtf8Copy(ctx, source);
-    frame.objects = vListObjCreate(ctx, NULL);
-    while (idx < frame.srcArr->num_elements) {
-        frame.tmp = read(ctx, frame.srcArr, &idx);
-        if(frame.tmp != NULL) {
-            if(frame.tmp == ctx->runtime->builtInConstants.needMoreData) {
-                frame.objects = frame.tmp;
+	oRoots.srcArr = vStringUtf8Copy(ctx, source);
+    oSETRET(vListObjCreate(ctx, NULL));
+    while (idx < oRoots.srcArr->num_elements) {
+        oRoots.tmp = read(ctx, oRoots.srcArr, &idx);
+        if(oRoots.tmp != NULL) {
+            if(oRoots.tmp == ctx->runtime->builtInConstants.needMoreData) {
+                oSETRET(oRoots.tmp);
             }
             else {
-                frame.objects = vListObjAddFront(ctx, frame.objects, frame.tmp);
+                oSETRET(vListObjAddFront(ctx, oGETRET, oRoots.tmp));
             }
         }
     }
-    if(frame.objects != ctx->runtime->builtInConstants.needMoreData) {
-        frame.objects = vListObjReverse(ctx, frame.objects);
+    if(oGETRET != ctx->runtime->builtInConstants.needMoreData) {
+        oSETRET(vListObjReverse(ctx, oGETRET));
     }
 
-	vMemoryPopFrame(ctx);
-    return frame.objects;
+    oENDFN
 }
 

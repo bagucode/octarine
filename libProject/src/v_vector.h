@@ -6,7 +6,7 @@
 #include "v_typedefs.h"
 
 struct vVector {
-    vArrayRef data;
+    oArrayRef data;
 };
 
 vVectorRef vVectorCreate(vThreadContextRef ctx,

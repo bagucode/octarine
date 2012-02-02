@@ -6,6 +6,7 @@
 #include "v_runtime.h"
 #include "v_type.h"
 #include "v_array.h"
+#include "v_error.h"
 #include <memory.h>
 
 vStringRef vStringCreate(vThreadContextRef ctx, char *utf8) {
@@ -24,13 +25,18 @@ int vStringCompare(vStringRef x, vStringRef y) {
     return x == y ? 0 : vNativeStringCompare(x->str, y->str);
 }
 
-vArrayRef vStringUtf8Copy(vThreadContextRef ctx, vStringRef str) {
+oArrayRef vStringUtf8Copy(vThreadContextRef ctx, vStringRef str) {
+    oROOTS(ctx)
+    oENDROOTS
+
     uword length;
     char* utf8String = vNativeStringToUtf8(str->str, &length);
-    vArrayRef ret = vArrayCreate(ctx, ctx->runtime->builtInTypes.u8, length);
-    memcpy(vArrayDataPointer(ret), utf8String, length);
+
+    oSETRET(oArrayCreate(ctx, ctx->runtime->builtInTypes.u8, length));
+    memcpy(oArrayDataPointer(oGETRET), utf8String, length);
     vFree(utf8String);
-    return ret;
+
+    oENDFN
 }
 
 v_char vStringCharAt(vThreadContextRef ctx, vStringRef str, uword idx) {

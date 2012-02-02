@@ -12,11 +12,11 @@ struct vParameter {
 vParameterRef vParameterCreate(vStringRef name, vTypeRef type);
 
 struct vSignature {
-    vArrayRef returns; /* array of vType */
-    vArrayRef parameters; /* array of vParameter */
+    oArrayRef returns; /* array of vType */
+    oArrayRef parameters; /* array of vParameter */
 };
 
-vSignatureRef vSignatureCreate(vArrayRef returnTypes, vArrayRef parameters);
+vSignatureRef vSignatureCreate(oArrayRef returnTypes, oArrayRef parameters);
 
 v_bool vSignatureEquals(vThreadContextRef ctx,
                         vSignatureRef sig1,
@@ -26,12 +26,12 @@ struct vFunctionOverload {
     vSignatureRef signature;
 
     /* TODO: Change sideEffects to a map? */
-    vArrayRef sideEffects;
+    oArrayRef sideEffects;
 
     /* instructions is an array of vObjects that define the implementation
      of the function overload. It is used by eval implementations that do
      not generate native code. */
-    vArrayRef instructions;
+    oArrayRef instructions;
 
     /* If nativeCode is not NULL then there exists a machine-native
      implementation for this particular function overload and nativeCode
@@ -53,15 +53,15 @@ vFunctionOverloadRef vFunctionFindOverload(vFunctionRef fn, vSignatureRef sig);
 
 vObject vFunctionInvoke(vThreadContextRef ctx,
                         vFunctionOverloadRef fnImpl,
-                        vArrayRef args);
+                        oArrayRef args);
 
 struct vClosure {
     vFunctionOverloadRef function;
-    vArrayRef arguments;
+    oArrayRef arguments;
 };
 
 vClosureRef vClosureCreate(vThreadContextRef ctx,
 					       vFunctionOverloadRef fnImpl,
-                           vArrayRef args);
+                           oArrayRef args);
 
 #endif

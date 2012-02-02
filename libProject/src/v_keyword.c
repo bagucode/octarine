@@ -5,27 +5,27 @@
 #include "v_memory.h"
 #include "v_array.h"
 #include "v_string.h"
+#include "v_error.h"
 
 void v_bootstrap_keyword_type_init(vThreadContextRef ctx) {
-	struct {
-        vArrayRef fields;
-		vTypeRef theType;
-        vStringRef typeName;
-        vFieldRef field;
-	} frame;
-    oPUSHFRAME;
+    oROOTS(ctx)
+    oArrayRef fields;
+    vTypeRef theType;
+    vStringRef typeName;
+    vFieldRef field;
+    oENDROOTS
     
-    frame.fields = vArrayCreate(ctx, ctx->runtime->builtInTypes.field, 1);
-    frame.typeName = vStringCreate(ctx, "name");
-    frame.field = vFieldCreate(ctx, frame.typeName, ctx->runtime->builtInTypes.string);
-    vArrayPut(ctx, frame.fields, 0, frame.field, ctx->runtime->builtInTypes.field);
+    oRoots.fields = oArrayCreate(ctx, ctx->runtime->builtInTypes.field, 1);
+    oRoots.typeName = vStringCreate(ctx, "name");
+    oRoots.field = vFieldCreate(ctx, oRoots.typeName, ctx->runtime->builtInTypes.string);
+    oArrayPut(ctx, oRoots.fields, 0, oRoots.field, ctx->runtime->builtInTypes.field);
     
-    frame.typeName = vStringCreate(ctx, "Keyword");
-    frame.theType = vTypeCreate(ctx, V_T_OBJECT, 0, frame.typeName, frame.fields, NULL, NULL);
+    oRoots.typeName = vStringCreate(ctx, "Keyword");
+    oRoots.theType = vTypeCreate(ctx, V_T_OBJECT, 0, oRoots.typeName, oRoots.fields, NULL, NULL);
     
-    ctx->runtime->builtInTypes.keyword = frame.theType;
+    ctx->runtime->builtInTypes.keyword = oRoots.theType;
 
-    oPOPFRAME;
+    oENDVOIDFN
 }
 
 vKeywordRef vKeywordCreate(vThreadContextRef ctx, vStringRef name) {

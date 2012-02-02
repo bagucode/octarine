@@ -176,7 +176,7 @@ static void traceAndMark(vRuntimeRef rt, vHeapRef heap, vObject obj, vTypeRef ty
     vTypeRef fieldType;
     HeapBlockRef block;
     uword i, arrayStride;
-	vArrayRef array;
+	oArrayRef array;
 	vObject* arrayObjs;
 
     /* TODO: for collecting the shared heap, we should check if a root
@@ -197,7 +197,7 @@ static void traceAndMark(vRuntimeRef rt, vHeapRef heap, vObject obj, vTypeRef ty
             }
             /* Some types don't have fields */
             if(type->fields) {
-                fields = (vFieldRef*)vArrayDataPointer(type->fields);
+                fields = (vFieldRef*)oArrayDataPointer(type->fields);
                 for(i = 0; i < type->fields->num_elements; ++i) {
                     field = fields[i];
                     if(!vTypeIsPrimitive(field->type)) {
@@ -219,10 +219,10 @@ static void traceAndMark(vRuntimeRef rt, vHeapRef heap, vObject obj, vTypeRef ty
             }
 			/* else clause for field NULL check, array handling */
 			else if(type == rt->builtInTypes.array) {
-				array = (vArrayRef)obj;
+				array = (oArrayRef)obj;
 				if(!vTypeIsPrimitive(array->element_type)) {
 					if(array->element_type->kind == V_T_OBJECT) {
-						arrayObjs = (vObject*)vArrayDataPointer(array);
+						arrayObjs = (vObject*)oArrayDataPointer(array);
 						for(i = 0; i < array->num_elements; ++i) {
 							traceAndMark(rt, heap, arrayObjs[i], array->element_type);
 						}
@@ -230,7 +230,7 @@ static void traceAndMark(vRuntimeRef rt, vHeapRef heap, vObject obj, vTypeRef ty
 					else {
 						// TODO: take array alignment into account once that is implemented
 						arrayStride = array->element_type->size;
-						fieldPtr = vArrayDataPointer(array);
+						fieldPtr = oArrayDataPointer(array);
 						for(i = 0; i < array->num_elements; ++i) {
 							traceAndMark(rt, heap, fieldPtr, array->element_type);
 							fieldPtr = ((char*)fieldPtr) + arrayStride;
@@ -398,17 +398,17 @@ vObject vHeapAlloc(vRuntimeRef rt, vHeapRef heap, vTypeRef t) {
 }
 
 static uword calcArraySize(uword elemSize, uword numElems, u8 align) {
-    return sizeof(vArray) + (elemSize * numElems) + align - 1;
+    return sizeof(oArray) + (elemSize * numElems) + align - 1;
 }
 
-vArrayRef vHeapAllocArray(vRuntimeRef rt,
+oArrayRef vHeapAllocArray(vRuntimeRef rt,
 	                      vHeapRef heap,
                           vTypeRef elementType,
                           uword numElements) {
-    vArrayRef arr;
+    oArrayRef arr;
     u8 align = (u8)(elementType->alignment != 0 ? elementType->alignment : elementType->size);
     uword size = calcArraySize(elementType->size, numElements, align);
-    arr = (vArrayRef)internalAlloc(rt, heap, rt->builtInTypes.array, size);
+    arr = (oArrayRef)internalAlloc(rt, heap, rt->builtInTypes.array, size);
     arr->element_type = elementType;
     arr->num_elements = numElements;
     arr->alignment = align;
@@ -433,16 +433,16 @@ vObject v_bootstrap_object_alloc(vRuntimeRef rt,
     return internalAlloc(rt, heap, proto_type, size);
 }
 
-vArrayRef v_bootstrap_array_alloc(vRuntimeRef rt,
+oArrayRef v_bootstrap_array_alloc(vRuntimeRef rt,
 	                              vHeapRef heap,
                                   vTypeRef proto_elem_type,
                                   uword num_elements,
                                   uword elem_size,
                                   u8 alignment) {
-    vArrayRef arr;
+    oArrayRef arr;
     uword size = calcArraySize(elem_size, num_elements, alignment);
     
-    arr = (vArrayRef)internalAlloc(rt, heap, rt->builtInTypes.array, size);
+    arr = (oArrayRef)internalAlloc(rt, heap, rt->builtInTypes.array, size);
     arr->element_type = proto_elem_type;
     arr->num_elements = num_elements;
     arr->alignment = alignment;
@@ -483,6 +483,7 @@ vObject vHeapCopyObjectShared(vThreadContextRef ctx,
                               vObject obj,
                               vTypeRef type,
                               vHeapRef sharedHeap) {
+    if(ctx->error) return NULL;
     if(sharedHeap->mutex == NULL) {
         // TODO: ERROR
         return NULL;

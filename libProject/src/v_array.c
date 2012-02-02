@@ -12,22 +12,22 @@ static uword alignOffset(uword offset, uword on) {
     return (offset + (on - 1)) & (~(on - 1));
 }
 
-vArrayRef vArrayCreate(vThreadContextRef ctx,
+oArrayRef _oArrayCreate(vThreadContextRef ctx,
                        vTypeRef elemType,
                        uword num_elements) {
     if(ctx->error) return NULL;
 	return vHeapAllocArray(ctx->runtime, ctx->heap, elemType, num_elements);
 }
 
-pointer vArrayDataPointer(vArrayRef arr) {
+pointer oArrayDataPointer(oArrayRef arr) {
     return (pointer)alignOffset((uword)arr->data, arr->alignment);
 }
 
-uword vArraySize(vArrayRef arr) {
+uword oArraySize(oArrayRef arr) {
     return arr->num_elements;
 }
 
-vArrayRef v_bootstrap_array_create(vRuntimeRef rt,
+oArrayRef v_bootstrap_array_create(vRuntimeRef rt,
 	                               vHeapRef heap,
                                    vTypeRef type,
                                    uword num_elements,
@@ -36,7 +36,7 @@ vArrayRef v_bootstrap_array_create(vRuntimeRef rt,
     return v_bootstrap_array_alloc(rt, heap, type, num_elements, elem_size, alignment);
 }
 
-void vArrayCopy(vThreadContextRef ctx, vArrayRef from, vArrayRef to) {
+void oArrayCopy(vThreadContextRef ctx, oArrayRef from, oArrayRef to) {
     pointer a1Data, a2Data;
 
     if(ctx->error) return;
@@ -49,15 +49,15 @@ void vArrayCopy(vThreadContextRef ctx, vArrayRef from, vArrayRef to) {
         return;
     }
     
-    a1Data = vArrayDataPointer(from);
-    a2Data = vArrayDataPointer(to);
+    a1Data = oArrayDataPointer(from);
+    a2Data = oArrayDataPointer(to);
     
     memcpy(a1Data, a2Data, from->element_type->size * from->num_elements);
     return;
 }
 
-void vArrayPut(vThreadContextRef ctx, vArrayRef arr, uword idx, pointer src, vTypeRef srcType) {
-    char* data = (char*)vArrayDataPointer(arr);
+void oArrayPut(vThreadContextRef ctx, oArrayRef arr, uword idx, pointer src, vTypeRef srcType) {
+    char* data = (char*)oArrayDataPointer(arr);
     pointer* datap;
 
     if(ctx->error) return;
@@ -87,8 +87,8 @@ void vArrayPut(vThreadContextRef ctx, vArrayRef arr, uword idx, pointer src, vTy
     }
 }
 
-void vArrayGet(vThreadContextRef ctx, vArrayRef arr, uword idx, pointer dest, vTypeRef destType) {
-    char* data = (char*)vArrayDataPointer(arr);
+void oArrayGet(vThreadContextRef ctx, oArrayRef arr, uword idx, pointer dest, vTypeRef destType) {
+    char* data = (char*)oArrayDataPointer(arr);
     pointer *datap, *destp;
     vObject obj;
 
@@ -131,6 +131,6 @@ void v_bootstrap_array_init_type(vRuntimeRef rt, vHeapRef heap) {
     rt->builtInTypes.array->fields = NULL;
     rt->builtInTypes.array->kind = V_T_OBJECT;
     rt->builtInTypes.array->name = v_bootstrap_string_create(rt, heap, "Array");
-    rt->builtInTypes.array->size = sizeof(vArray);
+    rt->builtInTypes.array->size = sizeof(oArray);
 }
 

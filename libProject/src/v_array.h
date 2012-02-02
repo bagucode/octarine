@@ -4,7 +4,7 @@
 #include "../../platformProject/src/v_platform.h"
 #include "v_typedefs.h"
 
-struct vArray {
+struct oArray {
     vTypeRef element_type;
     uword num_elements;
     u8 alignment;
@@ -13,18 +13,22 @@ struct vArray {
      any padding needed for the alignment. */
 };
 
-vArrayRef vArrayCreate(vThreadContextRef ctx,
-                       vTypeRef elemType,
-                       uword num_elements);
-pointer vArrayDataPointer(vArrayRef arr);
-uword vArraySize(vArrayRef arr);
+oArrayRef _oArrayCreate(vThreadContextRef ctx,
+                        vTypeRef elemType,
+                        uword num_elements);
+#define oArrayCreate(...) _oArrayCreate(__VA_ARGS__); \
+                          if(vErrorGet(ctx)) { oRoots._oRET = NULL; goto _oENDFNL; }
 
-void vArrayCopy(vThreadContextRef ctx, vArrayRef from, vArrayRef to);
+pointer oArrayDataPointer(oArrayRef arr);
 
-void vArrayPut(vThreadContextRef ctx, vArrayRef arr, uword idx, pointer src, vTypeRef srcType);
-void vArrayGet(vThreadContextRef ctx, vArrayRef arr, uword idx, pointer dest, vTypeRef destType);
+uword oArraySize(oArrayRef arr);
 
-vArrayRef v_bootstrap_array_create(vRuntimeRef rt,
+void oArrayCopy(vThreadContextRef ctx, oArrayRef from, oArrayRef to);
+
+void oArrayPut(vThreadContextRef ctx, oArrayRef arr, uword idx, pointer src, vTypeRef srcType);
+void oArrayGet(vThreadContextRef ctx, oArrayRef arr, uword idx, pointer dest, vTypeRef destType);
+
+oArrayRef v_bootstrap_array_create(vRuntimeRef rt,
 	                               vHeapRef heap,
                                    vTypeRef type,
                                    uword num_elements,

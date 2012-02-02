@@ -11,7 +11,7 @@ void vHeapDestroy(vHeapRef heap);
 
 vObject vHeapAlloc(vRuntimeRef rt, vHeapRef heap, vTypeRef t);
 
-vArrayRef vHeapAllocArray(vRuntimeRef rt,
+oArrayRef vHeapAllocArray(vRuntimeRef rt,
 	                      vHeapRef heap,
                           vTypeRef elementType,
                           uword numElements);
@@ -46,7 +46,7 @@ vObject v_bootstrap_object_alloc(vRuntimeRef rt,
                                  vTypeRef proto_type,
                                  uword size);
 
-vArrayRef v_bootstrap_array_alloc(vRuntimeRef rt,
+oArrayRef v_bootstrap_array_alloc(vRuntimeRef rt,
 	                              vHeapRef heap,
                                   vTypeRef proto_elem_type,
                                   uword num_elements,

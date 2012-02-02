@@ -30,22 +30,21 @@ void vErrorSet(vThreadContextRef ctx, vObject data) {
 }
 
 void v_bootstrap_error_type_init(vThreadContextRef ctx) {
-	struct {
-        vArrayRef fields;
-		vTypeRef theType;
-        vStringRef typeName;
-        vFieldRef field;
-	} frame;
-    oPUSHFRAME;
+    oROOTS(ctx)
+    oArrayRef fields;
+    vTypeRef theType;
+    vStringRef typeName;
+    vFieldRef field;
+    oENDROOTS
     
-    frame.fields = vArrayCreate(ctx, ctx->runtime->builtInTypes.field, 1);
-    frame.typeName = vStringCreate(ctx, "data");
-    frame.field = vFieldCreate(ctx, frame.typeName, ctx->runtime->builtInTypes.any);
-    vArrayPut(ctx, frame.fields, 0, frame.field, ctx->runtime->builtInTypes.field);
+    oRoots.fields = oArrayCreate(ctx, ctx->runtime->builtInTypes.field, 1);
+    oRoots.typeName = vStringCreate(ctx, "data");
+    oRoots.field = vFieldCreate(ctx, oRoots.typeName, ctx->runtime->builtInTypes.any);
+    oArrayPut(ctx, oRoots.fields, 0, oRoots.field, ctx->runtime->builtInTypes.field);
     
-    frame.typeName = vStringCreate(ctx, "Error");
-    frame.theType = vTypeCreate(ctx, V_T_OBJECT, 0, frame.typeName, frame.fields, NULL, NULL);
+    oRoots.typeName = vStringCreate(ctx, "Error");
+    oRoots.theType = vTypeCreate(ctx, V_T_OBJECT, 0, oRoots.typeName, oRoots.fields, NULL, NULL);
     
-    ctx->runtime->builtInTypes.error = frame.theType;
-    oPOPFRAME;
+    ctx->runtime->builtInTypes.error = oRoots.theType;
+    oENDVOIDFN
 }

@@ -4,6 +4,7 @@
 #include "v_string.h"
 #include "v_array.h"
 #include "v_memory.h"
+#include "v_error.h"
 #include <stddef.h>
 
 v_bool vTypeIsPrimitive(vTypeRef t) {
@@ -40,7 +41,7 @@ static uword findLargestAlignment(vThreadContextRef ctx,
 			}
 		}
 		else {
-			members = (vFieldRef*)vArrayDataPointer(field->type->fields);
+			members = (vFieldRef*)oArrayDataPointer(field->type->fields);
 			for(i = 0; i < field->type->fields->num_elements; ++i) {
 				largest = findLargestAlignment(ctx, largest, members[i]);
 			}
@@ -66,45 +67,43 @@ vTypeRef vTypeCreate(vThreadContextRef ctx,
                      u8 kind,
                      u8 alignment,
                      vStringRef name,
-                     vArrayRef fields,
+                     oArrayRef fields,
                      vFinalizer finalizer,
                      vTypeRef protoType) {
     vFieldRef* inFields;
     vFieldRef* members;
     uword i, largest, align;
-    struct {
-        vTypeRef proto;
-    } frame;
-    vMemoryPushFrame(ctx, &frame, sizeof(frame));
+    oROOTS(ctx)
+    oENDROOTS
     
-    frame.proto = protoType;
-    if(frame.proto == NULL) {
-        frame.proto = vTypeCreateProtoType(ctx);
+    oSETRET(protoType);
+    if(oGETRET == NULL) {
+        oSETRET(vTypeCreateProtoType(ctx));
     }
     
-    frame.proto->name = name;
-    frame.proto->kind = kind;
-    frame.proto->finalizer = finalizer;
-    frame.proto->fields = vArrayCreate(ctx, ctx->runtime->builtInTypes.field, fields->num_elements);
-    frame.proto->size = 0;
-    frame.proto->alignment = alignment;
+    oGETRETT(vTypeRef)->name = name;
+    oGETRETT(vTypeRef)->kind = kind;
+    oGETRETT(vTypeRef)->finalizer = finalizer;
+    oGETRETT(vTypeRef)->fields = oArrayCreate(ctx, ctx->runtime->builtInTypes.field, fields->num_elements);
+    oGETRETT(vTypeRef)->size = 0;
+    oGETRETT(vTypeRef)->alignment = alignment;
 
     largest = 0;
-    inFields = (vFieldRef*)vArrayDataPointer(fields);
-    members = (vFieldRef*)vArrayDataPointer(frame.proto->fields);
+    inFields = (vFieldRef*)oArrayDataPointer(fields);
+    members = (vFieldRef*)oArrayDataPointer(oGETRETT(vTypeRef)->fields);
 
-    for(i = 0; i < frame.proto->fields->num_elements; ++i) {
+    for(i = 0; i < oGETRETT(vTypeRef)->fields->num_elements; ++i) {
 		members[i] = (vFieldRef)vHeapAlloc(ctx->runtime, ctx->heap, ctx->runtime->builtInTypes.field);
         members[i]->name = inFields[i]->name;
         if(inFields[i]->type == V_T_SELF) {
-            members[i]->type = frame.proto;
+            members[i]->type = oGETRET;
         } else {
             members[i]->type = inFields[i]->type;
         }
         if(members[i]->type->kind == V_T_OBJECT) {
-            frame.proto->size = alignOffset(frame.proto->size, sizeof(void*));
-            members[i]->offset = (u32)frame.proto->size;
-            frame.proto->size += sizeof(void*);
+            oGETRETT(vTypeRef)->size = alignOffset(oGETRETT(vTypeRef)->size, sizeof(void*));
+            members[i]->offset = (u32)oGETRETT(vTypeRef)->size;
+            oGETRETT(vTypeRef)->size += sizeof(void*);
             if(largest < sizeof(void*))
                 largest = sizeof(void*);
         } else { // struct type
@@ -114,26 +113,24 @@ vTypeRef vTypeCreate(vThreadContextRef ctx,
                 // Align composite types on pointer if there is no explicit alignment
                 align = members[i]->type->alignment != 0 ? members[i]->type->alignment : sizeof(void*);
             }
-            frame.proto->size = alignOffset(frame.proto->size, align);
-            members[i]->offset = (u32)frame.proto->size;
-            frame.proto->size += members[i]->type->size;
+            oGETRETT(vTypeRef)->size = alignOffset(oGETRETT(vTypeRef)->size, align);
+            members[i]->offset = (u32)oGETRETT(vTypeRef)->size;
+            oGETRETT(vTypeRef)->size += members[i]->type->size;
             largest = findLargestAlignment(ctx, largest, members[i]);
         }
     }
     
-    frame.proto->size = nextLargerMultiple(largest, frame.proto->size);
+    oGETRETT(vTypeRef)->size = nextLargerMultiple(largest, oGETRETT(vTypeRef)->size);
 
-    vMemoryPopFrame(ctx);
-    
-    return frame.proto;
+    oENDFN
 }
 
-vArrayRef v_bootstrap_type_create_field_array(vRuntimeRef rt,
+oArrayRef v_bootstrap_type_create_field_array(vRuntimeRef rt,
 	                                          vHeapRef heap,
                                               uword numFields) {
-    vArrayRef ret = v_bootstrap_array_create(rt, heap, rt->builtInTypes.field, numFields, sizeof(pointer), sizeof(pointer));
+    oArrayRef ret = v_bootstrap_array_create(rt, heap, rt->builtInTypes.field, numFields, sizeof(pointer), sizeof(pointer));
     uword i;
-    vFieldRef* fields = (vFieldRef*)vArrayDataPointer(ret);
+    vFieldRef* fields = (vFieldRef*)oArrayDataPointer(ret);
     for(i = 0; i < numFields; ++i) {
         fields[i] = (vFieldRef)v_bootstrap_object_alloc(rt, heap, rt->builtInTypes.field, sizeof(vField));
     }
@@ -147,7 +144,7 @@ void v_bootstrap_type_init_type(vRuntimeRef rt, vHeapRef heap) {
     rt->builtInTypes.type->name = v_bootstrap_string_create(rt, heap, "Type");
     rt->builtInTypes.type->size = sizeof(vType);
     
-    fields = (vFieldRef*)vArrayDataPointer(rt->builtInTypes.type->fields);
+    fields = (vFieldRef*)oArrayDataPointer(rt->builtInTypes.type->fields);
 
     fields[0]->name = v_bootstrap_string_create(rt, heap, "name");
     fields[0]->offset = offsetof(vType, name);
@@ -173,7 +170,7 @@ void v_bootstrap_type_init_field(vRuntimeRef rt, vHeapRef heap) {
     rt->builtInTypes.field->name = v_bootstrap_string_create(rt, heap, "Field");
     rt->builtInTypes.field->size = sizeof(vField);
 
-    fields = (vFieldRef*)vArrayDataPointer(rt->builtInTypes.field->fields);
+    fields = (vFieldRef*)oArrayDataPointer(rt->builtInTypes.field->fields);
     
     fields[0]->name = v_bootstrap_string_create(rt, heap, "name");
     fields[0]->offset = offsetof(vField, name);

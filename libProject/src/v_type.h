@@ -17,8 +17,8 @@ struct vField {
 
 struct vType {
     vStringRef name;
-    vArrayRef fields;
-    vArrayRef attributes; // TODO: use this for things like 'this is immutable'
+    oArrayRef fields;
+    oArrayRef attributes; // TODO: use this for things like 'this is immutable'
     /* TODO: how to use this from the language?
      It should probably be changed to a vFunction
      but ... we can't allow overloads? There has to 
@@ -43,14 +43,14 @@ vTypeRef vTypeCreate(vThreadContextRef ctx,
                      u8 kind,
                      u8 alignment,
                      vStringRef name,
-                     vArrayRef fields,
+                     oArrayRef fields,
                      vFinalizer finalizer,
                      vTypeRef protoType);
 vStringRef vTypeGetName(vTypeRef type);
 
 void v_bootstrap_type_init_type(vRuntimeRef rt, vHeapRef heap);
 void v_bootstrap_type_init_field(vRuntimeRef rt, vHeapRef heap);
-vArrayRef v_bootstrap_type_create_field_array(vRuntimeRef rt,
+oArrayRef v_bootstrap_type_create_field_array(vRuntimeRef rt,
 	                                          vHeapRef heap,
                                               uword numFields);
 
