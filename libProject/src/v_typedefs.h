@@ -79,7 +79,9 @@ typedef vVector* vVectorRef;
 // contain a member called ret which holds the return value of
 // the function.
 #define oPUSHFRAME vMemoryPushFrame(ctx, &frame, sizeof(frame));
-#define oPOPFRAME popframe: vMemoryPopFrame(ctx);
+// Dummy goto right before the label to make the compiler stfu when
+// there is no actual goto used.
+#define oPOPFRAME goto popframe; popframe: vMemoryPopFrame(ctx);
 #define oERRORCHECK if(vErrorGet(ctx)) { frame.ret = NULL; goto popframe; }
 #define oC(fn, ...) fn(__VA_ARGS__); oERRORCHECK
 

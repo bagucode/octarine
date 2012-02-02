@@ -157,8 +157,8 @@ static void init_builtInConstants(vThreadContextRef ctx) {
     ctx->runtime->builtInConstants.needMoreData = vKeywordCreate(ctx, frame.str);
     frame.str = vStringCreate(ctx, "type-mismatch");
     ctx->runtime->builtInConstants.typeMismatch = vKeywordCreate(ctx, frame.str);
-    frame.str = vStringCreate(ctx, "array-index-out-of-bounds");
-    ctx->runtime->builtInConstants.arrayIndexOutOfBounds = vKeywordCreate(ctx, frame.str);
+    frame.str = vStringCreate(ctx, "index-out-of-bounds");
+    ctx->runtime->builtInConstants.indexOutOfBounds = vKeywordCreate(ctx, frame.str);
     
     vMemoryPopFrame(ctx);
 }

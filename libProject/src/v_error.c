@@ -36,7 +36,7 @@ void v_bootstrap_error_type_init(vThreadContextRef ctx) {
         vStringRef typeName;
         vFieldRef field;
 	} frame;
-	vMemoryPushFrame(ctx, &frame, sizeof(frame));
+    oPUSHFRAME;
     
     frame.fields = vArrayCreate(ctx, ctx->runtime->builtInTypes.field, 1);
     frame.typeName = vStringCreate(ctx, "data");
@@ -47,5 +47,5 @@ void v_bootstrap_error_type_init(vThreadContextRef ctx) {
     frame.theType = vTypeCreate(ctx, V_T_OBJECT, 0, frame.typeName, frame.fields, NULL, NULL);
     
     ctx->runtime->builtInTypes.error = frame.theType;
-	vMemoryPopFrame(ctx);
+    oPOPFRAME;
 }

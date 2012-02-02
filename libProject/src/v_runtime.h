@@ -52,7 +52,7 @@ typedef struct vRuntimeBuiltInFunctions {
 typedef struct vRuntimeBuiltInConstants {
     vKeywordRef needMoreData;
     vKeywordRef typeMismatch;
-    vKeywordRef arrayIndexOutOfBounds;
+    vKeywordRef indexOutOfBounds;
 } vRuntimeBuiltInConstants;
 
 struct vRuntime {

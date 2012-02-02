@@ -13,7 +13,7 @@ void v_bootstrap_keyword_type_init(vThreadContextRef ctx) {
         vStringRef typeName;
         vFieldRef field;
 	} frame;
-	vMemoryPushFrame(ctx, &frame, sizeof(frame));
+    oPUSHFRAME;
     
     frame.fields = vArrayCreate(ctx, ctx->runtime->builtInTypes.field, 1);
     frame.typeName = vStringCreate(ctx, "name");
@@ -24,7 +24,8 @@ void v_bootstrap_keyword_type_init(vThreadContextRef ctx) {
     frame.theType = vTypeCreate(ctx, V_T_OBJECT, 0, frame.typeName, frame.fields, NULL, NULL);
     
     ctx->runtime->builtInTypes.keyword = frame.theType;
-	vMemoryPopFrame(ctx);
+
+    oPOPFRAME;
 }
 
 vKeywordRef vKeywordCreate(vThreadContextRef ctx, vStringRef name) {

@@ -5,6 +5,7 @@
 #include "v_type.h"
 #include "v_string.h"
 #include "v_memory.h"
+#include "v_error.h"
 
 void v_bootstrap_vector_init_type(vThreadContextRef ctx) {
 	struct {
@@ -13,7 +14,7 @@ void v_bootstrap_vector_init_type(vThreadContextRef ctx) {
         vStringRef typeName;
         vFieldRef field;
 	} frame;
-	vMemoryPushFrame(ctx, &frame, sizeof(frame));
+    oPUSHFRAME;
     
     frame.fields = vArrayCreate(ctx, ctx->runtime->builtInTypes.field, 1);
     frame.typeName = vStringCreate(ctx, "data");
@@ -24,21 +25,22 @@ void v_bootstrap_vector_init_type(vThreadContextRef ctx) {
     frame.theType = vTypeCreate(ctx, V_T_OBJECT, 0, frame.typeName, frame.fields, NULL, NULL);
 
     ctx->runtime->builtInTypes.vector = frame.theType;
-	vMemoryPopFrame(ctx);
+
+    oPOPFRAME;
 }
 
 vVectorRef vVectorCreate(vThreadContextRef ctx,
                          vTypeRef type) {
     struct {
-        vVectorRef vec;
+        vVectorRef ret;
     } frame;
-    vMemoryPushFrame(ctx, &frame, sizeof(frame));
+    oPUSHFRAME;
     
-	frame.vec = vHeapAlloc(ctx->runtime, ctx->heap, ctx->runtime->builtInTypes.vector);
-    frame.vec->data = vArrayCreate(ctx, type, 0);
+	frame.ret = vHeapAlloc(ctx->runtime, ctx->heap, ctx->runtime->builtInTypes.vector);
+    frame.ret->data = vArrayCreate(ctx, type, 0);
     
-    vMemoryPopFrame(ctx);
-    return frame.vec;
+    oPOPFRAME;
+    return frame.ret;
 }
 
 vVectorRef vVectorAddBack(vThreadContextRef ctx,
@@ -46,19 +48,18 @@ vVectorRef vVectorAddBack(vThreadContextRef ctx,
                           pointer data,
                           vTypeRef dataType) {
     struct {
-        vVectorRef newVec;
+        vVectorRef ret;
     } frame;
-    vMemoryPushFrame(ctx, &frame, sizeof(frame));
+    oPUSHFRAME;
     
-	frame.newVec = vHeapAlloc(ctx->runtime, ctx->heap, ctx->runtime->builtInTypes.vector);
-    frame.newVec->data = vArrayCreate(ctx, vec->data->element_type, vec->data->num_elements + 1);
+	frame.ret = vHeapAlloc(ctx->runtime, ctx->heap, ctx->runtime->builtInTypes.vector);
+    frame.ret->data = vArrayCreate(ctx, vec->data->element_type, vec->data->num_elements + 1);
 
-    vArrayCopy(ctx, vec->data, frame.newVec->data);
-    vArrayPut(ctx, frame.newVec->data, vec->data->num_elements, data, dataType);
-    // TODO: ERROR HANDLING
-    
-    vMemoryPopFrame(ctx);
-    return frame.newVec;
+    oC(vArrayCopy, ctx, vec->data, frame.ret->data);
+    oC(vArrayPut, ctx, frame.ret->data, vec->data->num_elements, data, dataType);
+
+    oPOPFRAME;
+    return frame.ret;
 }
 
 uword vVectorSize(vThreadContextRef ctx, vVectorRef vec) {
@@ -67,19 +68,18 @@ uword vVectorSize(vThreadContextRef ctx, vVectorRef vec) {
 
 vVectorRef vVectorPut(vThreadContextRef ctx, vVectorRef vec, uword idx, pointer src, vTypeRef srcType) {
     struct {
-        vVectorRef newVec;
+        vVectorRef ret;
     } frame;
-    vMemoryPushFrame(ctx, &frame, sizeof(frame));
+    oPUSHFRAME;
 
-	frame.newVec = vHeapAlloc(ctx->runtime, ctx->heap, ctx->runtime->builtInTypes.vector);
-    frame.newVec->data = vArrayCreate(ctx, vec->data->element_type, vec->data->num_elements);
+	frame.ret = vHeapAlloc(ctx->runtime, ctx->heap, ctx->runtime->builtInTypes.vector);
+    frame.ret->data = vArrayCreate(ctx, vec->data->element_type, vec->data->num_elements);
 
-    vArrayCopy(ctx, vec->data, frame.newVec->data);
-    vArrayPut(ctx, frame.newVec->data, idx, src, srcType);
-    // TODO: ERROR HANDLING
+    oC(vArrayCopy, ctx, vec->data, frame.ret->data);
+    oC(vArrayPut, ctx, frame.ret->data, idx, src, srcType);
 
-    vMemoryPopFrame(ctx);
-    return frame.newVec;
+    oPOPFRAME;
+    return frame.ret;
 }
 
 void vVectorGet(vThreadContextRef ctx, vVectorRef vec, uword idx, pointer dest, vTypeRef destType) {

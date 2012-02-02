@@ -43,7 +43,7 @@ void vArrayCopy(vThreadContextRef ctx, vArrayRef from, vArrayRef to) {
         return;
     }
     if(from->num_elements > to->num_elements) {
-        vErrorSet(ctx, ctx->runtime->builtInConstants.arrayIndexOutOfBounds);
+        vErrorSet(ctx, ctx->runtime->builtInConstants.indexOutOfBounds);
         return;
     }
     
@@ -61,16 +61,16 @@ void vArrayPut(vThreadContextRef ctx, vArrayRef arr, uword idx, pointer src, vTy
     if(vTypeIsObject(arr->element_type)
        && arr->element_type != ctx->runtime->builtInTypes.any
        && srcType != arr->element_type) {
-        // TODO: ERROR
+        vErrorSet(ctx, ctx->runtime->builtInConstants.typeMismatch);
         return;
     }
     else if(vTypeIsStruct(srcType)
             && srcType != arr->element_type) {
-        // TODO: ERROR
+        vErrorSet(ctx, ctx->runtime->builtInConstants.typeMismatch);
         return;
     }
     if(arr->num_elements <= idx) {
-        // TODO: ERROR
+        vErrorSet(ctx, ctx->runtime->builtInConstants.indexOutOfBounds);
         return;
     }
     
@@ -90,7 +90,7 @@ void vArrayGet(vThreadContextRef ctx, vArrayRef arr, uword idx, pointer dest, vT
     vObject obj;
 
     if(arr->num_elements <= idx) {
-        // TODO: ERROR
+        vErrorSet(ctx, ctx->runtime->builtInConstants.indexOutOfBounds);
         return;
     }
     
@@ -102,20 +102,20 @@ void vArrayGet(vThreadContextRef ctx, vArrayRef arr, uword idx, pointer dest, vT
         if(arr->element_type == ctx->runtime->builtInTypes.any
            && destType != ctx->runtime->builtInTypes.any) {
             if(obj && vObjectGetType(ctx, obj) != destType) {
-                // TODO: ERROR
+                vErrorSet(ctx, ctx->runtime->builtInConstants.typeMismatch);
                 return;
             }
         }
         else if(destType != ctx->runtime->builtInTypes.any
                 && destType != arr->element_type) {
-            // TODO: ERROR
+            vErrorSet(ctx, ctx->runtime->builtInConstants.typeMismatch);
             return;
         }
         destp[0] = obj;
     }
     else {
         if(arr->element_type != destType) {
-            // TODO: ERROR
+            vErrorSet(ctx, ctx->runtime->builtInConstants.typeMismatch);
             return;
         }
         data = data + destType->size * (idx + 1);
