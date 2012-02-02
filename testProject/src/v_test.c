@@ -398,6 +398,21 @@ void testReadKeyword() {
     vRuntimeDestroy(runtime);
 }
 
+void testOutOfMemory() {
+    vRuntimeRef rt = vRuntimeCreate(1024 * 1000, 1024 * 1000);
+    vThreadContextRef ctx = vRuntimeGetCurrentContext(rt);
+    oROOTS(ctx)
+    oENDROOTS
+    
+    ctx->error = rt->builtInErrors.outOfMemory;
+    oArrayCreate(rt->builtInTypes.i64, 10000);
+    assert(v_false); // should never get here
+    
+    oENDVOIDFN
+    assert(vErrorGet(ctx) == rt->builtInErrors.outOfMemory);
+    vRuntimeDestroy(rt);
+}
+
 int main(int argc, char** argv) {
 
     testCreateRuntime();
@@ -413,6 +428,7 @@ int main(int argc, char** argv) {
     testVector();
     testReadVector();
     testReadKeyword();
+    testOutOfMemory();
     
 	return 0;
 }

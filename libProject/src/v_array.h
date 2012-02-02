@@ -16,7 +16,7 @@ struct oArray {
 oArrayRef _oArrayCreate(vThreadContextRef ctx,
                         vTypeRef elemType,
                         uword num_elements);
-#define oArrayCreate(...) _oC(_oArrayCreate, __VA_ARGS__)
+#define oArrayCreate(elemType, numElems) _oC(_oArrayCreate, elemType, numElems)
 
 pointer oArrayDataPointer(oArrayRef arr);
 
