@@ -394,9 +394,8 @@ void testReadKeyword() {
     oRoots.src = oKeywordGetName(kw);
     assert(oStringCompare(oRoots.name, oRoots.src) == 0);
     
-	oMemoryPopFrame(ctx);
-    oRuntimeDestroy(runtime);
     oENDVOIDFN
+    oRuntimeDestroy(runtime);
 }
 
 void testOutOfMemory() {

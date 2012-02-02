@@ -13,22 +13,22 @@ oStringRef oStringCreate(oThreadContextRef ctx, char *utf8) {
     oROOTS(ctx)
     oENDROOTS
     oSETRET(oHeapAlloc(ctx->runtime->builtInTypes.string));
-    oGETRETT(oStringRef)->str = vNativeStringFromUtf8(utf8);
+    oGETRETT(oStringRef)->str = oNativeStringFromUtf8(utf8);
     oENDFN(oStringRef)
 }
 
 static void finalizer(oObject obj) {
     oStringRef str = (oStringRef)obj;
-    vNativeStringDestroy(str->str);
+    oNativeStringDestroy(str->str);
 }
 
 int oStringCompare(oStringRef x, oStringRef y) {
-    return x == y ? 0 : vNativeStringCompare(x->str, y->str);
+    return x == y ? 0 : oNativeStringCompare(x->str, y->str);
 }
 
 oArrayRef oStringUtf8Copy(oThreadContextRef ctx, oStringRef str) {
     uword length;
-    char* utf8String = vNativeStringToUtf8(str->str, &length);
+    char* utf8String = oNativeStringToUtf8(str->str, &length);
     oROOTS(ctx)
     oENDROOTS
 
@@ -40,25 +40,25 @@ oArrayRef oStringUtf8Copy(oThreadContextRef ctx, oStringRef str) {
 }
 
 o_char oStringCharAt(oThreadContextRef ctx, oStringRef str, uword idx) {
-    return vNativeStringCharAt(str->str, idx);
+    return oNativeStringCharAt(str->str, idx);
 }
 
 oStringRef oStringSubString(oThreadContextRef ctx, oStringRef str, uword start, uword end) {
     oROOTS(ctx)
     oENDROOTS
 	oSETRET(oHeapAlloc(ctx->runtime->builtInTypes.string));
-    oGETRETT(oStringRef)->str = vNativeStringSubstring(str->str, start, end);
+    oGETRETT(oStringRef)->str = oNativeStringSubstring(str->str, start, end);
     oENDFN(oStringRef)
 }
 
 oStringRef o_bootstrap_string_create(oRuntimeRef rt, oHeapRef heap, const char *utf8) {
     oStringRef str = (oStringRef)o_bootstrap_object_alloc(rt, heap, rt->builtInTypes.string, sizeof(oString));
-    str->str = vNativeStringFromUtf8(utf8);
+    str->str = oNativeStringFromUtf8(utf8);
     return str;
 }
 
 uword oStringLength(oThreadContextRef ctx, oStringRef str) {
-    return vNativeStringLength(str->str);
+    return oNativeStringLength(str->str);
 }
 
 void o_bootstrap_string_init_type(oRuntimeRef rt, oHeapRef heap) {

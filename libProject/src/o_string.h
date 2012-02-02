@@ -5,7 +5,7 @@
 #include "o_typedefs.h"
 
 struct oString {
-	vNativeStringRef str;
+	oNativeStringRef str;
 };
 
 oStringRef oStringCreate(oThreadContextRef ctx, char *utf8);

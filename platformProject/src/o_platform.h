@@ -26,15 +26,15 @@ pointer vMalloc(uword size);
 void vFree(pointer location);
 
 /* String support */
-typedef struct vNativeString vNativeString;
-typedef vNativeString* vNativeStringRef;
+typedef struct oNativeString oNativeString;
+typedef oNativeString* oNativeStringRef;
 
-vNativeStringRef vNativeStringFromUtf8(const char *utf8);
-char* vNativeStringToUtf8(vNativeStringRef str, uword* out_length);
-int vNativeStringCompare(vNativeStringRef str1, vNativeStringRef str2);
-void vNativeStringDestroy(vNativeStringRef str);
-o_char vNativeStringCharAt(vNativeStringRef str, uword idx);
-vNativeStringRef vNativeStringSubstring(vNativeStringRef str, uword start, uword end);
-uword vNativeStringLength(vNativeStringRef str);
+oNativeStringRef oNativeStringFromUtf8(const char *utf8);
+char* oNativeStringToUtf8(oNativeStringRef str, uword* out_length);
+int oNativeStringCompare(oNativeStringRef str1, oNativeStringRef str2);
+void oNativeStringDestroy(oNativeStringRef str);
+o_char oNativeStringCharAt(oNativeStringRef str, uword idx);
+oNativeStringRef oNativeStringSubstring(oNativeStringRef str, uword start, uword end);
+uword oNativeStringLength(oNativeStringRef str);
 
 #endif
