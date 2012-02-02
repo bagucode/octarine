@@ -17,16 +17,16 @@ void vErrorClear(vThreadContextRef ctx) {
 }
 
 // Get the error "message"
-vObject vErrorGetData(vThreadContextRef ctx, vErrorRef err) {
+vObject vErrorGetData(vErrorRef err) {
     return err->data;
 }
 
-void vErrorSet(vThreadContextRef ctx, vObject message) {
+void vErrorSet(vThreadContextRef ctx, vObject data) {
     // TODO: perhaps get rid of this allocation? Just keep an instance of error around
     // always per threadcontext so that this function does not cause any allocation
     // since that can be problematic during error conditions
     ctx->error = vHeapAlloc(ctx->runtime, ctx->heap, ctx->runtime->builtInTypes.error);
-    ctx->error->data = message;
+    ctx->error->data = data;
 }
 
 void v_bootstrap_error_type_init(vThreadContextRef ctx) {

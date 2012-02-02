@@ -12,13 +12,13 @@ struct vError {
 vErrorRef vErrorGet(vThreadContextRef ctx);
 
 // Set an error for the given thread context
-void vErrorSet(vThreadContextRef ctx, vObject message);
+void vErrorSet(vThreadContextRef ctx, vObject data);
 
 // Clears the error condition from the thread context.
 void vErrorClear(vThreadContextRef ctx);
 
 // Get the error "message"
-vObject vErrorGetData(vThreadContextRef ctx, vErrorRef err);
+vObject vErrorGetData(vErrorRef err);
 
 void v_bootstrap_error_type_init(vThreadContextRef ctx);
 

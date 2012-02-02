@@ -29,11 +29,14 @@ void v_bootstrap_keyword_type_init(vThreadContextRef ctx) {
 }
 
 vKeywordRef vKeywordCreate(vThreadContextRef ctx, vStringRef name) {
-	vKeywordRef kw = vHeapAlloc(ctx->runtime, ctx->heap, ctx->runtime->builtInTypes.keyword);
+	vKeywordRef kw;
+    if(ctx->error) return NULL;
+    kw = vHeapAlloc(ctx->runtime, ctx->heap, ctx->runtime->builtInTypes.keyword);
     kw->name = name;
     return kw;
 }
 
 vStringRef vKeywordGetName(vThreadContextRef ctx, vKeywordRef kw) {
+    if(ctx->error) return NULL;
     return kw->name;
 }
