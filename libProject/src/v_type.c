@@ -60,7 +60,10 @@ static uword nextLargerMultiple(uword of, uword largerThan) {
 }
 
 vTypeRef vTypeCreateProtoType(vThreadContextRef ctx) {
-	return (vTypeRef)vHeapAlloc(ctx->runtime, ctx->heap, ctx->runtime->builtInTypes.type);
+    oROOTS(ctx)
+    oENDROOTS
+	oRETURN(oHeapAlloc(ctx->runtime->builtInTypes.type));
+    oENDFN(vTypeRef)
 }
 
 vTypeRef vTypeCreate(vThreadContextRef ctx,
@@ -84,7 +87,7 @@ vTypeRef vTypeCreate(vThreadContextRef ctx,
     oGETRETT(vTypeRef)->name = name;
     oGETRETT(vTypeRef)->kind = kind;
     oGETRETT(vTypeRef)->finalizer = finalizer;
-    oGETRETT(vTypeRef)->fields = oArrayCreate(ctx, ctx->runtime->builtInTypes.field, fields->num_elements);
+    oGETRETT(vTypeRef)->fields = oArrayCreate(ctx->runtime->builtInTypes.field, fields->num_elements);
     oGETRETT(vTypeRef)->size = 0;
     oGETRETT(vTypeRef)->alignment = alignment;
 
@@ -93,7 +96,7 @@ vTypeRef vTypeCreate(vThreadContextRef ctx,
     members = (vFieldRef*)oArrayDataPointer(oGETRETT(vTypeRef)->fields);
 
     for(i = 0; i < oGETRETT(vTypeRef)->fields->num_elements; ++i) {
-		members[i] = (vFieldRef)vHeapAlloc(ctx->runtime, ctx->heap, ctx->runtime->builtInTypes.field);
+		members[i] = (vFieldRef)oHeapAlloc(ctx->runtime->builtInTypes.field);
         members[i]->name = inFields[i]->name;
         if(inFields[i]->type == V_T_SELF) {
             members[i]->type = oGETRET;
@@ -126,7 +129,7 @@ vTypeRef vTypeCreate(vThreadContextRef ctx,
 }
 
 oArrayRef v_bootstrap_type_create_field_array(vRuntimeRef rt,
-	                                          vHeapRef heap,
+	                                          oHeapRef heap,
                                               uword numFields) {
     oArrayRef ret = v_bootstrap_array_create(rt, heap, rt->builtInTypes.field, numFields, sizeof(pointer), sizeof(pointer));
     uword i;
@@ -137,7 +140,7 @@ oArrayRef v_bootstrap_type_create_field_array(vRuntimeRef rt,
     return ret;
 }
 
-void v_bootstrap_type_init_type(vRuntimeRef rt, vHeapRef heap) {
+void v_bootstrap_type_init_type(vRuntimeRef rt, oHeapRef heap) {
     vFieldRef *fields;
     rt->builtInTypes.type->fields = v_bootstrap_type_create_field_array(rt, heap, 4);
     rt->builtInTypes.type->kind = V_T_OBJECT;
@@ -163,7 +166,7 @@ void v_bootstrap_type_init_type(vRuntimeRef rt, vHeapRef heap) {
     fields[3]->type = rt->builtInTypes.u8;
 }
 
-void v_bootstrap_type_init_field(vRuntimeRef rt, vHeapRef heap) {
+void v_bootstrap_type_init_field(vRuntimeRef rt, oHeapRef heap) {
     vFieldRef *fields;
     rt->builtInTypes.field->fields = v_bootstrap_type_create_field_array(rt, heap, 3);
     rt->builtInTypes.field->kind = V_T_OBJECT;
@@ -193,10 +196,12 @@ v_bool vTypeEquals(vThreadContextRef ctx, vTypeRef t, vObject other) {
 vFieldRef vFieldCreate(vThreadContextRef ctx,
                        vStringRef name,
                        vTypeRef type) {
-	vFieldRef f = (vFieldRef)vHeapAlloc(ctx->runtime, ctx->heap, ctx->runtime->builtInTypes.field);
-    f->name = name;
-    f->type = type;
-    return f;
+    oROOTS(ctx)
+    oENDROOTS
+    oSETRET(oHeapAlloc(ctx->runtime->builtInTypes.field));
+    oGETRETT(vFieldRef)->name = name;
+    oGETRETT(vFieldRef)->type = type;
+    oENDFN(vFieldRef)
 }
 
 vStringRef vTypeGetName(vTypeRef type) {

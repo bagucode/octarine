@@ -64,7 +64,10 @@ v_bool isReserved(uword ch) {
 }
 
 vReaderRef vReaderCreate(vThreadContextRef ctx) {
-	return (vReaderRef)vHeapAlloc(ctx->runtime, ctx->heap, ctx->runtime->builtInTypes.reader);
+    oROOTS(ctx)
+    oENDROOTS
+	oRETURN(oHeapAlloc(ctx->runtime->builtInTypes.reader));
+    oENDFN(vReaderRef)
 }
 
 static u8 getChar(oArrayRef arr, uword i) {
@@ -98,7 +101,7 @@ static vObject readString(vThreadContextRef ctx, oArrayRef src, uword* idx) {
     oArrayRef tmp;
     oENDROOTS
     
-    oRoots.charBuffer = oArrayCreate(ctx, ctx->runtime->builtInTypes.u8, 1024);
+    oRoots.charBuffer = oArrayCreate(ctx->runtime->builtInTypes.u8, 1024);
     bufIdx = 0;
     
     while ((*idx) < src->num_elements) {
@@ -107,8 +110,8 @@ static vObject readString(vThreadContextRef ctx, oArrayRef src, uword* idx) {
             break;
         }
         if(bufIdx >= oRoots.charBuffer->num_elements) {
-            oRoots.tmp = oArrayCreate(ctx, ctx->runtime->builtInTypes.u8, oRoots.charBuffer->num_elements << 1);
-            oArrayCopy(ctx, oRoots.charBuffer, oRoots.tmp);
+            oRoots.tmp = oArrayCreate(ctx->runtime->builtInTypes.u8, oRoots.charBuffer->num_elements << 1);
+            oArrayCopy(oRoots.charBuffer, oRoots.tmp);
             oRoots.charBuffer = oRoots.tmp;
             oRoots.tmp = NULL;
         }
@@ -117,8 +120,8 @@ static vObject readString(vThreadContextRef ctx, oArrayRef src, uword* idx) {
         ++(*idx);
     }
     if(bufIdx >= oRoots.charBuffer->num_elements) {
-        oRoots.tmp = oArrayCreate(ctx, ctx->runtime->builtInTypes.u8, oRoots.charBuffer->num_elements << 1);
-        oArrayCopy(ctx, oRoots.charBuffer, oRoots.tmp);
+        oRoots.tmp = oArrayCreate(ctx->runtime->builtInTypes.u8, oRoots.charBuffer->num_elements << 1);
+        oArrayCopy(oRoots.charBuffer, oRoots.tmp);
         oRoots.charBuffer = oRoots.tmp;
         oRoots.tmp = NULL;
     }

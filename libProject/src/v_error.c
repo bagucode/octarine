@@ -22,11 +22,11 @@ vObject vErrorGetData(vErrorRef err) {
 }
 
 void vErrorSet(vThreadContextRef ctx, vObject data) {
-    // TODO: perhaps get rid of this allocation? Just keep an instance of error around
-    // always per threadcontext so that this function does not cause any allocation
-    // since that can be problematic during error conditions
-    ctx->error = vHeapAlloc(ctx->runtime, ctx->heap, ctx->runtime->builtInTypes.error);
+    oROOTS(ctx)
+    oENDROOTS
+    ctx->error = oHeapAlloc(ctx->runtime->builtInTypes.error);
     ctx->error->data = data;
+    oENDVOIDFN
 }
 
 void v_bootstrap_error_type_init(vThreadContextRef ctx) {
@@ -37,10 +37,10 @@ void v_bootstrap_error_type_init(vThreadContextRef ctx) {
     vFieldRef field;
     oENDROOTS
     
-    oRoots.fields = oArrayCreate(ctx, ctx->runtime->builtInTypes.field, 1);
+    oRoots.fields = oArrayCreate(ctx->runtime->builtInTypes.field, 1);
     oRoots.typeName = vStringCreate(ctx, "data");
     oRoots.field = vFieldCreate(ctx, oRoots.typeName, ctx->runtime->builtInTypes.any);
-    oArrayPut(ctx, oRoots.fields, 0, oRoots.field, ctx->runtime->builtInTypes.field);
+    oArrayPut(oRoots.fields, 0, oRoots.field, ctx->runtime->builtInTypes.field);
     
     oRoots.typeName = vStringCreate(ctx, "Error");
     oRoots.theType = vTypeCreate(ctx, V_T_OBJECT, 0, oRoots.typeName, oRoots.fields, NULL, NULL);

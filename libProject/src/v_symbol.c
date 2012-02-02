@@ -6,6 +6,7 @@
 #include "v_string.h"
 #include "v_array.h"
 #include "v_memory.h"
+#include "v_error.h"
 #include <stddef.h>
 
 void v_bootstrap_symbol_init_type(vThreadContextRef ctx) {
@@ -23,9 +24,11 @@ void v_bootstrap_symbol_init_type(vThreadContextRef ctx) {
 }
 
 vSymbolRef vSymbolCreate(vThreadContextRef ctx, vStringRef name) {
-	vSymbolRef sym = (vSymbolRef)vHeapAlloc(ctx->runtime, ctx->heap, ctx->runtime->builtInTypes.symbol);
-	sym->name = name;
-	return sym;
+    oROOTS(ctx)
+    oENDROOTS
+    oSETRET(oHeapAlloc(ctx->runtime->builtInTypes.symbol));
+    oGETRETT(vSymbolRef)->name = name;
+    oENDFN(vSymbolRef)
 }
 
 v_bool vSymbolEquals(vThreadContextRef ctx,

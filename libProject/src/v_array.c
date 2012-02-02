@@ -15,8 +15,11 @@ static uword alignOffset(uword offset, uword on) {
 oArrayRef _oArrayCreate(vThreadContextRef ctx,
                        vTypeRef elemType,
                        uword num_elements) {
+    oROOTS(ctx)
+    oENDROOTS
     if(ctx->error) return NULL;
-	return vHeapAllocArray(ctx->runtime, ctx->heap, elemType, num_elements);
+	oRETURN(oHeapAllocArray(elemType, num_elements));
+    oENDFN(oArrayRef)
 }
 
 pointer oArrayDataPointer(oArrayRef arr) {
@@ -28,7 +31,7 @@ uword oArraySize(oArrayRef arr) {
 }
 
 oArrayRef v_bootstrap_array_create(vRuntimeRef rt,
-	                               vHeapRef heap,
+	                               oHeapRef heap,
                                    vTypeRef type,
                                    uword num_elements,
                                    uword elem_size,
@@ -127,7 +130,7 @@ void _oArrayGet(vThreadContextRef ctx, oArrayRef arr, uword idx, pointer dest, v
     }
 }
 
-void v_bootstrap_array_init_type(vRuntimeRef rt, vHeapRef heap) {
+void v_bootstrap_array_init_type(vRuntimeRef rt, oHeapRef heap) {
     rt->builtInTypes.array->fields = NULL;
     rt->builtInTypes.array->kind = V_T_OBJECT;
     rt->builtInTypes.array->name = v_bootstrap_string_create(rt, heap, "Array");

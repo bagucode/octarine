@@ -12,7 +12,9 @@
 #include "v_keyword.h"
 #include "v_error.h"
 
-static vTypeRef alloc_built_in(vRuntimeRef rt, vHeapRef heap) {
+#include <memory.h>
+
+static vTypeRef alloc_built_in(vRuntimeRef rt, oHeapRef heap) {
 	return (vTypeRef)v_bootstrap_object_alloc(rt, heap, rt->builtInTypes.type, sizeof(vType));
 }
 
@@ -21,7 +23,7 @@ static void set_shared_primitive_attributes(vTypeRef t) {
     t->fields = NULL;
 }
 
-static void alloc_builtInTypes(vRuntimeRef rt, vHeapRef heap) {
+static void alloc_builtInTypes(vRuntimeRef rt, oHeapRef heap) {
     rt->builtInTypes.type = (vTypeRef)v_bootstrap_object_alloc(rt, heap, V_T_SELF, sizeof(vType));
 	rt->builtInTypes.v_char = alloc_built_in(rt, heap);
 	rt->builtInTypes.v_bool = alloc_built_in(rt, heap);
@@ -58,7 +60,7 @@ static void alloc_builtInTypes(vRuntimeRef rt, vHeapRef heap) {
 #endif
 }
 
-static void init_builtInTypes1(vRuntimeRef rt, vHeapRef heap) {
+static void init_builtInTypes1(vRuntimeRef rt, oHeapRef heap) {
 
     /* primitives */
 
@@ -163,13 +165,33 @@ static void init_builtInConstants(vThreadContextRef ctx) {
     vMemoryPopFrame(ctx);
 }
 
+static vErrorRef initError(vThreadContextRef ctx, char* name) {
+    oROOTS(ctx)
+    vStringRef str;
+    vKeywordRef kw;
+    oENDROOTS
+
+    oRoots.str = vStringCreate(ctx, name);
+    oRoots.kw = vKeywordCreate(ctx, oRoots.str);
+    oSETRET(oHeapAlloc(ctx->runtime->builtInTypes.error));
+    oGETRETT(vErrorRef)->data = oRoots.kw;
+
+    oENDFN(vErrorRef)
+}
+
+static void init_builtInErrors(vThreadContextRef ctx) {
+    ctx->runtime->builtInErrors.outOfMemory = initError(ctx, "out-of-memory");
+}
+
 vRuntimeRef vRuntimeCreate(uword sharedHeapInitialSize,
                            uword threadHeapInitialSize) {
 	vRuntimeRef rt = (vRuntimeRef)vMalloc(sizeof(vRuntime));
-	vHeapRef mtHeap = vHeapCreate(v_false, threadHeapInitialSize);
+	oHeapRef mtHeap = oHeapCreate(v_false, threadHeapInitialSize);
 	vThreadContextRef ctx;
+    
+    memset(rt, 0, sizeof(vRuntime));
 
-    rt->globals = vHeapCreate(v_true, sharedHeapInitialSize);
+    rt->globals = oHeapCreate(v_true, sharedHeapInitialSize);
     rt->currentContext = vTLSCreate();
 
 	alloc_builtInTypes(rt, mtHeap);
@@ -193,6 +215,7 @@ vRuntimeRef vRuntimeCreate(uword sharedHeapInitialSize,
     
     init_builtInConstants(ctx);
     init_builtInFunctions(ctx);
+    init_builtInErrors(ctx);
 
     return rt;
 }
@@ -207,7 +230,7 @@ void vRuntimeDestroy(vRuntimeRef rt) {
         vFree(lst);
 		lst = next;
     }
-    vHeapDestroy(rt->globals);
+    oHeapDestroy(rt->globals);
 	vFree(rt);
 }
 

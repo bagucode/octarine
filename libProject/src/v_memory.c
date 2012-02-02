@@ -81,14 +81,14 @@ typedef struct HeapRecord {
 
 typedef HeapRecord* HeapRecordRef;
 
-struct vHeap {
+struct oHeap {
     vMutexRef mutex;
     uword gcThreshold;
     uword currentSize;
     HeapRecordRef record;
 };
 
-static void addHeapEntry(vHeapRef heap, HeapBlockRef block);
+static void addHeapEntry(oHeapRef heap, HeapBlockRef block);
 
 static HeapRecordRef createRecord() {
     HeapRecordRef rec = (HeapRecordRef)vMalloc(sizeof(HeapRecord));
@@ -104,8 +104,8 @@ static v_bool recordEntry(HeapRecordRef record, HeapBlockRef block) {
     return v_true;
 }
 
-vHeapRef vHeapCreate(v_bool synchronized, uword gc_threshold) {
-    vHeapRef heap = (vHeapRef)vMalloc(sizeof(vHeap));
+oHeapRef oHeapCreate(v_bool synchronized, uword gc_threshold) {
+    oHeapRef heap = (oHeapRef)vMalloc(sizeof(oHeap));
 	heap->mutex = synchronized ? vMutexCreate() : NULL;
     heap->gcThreshold = gc_threshold;
     heap->currentSize = 0;
@@ -169,7 +169,7 @@ void vMemoryPopFrame(vThreadContextRef ctx) {
     }
 }
 
-static void traceAndMark(vRuntimeRef rt, vHeapRef heap, vObject obj, vTypeRef type) {
+static void traceAndMark(vRuntimeRef rt, oHeapRef heap, vObject obj, vTypeRef type) {
     vObject fieldPtr;
     vFieldRef field;
     vFieldRef* fields;
@@ -247,7 +247,7 @@ static void traceAndMark(vRuntimeRef rt, vHeapRef heap, vObject obj, vTypeRef ty
     }
 }
 
-static void collectGarbage(vRuntimeRef rt, vHeapRef heap) {
+static void collectGarbage(vRuntimeRef rt, oHeapRef heap) {
     vRootSetRef roots;
     uword i, j, nroots;
     vObject obj, *objArr;
@@ -290,6 +290,12 @@ static void collectGarbage(vRuntimeRef rt, vHeapRef heap) {
     for(i = 0; i < j; ++i) {
         // TODO: this will break when there are constants other than keywords
         traceAndMark(rt, heap, objArr[i], rt->builtInTypes.keyword);
+    }
+    // errors
+    j = sizeof(vRuntimeBuiltInErrors) / sizeof(pointer);
+    objArr = (vObject*)&rt->builtInErrors;
+    for(i = 0; i < j; ++i) {
+        traceAndMark(rt, heap, objArr[i], rt->builtInTypes.error);
     }
 
 	roots = vRuntimeGetCurrentContext(rt)->roots;
@@ -340,7 +346,7 @@ static void collectGarbage(vRuntimeRef rt, vHeapRef heap) {
     heap->record = newRecord;
 }
 
-void vHeapForceGC(vRuntimeRef rt, vHeapRef heap) {
+void oHeapForceGC(vRuntimeRef rt, oHeapRef heap) {
     if(heap->mutex != NULL) {
         vMutexLock(heap->mutex);
 		// TODO: if the heap has a mutex field then we assume that all threads
@@ -356,7 +362,7 @@ void vHeapForceGC(vRuntimeRef rt, vHeapRef heap) {
 }
 
 static v_bool checkHeapSpace(vRuntimeRef rt,
-							 vHeapRef heap,
+							 oHeapRef heap,
                              uword size) {
     if((heap->gcThreshold - heap->currentSize) < size) {
         collectGarbage(rt, heap);
@@ -369,7 +375,8 @@ static v_bool checkHeapSpace(vRuntimeRef rt,
 }
 
 static vObject internalAlloc(vRuntimeRef rt,
-	                         vHeapRef heap,
+                             vThreadContextRef ctx,
+	                         oHeapRef heap,
                              vTypeRef type,
                              uword size) {
     vObject ret;
@@ -384,6 +391,12 @@ static vObject internalAlloc(vRuntimeRef rt,
     }
 
     block = allocBlock(size);
+    if(block == NULL) {
+        if(ctx) {
+            ctx->error = rt->builtInErrors.outOfMemory;
+        }
+        return NULL;
+    }
     ret = getObject(block);
     setType(block, (vTypeRef)(type == V_T_SELF ? ret : type));
     addHeapEntry(heap, block);
@@ -393,29 +406,31 @@ static vObject internalAlloc(vRuntimeRef rt,
     return ret;
 }
 
-vObject vHeapAlloc(vRuntimeRef rt, vHeapRef heap, vTypeRef t) {
-    return internalAlloc(rt, heap, t, t->size);
+vObject _oHeapAlloc(vThreadContextRef ctx, vTypeRef t) {
+    return internalAlloc(ctx->runtime, ctx, ctx->heap, t, t->size);
 }
 
 static uword calcArraySize(uword elemSize, uword numElems, u8 align) {
     return sizeof(oArray) + (elemSize * numElems) + align - 1;
 }
 
-oArrayRef vHeapAllocArray(vRuntimeRef rt,
-	                      vHeapRef heap,
+oArrayRef _oHeapAllocArray(vThreadContextRef ctx,
                           vTypeRef elementType,
                           uword numElements) {
     oArrayRef arr;
     u8 align = (u8)(elementType->alignment != 0 ? elementType->alignment : elementType->size);
     uword size = calcArraySize(elementType->size, numElements, align);
-    arr = (oArrayRef)internalAlloc(rt, heap, rt->builtInTypes.array, size);
+    arr = (oArrayRef)internalAlloc(ctx->runtime, ctx, ctx->heap, ctx->runtime->builtInTypes.array, size);
+    if(arr == NULL) {
+        return NULL;
+    }
     arr->element_type = elementType;
     arr->num_elements = numElements;
     arr->alignment = align;
     return arr;
 }
 
-static void addHeapEntry(vHeapRef heap, HeapBlockRef block) {
+static void addHeapEntry(oHeapRef heap, HeapBlockRef block) {
     HeapRecordRef tmp;
     
     if(recordEntry(heap->record, block) == v_false) {
@@ -427,14 +442,14 @@ static void addHeapEntry(vHeapRef heap, HeapBlockRef block) {
 }
 
 vObject v_bootstrap_object_alloc(vRuntimeRef rt,
-		                         vHeapRef heap,
+		                         oHeapRef heap,
                                  vTypeRef proto_type,
                                  uword size) {
-    return internalAlloc(rt, heap, proto_type, size);
+    return internalAlloc(rt, NULL, heap, proto_type, size);
 }
 
 oArrayRef v_bootstrap_array_alloc(vRuntimeRef rt,
-	                              vHeapRef heap,
+	                              oHeapRef heap,
                                   vTypeRef proto_elem_type,
                                   uword num_elements,
                                   uword elem_size,
@@ -442,14 +457,14 @@ oArrayRef v_bootstrap_array_alloc(vRuntimeRef rt,
     oArrayRef arr;
     uword size = calcArraySize(elem_size, num_elements, alignment);
     
-    arr = (oArrayRef)internalAlloc(rt, heap, rt->builtInTypes.array, size);
+    arr = (oArrayRef)internalAlloc(rt, NULL, heap, rt->builtInTypes.array, size);
     arr->element_type = proto_elem_type;
     arr->num_elements = num_elements;
     arr->alignment = alignment;
     return arr;
 }
 
-void vHeapDestroy(vHeapRef heap) {
+void oHeapDestroy(oHeapRef heap) {
     HeapBlockRef block;
     HeapRecordRef currentRecord;
     uword i;
@@ -479,10 +494,10 @@ vTypeRef vMemoryGetObjectType(vThreadContextRef ctx, vObject obj) {
 // A pointer to the new object is returned or NULL if there is an error, in
 // which case vErrorGet can be used to get the error object.
 // The type needs to be supplied separately to support copying of value types.
-vObject vHeapCopyObjectShared(vThreadContextRef ctx,
+vObject oHeapCopyObjectShared(vThreadContextRef ctx,
                               vObject obj,
                               vTypeRef type,
-                              vHeapRef sharedHeap) {
+                              oHeapRef sharedHeap) {
     if(ctx->error) return NULL;
     if(sharedHeap->mutex == NULL) {
         // TODO: ERROR

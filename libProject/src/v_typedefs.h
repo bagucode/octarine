@@ -21,8 +21,8 @@ typedef vFunction* vFunctionRef;
 typedef struct vFunctionOverload vFunctionOverload;
 typedef vFunctionOverload* vFunctionOverloadRef;
 
-typedef struct vHeap vHeap;
-typedef vHeap* vHeapRef;
+typedef struct oHeap oHeap;
+typedef oHeap* oHeapRef;
 
 typedef struct vKeyword vKeyword;
 typedef vKeyword* vKeywordRef;
@@ -81,6 +81,8 @@ typedef vVector* vVectorRef;
 
 #define oRETURN(expression) oRoots._oRET = expression; goto _oENDFNL;
 
+#define oRETURNERROR(expression) oRoots._oRET = NULL; vErrorSet(_oCTX, expression); goto _oENDFNL;
+
 #define oSETRET(expression) oRoots._oRET = expression
 
 #define oGETRET oRoots._oRET
@@ -93,6 +95,6 @@ typedef vVector* vVectorRef;
 
 #define oENDVOIDFN _oENDFN
 
-#define _oC(fn, ...) fn(__VA_ARGS__); if(vErrorGet(ctx)) { oRoots._oRET = NULL; goto _oENDFNL; }
+#define _oC(fn, ...) fn(_oCTX, __VA_ARGS__); if(vErrorGet(ctx)) { oRoots._oRET = NULL; goto _oENDFNL; }
 
 #endif

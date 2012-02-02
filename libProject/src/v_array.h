@@ -31,12 +31,12 @@ void _oArrayGet(vThreadContextRef ctx, oArrayRef arr, uword idx, pointer dest, v
 #define oArrayGet(...) _oC(_oArrayGet, __VA_ARGS__)
 
 oArrayRef v_bootstrap_array_create(vRuntimeRef rt,
-	                               vHeapRef heap,
+	                               oHeapRef heap,
                                    vTypeRef type,
                                    uword num_elements,
                                    uword elem_size,
                                    u8 alignment);
 
-void v_bootstrap_array_init_type(vRuntimeRef rt, vHeapRef heap);
+void v_bootstrap_array_init_type(vRuntimeRef rt, oHeapRef heap);
 
 #endif

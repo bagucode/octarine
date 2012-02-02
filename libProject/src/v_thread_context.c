@@ -7,7 +7,7 @@
 #include "v_runtime.h"
 #include <stddef.h>
 
-void v_bootstrap_thread_context_type_init(vRuntimeRef rt, vHeapRef heap) {
+void v_bootstrap_thread_context_type_init(vRuntimeRef rt, oHeapRef heap) {
     vFieldRef *fields;
     rt->builtInTypes.threadContext->fields = v_bootstrap_type_create_field_array(rt, heap, 1);
     rt->builtInTypes.threadContext->kind = V_T_OBJECT;
@@ -21,7 +21,7 @@ void v_bootstrap_thread_context_type_init(vRuntimeRef rt, vHeapRef heap) {
     fields[0]->type = rt->builtInTypes.any;
 }
 
-vThreadContextRef v_bootstrap_thread_context_create(vRuntimeRef runtime, vHeapRef heap) {
+vThreadContextRef v_bootstrap_thread_context_create(vRuntimeRef runtime, oHeapRef heap) {
 	vThreadContextRef ctx = (vThreadContextRef)v_bootstrap_object_alloc(runtime, heap, runtime->builtInTypes.threadContext, sizeof(vThreadContext));
     ctx->heap = NULL;
     ctx->runtime = runtime;
@@ -35,7 +35,7 @@ vThreadContextRef vThreadContextCreate(vRuntimeRef runtime,
                                        uword threadHeapInitialSize) {
 	/* TODO: Don't malloc here. Use the regular shared heap to store these? */
     vThreadContextRef ctx = (vThreadContextRef)vMalloc(sizeof(vThreadContext));
-    ctx->heap = vHeapCreate(v_false, threadHeapInitialSize);
+    ctx->heap = oHeapCreate(v_false, threadHeapInitialSize);
     ctx->runtime = runtime;
     ctx->roots = vMemoryCreateRootSet();
 	ctx->reader = vReaderCreate(ctx);
@@ -47,6 +47,6 @@ void vThreadContextDestroy(vThreadContextRef ctx) {
     vMemoryDeleteRootSet(ctx->roots);
 	// the thread context is contained in the heap which means this
 	// call will also destroy the context object
-    vHeapDestroy(ctx->heap);
+    oHeapDestroy(ctx->heap);
 }
 

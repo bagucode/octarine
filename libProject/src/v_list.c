@@ -5,6 +5,7 @@
 #include "v_type.h"
 #include "v_string.h"
 #include "v_array.h"
+#include "v_error.h"
 #include <stddef.h>
 
 void v_bootstrap_list_init_type(vThreadContextRef ctx) {
@@ -26,25 +27,27 @@ void v_bootstrap_list_init_type(vThreadContextRef ctx) {
 }
 
 vListObjRef vListObjCreate(vThreadContextRef ctx, vObject data) {
-    vListObjRef ret;
+    oROOTS(ctx)
+    oENDROOTS
     if(ctx->error) return NULL;
-	ret = (vListObjRef)vHeapAlloc(ctx->runtime, ctx->heap, ctx->runtime->builtInTypes.list);
-    ret->data = data;
-    return ret;
+	oSETRET(oHeapAlloc(ctx->runtime->builtInTypes.list));
+    oGETRETT(vListObjRef)->data = data;
+    oENDFN(vListObjRef)
 }
 
 vListObjRef vListObjAddFront(vThreadContextRef ctx,
                              vListObjRef lst,
                              vObject data) {
-    vListObjRef head;
+    oROOTS(ctx)
+    oENDROOTS
     if(ctx->error) return NULL;
-    head = (vListObjRef)vHeapAlloc(ctx->runtime, ctx->heap, ctx->runtime->builtInTypes.list);
-    head->data = data;
+    oSETRET(oHeapAlloc(ctx->runtime->builtInTypes.list));
+    oGETRETT(vListObjRef)->data = data;
     // Only set the next pointer to the node that got passed as an argument
     // if argument node is not empty, to make it appear that the empty node
     // got "filled" instead of having another link tacked on.
-    head->next = vListObjIsEmpty(ctx, lst) ? NULL : lst;
-    return head;
+    oGETRETT(vListObjRef)->next = vListObjIsEmpty(ctx, lst) ? NULL : lst;
+    oENDFN(vListObjRef)
 }
 
 static vListObjRef removeInternal(vThreadContextRef ctx,

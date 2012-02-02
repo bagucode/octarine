@@ -55,13 +55,18 @@ typedef struct vRuntimeBuiltInConstants {
     vKeywordRef indexOutOfBounds;
 } vRuntimeBuiltInConstants;
 
+typedef struct vRuntimeBuiltInErrors {
+    vErrorRef outOfMemory;
+} vRuntimeBuiltInErrors;
+
 struct vRuntime {
-    vHeapRef globals;
+    oHeapRef globals;
     vTLSRef currentContext;
     vThreadContextListRef allContexts;
     vRuntimeBuiltInTypes builtInTypes;
     vRuntimeBuiltInFunctions builtInFunctions;
     vRuntimeBuiltInConstants builtInConstants;
+    vRuntimeBuiltInErrors builtInErrors;
 };
 
 vRuntimeRef vRuntimeCreate(uword sharedHeapInitialSize,

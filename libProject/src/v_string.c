@@ -10,10 +10,11 @@
 #include <memory.h>
 
 vStringRef vStringCreate(vThreadContextRef ctx, char *utf8) {
-    vRuntimeRef rt = ctx->runtime;
-	vStringRef ret = (vStringRef)vHeapAlloc(ctx->runtime, ctx->heap, rt->builtInTypes.string);
-    ret->str = vNativeStringFromUtf8(utf8);
-    return ret;
+    oROOTS(ctx)
+    oENDROOTS
+    oSETRET(oHeapAlloc(ctx->runtime->builtInTypes.string));
+    oGETRETT(vStringRef)->str = vNativeStringFromUtf8(utf8);
+    oENDFN(vStringRef)
 }
 
 static void finalizer(vObject obj) {
@@ -31,7 +32,7 @@ oArrayRef vStringUtf8Copy(vThreadContextRef ctx, vStringRef str) {
     oROOTS(ctx)
     oENDROOTS
 
-    oSETRET(oArrayCreate(ctx, ctx->runtime->builtInTypes.u8, length));
+    oSETRET(oArrayCreate(ctx->runtime->builtInTypes.u8, length));
 	memcpy(oArrayDataPointer(oGETRETT(oArrayRef)), utf8String, length);
     vFree(utf8String);
 
@@ -43,12 +44,14 @@ v_char vStringCharAt(vThreadContextRef ctx, vStringRef str, uword idx) {
 }
 
 vStringRef vStringSubString(vThreadContextRef ctx, vStringRef str, uword start, uword end) {
-	vStringRef newStr = (vStringRef)vHeapAlloc(ctx->runtime, ctx->heap, ctx->runtime->builtInTypes.string);
-    newStr->str = vNativeStringSubstring(str->str, start, end);
-    return newStr;
+    oROOTS(ctx)
+    oENDROOTS
+	oSETRET(oHeapAlloc(ctx->runtime->builtInTypes.string));
+    oGETRETT(vStringRef)->str = vNativeStringSubstring(str->str, start, end);
+    oENDFN(vStringRef)
 }
 
-vStringRef v_bootstrap_string_create(vRuntimeRef rt, vHeapRef heap, const char *utf8) {
+vStringRef v_bootstrap_string_create(vRuntimeRef rt, oHeapRef heap, const char *utf8) {
     vStringRef str = (vStringRef)v_bootstrap_object_alloc(rt, heap, rt->builtInTypes.string, sizeof(vString));
     str->str = vNativeStringFromUtf8(utf8);
     return str;
@@ -58,7 +61,7 @@ uword vStringLength(vThreadContextRef ctx, vStringRef str) {
     return vNativeStringLength(str->str);
 }
 
-void v_bootstrap_string_init_type(vRuntimeRef rt, vHeapRef heap) {
+void v_bootstrap_string_init_type(vRuntimeRef rt, oHeapRef heap) {
     rt->builtInTypes.string->fields = NULL;
     rt->builtInTypes.string->kind = V_T_OBJECT;
     rt->builtInTypes.string->name = v_bootstrap_string_create(rt, heap, "String");

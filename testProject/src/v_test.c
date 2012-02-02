@@ -59,7 +59,7 @@ void testGCFinalizer() {
     vThreadContextRef ctx = runtime->allContexts->ctx;
     
     vStringCreate(ctx, "Test string");
-	vHeapForceGC(ctx->runtime, ctx->heap);
+	oHeapForceGC(ctx->runtime, ctx->heap);
     
     vRuntimeDestroy(runtime);
 }
@@ -202,10 +202,10 @@ void testCreateType() {
     testStruct* instance;
     oENDROOTS
     
-    oRoots.fields = oArrayCreate(ctx, ctx->runtime->builtInTypes.field, 5);
+    oRoots.fields = oArrayCreate(ctx->runtime->builtInTypes.field, 5);
     fields = (vFieldRef*)oArrayDataPointer(oRoots.fields);
     for(i = 0; i < oRoots.fields->num_elements; ++i) {
-		fields[i] = vHeapAlloc(ctx->runtime, ctx->heap, ctx->runtime->builtInTypes.field);
+		fields[i] = oHeapAlloc(ctx->runtime->builtInTypes.field);
     }
     fields[0]->name = vStringCreate(ctx, "one");
     fields[0]->type = ctx->runtime->builtInTypes.u8;
@@ -223,7 +223,7 @@ void testCreateType() {
     
     assert(oRoots.myType->size == sizeof(testStruct));
     
-	oRoots.instance = vHeapAlloc(ctx->runtime, ctx->heap, oRoots.myType);
+	oRoots.instance = oHeapAlloc(oRoots.myType);
     
     oRoots.instance->one = 250;
     oRoots.instance->two = 65500;
@@ -249,16 +249,16 @@ void testArrayPutGet() {
     vObject tmp2;
     oENDROOTS
     
-    oRoots.objArray = oArrayCreate(ctx, ctx->runtime->builtInTypes.any, 50);
+    oRoots.objArray = oArrayCreate(ctx->runtime->builtInTypes.any, 50);
     // Have no built in composite structs :(
-    oRoots.structArray = oArrayCreate(ctx, ctx->runtime->builtInTypes.i64, 50);
+    oRoots.structArray = oArrayCreate(ctx->runtime->builtInTypes.i64, 50);
 
-    oArrayGet(ctx, oRoots.objArray, 0, &oRoots.tmp1, ctx->runtime->builtInTypes.string);
+    oArrayGet(oRoots.objArray, 0, &oRoots.tmp1, ctx->runtime->builtInTypes.string);
     assert(oRoots.tmp1 == NULL);
 
     oRoots.tmp1 = vStringCreate(ctx, "a string");
-    oArrayPut(ctx, oRoots.objArray, 10, oRoots.tmp1, ctx->runtime->builtInTypes.string);
-    oArrayGet(ctx, oRoots.objArray, 10, &oRoots.tmp2, ctx->runtime->builtInTypes.string);
+    oArrayPut(oRoots.objArray, 10, oRoots.tmp1, ctx->runtime->builtInTypes.string);
+    oArrayGet(oRoots.objArray, 10, &oRoots.tmp2, ctx->runtime->builtInTypes.string);
     assert(vObjectGetType(ctx, oRoots.tmp2) == ctx->runtime->builtInTypes.string);
     assert(vStringCompare(oRoots.tmp1, oRoots.tmp2) == 0);
     assert(oRoots.tmp1 == oRoots.tmp2);
@@ -268,15 +268,15 @@ void testArrayPutGet() {
     three = -3;
     check = 0;
     
-    oArrayPut(ctx, oRoots.structArray, 1, &one, ctx->runtime->builtInTypes.i64);
-    oArrayPut(ctx, oRoots.structArray, 2, &two, ctx->runtime->builtInTypes.i64);
-    oArrayPut(ctx, oRoots.structArray, 3, &three, ctx->runtime->builtInTypes.i64);
+    oArrayPut(oRoots.structArray, 1, &one, ctx->runtime->builtInTypes.i64);
+    oArrayPut(oRoots.structArray, 2, &two, ctx->runtime->builtInTypes.i64);
+    oArrayPut(oRoots.structArray, 3, &three, ctx->runtime->builtInTypes.i64);
     
-    oArrayGet(ctx, oRoots.structArray, 1, &check, ctx->runtime->builtInTypes.i64);
+    oArrayGet(oRoots.structArray, 1, &check, ctx->runtime->builtInTypes.i64);
     assert(check == one);
-    oArrayGet(ctx, oRoots.structArray, 2, &check, ctx->runtime->builtInTypes.i64);
+    oArrayGet(oRoots.structArray, 2, &check, ctx->runtime->builtInTypes.i64);
     assert(check == two);
-    oArrayGet(ctx, oRoots.structArray, 3, &check, ctx->runtime->builtInTypes.i64);
+    oArrayGet(oRoots.structArray, 3, &check, ctx->runtime->builtInTypes.i64);
     assert(check == three);
     
     oENDVOIDFN

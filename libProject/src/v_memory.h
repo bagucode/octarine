@@ -5,28 +5,29 @@
 #include "v_object.h"
 #include "v_typedefs.h"
 
-vHeapRef vHeapCreate(v_bool synchronized, uword gc_threshold);
+oHeapRef oHeapCreate(v_bool synchronized, uword gc_threshold);
 
-void vHeapDestroy(vHeapRef heap);
+void oHeapDestroy(oHeapRef heap);
 
-vObject vHeapAlloc(vRuntimeRef rt, vHeapRef heap, vTypeRef t);
+vObject _oHeapAlloc(vThreadContextRef ctx, vTypeRef t);
+#define oHeapAlloc(...) _oC(_oHeapAlloc, __VA_ARGS__)
 
-oArrayRef vHeapAllocArray(vRuntimeRef rt,
-	                      vHeapRef heap,
-                          vTypeRef elementType,
-                          uword numElements);
+oArrayRef _oHeapAllocArray(vThreadContextRef ctx,
+                           vTypeRef elementType,
+                           uword numElements);
+#define oHeapAllocArray(...) _oC(_oHeapAllocArray, __VA_ARGS__)
 
-void vHeapForceGC(vRuntimeRef rt, vHeapRef heap);
+void oHeapForceGC(vRuntimeRef rt, oHeapRef heap);
 
 // Does a deep copy of obj into the specified heap, but only if the given heap
 // is a shared (synchronized) heap.
 // A pointer to the new object is returned or NULL if there is an error, in
 // which case vErrorGet can be used to get the error object.
 // The type needs to be supplied separately to support copying of value types.
-vObject vHeapCopyObjectShared(vThreadContextRef ctx,
+vObject oHeapCopyObjectShared(vThreadContextRef ctx,
                               vObject obj,
                               vTypeRef type,
-                              vHeapRef sharedHeap);
+                              oHeapRef sharedHeap);
 
 vTypeRef vMemoryGetObjectType(vThreadContextRef ctx, vObject obj);
 
@@ -42,12 +43,12 @@ vRootSetRef vMemoryCreateRootSet();
 void vMemoryDeleteRootSet(vRootSetRef roots);
 
 vObject v_bootstrap_object_alloc(vRuntimeRef rt,
-		                         vHeapRef heap,
+		                         oHeapRef heap,
                                  vTypeRef proto_type,
                                  uword size);
 
 oArrayRef v_bootstrap_array_alloc(vRuntimeRef rt,
-	                              vHeapRef heap,
+	                              oHeapRef heap,
                                   vTypeRef proto_elem_type,
                                   uword num_elements,
                                   uword elem_size,
