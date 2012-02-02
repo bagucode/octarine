@@ -193,17 +193,17 @@ typedef struct testStruct {
 void testCreateType() {
     oRuntimeRef runtime = oRuntimeCreate(2000 * 1024, 1024 * 1000);
     oThreadContextRef ctx = runtime->allContexts->ctx;
-    vFieldRef* fields;
+    oFieldRef* fields;
     uword i;
     oROOTS(ctx)
     oArrayRef fields;
-    vTypeRef myType;
+    oTypeRef myType;
     oStringRef typeName;
     testStruct* instance;
     oENDROOTS
     
     oRoots.fields = oArrayCreate(ctx->runtime->builtInTypes.field, 5);
-    fields = (vFieldRef*)oArrayDataPointer(oRoots.fields);
+    fields = (oFieldRef*)oArrayDataPointer(oRoots.fields);
     for(i = 0; i < oRoots.fields->num_elements; ++i) {
 		fields[i] = oHeapAlloc(ctx->runtime->builtInTypes.field);
     }
@@ -219,7 +219,7 @@ void testCreateType() {
     fields[4]->type = ctx->runtime->builtInTypes.f64;
     
     oRoots.typeName = oStringCreate(ctx, "MyHappyTestType");
-    oRoots.myType = vTypeCreate(ctx, V_T_OBJECT, 0, oRoots.typeName, oRoots.fields, NULL, NULL);
+    oRoots.myType = oTypeCreate(ctx, V_T_OBJECT, 0, oRoots.typeName, oRoots.fields, NULL, NULL);
     
     assert(oRoots.myType->size == sizeof(testStruct));
     
@@ -286,8 +286,8 @@ void testArrayPutGet() {
 void testVector() {
     oRuntimeRef runtime = oRuntimeCreate(2000 * 1024, 1024 * 1000);
     oThreadContextRef ctx = runtime->allContexts->ctx;
-    vTypeRef str_t = ctx->runtime->builtInTypes.string;
-    vTypeRef i64_t = ctx->runtime->builtInTypes.i64;
+    oTypeRef str_t = ctx->runtime->builtInTypes.string;
+    oTypeRef i64_t = ctx->runtime->builtInTypes.i64;
     i64 one;
     i64 checki64;
     struct {

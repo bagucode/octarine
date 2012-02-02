@@ -9,11 +9,11 @@ oHeapRef oHeapCreate(v_bool synchronized, uword gc_threshold);
 
 void oHeapDestroy(oHeapRef heap);
 
-vObject _oHeapAlloc(oThreadContextRef ctx, vTypeRef t);
+vObject _oHeapAlloc(oThreadContextRef ctx, oTypeRef t);
 #define oHeapAlloc(type) _oC(_oHeapAlloc, type)
 
 oArrayRef _oHeapAllocArray(oThreadContextRef ctx,
-                           vTypeRef elementType,
+                           oTypeRef elementType,
                            uword numElements);
 #define oHeapAllocArray(type, size) _oC(_oHeapAllocArray, type, size)
 
@@ -26,10 +26,10 @@ void oHeapForceGC(oRuntimeRef rt, oHeapRef heap);
 // The type needs to be supplied separately to support copying of value types.
 vObject oHeapCopyObjectShared(oThreadContextRef ctx,
                               vObject obj,
-                              vTypeRef type,
+                              oTypeRef type,
                               oHeapRef sharedHeap);
 
-vTypeRef oMemoryGetObjectType(oThreadContextRef ctx, vObject obj);
+oTypeRef oMemoryGetObjectType(oThreadContextRef ctx, vObject obj);
 
 void oMemoryPushFrame(oThreadContextRef ctx,
                       pointer frame,
@@ -44,12 +44,12 @@ void oMemoryDeleteRootSet(vRootSetRef roots);
 
 vObject o_bootstrap_object_alloc(oRuntimeRef rt,
 		                         oHeapRef heap,
-                                 vTypeRef proto_type,
+                                 oTypeRef proto_type,
                                  uword size);
 
 oArrayRef o_bootstrap_array_alloc(oRuntimeRef rt,
 	                              oHeapRef heap,
-                                  vTypeRef proto_elem_type,
+                                  oTypeRef proto_elem_type,
                                   uword num_elements,
                                   uword elem_size,
                                   u8 alignment);

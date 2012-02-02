@@ -9,13 +9,13 @@
 #include <stddef.h>
 
 void o_bootstrap_list_init_type(oThreadContextRef ctx) {
-    vFieldRef *fields;
+    oFieldRef *fields;
     ctx->runtime->builtInTypes.list->fields = o_bootstrap_type_create_field_array(ctx->runtime, ctx->heap, 2);
     ctx->runtime->builtInTypes.list->kind = V_T_OBJECT;
     ctx->runtime->builtInTypes.list->name = o_bootstrap_string_create(ctx->runtime, ctx->heap, "AnyList");
     ctx->runtime->builtInTypes.list->size = sizeof(oListObj);
 
-    fields = (vFieldRef*)oArrayDataPointer(ctx->runtime->builtInTypes.list->fields);
+    fields = (oFieldRef*)oArrayDataPointer(ctx->runtime->builtInTypes.list->fields);
     
     fields[0]->name = o_bootstrap_string_create(ctx->runtime, ctx->heap, "data");
     fields[0]->offset = offsetof(oListObj, data);

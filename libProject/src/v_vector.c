@@ -11,23 +11,23 @@ void o_bootstrap_vector_init_type(oThreadContextRef ctx) {
     oROOTS(ctx)
     oArrayRef fields;
     oStringRef typeName;
-    vFieldRef field;
+    oFieldRef field;
     oENDROOTS
     
     oRoots.fields = oArrayCreate(ctx->runtime->builtInTypes.field, 1);
     oRoots.typeName = oStringCreate(ctx, "data");
-    oRoots.field = vFieldCreate(ctx, oRoots.typeName, ctx->runtime->builtInTypes.array);
+    oRoots.field = oFieldCreate(ctx, oRoots.typeName, ctx->runtime->builtInTypes.array);
     oArrayPut(oRoots.fields, 0, oRoots.field, ctx->runtime->builtInTypes.field);
     
     oRoots.typeName = oStringCreate(ctx, "Vector");
-    oSETRET(vTypeCreate(ctx, V_T_OBJECT, 0, oRoots.typeName, oRoots.fields, NULL, NULL));
+    oSETRET(oTypeCreate(ctx, V_T_OBJECT, 0, oRoots.typeName, oRoots.fields, NULL, NULL));
     ctx->runtime->builtInTypes.vector = oGETRET;
 
     oENDVOIDFN
 }
 
 vVectorRef vVectorCreate(oThreadContextRef ctx,
-                         vTypeRef type) {
+                         oTypeRef type) {
     oROOTS(ctx)
     oENDROOTS
     
@@ -40,7 +40,7 @@ vVectorRef vVectorCreate(oThreadContextRef ctx,
 vVectorRef vVectorAddBack(oThreadContextRef ctx,
                           vVectorRef vec,
                           pointer data,
-                          vTypeRef dataType) {
+                          oTypeRef dataType) {
     oROOTS(ctx)
     oENDROOTS
     
@@ -57,7 +57,7 @@ uword vVectorSize(oThreadContextRef ctx, vVectorRef vec) {
     return vec->data->num_elements;
 }
 
-vVectorRef vVectorPut(oThreadContextRef ctx, vVectorRef vec, uword idx, pointer src, vTypeRef srcType) {
+vVectorRef vVectorPut(oThreadContextRef ctx, vVectorRef vec, uword idx, pointer src, oTypeRef srcType) {
     oROOTS(ctx)
     oENDROOTS
 
@@ -70,7 +70,7 @@ vVectorRef vVectorPut(oThreadContextRef ctx, vVectorRef vec, uword idx, pointer 
 	oENDFN(vVectorRef)
 }
 
-void vVectorGet(oThreadContextRef ctx, vVectorRef vec, uword idx, pointer dest, vTypeRef destType) {
+void vVectorGet(oThreadContextRef ctx, vVectorRef vec, uword idx, pointer dest, oTypeRef destType) {
     oROOTS(ctx)
     oENDROOTS
     oArrayGet(vec->data, idx, dest, destType);

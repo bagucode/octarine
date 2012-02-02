@@ -8,13 +8,13 @@
 #include <stddef.h>
 
 void o_bootstrap_thread_context_type_init(oRuntimeRef rt, oHeapRef heap) {
-    vFieldRef *fields;
+    oFieldRef *fields;
     rt->builtInTypes.threadContext->fields = o_bootstrap_type_create_field_array(rt, heap, 1);
     rt->builtInTypes.threadContext->kind = V_T_OBJECT;
     rt->builtInTypes.threadContext->name = o_bootstrap_string_create(rt, heap, "ThreadContext");
     rt->builtInTypes.threadContext->size = sizeof(oThreadContext);
 
-    fields = (vFieldRef*)oArrayDataPointer(rt->builtInTypes.threadContext->fields);
+    fields = (oFieldRef*)oArrayDataPointer(rt->builtInTypes.threadContext->fields);
     
     fields[0]->name = o_bootstrap_string_create(rt, heap, "error");
     fields[0]->offset = offsetof(oThreadContext, error);

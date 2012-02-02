@@ -5,7 +5,7 @@
 #include "v_typedefs.h"
 
 struct oArray {
-    vTypeRef element_type;
+    oTypeRef element_type;
     uword num_elements;
     u8 alignment;
     char data[0];
@@ -14,7 +14,7 @@ struct oArray {
 };
 
 oArrayRef _oArrayCreate(oThreadContextRef ctx,
-                        vTypeRef elemType,
+                        oTypeRef elemType,
                         uword num_elements);
 #define oArrayCreate(elemType, numElems) _oC(_oArrayCreate, elemType, numElems)
 
@@ -25,14 +25,14 @@ uword oArraySize(oArrayRef arr);
 void _oArrayCopy(oThreadContextRef ctx, oArrayRef from, oArrayRef to);
 #define oArrayCopy(from, to) _oC(_oArrayCopy, from, to)
 
-void _oArrayPut(oThreadContextRef ctx, oArrayRef arr, uword idx, pointer src, vTypeRef srcType);
+void _oArrayPut(oThreadContextRef ctx, oArrayRef arr, uword idx, pointer src, oTypeRef srcType);
 #define oArrayPut(arr, idx, src, srcType) _oC(_oArrayPut, arr, idx, src, srcType)
-void _oArrayGet(oThreadContextRef ctx, oArrayRef arr, uword idx, pointer dest, vTypeRef destType);
+void _oArrayGet(oThreadContextRef ctx, oArrayRef arr, uword idx, pointer dest, oTypeRef destType);
 #define oArrayGet(arr, idx, dest, destType) _oC(_oArrayGet, arr, idx, dest, destType)
 
 oArrayRef o_bootstrap_array_create(oRuntimeRef rt,
 	                               oHeapRef heap,
-                                   vTypeRef type,
+                                   oTypeRef type,
                                    uword num_elements,
                                    uword elem_size,
                                    u8 alignment);

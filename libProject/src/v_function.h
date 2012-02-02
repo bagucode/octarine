@@ -6,13 +6,13 @@
 
 struct oParameter {
     oStringRef name;
-    vTypeRef type;
+    oTypeRef type;
 };
 
-oParameterRef oParameterCreate(oStringRef name, vTypeRef type);
+oParameterRef oParameterCreate(oStringRef name, oTypeRef type);
 
 struct oSignature {
-    oArrayRef returns; /* array of vType */
+    oArrayRef returns; /* array of oType */
     oArrayRef parameters; /* array of oParameter */
 };
 

@@ -7,15 +7,15 @@
 #include "v_error.h"
 #include <stddef.h>
 
-v_bool vTypeIsPrimitive(vTypeRef t) {
-	return vTypeIsStruct(t) && t->fields == NULL;
+v_bool oTypeIsPrimitive(oTypeRef t) {
+	return oTypeIsStruct(t) && t->fields == NULL;
 }
 
-v_bool vTypeIsStruct(vTypeRef t) {
+v_bool oTypeIsStruct(oTypeRef t) {
     return t->kind == V_T_STRUCT;
 }
 
-v_bool vTypeIsObject(vTypeRef t) {
+v_bool oTypeIsObject(oTypeRef t) {
     return t->kind == V_T_OBJECT;
 }
 
@@ -25,11 +25,11 @@ static uword alignOffset(uword offset, uword on) {
 
 static uword findLargestAlignment(oThreadContextRef ctx,
 					              uword largest,
-                                  vFieldRef field) {
-    vFieldRef* members;
+                                  oFieldRef field) {
+    oFieldRef* members;
     uword i, align;
 
-    if(vTypeIsPrimitive(field->type)) {
+    if(oTypeIsPrimitive(field->type)) {
 		align = field->type->alignment != 0 ? field->type->alignment : field->type->size;
 		if(align > largest)
 			largest = align;
@@ -41,7 +41,7 @@ static uword findLargestAlignment(oThreadContextRef ctx,
 			}
 		}
 		else {
-			members = (vFieldRef*)oArrayDataPointer(field->type->fields);
+			members = (oFieldRef*)oArrayDataPointer(field->type->fields);
 			for(i = 0; i < field->type->fields->num_elements; ++i) {
 				largest = findLargestAlignment(ctx, largest, members[i]);
 			}
@@ -59,44 +59,44 @@ static uword nextLargerMultiple(uword of, uword largerThan) {
     return result;
 }
 
-vTypeRef vTypeCreateProtoType(oThreadContextRef ctx) {
+oTypeRef oTypeCreateProtoType(oThreadContextRef ctx) {
     oROOTS(ctx)
     oENDROOTS
 	oRETURN(oHeapAlloc(ctx->runtime->builtInTypes.type));
-    oENDFN(vTypeRef)
+    oENDFN(oTypeRef)
 }
 
-vTypeRef vTypeCreate(oThreadContextRef ctx,
+oTypeRef oTypeCreate(oThreadContextRef ctx,
                      u8 kind,
                      u8 alignment,
                      oStringRef name,
                      oArrayRef fields,
                      vFinalizer finalizer,
-                     vTypeRef protoType) {
-    vFieldRef* inFields;
-    vFieldRef* members;
+                     oTypeRef protoType) {
+    oFieldRef* inFields;
+    oFieldRef* members;
     uword i, largest, align;
     oROOTS(ctx)
     oENDROOTS
     
     oSETRET(protoType);
     if(oGETRET == NULL) {
-        oSETRET(vTypeCreateProtoType(ctx));
+        oSETRET(oTypeCreateProtoType(ctx));
     }
     
-    oGETRETT(vTypeRef)->name = name;
-    oGETRETT(vTypeRef)->kind = kind;
-    oGETRETT(vTypeRef)->finalizer = finalizer;
-    oGETRETT(vTypeRef)->fields = oArrayCreate(ctx->runtime->builtInTypes.field, fields->num_elements);
-    oGETRETT(vTypeRef)->size = 0;
-    oGETRETT(vTypeRef)->alignment = alignment;
+    oGETRETT(oTypeRef)->name = name;
+    oGETRETT(oTypeRef)->kind = kind;
+    oGETRETT(oTypeRef)->finalizer = finalizer;
+    oGETRETT(oTypeRef)->fields = oArrayCreate(ctx->runtime->builtInTypes.field, fields->num_elements);
+    oGETRETT(oTypeRef)->size = 0;
+    oGETRETT(oTypeRef)->alignment = alignment;
 
     largest = 0;
-    inFields = (vFieldRef*)oArrayDataPointer(fields);
-    members = (vFieldRef*)oArrayDataPointer(oGETRETT(vTypeRef)->fields);
+    inFields = (oFieldRef*)oArrayDataPointer(fields);
+    members = (oFieldRef*)oArrayDataPointer(oGETRETT(oTypeRef)->fields);
 
-    for(i = 0; i < oGETRETT(vTypeRef)->fields->num_elements; ++i) {
-		members[i] = (vFieldRef)oHeapAlloc(ctx->runtime->builtInTypes.field);
+    for(i = 0; i < oGETRETT(oTypeRef)->fields->num_elements; ++i) {
+		members[i] = (oFieldRef)oHeapAlloc(ctx->runtime->builtInTypes.field);
         members[i]->name = inFields[i]->name;
         if(inFields[i]->type == V_T_SELF) {
             members[i]->type = oGETRET;
@@ -104,28 +104,28 @@ vTypeRef vTypeCreate(oThreadContextRef ctx,
             members[i]->type = inFields[i]->type;
         }
         if(members[i]->type->kind == V_T_OBJECT) {
-            oGETRETT(vTypeRef)->size = alignOffset(oGETRETT(vTypeRef)->size, sizeof(void*));
-            members[i]->offset = (u32)oGETRETT(vTypeRef)->size;
-            oGETRETT(vTypeRef)->size += sizeof(void*);
+            oGETRETT(oTypeRef)->size = alignOffset(oGETRETT(oTypeRef)->size, sizeof(void*));
+            members[i]->offset = (u32)oGETRETT(oTypeRef)->size;
+            oGETRETT(oTypeRef)->size += sizeof(void*);
             if(largest < sizeof(void*))
                 largest = sizeof(void*);
         } else { // struct type
-            if(vTypeIsPrimitive(members[i]->type)) {
+            if(oTypeIsPrimitive(members[i]->type)) {
                 align = members[i]->type->alignment != 0 ? members[i]->type->alignment : members[i]->type->size;
             } else {
                 // Align composite types on pointer if there is no explicit alignment
                 align = members[i]->type->alignment != 0 ? members[i]->type->alignment : sizeof(void*);
             }
-            oGETRETT(vTypeRef)->size = alignOffset(oGETRETT(vTypeRef)->size, align);
-            members[i]->offset = (u32)oGETRETT(vTypeRef)->size;
-            oGETRETT(vTypeRef)->size += members[i]->type->size;
+            oGETRETT(oTypeRef)->size = alignOffset(oGETRETT(oTypeRef)->size, align);
+            members[i]->offset = (u32)oGETRETT(oTypeRef)->size;
+            oGETRETT(oTypeRef)->size += members[i]->type->size;
             largest = findLargestAlignment(ctx, largest, members[i]);
         }
     }
     
-    oGETRETT(vTypeRef)->size = nextLargerMultiple(largest, oGETRETT(vTypeRef)->size);
+    oGETRETT(oTypeRef)->size = nextLargerMultiple(largest, oGETRETT(oTypeRef)->size);
 
-    oENDFN(vTypeRef)
+    oENDFN(oTypeRef)
 }
 
 oArrayRef o_bootstrap_type_create_field_array(oRuntimeRef rt,
@@ -133,84 +133,84 @@ oArrayRef o_bootstrap_type_create_field_array(oRuntimeRef rt,
                                               uword numFields) {
     oArrayRef ret = o_bootstrap_array_create(rt, heap, rt->builtInTypes.field, numFields, sizeof(pointer), sizeof(pointer));
     uword i;
-    vFieldRef* fields = (vFieldRef*)oArrayDataPointer(ret);
+    oFieldRef* fields = (oFieldRef*)oArrayDataPointer(ret);
     for(i = 0; i < numFields; ++i) {
-        fields[i] = (vFieldRef)o_bootstrap_object_alloc(rt, heap, rt->builtInTypes.field, sizeof(vField));
+        fields[i] = (oFieldRef)o_bootstrap_object_alloc(rt, heap, rt->builtInTypes.field, sizeof(oField));
     }
     return ret;
 }
 
 void o_bootstrap_type_init_type(oRuntimeRef rt, oHeapRef heap) {
-    vFieldRef *fields;
+    oFieldRef *fields;
     rt->builtInTypes.type->fields = o_bootstrap_type_create_field_array(rt, heap, 4);
     rt->builtInTypes.type->kind = V_T_OBJECT;
     rt->builtInTypes.type->name = o_bootstrap_string_create(rt, heap, "Type");
-    rt->builtInTypes.type->size = sizeof(vType);
+    rt->builtInTypes.type->size = sizeof(oType);
     
-    fields = (vFieldRef*)oArrayDataPointer(rt->builtInTypes.type->fields);
+    fields = (oFieldRef*)oArrayDataPointer(rt->builtInTypes.type->fields);
 
     fields[0]->name = o_bootstrap_string_create(rt, heap, "name");
-    fields[0]->offset = offsetof(vType, name);
+    fields[0]->offset = offsetof(oType, name);
     fields[0]->type = rt->builtInTypes.string;
 
     fields[1]->name = o_bootstrap_string_create(rt, heap, "fields");
-    fields[1]->offset = offsetof(vType, fields);
+    fields[1]->offset = offsetof(oType, fields);
     fields[1]->type = rt->builtInTypes.array;
     
     fields[2]->name = o_bootstrap_string_create(rt, heap, "size");
-    fields[2]->offset = offsetof(vType, size);
+    fields[2]->offset = offsetof(oType, size);
     fields[2]->type = rt->builtInTypes.uword;
     
     fields[3]->name = o_bootstrap_string_create(rt, heap, "kind");
-    fields[3]->offset = offsetof(vType, kind);
+    fields[3]->offset = offsetof(oType, kind);
     fields[3]->type = rt->builtInTypes.u8;
 }
 
 void o_bootstrap_type_init_field(oRuntimeRef rt, oHeapRef heap) {
-    vFieldRef *fields;
+    oFieldRef *fields;
     rt->builtInTypes.field->fields = o_bootstrap_type_create_field_array(rt, heap, 3);
     rt->builtInTypes.field->kind = V_T_OBJECT;
     rt->builtInTypes.field->name = o_bootstrap_string_create(rt, heap, "Field");
-    rt->builtInTypes.field->size = sizeof(vField);
+    rt->builtInTypes.field->size = sizeof(oField);
 
-    fields = (vFieldRef*)oArrayDataPointer(rt->builtInTypes.field->fields);
+    fields = (oFieldRef*)oArrayDataPointer(rt->builtInTypes.field->fields);
     
     fields[0]->name = o_bootstrap_string_create(rt, heap, "name");
-    fields[0]->offset = offsetof(vField, name);
+    fields[0]->offset = offsetof(oField, name);
     fields[0]->type = rt->builtInTypes.string;
     
     fields[1]->name = o_bootstrap_string_create(rt, heap, "type");
-    fields[1]->offset = offsetof(vField, type);
+    fields[1]->offset = offsetof(oField, type);
     fields[1]->type = rt->builtInTypes.type;
     
     fields[2]->name = o_bootstrap_string_create(rt, heap, "offset");
-    fields[2]->offset = offsetof(vField, offset);
+    fields[2]->offset = offsetof(oField, offset);
     fields[2]->type = rt->builtInTypes.u32;
 }
 
-v_bool vTypeEquals(oThreadContextRef ctx, vTypeRef t, vObject other) {
+v_bool oTypeEquals(oThreadContextRef ctx, oTypeRef t, vObject other) {
     /* Types are only equal if they are the same type */
     return t == other;
 }
 
-vFieldRef vFieldCreate(oThreadContextRef ctx,
+oFieldRef oFieldCreate(oThreadContextRef ctx,
                        oStringRef name,
-                       vTypeRef type) {
+                       oTypeRef type) {
     oROOTS(ctx)
     oENDROOTS
     oSETRET(oHeapAlloc(ctx->runtime->builtInTypes.field));
-    oGETRETT(vFieldRef)->name = name;
-    oGETRETT(vFieldRef)->type = type;
-    oENDFN(vFieldRef)
+    oGETRETT(oFieldRef)->name = name;
+    oGETRETT(oFieldRef)->type = type;
+    oENDFN(oFieldRef)
 }
 
-oStringRef vTypeGetName(vTypeRef type) {
+oStringRef oTypeGetName(oTypeRef type) {
     return type->name;
 }
 
 const u8 V_T_OBJECT = 0;
 const u8 V_T_STRUCT = 1;
-const vTypeRef V_T_SELF = NULL;
+const oTypeRef V_T_SELF = NULL;
 
 
 

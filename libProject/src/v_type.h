@@ -7,15 +7,15 @@
 
 extern const u8 V_T_OBJECT;
 extern const u8 V_T_STRUCT;
-extern const vTypeRef V_T_SELF;
+extern const oTypeRef V_T_SELF;
 
-struct vField {
+struct oField {
     oStringRef name;
-    vTypeRef type;
+    oTypeRef type;
     u32 offset;
 };
 
-struct vType {
+struct oType {
     oStringRef name;
     oArrayRef fields;
     oArrayRef attributes; // TODO: use this for things like 'this is immutable'
@@ -30,23 +30,23 @@ struct vType {
     u8 alignment;
 };
 
-vFieldRef vFieldCreate(oThreadContextRef ctx,
+oFieldRef oFieldCreate(oThreadContextRef ctx,
                        oStringRef name,
-                       vTypeRef type);
+                       oTypeRef type);
 
-v_bool vTypeIsPrimitive(vTypeRef t);
-v_bool vTypeIsStruct(vTypeRef t);
-v_bool vTypeIsObject(vTypeRef t);
-v_bool vTypeEquals(oThreadContextRef ctx, vTypeRef t, vObject other);
-vTypeRef vTypeCreatePrototype(oThreadContextRef ctx, v_bool shared);
-vTypeRef vTypeCreate(oThreadContextRef ctx,
+v_bool oTypeIsPrimitive(oTypeRef t);
+v_bool oTypeIsStruct(oTypeRef t);
+v_bool oTypeIsObject(oTypeRef t);
+v_bool oTypeEquals(oThreadContextRef ctx, oTypeRef t, vObject other);
+oTypeRef oTypeCreatePrototype(oThreadContextRef ctx, v_bool shared);
+oTypeRef oTypeCreate(oThreadContextRef ctx,
                      u8 kind,
                      u8 alignment,
                      oStringRef name,
                      oArrayRef fields,
                      vFinalizer finalizer,
-                     vTypeRef protoType);
-oStringRef vTypeGetName(vTypeRef type);
+                     oTypeRef protoType);
+oStringRef oTypeGetName(oTypeRef type);
 
 void o_bootstrap_type_init_type(oRuntimeRef rt, oHeapRef heap);
 void o_bootstrap_type_init_field(oRuntimeRef rt, oHeapRef heap);

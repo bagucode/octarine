@@ -54,20 +54,20 @@ static void clearMark(HeapBlockRef block) {
 #endif
 }
 
-static vTypeRef getType(HeapBlockRef block) {
+static oTypeRef getType(HeapBlockRef block) {
 #ifdef VLANG64
-    return (vTypeRef)(block->typeRefAndMark & 0xFFFFFFFFFFFFFFFE);
+    return (oTypeRef)(block->typeRefAndMark & 0xFFFFFFFFFFFFFFFE);
 #else
-    return (vTypeRef)(block->typeRefAndMark & 0xFFFFFFFE);
+    return (oTypeRef)(block->typeRefAndMark & 0xFFFFFFFE);
 #endif
 }
 
-static void setType(HeapBlockRef block, vTypeRef type) {
+static void setType(HeapBlockRef block, oTypeRef type) {
     block->typeRefAndMark = (uword)type;
 }
 
 static uword getSize(HeapBlockRef block) {
-    vTypeRef type = getType(block);
+    oTypeRef type = getType(block);
     return sizeof(HeapBlock) + type->size;
 }
 
@@ -169,11 +169,11 @@ void oMemoryPopFrame(oThreadContextRef ctx) {
     }
 }
 
-static void traceAndMark(oRuntimeRef rt, oHeapRef heap, vObject obj, vTypeRef type) {
+static void traceAndMark(oRuntimeRef rt, oHeapRef heap, vObject obj, oTypeRef type) {
     vObject fieldPtr;
-    vFieldRef field;
-    vFieldRef* fields;
-    vTypeRef fieldType;
+    oFieldRef field;
+    oFieldRef* fields;
+    oTypeRef fieldType;
     HeapBlockRef block;
     uword i, arrayStride;
 	oArrayRef array;
@@ -188,7 +188,7 @@ static void traceAndMark(oRuntimeRef rt, oHeapRef heap, vObject obj, vTypeRef ty
      be no sweep in the shared heap to reset the marks. */
     if(obj) {
         block = NULL;
-        if(vTypeIsObject(type)) {
+        if(oTypeIsObject(type)) {
             block = getBlock(obj);
         }
         if(block == NULL || isMarked(block) == v_false) {
@@ -197,10 +197,10 @@ static void traceAndMark(oRuntimeRef rt, oHeapRef heap, vObject obj, vTypeRef ty
             }
             /* Some types don't have fields */
             if(type->fields) {
-                fields = (vFieldRef*)oArrayDataPointer(type->fields);
+                fields = (oFieldRef*)oArrayDataPointer(type->fields);
                 for(i = 0; i < type->fields->num_elements; ++i) {
                     field = fields[i];
-                    if(!vTypeIsPrimitive(field->type)) {
+                    if(!oTypeIsPrimitive(field->type)) {
                         fieldPtr = *((vObject*)(((char*)obj) + field->offset));
                         if(fieldPtr) {
                             /* if the type is Any we have to get the actual runtime
@@ -220,7 +220,7 @@ static void traceAndMark(oRuntimeRef rt, oHeapRef heap, vObject obj, vTypeRef ty
 			/* else clause for field NULL check, array handling */
 			else if(type == rt->builtInTypes.array) {
 				array = (oArrayRef)obj;
-				if(!vTypeIsPrimitive(array->element_type)) {
+				if(!oTypeIsPrimitive(array->element_type)) {
 					if(array->element_type->kind == V_T_OBJECT) {
 						arrayObjs = (vObject*)oArrayDataPointer(array);
 						for(i = 0; i < array->num_elements; ++i) {
@@ -255,7 +255,7 @@ static void collectGarbage(oRuntimeRef rt, oHeapRef heap) {
     HeapRecordRef currentRecord;
     HeapRecordRef tmpRecord;
     HeapBlockRef block;
-    vTypeRef type;
+    oTypeRef type;
     
 	oThreadContextListRef lst, next;
 
@@ -377,7 +377,7 @@ static v_bool checkHeapSpace(oRuntimeRef rt,
 static vObject internalAlloc(oRuntimeRef rt,
                              oThreadContextRef ctx,
 	                         oHeapRef heap,
-                             vTypeRef type,
+                             oTypeRef type,
                              uword size) {
     vObject ret;
     HeapBlockRef block;
@@ -398,7 +398,7 @@ static vObject internalAlloc(oRuntimeRef rt,
         return NULL;
     }
     ret = getObject(block);
-    setType(block, (vTypeRef)(type == V_T_SELF ? ret : type));
+    setType(block, (oTypeRef)(type == V_T_SELF ? ret : type));
     addHeapEntry(heap, block);
     
     heap->currentSize += allocSize;
@@ -406,7 +406,7 @@ static vObject internalAlloc(oRuntimeRef rt,
     return ret;
 }
 
-vObject _oHeapAlloc(oThreadContextRef ctx, vTypeRef t) {
+vObject _oHeapAlloc(oThreadContextRef ctx, oTypeRef t) {
     return internalAlloc(ctx->runtime, ctx, ctx->heap, t, t->size);
 }
 
@@ -415,7 +415,7 @@ static uword calcArraySize(uword elemSize, uword numElems, u8 align) {
 }
 
 oArrayRef _oHeapAllocArray(oThreadContextRef ctx,
-                          vTypeRef elementType,
+                          oTypeRef elementType,
                           uword numElements) {
     oArrayRef arr;
     u8 align = (u8)(elementType->alignment != 0 ? elementType->alignment : elementType->size);
@@ -443,14 +443,14 @@ static void addHeapEntry(oHeapRef heap, HeapBlockRef block) {
 
 vObject o_bootstrap_object_alloc(oRuntimeRef rt,
 		                         oHeapRef heap,
-                                 vTypeRef proto_type,
+                                 oTypeRef proto_type,
                                  uword size) {
     return internalAlloc(rt, NULL, heap, proto_type, size);
 }
 
 oArrayRef o_bootstrap_array_alloc(oRuntimeRef rt,
 	                              oHeapRef heap,
-                                  vTypeRef proto_elem_type,
+                                  oTypeRef proto_elem_type,
                                   uword num_elements,
                                   uword elem_size,
                                   u8 alignment) {
@@ -485,7 +485,7 @@ void oHeapDestroy(oHeapRef heap) {
     vFree(heap);
 }
 
-vTypeRef oMemoryGetObjectType(oThreadContextRef ctx, vObject obj) {
+oTypeRef oMemoryGetObjectType(oThreadContextRef ctx, vObject obj) {
     return getType(getBlock(obj));
 }
 
@@ -496,7 +496,7 @@ vTypeRef oMemoryGetObjectType(oThreadContextRef ctx, vObject obj) {
 // The type needs to be supplied separately to support copying of value types.
 vObject oHeapCopyObjectShared(oThreadContextRef ctx,
                               vObject obj,
-                              vTypeRef type,
+                              oTypeRef type,
                               oHeapRef sharedHeap) {
     if(ctx->error) return NULL;
     if(sharedHeap->mutex == NULL) {

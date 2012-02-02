@@ -12,8 +12,8 @@ typedef oClosure* oClosureRef;
 typedef struct oError oError;
 typedef oError* oErrorRef;
 
-typedef struct vField vField;
-typedef vField* vFieldRef;
+typedef struct oField oField;
+typedef oField* oFieldRef;
 
 typedef struct oFunction oFunction;
 typedef oFunction* oFunctionRef;
@@ -67,8 +67,8 @@ typedef oSymbol* oSymbolRef;
 typedef struct oThreadContext oThreadContext;
 typedef oThreadContext* oThreadContextRef;
 
-typedef struct vType vType;
-typedef vType* vTypeRef;
+typedef struct oType oType;
+typedef oType* oTypeRef;
 
 typedef struct vVector vVector;
 typedef vVector* vVectorRef;

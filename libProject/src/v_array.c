@@ -13,7 +13,7 @@ static uword alignOffset(uword offset, uword on) {
 }
 
 oArrayRef _oArrayCreate(oThreadContextRef ctx,
-                       vTypeRef elemType,
+                       oTypeRef elemType,
                        uword num_elements) {
     oROOTS(ctx)
     oENDROOTS
@@ -32,7 +32,7 @@ uword oArraySize(oArrayRef arr) {
 
 oArrayRef o_bootstrap_array_create(oRuntimeRef rt,
 	                               oHeapRef heap,
-                                   vTypeRef type,
+                                   oTypeRef type,
                                    uword num_elements,
                                    uword elem_size,
                                    u8 alignment) {
@@ -59,18 +59,18 @@ void _oArrayCopy(oThreadContextRef ctx, oArrayRef from, oArrayRef to) {
     return;
 }
 
-void _oArrayPut(oThreadContextRef ctx, oArrayRef arr, uword idx, pointer src, vTypeRef srcType) {
+void _oArrayPut(oThreadContextRef ctx, oArrayRef arr, uword idx, pointer src, oTypeRef srcType) {
     char* data = (char*)oArrayDataPointer(arr);
     pointer* datap;
 
     if(ctx->error) return;
-    if(vTypeIsObject(arr->element_type)
+    if(oTypeIsObject(arr->element_type)
        && arr->element_type != ctx->runtime->builtInTypes.any
        && srcType != arr->element_type) {
         oErrorSet(ctx, ctx->runtime->builtInConstants.typeMismatch);
         return;
     }
-    else if(vTypeIsStruct(srcType)
+    else if(oTypeIsStruct(srcType)
             && srcType != arr->element_type) {
         oErrorSet(ctx, ctx->runtime->builtInConstants.typeMismatch);
         return;
@@ -80,7 +80,7 @@ void _oArrayPut(oThreadContextRef ctx, oArrayRef arr, uword idx, pointer src, vT
         return;
     }
     
-    if(vTypeIsObject(srcType)) {
+    if(oTypeIsObject(srcType)) {
         datap = (pointer*)data;
         datap[idx] = src;
     }
@@ -90,7 +90,7 @@ void _oArrayPut(oThreadContextRef ctx, oArrayRef arr, uword idx, pointer src, vT
     }
 }
 
-void _oArrayGet(oThreadContextRef ctx, oArrayRef arr, uword idx, pointer dest, vTypeRef destType) {
+void _oArrayGet(oThreadContextRef ctx, oArrayRef arr, uword idx, pointer dest, oTypeRef destType) {
     char* data = (char*)oArrayDataPointer(arr);
     pointer *datap, *destp;
     vObject obj;
@@ -101,7 +101,7 @@ void _oArrayGet(oThreadContextRef ctx, oArrayRef arr, uword idx, pointer dest, v
         return;
     }
     
-    if(vTypeIsObject(destType)) {
+    if(oTypeIsObject(destType)) {
         datap = (pointer*)data;
         destp = (pointer*)dest;
         obj = datap[idx];

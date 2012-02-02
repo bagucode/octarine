@@ -8,7 +8,7 @@ struct oAny {
     pointer ptr;
 };
 
-vTypeRef vObjectGetType(oThreadContextRef ctx, vObject obj);
+oTypeRef vObjectGetType(oThreadContextRef ctx, vObject obj);
 
 void o_bootstrap_any_type_init(oThreadContextRef ctx);
 

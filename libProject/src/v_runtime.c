@@ -14,17 +14,17 @@
 
 #include <memory.h>
 
-static vTypeRef alloc_built_in(oRuntimeRef rt, oHeapRef heap) {
-	return (vTypeRef)o_bootstrap_object_alloc(rt, heap, rt->builtInTypes.type, sizeof(vType));
+static oTypeRef alloc_built_in(oRuntimeRef rt, oHeapRef heap) {
+	return (oTypeRef)o_bootstrap_object_alloc(rt, heap, rt->builtInTypes.type, sizeof(oType));
 }
 
-static void set_shared_primitive_attributes(vTypeRef t) {
+static void set_shared_primitive_attributes(oTypeRef t) {
 	t->kind = V_T_STRUCT;
     t->fields = NULL;
 }
 
 static void alloc_builtInTypes(oRuntimeRef rt, oHeapRef heap) {
-    rt->builtInTypes.type = (vTypeRef)o_bootstrap_object_alloc(rt, heap, V_T_SELF, sizeof(vType));
+    rt->builtInTypes.type = (oTypeRef)o_bootstrap_object_alloc(rt, heap, V_T_SELF, sizeof(oType));
 	rt->builtInTypes.v_char = alloc_built_in(rt, heap);
 	rt->builtInTypes.v_bool = alloc_built_in(rt, heap);
 	rt->builtInTypes.f32 = alloc_built_in(rt, heap);

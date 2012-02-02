@@ -32,18 +32,18 @@ void oErrorSet(oThreadContextRef ctx, vObject data) {
 void o_bootstrap_error_type_init(oThreadContextRef ctx) {
     oROOTS(ctx)
     oArrayRef fields;
-    vTypeRef theType;
+    oTypeRef theType;
     oStringRef typeName;
-    vFieldRef field;
+    oFieldRef field;
     oENDROOTS
     
     oRoots.fields = oArrayCreate(ctx->runtime->builtInTypes.field, 1);
     oRoots.typeName = oStringCreate(ctx, "data");
-    oRoots.field = vFieldCreate(ctx, oRoots.typeName, ctx->runtime->builtInTypes.any);
+    oRoots.field = oFieldCreate(ctx, oRoots.typeName, ctx->runtime->builtInTypes.any);
     oArrayPut(oRoots.fields, 0, oRoots.field, ctx->runtime->builtInTypes.field);
     
     oRoots.typeName = oStringCreate(ctx, "Error");
-    oRoots.theType = vTypeCreate(ctx, V_T_OBJECT, 0, oRoots.typeName, oRoots.fields, NULL, NULL);
+    oRoots.theType = oTypeCreate(ctx, V_T_OBJECT, 0, oRoots.typeName, oRoots.fields, NULL, NULL);
     
     ctx->runtime->builtInTypes.error = oRoots.theType;
     oENDVOIDFN

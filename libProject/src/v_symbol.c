@@ -10,13 +10,13 @@
 #include <stddef.h>
 
 void o_bootstrap_symbol_init_type(oThreadContextRef ctx) {
-    vFieldRef *fields;
+    oFieldRef *fields;
 	ctx->runtime->builtInTypes.symbol->fields = o_bootstrap_type_create_field_array(ctx->runtime, ctx->heap, 1);
     ctx->runtime->builtInTypes.symbol->kind = V_T_OBJECT;
 	ctx->runtime->builtInTypes.symbol->name = oStringCreate(ctx, "Symbol");
 	ctx->runtime->builtInTypes.symbol->size = sizeof(oSymbol);
 
-    fields = (vFieldRef*)oArrayDataPointer(ctx->runtime->builtInTypes.symbol->fields);
+    fields = (oFieldRef*)oArrayDataPointer(ctx->runtime->builtInTypes.symbol->fields);
     
     fields[0]->name = oStringCreate(ctx, "name");
 	fields[0]->offset = offsetof(oSymbol, name);

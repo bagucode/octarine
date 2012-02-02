@@ -13,36 +13,36 @@ typedef oThreadContextList* oThreadContextListRef;
 
 typedef struct oRuntimeBuiltInTypes {
     /* primitive types */
-    vTypeRef i8;
-    vTypeRef u8;
-    vTypeRef i16;
-    vTypeRef u16;
-    vTypeRef i32;
-    vTypeRef u32;
-    vTypeRef i64;
-    vTypeRef u64;
-    vTypeRef f32;
-    vTypeRef f64;
-    vTypeRef word;
-    vTypeRef uword;
-    vTypeRef pointer;
-    vTypeRef v_bool;
-    vTypeRef v_char;
+    oTypeRef i8;
+    oTypeRef u8;
+    oTypeRef i16;
+    oTypeRef u16;
+    oTypeRef i32;
+    oTypeRef u32;
+    oTypeRef i64;
+    oTypeRef u64;
+    oTypeRef f32;
+    oTypeRef f64;
+    oTypeRef word;
+    oTypeRef uword;
+    oTypeRef pointer;
+    oTypeRef v_bool;
+    oTypeRef v_char;
     /* aggregate value types */
     /* object types */
-    vTypeRef string;
-    vTypeRef type;
-    vTypeRef field;
-    vTypeRef array;
-    vTypeRef list;
-    vTypeRef any;
-    vTypeRef map;
-    vTypeRef reader;
-    vTypeRef symbol;
-    vTypeRef vector;
-    vTypeRef keyword;
-    vTypeRef threadContext;
-    vTypeRef error;
+    oTypeRef string;
+    oTypeRef type;
+    oTypeRef field;
+    oTypeRef array;
+    oTypeRef list;
+    oTypeRef any;
+    oTypeRef map;
+    oTypeRef reader;
+    oTypeRef symbol;
+    oTypeRef vector;
+    oTypeRef keyword;
+    oTypeRef threadContext;
+    oTypeRef error;
 } oRuntimeBuiltInTypes;
 
 typedef struct oRuntimeBuiltInFunctions {
