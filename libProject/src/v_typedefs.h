@@ -73,4 +73,14 @@ typedef vType* vTypeRef;
 typedef struct vVector vVector;
 typedef vVector* vVectorRef;
 
+// Some macros for handling stack frames and errors
+// For these to work, the threadcontext pointer must be named ctx,
+// the frame struct must be named frame and the frame struct must
+// contain a member called ret which holds the return value of
+// the function.
+#define oPUSHFRAME vMemoryPushFrame(ctx, &frame, sizeof(frame));
+#define oPOPFRAME popframe: vMemoryPopFrame(ctx);
+#define oERRORCHECK if(vErrorGet(ctx)) { frame.ret = NULL; goto popframe; }
+#define oC(fn, ...) fn(__VA_ARGS__); oERRORCHECK
+
 #endif

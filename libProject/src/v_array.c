@@ -5,6 +5,7 @@
 #include "v_object.h"
 #include "v_runtime.h"
 #include "v_string.h"
+#include "v_error.h"
 #include <memory.h>
 
 static uword alignOffset(uword offset, uword on) {
@@ -34,23 +35,23 @@ vArrayRef v_bootstrap_array_create(vRuntimeRef rt,
     return v_bootstrap_array_alloc(rt, heap, type, num_elements, elem_size, alignment);
 }
 
-// There is currently no way to know if this went well or not.
-// TODO: need error handling.
-vObject vArrayCopy(vArrayRef from, vArrayRef to) {
+void vArrayCopy(vThreadContextRef ctx, vArrayRef from, vArrayRef to) {
     pointer a1Data, a2Data;
     
     if(from->element_type != to->element_type) {
-        return NULL;
+        vErrorSet(ctx, ctx->runtime->builtInConstants.typeMismatch);
+        return;
     }
     if(from->num_elements > to->num_elements) {
-        return NULL;
+        vErrorSet(ctx, ctx->runtime->builtInConstants.arrayIndexOutOfBounds);
+        return;
     }
     
     a1Data = vArrayDataPointer(from);
     a2Data = vArrayDataPointer(to);
     
     memcpy(a1Data, a2Data, from->element_type->size * from->num_elements);
-    return NULL;
+    return;
 }
 
 void vArrayPut(vThreadContextRef ctx, vArrayRef arr, uword idx, pointer src, vTypeRef srcType) {

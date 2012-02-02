@@ -250,7 +250,7 @@ static void traceAndMark(vRuntimeRef rt, vHeapRef heap, vObject obj, vTypeRef ty
 static void collectGarbage(vRuntimeRef rt, vHeapRef heap) {
     vRootSetRef roots;
     uword i, j, nroots;
-    vObject obj;
+    vObject obj, *objArr;
     HeapRecordRef newRecord;
     HeapRecordRef currentRecord;
     HeapRecordRef tmpRecord;
@@ -272,43 +272,25 @@ static void collectGarbage(vRuntimeRef rt, vHeapRef heap) {
     // a local collection
 
     // types
-    traceAndMark(rt, heap, rt->builtInTypes.any, rt->builtInTypes.type);
-    traceAndMark(rt, heap, rt->builtInTypes.i8, rt->builtInTypes.type);
-    traceAndMark(rt, heap, rt->builtInTypes.u8, rt->builtInTypes.type);
-    traceAndMark(rt, heap, rt->builtInTypes.i16, rt->builtInTypes.type);
-    traceAndMark(rt, heap, rt->builtInTypes.u16, rt->builtInTypes.type);
-    traceAndMark(rt, heap, rt->builtInTypes.i32, rt->builtInTypes.type);
-    traceAndMark(rt, heap, rt->builtInTypes.u32, rt->builtInTypes.type);
-    traceAndMark(rt, heap, rt->builtInTypes.i64, rt->builtInTypes.type);
-    traceAndMark(rt, heap, rt->builtInTypes.u64, rt->builtInTypes.type);
-    traceAndMark(rt, heap, rt->builtInTypes.f32, rt->builtInTypes.type);
-    traceAndMark(rt, heap, rt->builtInTypes.f64, rt->builtInTypes.type);
-    traceAndMark(rt, heap, rt->builtInTypes.word, rt->builtInTypes.type);
-    traceAndMark(rt, heap, rt->builtInTypes.uword, rt->builtInTypes.type);
-    traceAndMark(rt, heap, rt->builtInTypes.pointer, rt->builtInTypes.type);
-    traceAndMark(rt, heap, rt->builtInTypes.v_bool, rt->builtInTypes.type);
-    traceAndMark(rt, heap, rt->builtInTypes.v_char, rt->builtInTypes.type);
-    traceAndMark(rt, heap, rt->builtInTypes.string, rt->builtInTypes.type);
-    traceAndMark(rt, heap, rt->builtInTypes.type, rt->builtInTypes.type);
-    traceAndMark(rt, heap, rt->builtInTypes.field, rt->builtInTypes.type);
-    traceAndMark(rt, heap, rt->builtInTypes.array, rt->builtInTypes.type);
-    traceAndMark(rt, heap, rt->builtInTypes.list, rt->builtInTypes.type);
-    traceAndMark(rt, heap, rt->builtInTypes.any, rt->builtInTypes.type);
-    traceAndMark(rt, heap, rt->builtInTypes.map, rt->builtInTypes.type);
-    traceAndMark(rt, heap, rt->builtInTypes.reader, rt->builtInTypes.type);
-    traceAndMark(rt, heap, rt->builtInTypes.symbol, rt->builtInTypes.type);
-    traceAndMark(rt, heap, rt->builtInTypes.vector, rt->builtInTypes.type);
-    traceAndMark(rt, heap, rt->builtInTypes.keyword, rt->builtInTypes.type);
-	traceAndMark(rt, heap, rt->builtInTypes.threadContext, rt->builtInTypes.type);
+    j = sizeof(vRuntimeBuiltInTypes) / sizeof(pointer);
+    objArr = (vObject*)&rt->builtInTypes;
+    for(i = 0; i < j; ++i) {
+        traceAndMark(rt, heap, objArr[i], rt->builtInTypes.type);
+    }
+    // thread contexts
 	lst = rt->allContexts;
     while(lst) {
 		next = lst->next;
 		traceAndMark(rt, heap, lst->ctx, rt->builtInTypes.threadContext);
 		lst = next;
 	}
-
     // constants
-    traceAndMark(rt, heap, rt->builtInConstants.needMoreData, rt->builtInTypes.symbol);
+    j = sizeof(vRuntimeBuiltInConstants) / sizeof(pointer);
+    objArr = (vObject*)&rt->builtInConstants;
+    for(i = 0; i < j; ++i) {
+        // TODO: this will break when there are constants other than keywords
+        traceAndMark(rt, heap, objArr[i], rt->builtInTypes.keyword);
+    }
 
 	roots = vRuntimeGetCurrentContext(rt)->roots;
     while (roots) {

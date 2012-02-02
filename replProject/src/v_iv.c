@@ -119,7 +119,7 @@ int main(int argc, char** argv) {
         }
         oFrame.src = vStringCreate(ctx, line);
 		oFrame.result = (vListObjRef)vReaderRead(ctx, oFrame.src);
-        if(((vSymbolRef)oFrame.result) == rt->builtInConstants.needMoreData) {
+        if(((vKeywordRef)oFrame.result) == rt->builtInConstants.needMoreData) {
             prevLine = (char*)malloc(strlen(line) + 1);
             strcpy(prevLine, line);
             if(input == stdin) {

@@ -11,48 +11,57 @@ typedef struct vThreadContextList {
 } vThreadContextList;
 typedef vThreadContextList* vThreadContextListRef;
 
+typedef struct vRuntimeBuiltInTypes {
+    /* primitive types */
+    vTypeRef i8;
+    vTypeRef u8;
+    vTypeRef i16;
+    vTypeRef u16;
+    vTypeRef i32;
+    vTypeRef u32;
+    vTypeRef i64;
+    vTypeRef u64;
+    vTypeRef f32;
+    vTypeRef f64;
+    vTypeRef word;
+    vTypeRef uword;
+    vTypeRef pointer;
+    vTypeRef v_bool;
+    vTypeRef v_char;
+    /* aggregate value types */
+    /* object types */
+    vTypeRef string;
+    vTypeRef type;
+    vTypeRef field;
+    vTypeRef array;
+    vTypeRef list;
+    vTypeRef any;
+    vTypeRef map;
+    vTypeRef reader;
+    vTypeRef symbol;
+    vTypeRef vector;
+    vTypeRef keyword;
+    vTypeRef threadContext;
+    vTypeRef error;
+} vRuntimeBuiltInTypes;
+
+typedef struct vRuntimeBuiltInFunctions {
+    vFunctionRef equals;
+} vRuntimeBuiltInFunctions;
+
+typedef struct vRuntimeBuiltInConstants {
+    vKeywordRef needMoreData;
+    vKeywordRef typeMismatch;
+    vKeywordRef arrayIndexOutOfBounds;
+} vRuntimeBuiltInConstants;
+
 struct vRuntime {
     vHeapRef globals;
     vTLSRef currentContext;
     vThreadContextListRef allContexts;
-    struct {
-        /* primitive types */
-        vTypeRef i8;
-        vTypeRef u8;
-        vTypeRef i16;
-        vTypeRef u16;
-        vTypeRef i32;
-        vTypeRef u32;
-        vTypeRef i64;
-        vTypeRef u64;
-        vTypeRef f32;
-        vTypeRef f64;
-        vTypeRef word;
-        vTypeRef uword;
-        vTypeRef pointer;
-        vTypeRef v_bool;
-		vTypeRef v_char;
-        /* aggregate value types */
-        /* object types */
-        vTypeRef string;
-        vTypeRef type;
-        vTypeRef field;
-        vTypeRef array;
-        vTypeRef list;
-        vTypeRef any;
-        vTypeRef map;
-		vTypeRef reader;
-		vTypeRef symbol;
-        vTypeRef vector;
-        vTypeRef keyword;
-		vTypeRef threadContext;
-    } builtInTypes;
-    struct {
-        vFunctionRef equals;
-    } builtInFunctions;
-	struct {
-		vSymbolRef needMoreData;
-	} builtInConstants;
+    vRuntimeBuiltInTypes builtInTypes;
+    vRuntimeBuiltInFunctions builtInFunctions;
+    vRuntimeBuiltInConstants builtInConstants;
 };
 
 vRuntimeRef vRuntimeCreate(uword sharedHeapInitialSize,

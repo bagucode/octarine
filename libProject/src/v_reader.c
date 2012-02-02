@@ -10,6 +10,7 @@
 #include "v_symbol.h"
 #include "v_vector.h"
 #include "v_keyword.h"
+#include "v_error.h"
 #include <stddef.h>
 #include <ctype.h>
 #include <memory.h>
@@ -95,9 +96,9 @@ static vObject readString(vThreadContextRef ctx, vArrayRef src, uword* idx) {
         // TODO: exchange these manually expanded arrays for vectors
         vArrayRef charBuffer;
         vArrayRef tmp;
-        vObject theString;
+        vObject ret;
     } frame;
-    vMemoryPushFrame(ctx, &frame, sizeof(frame));
+    oPUSHFRAME;
     
     frame.charBuffer = vArrayCreate(ctx, ctx->runtime->builtInTypes.u8, 1024);
     bufIdx = 0;
@@ -109,7 +110,7 @@ static vObject readString(vThreadContextRef ctx, vArrayRef src, uword* idx) {
         }
         if(bufIdx >= frame.charBuffer->num_elements) {
             frame.tmp = vArrayCreate(ctx, ctx->runtime->builtInTypes.u8, frame.charBuffer->num_elements << 1);
-            vArrayCopy(frame.charBuffer, frame.tmp);
+            oC(vArrayCopy, ctx, frame.charBuffer, frame.tmp);
             frame.charBuffer = frame.tmp;
             frame.tmp = NULL;
         }
@@ -119,17 +120,17 @@ static vObject readString(vThreadContextRef ctx, vArrayRef src, uword* idx) {
     }
     if(bufIdx >= frame.charBuffer->num_elements) {
         frame.tmp = vArrayCreate(ctx, ctx->runtime->builtInTypes.u8, frame.charBuffer->num_elements << 1);
-        vArrayCopy(frame.charBuffer, frame.tmp);
+        oC(vArrayCopy, ctx, frame.charBuffer, frame.tmp);
         frame.charBuffer = frame.tmp;
         frame.tmp = NULL;
     }
     chars = (char*)vArrayDataPointer(frame.charBuffer);
     chars[bufIdx] = 0;
 
-    frame.theString = vStringCreate(ctx, chars);
-    
-    vMemoryPopFrame(ctx);
-    return frame.theString;
+    frame.ret = vStringCreate(ctx, chars);
+
+    oPOPFRAME;
+    return frame.ret;
 }
 
 static vObject readSymbolOrKeyword(vThreadContextRef ctx, vArrayRef src, uword* idx) {

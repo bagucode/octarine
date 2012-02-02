@@ -53,7 +53,7 @@ vVectorRef vVectorAddBack(vThreadContextRef ctx,
 	frame.newVec = vHeapAlloc(ctx->runtime, ctx->heap, ctx->runtime->builtInTypes.vector);
     frame.newVec->data = vArrayCreate(ctx, vec->data->element_type, vec->data->num_elements + 1);
 
-    vArrayCopy(vec->data, frame.newVec->data);
+    vArrayCopy(ctx, vec->data, frame.newVec->data);
     vArrayPut(ctx, frame.newVec->data, vec->data->num_elements, data, dataType);
     // TODO: ERROR HANDLING
     
@@ -74,7 +74,7 @@ vVectorRef vVectorPut(vThreadContextRef ctx, vVectorRef vec, uword idx, pointer 
 	frame.newVec = vHeapAlloc(ctx->runtime, ctx->heap, ctx->runtime->builtInTypes.vector);
     frame.newVec->data = vArrayCreate(ctx, vec->data->element_type, vec->data->num_elements);
 
-    vArrayCopy(vec->data, frame.newVec->data);
+    vArrayCopy(ctx, vec->data, frame.newVec->data);
     vArrayPut(ctx, frame.newVec->data, idx, src, srcType);
     // TODO: ERROR HANDLING
 

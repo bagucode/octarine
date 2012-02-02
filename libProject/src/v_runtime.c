@@ -10,6 +10,7 @@
 #include "v_symbol.h"
 #include "v_vector.h"
 #include "v_keyword.h"
+#include "v_error.h"
 
 static vTypeRef alloc_built_in(vRuntimeRef rt, vHeapRef heap) {
 	return (vTypeRef)v_bootstrap_object_alloc(rt, heap, rt->builtInTypes.type, sizeof(vType));
@@ -48,6 +49,7 @@ static void alloc_builtInTypes(vRuntimeRef rt, vHeapRef heap) {
     rt->builtInTypes.vector = alloc_built_in(rt, heap);
     rt->builtInTypes.keyword = alloc_built_in(rt, heap);
 	rt->builtInTypes.threadContext = alloc_built_in(rt, heap);
+    rt->builtInTypes.error = alloc_built_in(rt, heap);
 #ifdef __GNUC__
 #ifdef VLANG32
 	rt->builtInTypes.i64->alignment = 4;
@@ -139,6 +141,7 @@ static void init_builtInTypes2(vThreadContextRef ctx) {
 	v_bootstrap_symbol_init_type(ctx);
     v_bootstrap_vector_init_type(ctx);
     v_bootstrap_keyword_type_init(ctx);
+    v_bootstrap_error_type_init(ctx);
 }
 
 static void init_builtInFunctions(vThreadContextRef ctx) {
@@ -151,7 +154,11 @@ static void init_builtInConstants(vThreadContextRef ctx) {
     vMemoryPushFrame(ctx, &frame, sizeof(frame));
     
     frame.str = vStringCreate(ctx, "need-more-data");
-    ctx->runtime->builtInConstants.needMoreData = vSymbolCreate(ctx, frame.str);
+    ctx->runtime->builtInConstants.needMoreData = vKeywordCreate(ctx, frame.str);
+    frame.str = vStringCreate(ctx, "type-mismatch");
+    ctx->runtime->builtInConstants.typeMismatch = vKeywordCreate(ctx, frame.str);
+    frame.str = vStringCreate(ctx, "array-index-out-of-bounds");
+    ctx->runtime->builtInConstants.arrayIndexOutOfBounds = vKeywordCreate(ctx, frame.str);
     
     vMemoryPopFrame(ctx);
 }

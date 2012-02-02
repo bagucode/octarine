@@ -11,12 +11,15 @@ struct vError {
 // Returns NULL if there was no error set for this context
 vErrorRef vErrorGet(vThreadContextRef ctx);
 
+// Set an error for the given thread context
+void vErrorSet(vThreadContextRef ctx, vObject message);
+
 // Clears the error condition from the thread context.
 void vErrorClear(vThreadContextRef ctx);
 
 // Get the error "message"
 vObject vErrorGetData(vThreadContextRef ctx, vErrorRef err);
 
-void v_bootstrap_error_type_init(vRuntimeRef rt, vHeapRef heap);
+void v_bootstrap_error_type_init(vThreadContextRef ctx);
 
 #endif
