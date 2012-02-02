@@ -31,14 +31,14 @@ static const char reservedChars[] = {
     RCBRACKET
 };
 
-typedef vObject (*ReadFn)(vThreadContextRef ctx, oArrayRef src, uword* idx);
+typedef vObject (*ReadFn)(oThreadContextRef ctx, oArrayRef src, uword* idx);
 static ReadFn readTable[128];
 
-static vObject readList(vThreadContextRef ctx, oArrayRef src, uword* idx);
-static vObject readSymbolOrKeyword(vThreadContextRef ctx, oArrayRef src, uword* idx);
-static vObject readVector(vThreadContextRef ctx, oArrayRef src, uword* idx);
+static vObject readList(oThreadContextRef ctx, oArrayRef src, uword* idx);
+static vObject readSymbolOrKeyword(oThreadContextRef ctx, oArrayRef src, uword* idx);
+static vObject readVector(oThreadContextRef ctx, oArrayRef src, uword* idx);
 
-void o_bootstrap_reader_init_type(vThreadContextRef ctx) {
+void o_bootstrap_reader_init_type(oThreadContextRef ctx) {
     uword i;
     ctx->runtime->builtInTypes.reader->fields = NULL;
     ctx->runtime->builtInTypes.reader->kind = V_T_OBJECT;
@@ -63,7 +63,7 @@ v_bool isReserved(uword ch) {
     return v_false;
 }
 
-oReaderRef oReaderCreate(vThreadContextRef ctx) {
+oReaderRef oReaderCreate(oThreadContextRef ctx) {
     oROOTS(ctx)
     oENDROOTS
 	oRETURN(oHeapAlloc(ctx->runtime->builtInTypes.reader));
@@ -89,9 +89,9 @@ static v_bool eos(oArrayRef src, uword* idx) {
     return src->num_elements == (*idx);
 }
 
-static vObject read(vThreadContextRef ctx, oArrayRef src, uword* idx);
+static vObject read(oThreadContextRef ctx, oArrayRef src, uword* idx);
 
-static vObject readString(vThreadContextRef ctx, oArrayRef src, uword* idx) {
+static vObject readString(oThreadContextRef ctx, oArrayRef src, uword* idx) {
     uword ch;
     uword bufIdx;
     char* chars;
@@ -132,7 +132,7 @@ static vObject readString(vThreadContextRef ctx, oArrayRef src, uword* idx) {
 	oENDFN(vObject)
 }
 
-static vObject readSymbolOrKeyword(vThreadContextRef ctx, oArrayRef src, uword* idx) {
+static vObject readSymbolOrKeyword(oThreadContextRef ctx, oArrayRef src, uword* idx) {
     oROOTS(ctx)
     vObject theString;
     oENDROOTS
@@ -149,7 +149,7 @@ static vObject readSymbolOrKeyword(vThreadContextRef ctx, oArrayRef src, uword* 
     oENDFN(vObject)
 }
 
-static vObject readList(vThreadContextRef ctx, oArrayRef src, uword* idx) {
+static vObject readList(oThreadContextRef ctx, oArrayRef src, uword* idx) {
     oROOTS(ctx)
     vObject tmp;
     oENDROOTS
@@ -175,7 +175,7 @@ static vObject readList(vThreadContextRef ctx, oArrayRef src, uword* idx) {
     oENDFN(vObject)
 }
 
-static vObject readVector(vThreadContextRef ctx, oArrayRef src, uword* idx) {
+static vObject readVector(oThreadContextRef ctx, oArrayRef src, uword* idx) {
     oROOTS(ctx)
     vObject tmp;
     oENDROOTS
@@ -200,7 +200,7 @@ static vObject readVector(vThreadContextRef ctx, oArrayRef src, uword* idx) {
     oENDFN(vObject)
 }
 
-static vObject read(vThreadContextRef ctx, oArrayRef src, uword* idx) {
+static vObject read(oThreadContextRef ctx, oArrayRef src, uword* idx) {
     ReadFn fn;
     uword ch;
 
@@ -225,7 +225,7 @@ static vObject read(vThreadContextRef ctx, oArrayRef src, uword* idx) {
     }
 }
 
-vObject oReaderRead(vThreadContextRef ctx, vStringRef source) {
+vObject oReaderRead(oThreadContextRef ctx, vStringRef source) {
     uword idx = 0;
     oROOTS(ctx)
     vObject tmp;

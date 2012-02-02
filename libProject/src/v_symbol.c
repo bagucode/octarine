@@ -9,7 +9,7 @@
 #include "v_error.h"
 #include <stddef.h>
 
-void o_bootstrap_symbol_init_type(vThreadContextRef ctx) {
+void o_bootstrap_symbol_init_type(oThreadContextRef ctx) {
     vFieldRef *fields;
 	ctx->runtime->builtInTypes.symbol->fields = o_bootstrap_type_create_field_array(ctx->runtime, ctx->heap, 1);
     ctx->runtime->builtInTypes.symbol->kind = V_T_OBJECT;
@@ -23,7 +23,7 @@ void o_bootstrap_symbol_init_type(vThreadContextRef ctx) {
     fields[0]->type = ctx->runtime->builtInTypes.string;
 }
 
-vSymbolRef vSymbolCreate(vThreadContextRef ctx, vStringRef name) {
+vSymbolRef vSymbolCreate(oThreadContextRef ctx, vStringRef name) {
     oROOTS(ctx)
     oENDROOTS
     oSETRET(oHeapAlloc(ctx->runtime->builtInTypes.symbol));
@@ -31,7 +31,7 @@ vSymbolRef vSymbolCreate(vThreadContextRef ctx, vStringRef name) {
     oENDFN(vSymbolRef)
 }
 
-v_bool vSymbolEquals(vThreadContextRef ctx,
+v_bool vSymbolEquals(oThreadContextRef ctx,
                      vSymbolRef sym1,
 					 vSymbolRef sym2) {
 	return sym1 == sym2 || vStringCompare(sym1->name, sym2->name) == 0;

@@ -16,12 +16,12 @@ struct oMapStrObj {
     f32 load_factor;
 };
 
-oMapStrObjRef oMapStrObjCreate(vThreadContextRef ctx);
+oMapStrObjRef oMapStrObjCreate(oThreadContextRef ctx);
 void oMapStrObjDestroy(oMapStrObjRef map);
 void oMapStrObjPut(oMapStrObjRef map, vStringRef key, vObject value);
 /* Type of returned object is Nothing if there was no entry. */
 vObject oMapStrObjGet(oMapStrObjRef map, vStringRef key);
 
-void o_bootstrap_map_init_type(vThreadContextRef ctx);
+void o_bootstrap_map_init_type(oThreadContextRef ctx);
 
 #endif

@@ -24,7 +24,7 @@ void testCreateRuntime() {
 void testGCAllGarbage() {
     uword i;
     vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024 * 1000);
-    vThreadContextRef ctx = runtime->allContexts->ctx;
+    oThreadContextRef ctx = runtime->allContexts->ctx;
     
     for(i = 0; i < 1000 * 1024; ++i) {
         oListObjCreate(ctx, NULL);
@@ -36,7 +36,7 @@ void testGCAllGarbage() {
 void testGCAllRetained() {
     uword i;
     vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024 * 1000);
-    vThreadContextRef ctx = runtime->allContexts->ctx;
+    oThreadContextRef ctx = runtime->allContexts->ctx;
 
     struct {
         vObject listHead;
@@ -56,7 +56,7 @@ void testGCAllRetained() {
 
 void testGCFinalizer() {
     vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024 * 1000);
-    vThreadContextRef ctx = runtime->allContexts->ctx;
+    oThreadContextRef ctx = runtime->allContexts->ctx;
     
     vStringCreate(ctx, "Test string");
 	oHeapForceGC(ctx->runtime, ctx->heap);
@@ -66,7 +66,7 @@ void testGCFinalizer() {
 
 void testReaderEmptyList() {
     vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024 * 1000);
-    vThreadContextRef ctx = runtime->allContexts->ctx;
+    oThreadContextRef ctx = runtime->allContexts->ctx;
     vObject result;
     vStringRef src;
     oListObjRef emptyList;
@@ -83,7 +83,7 @@ void testReaderEmptyList() {
 
 void testSymbolEquals() {
     vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024 * 1000);
-    vThreadContextRef ctx = runtime->allContexts->ctx;
+    oThreadContextRef ctx = runtime->allContexts->ctx;
 	struct {
 		vSymbolRef sym1;
 		vSymbolRef sym2;
@@ -113,7 +113,7 @@ void testSymbolEquals() {
 
 void testReadSymbol() {
     vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024 * 1000);
-    vThreadContextRef ctx = runtime->allContexts->ctx;
+    oThreadContextRef ctx = runtime->allContexts->ctx;
     vSymbolRef bob;
 	struct {
 		vObject readResult;
@@ -138,7 +138,7 @@ void testReadSymbol() {
 
 void testReadOneListAndOneSymbol() {
     vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024 * 1000);
-    vThreadContextRef ctx = runtime->allContexts->ctx;
+    oThreadContextRef ctx = runtime->allContexts->ctx;
     vSymbolRef bob;
     vSymbolRef other;
     oListObjRef lst;
@@ -192,7 +192,7 @@ typedef struct testStruct {
 
 void testCreateType() {
     vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024 * 1000);
-    vThreadContextRef ctx = runtime->allContexts->ctx;
+    oThreadContextRef ctx = runtime->allContexts->ctx;
     vFieldRef* fields;
     uword i;
     oROOTS(ctx)
@@ -237,7 +237,7 @@ void testCreateType() {
 
 void testArrayPutGet() {
     vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024 * 1000);
-    vThreadContextRef ctx = runtime->allContexts->ctx;
+    oThreadContextRef ctx = runtime->allContexts->ctx;
     i64 one;
     i64 two;
     i64 three;
@@ -285,7 +285,7 @@ void testArrayPutGet() {
 
 void testVector() {
     vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024 * 1000);
-    vThreadContextRef ctx = runtime->allContexts->ctx;
+    oThreadContextRef ctx = runtime->allContexts->ctx;
     vTypeRef str_t = ctx->runtime->builtInTypes.string;
     vTypeRef i64_t = ctx->runtime->builtInTypes.i64;
     i64 one;
@@ -337,7 +337,7 @@ void testVector() {
 
 void testReadVector() {
     vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024 * 1000);
-    vThreadContextRef ctx = runtime->allContexts->ctx;
+    oThreadContextRef ctx = runtime->allContexts->ctx;
     oListObjRef lst;
     vSymbolRef sym;
     vVectorRef vec;
@@ -371,7 +371,7 @@ void testReadVector() {
 
 void testReadKeyword() {
     vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024 * 1000);
-    vThreadContextRef ctx = runtime->allContexts->ctx;
+    oThreadContextRef ctx = runtime->allContexts->ctx;
     oListObjRef lst;
     oKeywordRef kw;
 	struct {
@@ -400,7 +400,7 @@ void testReadKeyword() {
 
 void testOutOfMemory() {
     vRuntimeRef rt = vRuntimeCreate(1024 * 1000, 1024 * 1000);
-    vThreadContextRef ctx = vRuntimeGetCurrentContext(rt);
+    oThreadContextRef ctx = vRuntimeGetCurrentContext(rt);
     oROOTS(ctx)
     oENDROOTS
     

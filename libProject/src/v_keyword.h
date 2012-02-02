@@ -8,9 +8,9 @@ struct oKeyword {
     vStringRef name;
 };
 
-oKeywordRef oKeywordCreate(vThreadContextRef ctx, vStringRef name);
-vStringRef oKeywordGetName(vThreadContextRef ctx, oKeywordRef kw);
+oKeywordRef oKeywordCreate(oThreadContextRef ctx, vStringRef name);
+vStringRef oKeywordGetName(oThreadContextRef ctx, oKeywordRef kw);
 
-void o_bootstrap_keyword_type_init(vThreadContextRef ctx);
+void o_bootstrap_keyword_type_init(oThreadContextRef ctx);
 
 #endif

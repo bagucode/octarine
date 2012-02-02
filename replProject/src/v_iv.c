@@ -62,7 +62,7 @@ int main(int argc, char** argv) {
     char* typeName;
 
     vRuntimeRef rt;
-    vThreadContextRef ctx;
+    oThreadContextRef ctx;
     
     struct {
         vStringRef src;

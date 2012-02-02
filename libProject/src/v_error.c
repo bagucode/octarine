@@ -7,12 +7,12 @@
 #include "v_type.h"
 
 // Returns NULL if there was no error set for this context
-oErrorRef oErrorGet(vThreadContextRef ctx) {
+oErrorRef oErrorGet(oThreadContextRef ctx) {
     return ctx->error;
 }
 
 // Clears the error condition from the thread context.
-void oErrorClear(vThreadContextRef ctx) {
+void oErrorClear(oThreadContextRef ctx) {
     ctx->error = NULL;
 }
 
@@ -21,7 +21,7 @@ vObject oErrorGetData(oErrorRef err) {
     return err->data;
 }
 
-void oErrorSet(vThreadContextRef ctx, vObject data) {
+void oErrorSet(oThreadContextRef ctx, vObject data) {
     oROOTS(ctx)
     oENDROOTS
     ctx->error = oHeapAlloc(ctx->runtime->builtInTypes.error);
@@ -29,7 +29,7 @@ void oErrorSet(vThreadContextRef ctx, vObject data) {
     oENDVOIDFN
 }
 
-void o_bootstrap_error_type_init(vThreadContextRef ctx) {
+void o_bootstrap_error_type_init(oThreadContextRef ctx) {
     oROOTS(ctx)
     oArrayRef fields;
     vTypeRef theType;

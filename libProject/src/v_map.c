@@ -4,7 +4,7 @@
 #include "v_thread_context.h"
 #include "v_runtime.h"
 
-oMapStrObjRef oMapStrObjCreate(vThreadContextRef ctx) {
+oMapStrObjRef oMapStrObjCreate(oThreadContextRef ctx) {
 	return NULL;
 }
 
@@ -19,6 +19,6 @@ vObject oMapStrObjGet(oMapStrObjRef map, vStringRef key) {
 }
 
 
-void o_bootstrap_map_init_type(vThreadContextRef rt) {
+void o_bootstrap_map_init_type(oThreadContextRef rt) {
 }
 

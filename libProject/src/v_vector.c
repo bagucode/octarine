@@ -7,7 +7,7 @@
 #include "v_memory.h"
 #include "v_error.h"
 
-void o_bootstrap_vector_init_type(vThreadContextRef ctx) {
+void o_bootstrap_vector_init_type(oThreadContextRef ctx) {
     oROOTS(ctx)
     oArrayRef fields;
     vStringRef typeName;
@@ -26,7 +26,7 @@ void o_bootstrap_vector_init_type(vThreadContextRef ctx) {
     oENDVOIDFN
 }
 
-vVectorRef vVectorCreate(vThreadContextRef ctx,
+vVectorRef vVectorCreate(oThreadContextRef ctx,
                          vTypeRef type) {
     oROOTS(ctx)
     oENDROOTS
@@ -37,7 +37,7 @@ vVectorRef vVectorCreate(vThreadContextRef ctx,
 	oENDFN(vVectorRef)
 }
 
-vVectorRef vVectorAddBack(vThreadContextRef ctx,
+vVectorRef vVectorAddBack(oThreadContextRef ctx,
                           vVectorRef vec,
                           pointer data,
                           vTypeRef dataType) {
@@ -53,11 +53,11 @@ vVectorRef vVectorAddBack(vThreadContextRef ctx,
 	oENDFN(vVectorRef)
 }
 
-uword vVectorSize(vThreadContextRef ctx, vVectorRef vec) {
+uword vVectorSize(oThreadContextRef ctx, vVectorRef vec) {
     return vec->data->num_elements;
 }
 
-vVectorRef vVectorPut(vThreadContextRef ctx, vVectorRef vec, uword idx, pointer src, vTypeRef srcType) {
+vVectorRef vVectorPut(oThreadContextRef ctx, vVectorRef vec, uword idx, pointer src, vTypeRef srcType) {
     oROOTS(ctx)
     oENDROOTS
 
@@ -70,7 +70,7 @@ vVectorRef vVectorPut(vThreadContextRef ctx, vVectorRef vec, uword idx, pointer 
 	oENDFN(vVectorRef)
 }
 
-void vVectorGet(vThreadContextRef ctx, vVectorRef vec, uword idx, pointer dest, vTypeRef destType) {
+void vVectorGet(oThreadContextRef ctx, vVectorRef vec, uword idx, pointer dest, vTypeRef destType) {
     oROOTS(ctx)
     oENDROOTS
     oArrayGet(vec->data, idx, dest, destType);

@@ -7,7 +7,7 @@
 #include "v_string.h"
 #include "v_error.h"
 
-void o_bootstrap_keyword_type_init(vThreadContextRef ctx) {
+void o_bootstrap_keyword_type_init(oThreadContextRef ctx) {
     oROOTS(ctx)
     oArrayRef fields;
     vTypeRef theType;
@@ -28,7 +28,7 @@ void o_bootstrap_keyword_type_init(vThreadContextRef ctx) {
     oENDVOIDFN
 }
 
-oKeywordRef oKeywordCreate(vThreadContextRef ctx, vStringRef name) {
+oKeywordRef oKeywordCreate(oThreadContextRef ctx, vStringRef name) {
     oROOTS(ctx)
     oENDROOTS
     if(ctx->error) return NULL;
@@ -37,7 +37,7 @@ oKeywordRef oKeywordCreate(vThreadContextRef ctx, vStringRef name) {
     oENDFN(oKeywordRef)
 }
 
-vStringRef oKeywordGetName(vThreadContextRef ctx, oKeywordRef kw) {
+vStringRef oKeywordGetName(oThreadContextRef ctx, oKeywordRef kw) {
     if(ctx->error) return NULL;
     return kw->name;
 }

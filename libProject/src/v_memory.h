@@ -9,10 +9,10 @@ oHeapRef oHeapCreate(v_bool synchronized, uword gc_threshold);
 
 void oHeapDestroy(oHeapRef heap);
 
-vObject _oHeapAlloc(vThreadContextRef ctx, vTypeRef t);
+vObject _oHeapAlloc(oThreadContextRef ctx, vTypeRef t);
 #define oHeapAlloc(type) _oC(_oHeapAlloc, type)
 
-oArrayRef _oHeapAllocArray(vThreadContextRef ctx,
+oArrayRef _oHeapAllocArray(oThreadContextRef ctx,
                            vTypeRef elementType,
                            uword numElements);
 #define oHeapAllocArray(type, size) _oC(_oHeapAllocArray, type, size)
@@ -24,18 +24,18 @@ void oHeapForceGC(vRuntimeRef rt, oHeapRef heap);
 // A pointer to the new object is returned or NULL if there is an error, in
 // which case oErrorGet can be used to get the error object.
 // The type needs to be supplied separately to support copying of value types.
-vObject oHeapCopyObjectShared(vThreadContextRef ctx,
+vObject oHeapCopyObjectShared(oThreadContextRef ctx,
                               vObject obj,
                               vTypeRef type,
                               oHeapRef sharedHeap);
 
-vTypeRef oMemoryGetObjectType(vThreadContextRef ctx, vObject obj);
+vTypeRef oMemoryGetObjectType(oThreadContextRef ctx, vObject obj);
 
-void oMemoryPushFrame(vThreadContextRef ctx,
+void oMemoryPushFrame(oThreadContextRef ctx,
                       pointer frame,
                       uword frameSize);
 
-void oMemoryPopFrame(vThreadContextRef ctx);
+void oMemoryPopFrame(oThreadContextRef ctx);
 
 /* This is a little bit internal right? Invent naming convention? */
 vRootSetRef oMemoryCreateRootSet();

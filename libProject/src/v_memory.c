@@ -140,7 +140,7 @@ void oMemoryDeleteRootSet(vRootSetRef roots) {
     }
 }
 
-void oMemoryPushFrame(vThreadContextRef ctx,
+void oMemoryPushFrame(oThreadContextRef ctx,
                       pointer frame,
                       uword frameSize) {
     vRootSetRef newRoots;
@@ -159,7 +159,7 @@ void oMemoryPushFrame(vThreadContextRef ctx,
     }
 }
 
-void oMemoryPopFrame(vThreadContextRef ctx) {
+void oMemoryPopFrame(oThreadContextRef ctx) {
     vRootSetRef prev;
     ctx->roots->numUsed--;
     if(ctx->roots->numUsed == 0 && ctx->roots->prev != NULL) {
@@ -257,7 +257,7 @@ static void collectGarbage(vRuntimeRef rt, oHeapRef heap) {
     HeapBlockRef block;
     vTypeRef type;
     
-	vThreadContextListRef lst, next;
+	oThreadContextListRef lst, next;
 
     /* Phase 1, mark. */
     /* TODO: need to trace from the roots in all threads when doing
@@ -375,7 +375,7 @@ static v_bool checkHeapSpace(vRuntimeRef rt,
 }
 
 static vObject internalAlloc(vRuntimeRef rt,
-                             vThreadContextRef ctx,
+                             oThreadContextRef ctx,
 	                         oHeapRef heap,
                              vTypeRef type,
                              uword size) {
@@ -406,7 +406,7 @@ static vObject internalAlloc(vRuntimeRef rt,
     return ret;
 }
 
-vObject _oHeapAlloc(vThreadContextRef ctx, vTypeRef t) {
+vObject _oHeapAlloc(oThreadContextRef ctx, vTypeRef t) {
     return internalAlloc(ctx->runtime, ctx, ctx->heap, t, t->size);
 }
 
@@ -414,7 +414,7 @@ static uword calcArraySize(uword elemSize, uword numElems, u8 align) {
     return sizeof(oArray) + (elemSize * numElems) + align - 1;
 }
 
-oArrayRef _oHeapAllocArray(vThreadContextRef ctx,
+oArrayRef _oHeapAllocArray(oThreadContextRef ctx,
                           vTypeRef elementType,
                           uword numElements) {
     oArrayRef arr;
@@ -485,7 +485,7 @@ void oHeapDestroy(oHeapRef heap) {
     vFree(heap);
 }
 
-vTypeRef oMemoryGetObjectType(vThreadContextRef ctx, vObject obj) {
+vTypeRef oMemoryGetObjectType(oThreadContextRef ctx, vObject obj) {
     return getType(getBlock(obj));
 }
 
@@ -494,7 +494,7 @@ vTypeRef oMemoryGetObjectType(vThreadContextRef ctx, vObject obj) {
 // A pointer to the new object is returned or NULL if there is an error, in
 // which case oErrorGet can be used to get the error object.
 // The type needs to be supplied separately to support copying of value types.
-vObject oHeapCopyObjectShared(vThreadContextRef ctx,
+vObject oHeapCopyObjectShared(oThreadContextRef ctx,
                               vObject obj,
                               vTypeRef type,
                               oHeapRef sharedHeap) {

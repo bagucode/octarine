@@ -5,11 +5,11 @@
 #include "v_typedefs.h"
 #include "../../platformProject/src/v_platform.h"
     
-typedef struct vThreadContextList {
-    vThreadContextRef ctx;
-    struct vThreadContextList* next;
-} vThreadContextList;
-typedef vThreadContextList* vThreadContextListRef;
+typedef struct oThreadContextList {
+    oThreadContextRef ctx;
+    struct oThreadContextList* next;
+} oThreadContextList;
+typedef oThreadContextList* oThreadContextListRef;
 
 typedef struct vRuntimeBuiltInTypes {
     /* primitive types */
@@ -62,7 +62,7 @@ typedef struct vRuntimeBuiltInErrors {
 struct vRuntime {
     oHeapRef globals;
     vTLSRef currentContext;
-    vThreadContextListRef allContexts;
+    oThreadContextListRef allContexts;
     vRuntimeBuiltInTypes builtInTypes;
     vRuntimeBuiltInFunctions builtInFunctions;
     vRuntimeBuiltInConstants builtInConstants;
@@ -72,6 +72,6 @@ struct vRuntime {
 vRuntimeRef vRuntimeCreate(uword sharedHeapInitialSize,
                            uword threadHeapInitialSize);
 void vRuntimeDestroy(vRuntimeRef rt);
-vThreadContextRef vRuntimeGetCurrentContext(vRuntimeRef rt);
+oThreadContextRef vRuntimeGetCurrentContext(vRuntimeRef rt);
 
 #endif

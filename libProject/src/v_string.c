@@ -9,7 +9,7 @@
 #include "v_error.h"
 #include <memory.h>
 
-vStringRef vStringCreate(vThreadContextRef ctx, char *utf8) {
+vStringRef vStringCreate(oThreadContextRef ctx, char *utf8) {
     oROOTS(ctx)
     oENDROOTS
     oSETRET(oHeapAlloc(ctx->runtime->builtInTypes.string));
@@ -26,7 +26,7 @@ int vStringCompare(vStringRef x, vStringRef y) {
     return x == y ? 0 : vNativeStringCompare(x->str, y->str);
 }
 
-oArrayRef vStringUtf8Copy(vThreadContextRef ctx, vStringRef str) {
+oArrayRef vStringUtf8Copy(oThreadContextRef ctx, vStringRef str) {
     uword length;
     char* utf8String = vNativeStringToUtf8(str->str, &length);
     oROOTS(ctx)
@@ -39,11 +39,11 @@ oArrayRef vStringUtf8Copy(vThreadContextRef ctx, vStringRef str) {
 	oENDFN(oArrayRef)
 }
 
-v_char vStringCharAt(vThreadContextRef ctx, vStringRef str, uword idx) {
+v_char vStringCharAt(oThreadContextRef ctx, vStringRef str, uword idx) {
     return vNativeStringCharAt(str->str, idx);
 }
 
-vStringRef vStringSubString(vThreadContextRef ctx, vStringRef str, uword start, uword end) {
+vStringRef vStringSubString(oThreadContextRef ctx, vStringRef str, uword start, uword end) {
     oROOTS(ctx)
     oENDROOTS
 	oSETRET(oHeapAlloc(ctx->runtime->builtInTypes.string));
@@ -57,7 +57,7 @@ vStringRef o_bootstrap_string_create(vRuntimeRef rt, oHeapRef heap, const char *
     return str;
 }
 
-uword vStringLength(vThreadContextRef ctx, vStringRef str) {
+uword vStringLength(oThreadContextRef ctx, vStringRef str) {
     return vNativeStringLength(str->str);
 }
 

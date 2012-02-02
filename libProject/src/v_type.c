@@ -23,7 +23,7 @@ static uword alignOffset(uword offset, uword on) {
     return (offset + (on - 1)) & (~(on - 1));
 }
 
-static uword findLargestAlignment(vThreadContextRef ctx,
+static uword findLargestAlignment(oThreadContextRef ctx,
 					              uword largest,
                                   vFieldRef field) {
     vFieldRef* members;
@@ -59,14 +59,14 @@ static uword nextLargerMultiple(uword of, uword largerThan) {
     return result;
 }
 
-vTypeRef vTypeCreateProtoType(vThreadContextRef ctx) {
+vTypeRef vTypeCreateProtoType(oThreadContextRef ctx) {
     oROOTS(ctx)
     oENDROOTS
 	oRETURN(oHeapAlloc(ctx->runtime->builtInTypes.type));
     oENDFN(vTypeRef)
 }
 
-vTypeRef vTypeCreate(vThreadContextRef ctx,
+vTypeRef vTypeCreate(oThreadContextRef ctx,
                      u8 kind,
                      u8 alignment,
                      vStringRef name,
@@ -188,12 +188,12 @@ void o_bootstrap_type_init_field(vRuntimeRef rt, oHeapRef heap) {
     fields[2]->type = rt->builtInTypes.u32;
 }
 
-v_bool vTypeEquals(vThreadContextRef ctx, vTypeRef t, vObject other) {
+v_bool vTypeEquals(oThreadContextRef ctx, vTypeRef t, vObject other) {
     /* Types are only equal if they are the same type */
     return t == other;
 }
 
-vFieldRef vFieldCreate(vThreadContextRef ctx,
+vFieldRef vFieldCreate(oThreadContextRef ctx,
                        vStringRef name,
                        vTypeRef type) {
     oROOTS(ctx)

@@ -64,8 +64,8 @@ typedef vString* vStringRef;
 typedef struct vSymbol vSymbol;
 typedef vSymbol* vSymbolRef;
 
-typedef struct vThreadContext vThreadContext;
-typedef vThreadContext* vThreadContextRef;
+typedef struct oThreadContext oThreadContext;
+typedef oThreadContext* oThreadContextRef;
 
 typedef struct vType vType;
 typedef vType* vTypeRef;
@@ -75,7 +75,7 @@ typedef vVector* vVectorRef;
 
 // Some macros for handling stack frames and errors
 
-#define oROOTS(context) vThreadContextRef _oCTX = context; struct {
+#define oROOTS(context) oThreadContextRef _oCTX = context; struct {
 
 #define oENDROOTS vObject _oRET; } oRoots; oMemoryPushFrame(_oCTX, &oRoots, sizeof(oRoots));
 

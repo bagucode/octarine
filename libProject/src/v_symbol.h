@@ -9,11 +9,11 @@ struct vSymbol {
     vStringRef name;
 };
 
-vSymbolRef vSymbolCreate(vThreadContextRef ctx, vStringRef name);
-v_bool vSymbolEquals(vThreadContextRef ctx,
+vSymbolRef vSymbolCreate(oThreadContextRef ctx, vStringRef name);
+v_bool vSymbolEquals(oThreadContextRef ctx,
                      vSymbolRef sym1,
                      vSymbolRef sym2);
 
-void o_bootstrap_symbol_init_type(vThreadContextRef ctx);
+void o_bootstrap_symbol_init_type(oThreadContextRef ctx);
 
 #endif

@@ -8,7 +8,7 @@
 #include "v_error.h"
 #include <stddef.h>
 
-void o_bootstrap_list_init_type(vThreadContextRef ctx) {
+void o_bootstrap_list_init_type(oThreadContextRef ctx) {
     vFieldRef *fields;
     ctx->runtime->builtInTypes.list->fields = o_bootstrap_type_create_field_array(ctx->runtime, ctx->heap, 2);
     ctx->runtime->builtInTypes.list->kind = V_T_OBJECT;
@@ -26,7 +26,7 @@ void o_bootstrap_list_init_type(vThreadContextRef ctx) {
     fields[1]->type = ctx->runtime->builtInTypes.list;
 }
 
-oListObjRef oListObjCreate(vThreadContextRef ctx, vObject data) {
+oListObjRef oListObjCreate(oThreadContextRef ctx, vObject data) {
     oROOTS(ctx)
     oENDROOTS
     if(ctx->error) return NULL;
@@ -35,7 +35,7 @@ oListObjRef oListObjCreate(vThreadContextRef ctx, vObject data) {
     oENDFN(oListObjRef)
 }
 
-oListObjRef oListObjAddFront(vThreadContextRef ctx,
+oListObjRef oListObjAddFront(oThreadContextRef ctx,
                              oListObjRef lst,
                              vObject data) {
     oROOTS(ctx)
@@ -50,7 +50,7 @@ oListObjRef oListObjAddFront(vThreadContextRef ctx,
     oENDFN(oListObjRef)
 }
 
-static oListObjRef removeInternal(vThreadContextRef ctx,
+static oListObjRef removeInternal(oThreadContextRef ctx,
                                   oListObjRef head,
                                   oListObjRef elem,
                                   oListObjRef prev) {
@@ -97,7 +97,7 @@ static oListObjRef removeInternal(vThreadContextRef ctx,
 	oENDFN(oListObjRef)
 }
 
-oListObjRef oListObjRemove(vThreadContextRef ctx,
+oListObjRef oListObjRemove(oThreadContextRef ctx,
                           oListObjRef lst,
                           vObject obj) {
     if(ctx->error) return NULL;
@@ -105,7 +105,7 @@ oListObjRef oListObjRemove(vThreadContextRef ctx,
     return lst;
 }
 
-oListObjRef oListObjRemoveNth(vThreadContextRef ctx,
+oListObjRef oListObjRemoveNth(oThreadContextRef ctx,
                               oListObjRef lst,
                               uword idx) {
     uword currentIdx = 0;
@@ -126,11 +126,11 @@ oListObjRef oListObjRemoveNth(vThreadContextRef ctx,
     return lst;
 }
 
-v_bool oListObjIsEmpty(vThreadContextRef ctx, oListObjRef lst) {
+v_bool oListObjIsEmpty(oThreadContextRef ctx, oListObjRef lst) {
     return lst->data == NULL && lst->next == NULL;
 }
 
-oListObjRef oListObjReverse(vThreadContextRef ctx, oListObjRef lst) {
+oListObjRef oListObjReverse(oThreadContextRef ctx, oListObjRef lst) {
     oROOTS(ctx)
     oENDROOTS
     
@@ -144,7 +144,7 @@ oListObjRef oListObjReverse(vThreadContextRef ctx, oListObjRef lst) {
 	oENDFN(oListObjRef)
 }
 
-uword oListObjSize(vThreadContextRef ctx, oListObjRef lst) {
+uword oListObjSize(oThreadContextRef ctx, oListObjRef lst) {
     uword cnt = 0;
     while (lst) {
         ++cnt;
@@ -153,11 +153,11 @@ uword oListObjSize(vThreadContextRef ctx, oListObjRef lst) {
     return cnt;
 }
 
-vObject oListObjFirst(vThreadContextRef ctx, oListObjRef lst) {
+vObject oListObjFirst(oThreadContextRef ctx, oListObjRef lst) {
     return lst->data;
 }
 
-oListObjRef oListObjRest(vThreadContextRef ctx, oListObjRef lst) {
+oListObjRef oListObjRest(oThreadContextRef ctx, oListObjRef lst) {
     if(oListObjIsEmpty(ctx, lst)) {
         return oListObjCreate(ctx, NULL);
     }

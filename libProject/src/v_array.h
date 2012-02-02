@@ -13,7 +13,7 @@ struct oArray {
      any padding needed for the alignment. */
 };
 
-oArrayRef _oArrayCreate(vThreadContextRef ctx,
+oArrayRef _oArrayCreate(oThreadContextRef ctx,
                         vTypeRef elemType,
                         uword num_elements);
 #define oArrayCreate(elemType, numElems) _oC(_oArrayCreate, elemType, numElems)
@@ -22,12 +22,12 @@ pointer oArrayDataPointer(oArrayRef arr);
 
 uword oArraySize(oArrayRef arr);
 
-void _oArrayCopy(vThreadContextRef ctx, oArrayRef from, oArrayRef to);
+void _oArrayCopy(oThreadContextRef ctx, oArrayRef from, oArrayRef to);
 #define oArrayCopy(from, to) _oC(_oArrayCopy, from, to)
 
-void _oArrayPut(vThreadContextRef ctx, oArrayRef arr, uword idx, pointer src, vTypeRef srcType);
+void _oArrayPut(oThreadContextRef ctx, oArrayRef arr, uword idx, pointer src, vTypeRef srcType);
 #define oArrayPut(arr, idx, src, srcType) _oC(_oArrayPut, arr, idx, src, srcType)
-void _oArrayGet(vThreadContextRef ctx, oArrayRef arr, uword idx, pointer dest, vTypeRef destType);
+void _oArrayGet(oThreadContextRef ctx, oArrayRef arr, uword idx, pointer dest, vTypeRef destType);
 #define oArrayGet(arr, idx, dest, destType) _oC(_oArrayGet, arr, idx, dest, destType)
 
 oArrayRef o_bootstrap_array_create(vRuntimeRef rt,

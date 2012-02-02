@@ -30,16 +30,16 @@ struct vType {
     u8 alignment;
 };
 
-vFieldRef vFieldCreate(vThreadContextRef ctx,
+vFieldRef vFieldCreate(oThreadContextRef ctx,
                        vStringRef name,
                        vTypeRef type);
 
 v_bool vTypeIsPrimitive(vTypeRef t);
 v_bool vTypeIsStruct(vTypeRef t);
 v_bool vTypeIsObject(vTypeRef t);
-v_bool vTypeEquals(vThreadContextRef ctx, vTypeRef t, vObject other);
-vTypeRef vTypeCreatePrototype(vThreadContextRef ctx, v_bool shared);
-vTypeRef vTypeCreate(vThreadContextRef ctx,
+v_bool vTypeEquals(oThreadContextRef ctx, vTypeRef t, vObject other);
+vTypeRef vTypeCreatePrototype(oThreadContextRef ctx, v_bool shared);
+vTypeRef vTypeCreate(oThreadContextRef ctx,
                      u8 kind,
                      u8 alignment,
                      vStringRef name,

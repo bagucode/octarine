@@ -135,7 +135,7 @@ static void init_builtInTypes1(vRuntimeRef rt, oHeapRef heap) {
 	o_bootstrap_thread_context_type_init(rt, heap);
 }
 
-static void init_builtInTypes2(vThreadContextRef ctx) {
+static void init_builtInTypes2(oThreadContextRef ctx) {
 	o_bootstrap_list_init_type(ctx);
     o_bootstrap_any_type_init(ctx);
     o_bootstrap_map_init_type(ctx);
@@ -146,10 +146,10 @@ static void init_builtInTypes2(vThreadContextRef ctx) {
     o_bootstrap_error_type_init(ctx);
 }
 
-static void init_builtInFunctions(vThreadContextRef ctx) {
+static void init_builtInFunctions(oThreadContextRef ctx) {
 }
 
-static void init_builtInConstants(vThreadContextRef ctx) {
+static void init_builtInConstants(oThreadContextRef ctx) {
     struct {
         vStringRef str;
     } frame;
@@ -165,7 +165,7 @@ static void init_builtInConstants(vThreadContextRef ctx) {
     oMemoryPopFrame(ctx);
 }
 
-static oErrorRef initError(vThreadContextRef ctx, char* name) {
+static oErrorRef initError(oThreadContextRef ctx, char* name) {
     oROOTS(ctx)
     vStringRef str;
     oKeywordRef kw;
@@ -179,7 +179,7 @@ static oErrorRef initError(vThreadContextRef ctx, char* name) {
     oENDFN(oErrorRef)
 }
 
-static void init_builtInErrors(vThreadContextRef ctx) {
+static void init_builtInErrors(oThreadContextRef ctx) {
     ctx->runtime->builtInErrors.outOfMemory = initError(ctx, "out-of-memory");
 }
 
@@ -187,7 +187,7 @@ vRuntimeRef vRuntimeCreate(uword sharedHeapInitialSize,
                            uword threadHeapInitialSize) {
 	vRuntimeRef rt = (vRuntimeRef)vMalloc(sizeof(vRuntime));
 	oHeapRef mtHeap = oHeapCreate(v_false, threadHeapInitialSize);
-	vThreadContextRef ctx;
+	oThreadContextRef ctx;
     
     memset(rt, 0, sizeof(vRuntime));
 
@@ -200,7 +200,7 @@ vRuntimeRef vRuntimeCreate(uword sharedHeapInitialSize,
 	ctx = o_bootstrap_thread_context_create(rt, mtHeap);
 	ctx->heap = mtHeap;
 	vTLSSet(rt->currentContext, ctx);
-    rt->allContexts = (vThreadContextListRef)vMalloc(sizeof(vThreadContextList));
+    rt->allContexts = (oThreadContextListRef)vMalloc(sizeof(oThreadContextList));
 	rt->allContexts->next = NULL;
     rt->allContexts->ctx = ctx;
 
@@ -222,11 +222,11 @@ vRuntimeRef vRuntimeCreate(uword sharedHeapInitialSize,
 
 void vRuntimeDestroy(vRuntimeRef rt) {
     /* TODO: synchronize stopping of all threads before deleting the heaps */
-    vThreadContextListRef lst = rt->allContexts;
-	vThreadContextListRef next;
+    oThreadContextListRef lst = rt->allContexts;
+	oThreadContextListRef next;
     while(lst) {
 		next = lst->next;
-        vThreadContextDestroy(lst->ctx);
+        oThreadContextDestroy(lst->ctx);
         vFree(lst);
 		lst = next;
     }
@@ -234,6 +234,6 @@ void vRuntimeDestroy(vRuntimeRef rt) {
 	vFree(rt);
 }
 
-vThreadContextRef vRuntimeGetCurrentContext(vRuntimeRef rt) {
-    return (vThreadContextRef)vTLSGet(rt->currentContext);
+oThreadContextRef vRuntimeGetCurrentContext(vRuntimeRef rt) {
+    return (oThreadContextRef)vTLSGet(rt->currentContext);
 }

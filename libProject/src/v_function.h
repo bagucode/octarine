@@ -18,7 +18,7 @@ struct oSignature {
 
 oSignatureRef oSignatureCreate(oArrayRef returnTypes, oArrayRef parameters);
 
-v_bool oSignatureEquals(vThreadContextRef ctx,
+v_bool oSignatureEquals(oThreadContextRef ctx,
                         oSignatureRef sig1,
                         oSignatureRef sig2);
 
@@ -51,7 +51,7 @@ void oFunctionAddOverload(oFunctionRef fn, oFunctionOverloadRef impl);
 
 oFunctionOverloadRef oFunctionFindOverload(oFunctionRef fn, oSignatureRef sig);
 
-vObject oFunctionInvoke(vThreadContextRef ctx,
+vObject oFunctionInvoke(oThreadContextRef ctx,
                         oFunctionOverloadRef fnImpl,
                         oArrayRef args);
 
@@ -60,7 +60,7 @@ struct oClosure {
     oArrayRef arguments;
 };
 
-oClosureRef oClosureCreate(vThreadContextRef ctx,
+oClosureRef oClosureCreate(oThreadContextRef ctx,
 					       oFunctionOverloadRef fnImpl,
                            oArrayRef args);
 
