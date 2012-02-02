@@ -4,16 +4,16 @@
 #include "../../platformProject/src/v_platform.h"
 #include "v_typedefs.h"
 
-struct vParameter {
+struct oParameter {
     vStringRef name;
     vTypeRef type;
 };
 
-vParameterRef vParameterCreate(vStringRef name, vTypeRef type);
+oParameterRef oParameterCreate(vStringRef name, vTypeRef type);
 
 struct vSignature {
     oArrayRef returns; /* array of vType */
-    oArrayRef parameters; /* array of vParameter */
+    oArrayRef parameters; /* array of oParameter */
 };
 
 vSignatureRef vSignatureCreate(oArrayRef returnTypes, oArrayRef parameters);
