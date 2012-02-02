@@ -30,11 +30,11 @@ typedef oKeyword* oKeywordRef;
 typedef struct oListObj oListObj;
 typedef oListObj* oListObjRef;
 
-typedef struct vMapStrObj vMapStrObj;
-typedef vMapStrObj* vMapStrObjRef;
+typedef struct oMapStrObj oMapStrObj;
+typedef oMapStrObj* oMapStrObjRef;
 
-typedef struct vMapStrObjEntry vMapStrObjEntry;
-typedef vMapStrObjEntry* vMapStrObjEntryRef;
+typedef struct oMapStrObjEntry oMapStrObjEntry;
+typedef oMapStrObjEntry* oMapStrObjEntryRef;
 
 typedef struct vNothing vNothing;
 typedef vNothing* vNothingRef;

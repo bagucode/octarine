@@ -4,17 +4,17 @@
 #include "v_thread_context.h"
 #include "v_runtime.h"
 
-vMapStrObjRef vMapStrObjCreate(vThreadContextRef ctx) {
+oMapStrObjRef oMapStrObjCreate(vThreadContextRef ctx) {
 	return NULL;
 }
 
-void vMapStrObjDestroy(vMapStrObjRef map) {
+void oMapStrObjDestroy(oMapStrObjRef map) {
 }
 
-void vMapStrObjPut(vMapStrObjRef map, vStringRef key, vObject value) {
+void oMapStrObjPut(oMapStrObjRef map, vStringRef key, vObject value) {
 }
 
-vObject vMapStrObjGet(vMapStrObjRef map, vStringRef key) {
+vObject oMapStrObjGet(oMapStrObjRef map, vStringRef key) {
 	return NULL;
 }
 
