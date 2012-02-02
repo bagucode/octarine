@@ -15,18 +15,18 @@ void vFree(pointer location) {
 
 /* String */
 
-struct vNativeString {
+struct oNativeString {
     CFStringRef str;
 };
 
-vNativeStringRef vNativeStringFromUtf8(const char *utf8) {
+oNativeStringRef oNativeStringFromUtf8(const char *utf8) {
     uword len = strlen(utf8);
-    vNativeString *str = vMalloc(sizeof(vNativeString));
+    oNativeString *str = vMalloc(sizeof(oNativeString));
     str->str = CFStringCreateWithBytes(NULL, (const UInt8*)utf8, len, kCFStringEncodingUTF8, false);
     return str;
 }
 
-char* vNativeStringToUtf8(vNativeStringRef str, uword* out_length) {
+char* oNativeStringToUtf8(oNativeStringRef str, uword* out_length) {
     CFIndex numChars = CFStringGetLength(str->str);
     CFIndex bufSize = (numChars + 1) * 4; // 4 is the maximum number of bytes for a utf8 char
     char *tmpBuffer = vMalloc(bufSize);
@@ -42,22 +42,22 @@ char* vNativeStringToUtf8(vNativeStringRef str, uword* out_length) {
     return cString;
 }
 
-int vNativeStringCompare(vNativeStringRef str1, vNativeStringRef str2) {
+int oNativeStringCompare(oNativeStringRef str1, oNativeStringRef str2) {
     return CFStringCompare(str1->str, str2->str, 0);
 }
 
-void vNativeStringDestroy(vNativeStringRef str) {
+void oNativeStringDestroy(oNativeStringRef str) {
     CFRelease(str->str);
     vFree(str);
 }
 
-o_char vNativeStringCharAt(vNativeStringRef str, uword idx) {
+o_char oNativeStringCharAt(oNativeStringRef str, uword idx) {
     // TODO: THIS IS BROKEN! Unichar is 16 bits but codepoints are 32 bits...
     return CFStringGetCharacterAtIndex(str->str, idx);
 }
 
-vNativeStringRef vNativeStringSubstring(vNativeStringRef str, uword start, uword end) {
-    vNativeStringRef subStr = vMalloc(sizeof(vNativeString));
+oNativeStringRef oNativeStringSubstring(oNativeStringRef str, uword start, uword end) {
+    oNativeStringRef subStr = vMalloc(sizeof(oNativeString));
     CFRange range;
     range.location = start;
     range.length = end - start;
@@ -65,7 +65,7 @@ vNativeStringRef vNativeStringSubstring(vNativeStringRef str, uword start, uword
     return subStr;
 }
 
-uword vNativeStringLength(vNativeStringRef str) {
+uword oNativeStringLength(oNativeStringRef str) {
     return CFStringGetLength(str->str);
 }
 
