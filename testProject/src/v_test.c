@@ -85,27 +85,27 @@ void testSymbolEquals() {
     oRuntimeRef runtime = oRuntimeCreate(2000 * 1024, 1024 * 1000);
     oThreadContextRef ctx = runtime->allContexts->ctx;
 	struct {
-		vSymbolRef sym1;
-		vSymbolRef sym2;
+		oSymbolRef sym1;
+		oSymbolRef sym2;
 		oStringRef name;
 	} frame;
 	oMemoryPushFrame(ctx, &frame, sizeof(frame));
 
 	frame.name = oStringCreate(ctx, "Bob2Bob");
-	frame.sym1 = vSymbolCreate(ctx, frame.name);
-	frame.sym2 = vSymbolCreate(ctx, frame.name);
+	frame.sym1 = oSymbolCreate(ctx, frame.name);
+	frame.sym2 = oSymbolCreate(ctx, frame.name);
 
-	assert(vSymbolEquals(ctx, frame.sym1, frame.sym2) == v_true);
+	assert(oSymbolEquals(ctx, frame.sym1, frame.sym2) == v_true);
 
 	frame.name = oStringCreate(ctx, "Bob2Bob"); // same name but different string instance
-	frame.sym1 = vSymbolCreate(ctx, frame.name);
+	frame.sym1 = oSymbolCreate(ctx, frame.name);
 
-	assert(vSymbolEquals(ctx, frame.sym1, frame.sym2) == v_true);
+	assert(oSymbolEquals(ctx, frame.sym1, frame.sym2) == v_true);
 
 	frame.name = oStringCreate(ctx, "WRONG"); // other name
-	frame.sym2 = vSymbolCreate(ctx, frame.name);
+	frame.sym2 = oSymbolCreate(ctx, frame.name);
 
-	assert(vSymbolEquals(ctx, frame.sym1, frame.sym2) == v_false);
+	assert(oSymbolEquals(ctx, frame.sym1, frame.sym2) == v_false);
 
 	oMemoryPopFrame(ctx);
     oRuntimeDestroy(runtime);
@@ -114,23 +114,23 @@ void testSymbolEquals() {
 void testReadSymbol() {
     oRuntimeRef runtime = oRuntimeCreate(2000 * 1024, 1024 * 1000);
     oThreadContextRef ctx = runtime->allContexts->ctx;
-    vSymbolRef bob;
+    oSymbolRef bob;
 	struct {
 		vObject readResult;
-        vSymbolRef otherBob;
+        oSymbolRef otherBob;
 		oStringRef src;
 	} frame;
 	oMemoryPushFrame(ctx, &frame, sizeof(frame));
 
     frame.src = oStringCreate(ctx, "Bob2Bob");
-    frame.otherBob = vSymbolCreate(ctx, frame.src);
+    frame.otherBob = oSymbolCreate(ctx, frame.src);
     frame.readResult = oReaderRead(ctx, frame.src);
     
     // We should get a list with one element, the symbol Bob2Bob
     assert(vObjectGetType(ctx, frame.readResult) == ctx->runtime->builtInTypes.list);
-	bob = (vSymbolRef)((oListObjRef)frame.readResult)->data;
+	bob = (oSymbolRef)((oListObjRef)frame.readResult)->data;
     assert(vObjectGetType(ctx, bob) == ctx->runtime->builtInTypes.symbol);
-	assert(vSymbolEquals(ctx, frame.otherBob, bob) == v_true);
+	assert(oSymbolEquals(ctx, frame.otherBob, bob) == v_true);
 
 	oMemoryPopFrame(ctx);
     oRuntimeDestroy(runtime);
@@ -139,21 +139,21 @@ void testReadSymbol() {
 void testReadOneListAndOneSymbol() {
     oRuntimeRef runtime = oRuntimeCreate(2000 * 1024, 1024 * 1000);
     oThreadContextRef ctx = runtime->allContexts->ctx;
-    vSymbolRef bob;
-    vSymbolRef other;
+    oSymbolRef bob;
+    oSymbolRef other;
     oListObjRef lst;
     oListObjRef bobLst;
 	struct {
 		vObject readResult;
 		oStringRef src;
         oStringRef name;
-        vSymbolRef controlSym;
+        oSymbolRef controlSym;
 	} frame;
 	oMemoryPushFrame(ctx, &frame, sizeof(frame));
 
     frame.name = oStringCreate(ctx, "Bob2Bob");
     frame.src = oStringCreate(ctx, "(Bob2Bob) otherSym");
-    frame.controlSym = vSymbolCreate(ctx, frame.name);
+    frame.controlSym = oSymbolCreate(ctx, frame.name);
     
     frame.readResult = oReaderRead(ctx, frame.src);
     
@@ -167,16 +167,16 @@ void testReadOneListAndOneSymbol() {
     assert(vObjectGetType(ctx, bobLst) == ctx->runtime->builtInTypes.list);
     assert(oListObjSize(ctx, bobLst) == 1);
 
-    bob = (vSymbolRef)oListObjFirst(ctx, bobLst);
+    bob = (oSymbolRef)oListObjFirst(ctx, bobLst);
     assert(vObjectGetType(ctx, bob) == ctx->runtime->builtInTypes.symbol);
-	assert(vSymbolEquals(ctx, bob, frame.controlSym) == v_true);
+	assert(oSymbolEquals(ctx, bob, frame.controlSym) == v_true);
 
     lst = oListObjRest(ctx, lst);
-    other = (vSymbolRef)oListObjFirst(ctx, lst);
+    other = (oSymbolRef)oListObjFirst(ctx, lst);
     assert(vObjectGetType(ctx, other) == ctx->runtime->builtInTypes.symbol);
     frame.name = oStringCreate(ctx, "otherSym");
-    frame.controlSym = vSymbolCreate(ctx, frame.name);
-	assert(vSymbolEquals(ctx, other, frame.controlSym) == v_true);
+    frame.controlSym = oSymbolCreate(ctx, frame.name);
+	assert(oSymbolEquals(ctx, other, frame.controlSym) == v_true);
     
 	oMemoryPopFrame(ctx);
     oRuntimeDestroy(runtime);
@@ -339,17 +339,17 @@ void testReadVector() {
     oRuntimeRef runtime = oRuntimeCreate(2000 * 1024, 1024 * 1000);
     oThreadContextRef ctx = runtime->allContexts->ctx;
     oListObjRef lst;
-    vSymbolRef sym;
+    oSymbolRef sym;
     vVectorRef vec;
 	struct {
 		vObject readResult;
 		oStringRef src;
-        vSymbolRef ethel;
+        oSymbolRef ethel;
 	} frame;
 	oMemoryPushFrame(ctx, &frame, sizeof(frame));
 
     frame.src = oStringCreate(ctx, "ethel");
-    frame.ethel = vSymbolCreate(ctx, frame.src);
+    frame.ethel = oSymbolCreate(ctx, frame.src);
     frame.src = oStringCreate(ctx, "[bob fred ethel]\n");
     frame.readResult = oReaderRead(ctx, frame.src);
     
@@ -363,7 +363,7 @@ void testReadVector() {
     assert(vVectorSize(ctx, vec) == 3);
     
     vVectorGet(ctx, vec, 2, &sym, ctx->runtime->builtInTypes.symbol);
-    assert(vSymbolEquals(ctx, sym, frame.ethel) == v_true);
+    assert(oSymbolEquals(ctx, sym, frame.ethel) == v_true);
     
 	oMemoryPopFrame(ctx);
     oRuntimeDestroy(runtime);

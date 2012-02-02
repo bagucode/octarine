@@ -143,7 +143,7 @@ static vObject readSymbolOrKeyword(oThreadContextRef ctx, oArrayRef src, uword* 
         oRETURN(oKeywordCreate(ctx, (oStringRef)oRoots.theString));
     }
     else {
-        oRETURN(vSymbolCreate(ctx, (oStringRef)oRoots.theString));
+        oRETURN(oSymbolCreate(ctx, (oStringRef)oRoots.theString));
     }
 
     oENDFN(vObject)

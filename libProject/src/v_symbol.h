@@ -5,14 +5,14 @@
 #include "v_typedefs.h"
 #include "../../platformProject/src/v_basic_types.h"
 
-struct vSymbol {
+struct oSymbol {
     oStringRef name;
 };
 
-vSymbolRef vSymbolCreate(oThreadContextRef ctx, oStringRef name);
-v_bool vSymbolEquals(oThreadContextRef ctx,
-                     vSymbolRef sym1,
-                     vSymbolRef sym2);
+oSymbolRef oSymbolCreate(oThreadContextRef ctx, oStringRef name);
+v_bool oSymbolEquals(oThreadContextRef ctx,
+                     oSymbolRef sym1,
+                     oSymbolRef sym2);
 
 void o_bootstrap_symbol_init_type(oThreadContextRef ctx);
 

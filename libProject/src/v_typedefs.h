@@ -61,8 +61,8 @@ typedef oSignature* oSignatureRef;
 typedef struct oString oString;
 typedef oString* oStringRef;
 
-typedef struct vSymbol vSymbol;
-typedef vSymbol* vSymbolRef;
+typedef struct oSymbol oSymbol;
+typedef oSymbol* oSymbolRef;
 
 typedef struct oThreadContext oThreadContext;
 typedef oThreadContext* oThreadContextRef;
