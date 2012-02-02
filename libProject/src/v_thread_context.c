@@ -38,7 +38,7 @@ vThreadContextRef vThreadContextCreate(vRuntimeRef runtime,
     ctx->heap = oHeapCreate(v_false, threadHeapInitialSize);
     ctx->runtime = runtime;
     ctx->roots = oMemoryCreateRootSet();
-	ctx->reader = vReaderCreate(ctx);
+	ctx->reader = oReaderCreate(ctx);
 	ctx->error = NULL;
     return ctx;
 }

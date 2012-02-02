@@ -72,7 +72,7 @@ void testReaderEmptyList() {
     oListObjRef emptyList;
 
     src = vStringCreate(ctx, "()");
-    result = vReaderRead(ctx, src);
+    result = oReaderRead(ctx, src);
     // We should get a list with one element, an empty list.
     assert(vObjectGetType(ctx, result) == ctx->runtime->builtInTypes.list);
 	emptyList = (oListObjRef)((oListObjRef)result)->data;
@@ -124,7 +124,7 @@ void testReadSymbol() {
 
     frame.src = vStringCreate(ctx, "Bob2Bob");
     frame.otherBob = vSymbolCreate(ctx, frame.src);
-    frame.readResult = vReaderRead(ctx, frame.src);
+    frame.readResult = oReaderRead(ctx, frame.src);
     
     // We should get a list with one element, the symbol Bob2Bob
     assert(vObjectGetType(ctx, frame.readResult) == ctx->runtime->builtInTypes.list);
@@ -155,7 +155,7 @@ void testReadOneListAndOneSymbol() {
     frame.src = vStringCreate(ctx, "(Bob2Bob) otherSym");
     frame.controlSym = vSymbolCreate(ctx, frame.name);
     
-    frame.readResult = vReaderRead(ctx, frame.src);
+    frame.readResult = oReaderRead(ctx, frame.src);
     
     // We should get a list with two elements, a list with a symbol in it and a symbol
     assert(vObjectGetType(ctx, frame.readResult) == ctx->runtime->builtInTypes.list);
@@ -351,7 +351,7 @@ void testReadVector() {
     frame.src = vStringCreate(ctx, "ethel");
     frame.ethel = vSymbolCreate(ctx, frame.src);
     frame.src = vStringCreate(ctx, "[bob fred ethel]\n");
-    frame.readResult = vReaderRead(ctx, frame.src);
+    frame.readResult = oReaderRead(ctx, frame.src);
     
     // We should get a list with one element, a vector of three symbols
     assert(vObjectGetType(ctx, frame.readResult) == ctx->runtime->builtInTypes.list);
@@ -383,7 +383,7 @@ void testReadKeyword() {
     
     frame.name = vStringCreate(ctx, "lucy");
     frame.src = vStringCreate(ctx, ":lucy");
-    frame.readResult = vReaderRead(ctx, frame.src);
+    frame.readResult = oReaderRead(ctx, frame.src);
     
     // We should get a list with one element, a vector of three symbols
     assert(vObjectGetType(ctx, frame.readResult) == ctx->runtime->builtInTypes.list);

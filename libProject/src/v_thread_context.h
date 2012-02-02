@@ -9,7 +9,7 @@ struct vThreadContext {
     vRuntimeRef runtime;
     oHeapRef heap;
     vRootSetRef roots;
-	vReaderRef reader;
+	oReaderRef reader;
 	oErrorRef error;
 };
 

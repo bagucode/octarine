@@ -43,7 +43,7 @@ void o_bootstrap_reader_init_type(vThreadContextRef ctx) {
     ctx->runtime->builtInTypes.reader->fields = NULL;
     ctx->runtime->builtInTypes.reader->kind = V_T_OBJECT;
 	ctx->runtime->builtInTypes.reader->name = o_bootstrap_string_create(ctx->runtime, ctx->heap, "Reader");
-    ctx->runtime->builtInTypes.reader->size = sizeof(vReader);
+    ctx->runtime->builtInTypes.reader->size = sizeof(oReader);
 
     // Also init the read table here
     for(i = 0; i < 128; ++i) {
@@ -63,11 +63,11 @@ v_bool isReserved(uword ch) {
     return v_false;
 }
 
-vReaderRef vReaderCreate(vThreadContextRef ctx) {
+oReaderRef oReaderCreate(vThreadContextRef ctx) {
     oROOTS(ctx)
     oENDROOTS
 	oRETURN(oHeapAlloc(ctx->runtime->builtInTypes.reader));
-    oENDFN(vReaderRef)
+    oENDFN(oReaderRef)
 }
 
 static u8 getChar(oArrayRef arr, uword i) {
@@ -225,7 +225,7 @@ static vObject read(vThreadContextRef ctx, oArrayRef src, uword* idx) {
     }
 }
 
-vObject vReaderRead(vThreadContextRef ctx, vStringRef source) {
+vObject oReaderRead(vThreadContextRef ctx, vStringRef source) {
     uword idx = 0;
     oROOTS(ctx)
     vObject tmp;

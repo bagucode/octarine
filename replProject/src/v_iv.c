@@ -118,7 +118,7 @@ int main(int argc, char** argv) {
             prevLine = NULL;
         }
         oFrame.src = vStringCreate(ctx, line);
-		oFrame.result = (oListObjRef)vReaderRead(ctx, oFrame.src);
+		oFrame.result = (oListObjRef)oReaderRead(ctx, oFrame.src);
         if(((oKeywordRef)oFrame.result) == rt->builtInConstants.needMoreData) {
             prevLine = (char*)malloc(strlen(line) + 1);
             strcpy(prevLine, line);

@@ -46,8 +46,8 @@ typedef void (*vFinalizer)(vObject obj);
 typedef struct oParameter oParameter;
 typedef oParameter* oParameterRef;
 
-typedef struct vReader vReader;
-typedef vReader* vReaderRef;
+typedef struct oReader oReader;
+typedef oReader* oReaderRef;
 
 typedef struct vRootSet vRootSet;
 typedef vRootSet* vRootSetRef;

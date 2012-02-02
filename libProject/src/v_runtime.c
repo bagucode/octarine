@@ -211,7 +211,7 @@ vRuntimeRef vRuntimeCreate(uword sharedHeapInitialSize,
 	creating the reader for the main thread context to the end of this function.
 	TODO: do we even need a reader object? Should probably just get rid of it.
 	*/
-	ctx->reader = vReaderCreate(ctx);
+	ctx->reader = oReaderCreate(ctx);
     
     init_builtInConstants(ctx);
     init_builtInFunctions(ctx);

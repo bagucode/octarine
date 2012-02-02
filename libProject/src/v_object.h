@@ -4,7 +4,7 @@
 #include "../../platformProject/src/v_basic_types.h"
 #include "v_typedefs.h"
 
-struct vAny {
+struct oAny {
     pointer ptr;
 };
 

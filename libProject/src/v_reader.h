@@ -6,13 +6,13 @@
 #include "v_typedefs.h"
 
 // TODO: just remove?
-struct vReader {
+struct oReader {
 	uword dummy;
 };
 
-vReaderRef vReaderCreate(vThreadContextRef ctx);
+oReaderRef oReaderCreate(vThreadContextRef ctx);
 
-vObject vReaderRead(vThreadContextRef ctx, vStringRef source);
+vObject oReaderRead(vThreadContextRef ctx, vStringRef source);
 
 void o_bootstrap_reader_init_type(vThreadContextRef ctx);
 
