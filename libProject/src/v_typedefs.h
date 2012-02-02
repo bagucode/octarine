@@ -18,8 +18,8 @@ typedef vField* vFieldRef;
 typedef struct vFunction vFunction;
 typedef vFunction* vFunctionRef;
 
-typedef struct vFunctionOverload vFunctionOverload;
-typedef vFunctionOverload* vFunctionOverloadRef;
+typedef struct oFunctionOverload oFunctionOverload;
+typedef oFunctionOverload* oFunctionOverloadRef;
 
 typedef struct oHeap oHeap;
 typedef oHeap* oHeapRef;

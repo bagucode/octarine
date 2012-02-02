@@ -22,7 +22,7 @@ v_bool oSignatureEquals(vThreadContextRef ctx,
                         oSignatureRef sig1,
                         oSignatureRef sig2);
 
-struct vFunctionOverload {
+struct oFunctionOverload {
     oSignatureRef signature;
 
     /* TODO: Change sideEffects to a map? */
@@ -40,28 +40,28 @@ struct vFunctionOverload {
 };
 
 struct vFunction {
-    /* List of vFunctionOverloadRef
+    /* List of oFunctionOverloadRef
      TODO: change this to a vector? */
     vListObjRef overloads;
 };
 
-vFunctionRef vFunctionCreate(vFunctionOverloadRef initialImpl);
+vFunctionRef vFunctionCreate(oFunctionOverloadRef initialImpl);
 
-void vFunctionAddOverload(vFunctionRef fn, vFunctionOverloadRef impl);
+void vFunctionAddOverload(vFunctionRef fn, oFunctionOverloadRef impl);
 
-vFunctionOverloadRef vFunctionFindOverload(vFunctionRef fn, oSignatureRef sig);
+oFunctionOverloadRef vFunctionFindOverload(vFunctionRef fn, oSignatureRef sig);
 
 vObject vFunctionInvoke(vThreadContextRef ctx,
-                        vFunctionOverloadRef fnImpl,
+                        oFunctionOverloadRef fnImpl,
                         oArrayRef args);
 
 struct vClosure {
-    vFunctionOverloadRef function;
+    oFunctionOverloadRef function;
     oArrayRef arguments;
 };
 
 vClosureRef vClosureCreate(vThreadContextRef ctx,
-					       vFunctionOverloadRef fnImpl,
+					       oFunctionOverloadRef fnImpl,
                            oArrayRef args);
 
 #endif
