@@ -10,13 +10,13 @@ extern const u8 V_T_STRUCT;
 extern const vTypeRef V_T_SELF;
 
 struct vField {
-    vStringRef name;
+    oStringRef name;
     vTypeRef type;
     u32 offset;
 };
 
 struct vType {
-    vStringRef name;
+    oStringRef name;
     oArrayRef fields;
     oArrayRef attributes; // TODO: use this for things like 'this is immutable'
     /* TODO: how to use this from the language?
@@ -31,7 +31,7 @@ struct vType {
 };
 
 vFieldRef vFieldCreate(oThreadContextRef ctx,
-                       vStringRef name,
+                       oStringRef name,
                        vTypeRef type);
 
 v_bool vTypeIsPrimitive(vTypeRef t);
@@ -42,11 +42,11 @@ vTypeRef vTypeCreatePrototype(oThreadContextRef ctx, v_bool shared);
 vTypeRef vTypeCreate(oThreadContextRef ctx,
                      u8 kind,
                      u8 alignment,
-                     vStringRef name,
+                     oStringRef name,
                      oArrayRef fields,
                      vFinalizer finalizer,
                      vTypeRef protoType);
-vStringRef vTypeGetName(vTypeRef type);
+oStringRef vTypeGetName(vTypeRef type);
 
 void o_bootstrap_type_init_type(oRuntimeRef rt, oHeapRef heap);
 void o_bootstrap_type_init_field(oRuntimeRef rt, oHeapRef heap);

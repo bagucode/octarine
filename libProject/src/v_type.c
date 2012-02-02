@@ -69,7 +69,7 @@ vTypeRef vTypeCreateProtoType(oThreadContextRef ctx) {
 vTypeRef vTypeCreate(oThreadContextRef ctx,
                      u8 kind,
                      u8 alignment,
-                     vStringRef name,
+                     oStringRef name,
                      oArrayRef fields,
                      vFinalizer finalizer,
                      vTypeRef protoType) {
@@ -194,7 +194,7 @@ v_bool vTypeEquals(oThreadContextRef ctx, vTypeRef t, vObject other) {
 }
 
 vFieldRef vFieldCreate(oThreadContextRef ctx,
-                       vStringRef name,
+                       oStringRef name,
                        vTypeRef type) {
     oROOTS(ctx)
     oENDROOTS
@@ -204,7 +204,7 @@ vFieldRef vFieldCreate(oThreadContextRef ctx,
     oENDFN(vFieldRef)
 }
 
-vStringRef vTypeGetName(vTypeRef type) {
+oStringRef vTypeGetName(vTypeRef type) {
     return type->name;
 }
 

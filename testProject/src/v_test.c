@@ -58,7 +58,7 @@ void testGCFinalizer() {
     oRuntimeRef runtime = oRuntimeCreate(2000 * 1024, 1024 * 1000);
     oThreadContextRef ctx = runtime->allContexts->ctx;
     
-    vStringCreate(ctx, "Test string");
+    oStringCreate(ctx, "Test string");
 	oHeapForceGC(ctx->runtime, ctx->heap);
     
     oRuntimeDestroy(runtime);
@@ -68,10 +68,10 @@ void testReaderEmptyList() {
     oRuntimeRef runtime = oRuntimeCreate(2000 * 1024, 1024 * 1000);
     oThreadContextRef ctx = runtime->allContexts->ctx;
     vObject result;
-    vStringRef src;
+    oStringRef src;
     oListObjRef emptyList;
 
-    src = vStringCreate(ctx, "()");
+    src = oStringCreate(ctx, "()");
     result = oReaderRead(ctx, src);
     // We should get a list with one element, an empty list.
     assert(vObjectGetType(ctx, result) == ctx->runtime->builtInTypes.list);
@@ -87,22 +87,22 @@ void testSymbolEquals() {
 	struct {
 		vSymbolRef sym1;
 		vSymbolRef sym2;
-		vStringRef name;
+		oStringRef name;
 	} frame;
 	oMemoryPushFrame(ctx, &frame, sizeof(frame));
 
-	frame.name = vStringCreate(ctx, "Bob2Bob");
+	frame.name = oStringCreate(ctx, "Bob2Bob");
 	frame.sym1 = vSymbolCreate(ctx, frame.name);
 	frame.sym2 = vSymbolCreate(ctx, frame.name);
 
 	assert(vSymbolEquals(ctx, frame.sym1, frame.sym2) == v_true);
 
-	frame.name = vStringCreate(ctx, "Bob2Bob"); // same name but different string instance
+	frame.name = oStringCreate(ctx, "Bob2Bob"); // same name but different string instance
 	frame.sym1 = vSymbolCreate(ctx, frame.name);
 
 	assert(vSymbolEquals(ctx, frame.sym1, frame.sym2) == v_true);
 
-	frame.name = vStringCreate(ctx, "WRONG"); // other name
+	frame.name = oStringCreate(ctx, "WRONG"); // other name
 	frame.sym2 = vSymbolCreate(ctx, frame.name);
 
 	assert(vSymbolEquals(ctx, frame.sym1, frame.sym2) == v_false);
@@ -118,11 +118,11 @@ void testReadSymbol() {
 	struct {
 		vObject readResult;
         vSymbolRef otherBob;
-		vStringRef src;
+		oStringRef src;
 	} frame;
 	oMemoryPushFrame(ctx, &frame, sizeof(frame));
 
-    frame.src = vStringCreate(ctx, "Bob2Bob");
+    frame.src = oStringCreate(ctx, "Bob2Bob");
     frame.otherBob = vSymbolCreate(ctx, frame.src);
     frame.readResult = oReaderRead(ctx, frame.src);
     
@@ -145,14 +145,14 @@ void testReadOneListAndOneSymbol() {
     oListObjRef bobLst;
 	struct {
 		vObject readResult;
-		vStringRef src;
-        vStringRef name;
+		oStringRef src;
+        oStringRef name;
         vSymbolRef controlSym;
 	} frame;
 	oMemoryPushFrame(ctx, &frame, sizeof(frame));
 
-    frame.name = vStringCreate(ctx, "Bob2Bob");
-    frame.src = vStringCreate(ctx, "(Bob2Bob) otherSym");
+    frame.name = oStringCreate(ctx, "Bob2Bob");
+    frame.src = oStringCreate(ctx, "(Bob2Bob) otherSym");
     frame.controlSym = vSymbolCreate(ctx, frame.name);
     
     frame.readResult = oReaderRead(ctx, frame.src);
@@ -174,7 +174,7 @@ void testReadOneListAndOneSymbol() {
     lst = oListObjRest(ctx, lst);
     other = (vSymbolRef)oListObjFirst(ctx, lst);
     assert(vObjectGetType(ctx, other) == ctx->runtime->builtInTypes.symbol);
-    frame.name = vStringCreate(ctx, "otherSym");
+    frame.name = oStringCreate(ctx, "otherSym");
     frame.controlSym = vSymbolCreate(ctx, frame.name);
 	assert(vSymbolEquals(ctx, other, frame.controlSym) == v_true);
     
@@ -198,7 +198,7 @@ void testCreateType() {
     oROOTS(ctx)
     oArrayRef fields;
     vTypeRef myType;
-    vStringRef typeName;
+    oStringRef typeName;
     testStruct* instance;
     oENDROOTS
     
@@ -207,18 +207,18 @@ void testCreateType() {
     for(i = 0; i < oRoots.fields->num_elements; ++i) {
 		fields[i] = oHeapAlloc(ctx->runtime->builtInTypes.field);
     }
-    fields[0]->name = vStringCreate(ctx, "one");
+    fields[0]->name = oStringCreate(ctx, "one");
     fields[0]->type = ctx->runtime->builtInTypes.u8;
-    fields[1]->name = vStringCreate(ctx, "two");
+    fields[1]->name = oStringCreate(ctx, "two");
     fields[1]->type = ctx->runtime->builtInTypes.u16;
-    fields[2]->name = vStringCreate(ctx, "three");
+    fields[2]->name = oStringCreate(ctx, "three");
     fields[2]->type = ctx->runtime->builtInTypes.i64;
-    fields[3]->name = vStringCreate(ctx, "self");
+    fields[3]->name = oStringCreate(ctx, "self");
     fields[3]->type = V_T_SELF;
-    fields[4]->name = vStringCreate(ctx, "five");
+    fields[4]->name = oStringCreate(ctx, "five");
     fields[4]->type = ctx->runtime->builtInTypes.f64;
     
-    oRoots.typeName = vStringCreate(ctx, "MyHappyTestType");
+    oRoots.typeName = oStringCreate(ctx, "MyHappyTestType");
     oRoots.myType = vTypeCreate(ctx, V_T_OBJECT, 0, oRoots.typeName, oRoots.fields, NULL, NULL);
     
     assert(oRoots.myType->size == sizeof(testStruct));
@@ -256,11 +256,11 @@ void testArrayPutGet() {
     oArrayGet(oRoots.objArray, 0, &oRoots.tmp1, ctx->runtime->builtInTypes.string);
     assert(oRoots.tmp1 == NULL);
 
-    oRoots.tmp1 = vStringCreate(ctx, "a string");
+    oRoots.tmp1 = oStringCreate(ctx, "a string");
     oArrayPut(oRoots.objArray, 10, oRoots.tmp1, ctx->runtime->builtInTypes.string);
     oArrayGet(oRoots.objArray, 10, &oRoots.tmp2, ctx->runtime->builtInTypes.string);
     assert(vObjectGetType(ctx, oRoots.tmp2) == ctx->runtime->builtInTypes.string);
-    assert(vStringCompare(oRoots.tmp1, oRoots.tmp2) == 0);
+    assert(oStringCompare(oRoots.tmp1, oRoots.tmp2) == 0);
     assert(oRoots.tmp1 == oRoots.tmp2);
     
     one = 1;
@@ -293,20 +293,20 @@ void testVector() {
     struct {
         vVectorRef veci64;
         vVectorRef vecStr;
-        vStringRef str;
-        vStringRef checkStr;
+        oStringRef str;
+        oStringRef checkStr;
     } frame;
     oMemoryPushFrame(ctx, &frame, sizeof(frame));
 
     frame.veci64 = vVectorCreate(ctx, i64_t);
     frame.vecStr = vVectorCreate(ctx, str_t);
     
-    frame.str = vStringCreate(ctx, "String One");
+    frame.str = oStringCreate(ctx, "String One");
     frame.vecStr = vVectorAddBack(ctx, frame.vecStr, frame.str, str_t);
     assert(vVectorSize(ctx, frame.vecStr) == 1);
     vVectorGet(ctx, frame.vecStr, 0, &frame.checkStr, str_t);
     assert(vObjectGetType(ctx, frame.checkStr) == str_t);
-    assert(vStringCompare(frame.str, frame.checkStr) == 0);
+    assert(oStringCompare(frame.str, frame.checkStr) == 0);
     assert(frame.str == frame.checkStr);
 
     one = 1;
@@ -317,11 +317,11 @@ void testVector() {
     assert(one == checki64);
 
     // Test put of object
-    frame.str = vStringCreate(ctx, "String Two");
+    frame.str = oStringCreate(ctx, "String Two");
     frame.vecStr = vVectorPut(ctx, frame.vecStr, 0, frame.str, str_t);
     vVectorGet(ctx, frame.vecStr, 0, &frame.checkStr, str_t);
     assert(vObjectGetType(ctx, frame.checkStr) == str_t);
-    assert(vStringCompare(frame.str, frame.checkStr) == 0);
+    assert(oStringCompare(frame.str, frame.checkStr) == 0);
     assert(frame.str == frame.checkStr);
 
     // Test put of struct
@@ -343,14 +343,14 @@ void testReadVector() {
     vVectorRef vec;
 	struct {
 		vObject readResult;
-		vStringRef src;
+		oStringRef src;
         vSymbolRef ethel;
 	} frame;
 	oMemoryPushFrame(ctx, &frame, sizeof(frame));
 
-    frame.src = vStringCreate(ctx, "ethel");
+    frame.src = oStringCreate(ctx, "ethel");
     frame.ethel = vSymbolCreate(ctx, frame.src);
-    frame.src = vStringCreate(ctx, "[bob fred ethel]\n");
+    frame.src = oStringCreate(ctx, "[bob fred ethel]\n");
     frame.readResult = oReaderRead(ctx, frame.src);
     
     // We should get a list with one element, a vector of three symbols
@@ -376,13 +376,13 @@ void testReadKeyword() {
     oKeywordRef kw;
 	struct {
 		vObject readResult;
-        vStringRef src;
-		vStringRef name;
+        oStringRef src;
+		oStringRef name;
 	} frame;
 	oMemoryPushFrame(ctx, &frame, sizeof(frame));
     
-    frame.name = vStringCreate(ctx, "lucy");
-    frame.src = vStringCreate(ctx, ":lucy");
+    frame.name = oStringCreate(ctx, "lucy");
+    frame.src = oStringCreate(ctx, ":lucy");
     frame.readResult = oReaderRead(ctx, frame.src);
     
     // We should get a list with one element, a vector of three symbols
@@ -392,7 +392,7 @@ void testReadKeyword() {
     
     kw = oListObjFirst(ctx, lst);
     assert(vObjectGetType(ctx, kw) == ctx->runtime->builtInTypes.keyword);
-    assert(vStringCompare(frame.name, oKeywordGetName(ctx, kw)) == 0);
+    assert(oStringCompare(frame.name, oKeywordGetName(ctx, kw)) == 0);
     
 	oMemoryPopFrame(ctx);
     oRuntimeDestroy(runtime);

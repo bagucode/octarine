@@ -58,8 +58,8 @@ typedef oRuntime* oRuntimeRef;
 typedef struct oSignature oSignature;
 typedef oSignature* oSignatureRef;
 
-typedef struct vString vString;
-typedef vString* vStringRef;
+typedef struct oString oString;
+typedef oString* oStringRef;
 
 typedef struct vSymbol vSymbol;
 typedef vSymbol* vSymbolRef;

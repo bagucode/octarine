@@ -4,18 +4,18 @@
 #include "../../platformProject/src/v_platform.h"
 #include "v_typedefs.h"
 
-struct vString {
+struct oString {
 	vNativeStringRef str;
 };
 
-vStringRef vStringCreate(oThreadContextRef ctx, char *utf8);
-int vStringCompare(vStringRef str1, vStringRef str2);
-oArrayRef vStringUtf8Copy(oThreadContextRef ctx, vStringRef str);
-v_char vStringCharAt(oThreadContextRef ctx, vStringRef str, uword idx);
-vStringRef vStringSubString(oThreadContextRef ctx, vStringRef str, uword start, uword end);
-uword vStringLength(oThreadContextRef ctx, vStringRef str);
+oStringRef oStringCreate(oThreadContextRef ctx, char *utf8);
+int oStringCompare(oStringRef str1, oStringRef str2);
+oArrayRef oStringUtf8Copy(oThreadContextRef ctx, oStringRef str);
+v_char oStringCharAt(oThreadContextRef ctx, oStringRef str, uword idx);
+oStringRef oStringSubString(oThreadContextRef ctx, oStringRef str, uword start, uword end);
+uword oStringLength(oThreadContextRef ctx, oStringRef str);
 
-vStringRef o_bootstrap_string_create(oRuntimeRef rt, oHeapRef heap, const char *utf8);
+oStringRef o_bootstrap_string_create(oRuntimeRef rt, oHeapRef heap, const char *utf8);
 void o_bootstrap_string_init_type(oRuntimeRef rt, oHeapRef heap);
 
 #endif

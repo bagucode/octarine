@@ -8,7 +8,7 @@
 void o_bootstrap_any_type_init(oThreadContextRef ctx) {
     ctx->runtime->builtInTypes.any->fields = NULL;
     ctx->runtime->builtInTypes.any->kind = V_T_OBJECT;
-	ctx->runtime->builtInTypes.any->name =  vStringCreate(ctx, "Any");
+	ctx->runtime->builtInTypes.any->name =  oStringCreate(ctx, "Any");
     ctx->runtime->builtInTypes.any->size = sizeof(pointer);
 }
 

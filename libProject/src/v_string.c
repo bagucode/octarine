@@ -9,24 +9,24 @@
 #include "v_error.h"
 #include <memory.h>
 
-vStringRef vStringCreate(oThreadContextRef ctx, char *utf8) {
+oStringRef oStringCreate(oThreadContextRef ctx, char *utf8) {
     oROOTS(ctx)
     oENDROOTS
     oSETRET(oHeapAlloc(ctx->runtime->builtInTypes.string));
-    oGETRETT(vStringRef)->str = vNativeStringFromUtf8(utf8);
-    oENDFN(vStringRef)
+    oGETRETT(oStringRef)->str = vNativeStringFromUtf8(utf8);
+    oENDFN(oStringRef)
 }
 
 static void finalizer(vObject obj) {
-    vStringRef str = (vStringRef)obj;
+    oStringRef str = (oStringRef)obj;
     vNativeStringDestroy(str->str);
 }
 
-int vStringCompare(vStringRef x, vStringRef y) {
+int oStringCompare(oStringRef x, oStringRef y) {
     return x == y ? 0 : vNativeStringCompare(x->str, y->str);
 }
 
-oArrayRef vStringUtf8Copy(oThreadContextRef ctx, vStringRef str) {
+oArrayRef oStringUtf8Copy(oThreadContextRef ctx, oStringRef str) {
     uword length;
     char* utf8String = vNativeStringToUtf8(str->str, &length);
     oROOTS(ctx)
@@ -39,25 +39,25 @@ oArrayRef vStringUtf8Copy(oThreadContextRef ctx, vStringRef str) {
 	oENDFN(oArrayRef)
 }
 
-v_char vStringCharAt(oThreadContextRef ctx, vStringRef str, uword idx) {
+v_char oStringCharAt(oThreadContextRef ctx, oStringRef str, uword idx) {
     return vNativeStringCharAt(str->str, idx);
 }
 
-vStringRef vStringSubString(oThreadContextRef ctx, vStringRef str, uword start, uword end) {
+oStringRef oStringSubString(oThreadContextRef ctx, oStringRef str, uword start, uword end) {
     oROOTS(ctx)
     oENDROOTS
 	oSETRET(oHeapAlloc(ctx->runtime->builtInTypes.string));
-    oGETRETT(vStringRef)->str = vNativeStringSubstring(str->str, start, end);
-    oENDFN(vStringRef)
+    oGETRETT(oStringRef)->str = vNativeStringSubstring(str->str, start, end);
+    oENDFN(oStringRef)
 }
 
-vStringRef o_bootstrap_string_create(oRuntimeRef rt, oHeapRef heap, const char *utf8) {
-    vStringRef str = (vStringRef)o_bootstrap_object_alloc(rt, heap, rt->builtInTypes.string, sizeof(vString));
+oStringRef o_bootstrap_string_create(oRuntimeRef rt, oHeapRef heap, const char *utf8) {
+    oStringRef str = (oStringRef)o_bootstrap_object_alloc(rt, heap, rt->builtInTypes.string, sizeof(oString));
     str->str = vNativeStringFromUtf8(utf8);
     return str;
 }
 
-uword vStringLength(oThreadContextRef ctx, vStringRef str) {
+uword oStringLength(oThreadContextRef ctx, oStringRef str) {
     return vNativeStringLength(str->str);
 }
 
@@ -65,6 +65,6 @@ void o_bootstrap_string_init_type(oRuntimeRef rt, oHeapRef heap) {
     rt->builtInTypes.string->fields = NULL;
     rt->builtInTypes.string->kind = V_T_OBJECT;
     rt->builtInTypes.string->name = o_bootstrap_string_create(rt, heap, "String");
-    rt->builtInTypes.string->size = sizeof(vString);
+    rt->builtInTypes.string->size = sizeof(oString);
     rt->builtInTypes.string->finalizer = finalizer;
 }

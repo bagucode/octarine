@@ -65,7 +65,7 @@ int main(int argc, char** argv) {
     oThreadContextRef ctx;
     
     struct {
-        vStringRef src;
+        oStringRef src;
         oListObjRef result;
         vObject obj;
         oArrayRef utf8;
@@ -117,7 +117,7 @@ int main(int argc, char** argv) {
             line = tmp;
             prevLine = NULL;
         }
-        oFrame.src = vStringCreate(ctx, line);
+        oFrame.src = oStringCreate(ctx, line);
 		oFrame.result = (oListObjRef)oReaderRead(ctx, oFrame.src);
         if(((oKeywordRef)oFrame.result) == rt->builtInConstants.needMoreData) {
             prevLine = (char*)malloc(strlen(line) + 1);
@@ -132,7 +132,7 @@ int main(int argc, char** argv) {
             for(i = 0; i < numObjs; ++i) {
                 oFrame.obj = oListObjFirst(ctx, oFrame.result);
                 oFrame.result = oListObjRest(ctx, oFrame.result);
-                oFrame.utf8 = vStringUtf8Copy(ctx, vTypeGetName(vObjectGetType(ctx, oFrame.obj)));
+                oFrame.utf8 = oStringUtf8Copy(ctx, vTypeGetName(vObjectGetType(ctx, oFrame.obj)));
                 typeName = (char*)oArrayDataPointer(oFrame.utf8);
                 printf("%s\n", typeName);
             }

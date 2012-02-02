@@ -128,7 +128,7 @@ static vObject readString(oThreadContextRef ctx, oArrayRef src, uword* idx) {
     chars = (char*)oArrayDataPointer(oRoots.charBuffer);
     chars[bufIdx] = 0;
 
-    oRETURN(vStringCreate(ctx, chars));
+    oRETURN(oStringCreate(ctx, chars));
 	oENDFN(vObject)
 }
 
@@ -138,12 +138,12 @@ static vObject readSymbolOrKeyword(oThreadContextRef ctx, oArrayRef src, uword* 
     oENDROOTS
     
 	oRoots.theString = readString(ctx, src, idx);
-    if(vStringCharAt(ctx, oRoots.theString, 0) == ':') {
-        oRoots.theString = vStringSubString(ctx, oRoots.theString, 1, vStringLength(ctx, oRoots.theString));
-        oRETURN(oKeywordCreate(ctx, (vStringRef)oRoots.theString));
+    if(oStringCharAt(ctx, oRoots.theString, 0) == ':') {
+        oRoots.theString = oStringSubString(ctx, oRoots.theString, 1, oStringLength(ctx, oRoots.theString));
+        oRETURN(oKeywordCreate(ctx, (oStringRef)oRoots.theString));
     }
     else {
-        oRETURN(vSymbolCreate(ctx, (vStringRef)oRoots.theString));
+        oRETURN(vSymbolCreate(ctx, (oStringRef)oRoots.theString));
     }
 
     oENDFN(vObject)
@@ -225,14 +225,14 @@ static vObject read(oThreadContextRef ctx, oArrayRef src, uword* idx) {
     }
 }
 
-vObject oReaderRead(oThreadContextRef ctx, vStringRef source) {
+vObject oReaderRead(oThreadContextRef ctx, oStringRef source) {
     uword idx = 0;
     oROOTS(ctx)
     vObject tmp;
     oArrayRef srcArr;
     oENDROOTS
 
-	oRoots.srcArr = vStringUtf8Copy(ctx, source);
+	oRoots.srcArr = oStringUtf8Copy(ctx, source);
     oSETRET(oListObjCreate(ctx, NULL));
     while (idx < oRoots.srcArr->num_elements) {
         oRoots.tmp = read(ctx, oRoots.srcArr, &idx);

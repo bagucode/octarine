@@ -7,7 +7,7 @@
 /* A hash map where the keys are strings and the values objects of any type */
 
 struct oMapStrObjEntry {
-    vStringRef key;
+    oStringRef key;
     vObject value;
 };
 
@@ -18,9 +18,9 @@ struct oMapStrObj {
 
 oMapStrObjRef oMapStrObjCreate(oThreadContextRef ctx);
 void oMapStrObjDestroy(oMapStrObjRef map);
-void oMapStrObjPut(oMapStrObjRef map, vStringRef key, vObject value);
+void oMapStrObjPut(oMapStrObjRef map, oStringRef key, vObject value);
 /* Type of returned object is Nothing if there was no entry. */
-vObject oMapStrObjGet(oMapStrObjRef map, vStringRef key);
+vObject oMapStrObjGet(oMapStrObjRef map, oStringRef key);
 
 void o_bootstrap_map_init_type(oThreadContextRef ctx);
 

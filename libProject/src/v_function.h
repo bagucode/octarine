@@ -5,11 +5,11 @@
 #include "v_typedefs.h"
 
 struct oParameter {
-    vStringRef name;
+    oStringRef name;
     vTypeRef type;
 };
 
-oParameterRef oParameterCreate(vStringRef name, vTypeRef type);
+oParameterRef oParameterCreate(oStringRef name, vTypeRef type);
 
 struct oSignature {
     oArrayRef returns; /* array of vType */

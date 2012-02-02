@@ -6,10 +6,10 @@
 #include "../../platformProject/src/v_basic_types.h"
 
 struct vSymbol {
-    vStringRef name;
+    oStringRef name;
 };
 
-vSymbolRef vSymbolCreate(oThreadContextRef ctx, vStringRef name);
+vSymbolRef vSymbolCreate(oThreadContextRef ctx, oStringRef name);
 v_bool vSymbolEquals(oThreadContextRef ctx,
                      vSymbolRef sym1,
                      vSymbolRef sym2);

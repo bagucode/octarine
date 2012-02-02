@@ -5,11 +5,11 @@
 #include "v_typedefs.h"
 
 struct oKeyword {
-    vStringRef name;
+    oStringRef name;
 };
 
-oKeywordRef oKeywordCreate(oThreadContextRef ctx, vStringRef name);
-vStringRef oKeywordGetName(oThreadContextRef ctx, oKeywordRef kw);
+oKeywordRef oKeywordCreate(oThreadContextRef ctx, oStringRef name);
+oStringRef oKeywordGetName(oThreadContextRef ctx, oKeywordRef kw);
 
 void o_bootstrap_keyword_type_init(oThreadContextRef ctx);
 

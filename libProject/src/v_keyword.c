@@ -11,16 +11,16 @@ void o_bootstrap_keyword_type_init(oThreadContextRef ctx) {
     oROOTS(ctx)
     oArrayRef fields;
     vTypeRef theType;
-    vStringRef typeName;
+    oStringRef typeName;
     vFieldRef field;
     oENDROOTS
     
     oRoots.fields = oArrayCreate(ctx->runtime->builtInTypes.field, 1);
-    oRoots.typeName = vStringCreate(ctx, "name");
+    oRoots.typeName = oStringCreate(ctx, "name");
     oRoots.field = vFieldCreate(ctx, oRoots.typeName, ctx->runtime->builtInTypes.string);
     oArrayPut(oRoots.fields, 0, oRoots.field, ctx->runtime->builtInTypes.field);
     
-    oRoots.typeName = vStringCreate(ctx, "Keyword");
+    oRoots.typeName = oStringCreate(ctx, "Keyword");
     oRoots.theType = vTypeCreate(ctx, V_T_OBJECT, 0, oRoots.typeName, oRoots.fields, NULL, NULL);
     
     ctx->runtime->builtInTypes.keyword = oRoots.theType;
@@ -28,7 +28,7 @@ void o_bootstrap_keyword_type_init(oThreadContextRef ctx) {
     oENDVOIDFN
 }
 
-oKeywordRef oKeywordCreate(oThreadContextRef ctx, vStringRef name) {
+oKeywordRef oKeywordCreate(oThreadContextRef ctx, oStringRef name) {
     oROOTS(ctx)
     oENDROOTS
     if(ctx->error) return NULL;
@@ -37,7 +37,7 @@ oKeywordRef oKeywordCreate(oThreadContextRef ctx, vStringRef name) {
     oENDFN(oKeywordRef)
 }
 
-vStringRef oKeywordGetName(oThreadContextRef ctx, oKeywordRef kw) {
+oStringRef oKeywordGetName(oThreadContextRef ctx, oKeywordRef kw) {
     if(ctx->error) return NULL;
     return kw->name;
 }
