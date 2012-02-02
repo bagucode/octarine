@@ -34,7 +34,7 @@ vVectorRef vVectorCreate(vThreadContextRef ctx,
 	oSETRET(vHeapAlloc(ctx->runtime, ctx->heap, ctx->runtime->builtInTypes.vector));
     oGETRETT(vVectorRef)->data = oArrayCreate(ctx, type, 0);
 
-    oENDFN
+	oENDFN(vVectorRef)
 }
 
 vVectorRef vVectorAddBack(vThreadContextRef ctx,
@@ -50,7 +50,7 @@ vVectorRef vVectorAddBack(vThreadContextRef ctx,
     oArrayCopy(ctx, vec->data, oGETRETT(vVectorRef)->data);
     oArrayPut(ctx, oGETRETT(vVectorRef)->data, vec->data->num_elements, data, dataType);
 
-    oENDFN
+	oENDFN(vVectorRef)
 }
 
 uword vVectorSize(vThreadContextRef ctx, vVectorRef vec) {
@@ -67,7 +67,7 @@ vVectorRef vVectorPut(vThreadContextRef ctx, vVectorRef vec, uword idx, pointer 
     oArrayCopy(ctx, vec->data, oGETRETT(vVectorRef)->data);
     oArrayPut(ctx, oGETRETT(vVectorRef)->data, idx, src, srcType);
 
-    oENDFN
+	oENDFN(vVectorRef)
 }
 
 void vVectorGet(vThreadContextRef ctx, vVectorRef vec, uword idx, pointer dest, vTypeRef destType) {

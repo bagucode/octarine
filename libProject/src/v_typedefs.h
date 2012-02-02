@@ -75,30 +75,24 @@ typedef vVector* vVectorRef;
 
 // Some macros for handling stack frames and errors
 
-#define oROOTS(context) vThreadContextRef _oCTX = context; \
-                        struct {
+#define oROOTS(context) vThreadContextRef _oCTX = context; struct {
 
-#define oENDROOTS vObject _oRET; \
-                  } oRoots; \
-                  vMemoryPushFrame(_oCTX, &oRoots, sizeof(oRoots));
+#define oENDROOTS vObject _oRET; } oRoots; vMemoryPushFrame(_oCTX, &oRoots, sizeof(oRoots));
 
 #define oRETURN(expression) oRoots._oRET = expression; goto _oENDFNL;
 
-#define oSETRET(expression) oRoots._oRET = (vObject)expression;
+#define oSETRET(expression) oRoots._oRET = expression
 
 #define oGETRET oRoots._oRET
 
 #define oGETRETT(type) ((type)oRoots._oRET)
 
-#define _oENDFN goto _oENDFNL; \
-                _oENDFNL: vMemoryPopFrame(_oCTX);
+#define _oENDFN goto _oENDFNL; _oENDFNL: vMemoryPopFrame(_oCTX);
 
-#define oENDFN _oENDFN \
-               return oRoots._oRET;
+#define oENDFN(type) _oENDFN return (type)oRoots._oRET;
 
 #define oENDVOIDFN _oENDFN
 
-#define _oC(fn, ...) fn(__VA_ARGS__); \
-                     if(vErrorGet(ctx)) { oRoots._oRET = NULL; goto _oENDFNL; }
+#define _oC(fn, ...) fn(__VA_ARGS__); if(vErrorGet(ctx)) { oRoots._oRET = NULL; goto _oENDFNL; }
 
 #endif

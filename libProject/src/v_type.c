@@ -122,7 +122,7 @@ vTypeRef vTypeCreate(vThreadContextRef ctx,
     
     oGETRETT(vTypeRef)->size = nextLargerMultiple(largest, oGETRETT(vTypeRef)->size);
 
-    oENDFN
+    oENDFN(vTypeRef)
 }
 
 oArrayRef v_bootstrap_type_create_field_array(vRuntimeRef rt,

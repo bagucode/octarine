@@ -26,17 +26,16 @@ int vStringCompare(vStringRef x, vStringRef y) {
 }
 
 oArrayRef vStringUtf8Copy(vThreadContextRef ctx, vStringRef str) {
+    uword length;
+    char* utf8String = vNativeStringToUtf8(str->str, &length);
     oROOTS(ctx)
     oENDROOTS
 
-    uword length;
-    char* utf8String = vNativeStringToUtf8(str->str, &length);
-
     oSETRET(oArrayCreate(ctx, ctx->runtime->builtInTypes.u8, length));
-    memcpy(oArrayDataPointer(oGETRET), utf8String, length);
+	memcpy(oArrayDataPointer(oGETRETT(oArrayRef)), utf8String, length);
     vFree(utf8String);
 
-    oENDFN
+	oENDFN(oArrayRef)
 }
 
 v_char vStringCharAt(vThreadContextRef ctx, vStringRef str, uword idx) {

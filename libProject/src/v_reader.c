@@ -126,7 +126,7 @@ static vObject readString(vThreadContextRef ctx, oArrayRef src, uword* idx) {
     chars[bufIdx] = 0;
 
     oRETURN(vStringCreate(ctx, chars));
-    oENDFN
+	oENDFN(vObject)
 }
 
 static vObject readSymbolOrKeyword(vThreadContextRef ctx, oArrayRef src, uword* idx) {
@@ -143,7 +143,7 @@ static vObject readSymbolOrKeyword(vThreadContextRef ctx, oArrayRef src, uword* 
         oRETURN(vSymbolCreate(ctx, (vStringRef)oRoots.theString));
     }
 
-    oENDFN
+    oENDFN(vObject)
 }
 
 static vObject readList(vThreadContextRef ctx, oArrayRef src, uword* idx) {
@@ -169,7 +169,7 @@ static vObject readList(vThreadContextRef ctx, oArrayRef src, uword* idx) {
         }
     }
 
-    oENDFN
+    oENDFN(vObject)
 }
 
 static vObject readVector(vThreadContextRef ctx, oArrayRef src, uword* idx) {
@@ -194,7 +194,7 @@ static vObject readVector(vThreadContextRef ctx, oArrayRef src, uword* idx) {
         }
     }
 
-    oENDFN
+    oENDFN(vObject)
 }
 
 static vObject read(vThreadContextRef ctx, oArrayRef src, uword* idx) {
@@ -246,6 +246,6 @@ vObject vReaderRead(vThreadContextRef ctx, vStringRef source) {
         oSETRET(vListObjReverse(ctx, oGETRET));
     }
 
-    oENDFN
+    oENDFN(vObject)
 }
 

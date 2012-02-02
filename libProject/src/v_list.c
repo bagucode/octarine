@@ -79,7 +79,7 @@ static vListObjRef removeInternal(vThreadContextRef ctx,
         /* Removing non-head element. Have to duplicate the list up to the
          point where the element to remove is. */
         oSETRET(vListObjCreate(ctx, head->data));
-        oRoots.prev = oGETRET;
+		oRoots.prev = oGETRETT(vListObjRef);
         oRoots.oldTmp = head->next;
         while (oRoots.oldTmp != elem) {
             oRoots.newTmp = vListObjCreate(ctx, oRoots.oldTmp->data);
@@ -91,7 +91,7 @@ static vListObjRef removeInternal(vThreadContextRef ctx,
         oRoots.prev->next = elem->next;
     }
 
-    oENDFN
+	oENDFN(vListObjRef)
 }
 
 vListObjRef vListObjRemove(vThreadContextRef ctx,
@@ -138,7 +138,7 @@ vListObjRef vListObjReverse(vThreadContextRef ctx, vListObjRef lst) {
         lst = lst->next;
     }
 
-    oENDFN
+	oENDFN(vListObjRef)
 }
 
 uword vListObjSize(vThreadContextRef ctx, vListObjRef lst) {
