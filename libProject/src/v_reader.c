@@ -156,19 +156,19 @@ static vObject readList(vThreadContextRef ctx, oArrayRef src, uword* idx) {
     
     ++(*idx); // eat (
     if(eos(src, idx) == v_false) {
-        oSETRET(vListObjCreate(ctx, NULL));
+        oSETRET(oListObjCreate(ctx, NULL));
         while(getChar(src, *idx) != RPAREN
               && eos(src, idx) == v_false) {
             oRoots.tmp = read(ctx, src, idx);
             if(oRoots.tmp != NULL)
-				oSETRET(vListObjAddFront(ctx, (vListObjRef)oGETRET, oRoots.tmp));
+				oSETRET(oListObjAddFront(ctx, (oListObjRef)oGETRET, oRoots.tmp));
             // else what?
         }
         if(eos(src, idx)) {
             oSETRET(ctx->runtime->builtInConstants.needMoreData);
         } else {
             ++(*idx); // eat )
-            oSETRET(vListObjReverse(ctx, (vListObjRef)oGETRET));
+            oSETRET(oListObjReverse(ctx, (oListObjRef)oGETRET));
         }
     }
 
@@ -233,7 +233,7 @@ vObject vReaderRead(vThreadContextRef ctx, vStringRef source) {
     oENDROOTS
 
 	oRoots.srcArr = vStringUtf8Copy(ctx, source);
-    oSETRET(vListObjCreate(ctx, NULL));
+    oSETRET(oListObjCreate(ctx, NULL));
     while (idx < oRoots.srcArr->num_elements) {
         oRoots.tmp = read(ctx, oRoots.srcArr, &idx);
         if(oRoots.tmp != NULL) {
@@ -241,12 +241,12 @@ vObject vReaderRead(vThreadContextRef ctx, vStringRef source) {
                 oSETRET(oRoots.tmp);
             }
             else {
-                oSETRET(vListObjAddFront(ctx, oGETRET, oRoots.tmp));
+                oSETRET(oListObjAddFront(ctx, oGETRET, oRoots.tmp));
             }
         }
     }
     if(oGETRET != ctx->runtime->builtInConstants.needMoreData) {
-        oSETRET(vListObjReverse(ctx, oGETRET));
+        oSETRET(oListObjReverse(ctx, oGETRET));
     }
 
     oENDFN(vObject)

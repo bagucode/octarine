@@ -27,8 +27,8 @@ typedef oHeap* oHeapRef;
 typedef struct oKeyword oKeyword;
 typedef oKeyword* oKeywordRef;
 
-typedef struct vListObj vListObj;
-typedef vListObj* vListObjRef;
+typedef struct oListObj oListObj;
+typedef oListObj* oListObjRef;
 
 typedef struct vMapStrObj vMapStrObj;
 typedef vMapStrObj* vMapStrObjRef;

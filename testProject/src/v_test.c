@@ -27,7 +27,7 @@ void testGCAllGarbage() {
     vThreadContextRef ctx = runtime->allContexts->ctx;
     
     for(i = 0; i < 1000 * 1024; ++i) {
-        vListObjCreate(ctx, NULL);
+        oListObjCreate(ctx, NULL);
     }
     
     vRuntimeDestroy(runtime);
@@ -44,9 +44,9 @@ void testGCAllRetained() {
 
     vMemoryPushFrame(ctx, &frame, sizeof(frame));
     
-    frame.listHead = vListObjCreate(ctx, NULL);
+    frame.listHead = oListObjCreate(ctx, NULL);
     for(i = 0; i < 1024; ++i) {
-        frame.listHead = vListObjAddFront(ctx, (vListObjRef)frame.listHead, frame.listHead);
+        frame.listHead = oListObjAddFront(ctx, (oListObjRef)frame.listHead, frame.listHead);
     }
 
     vMemoryPopFrame(ctx);
@@ -69,13 +69,13 @@ void testReaderEmptyList() {
     vThreadContextRef ctx = runtime->allContexts->ctx;
     vObject result;
     vStringRef src;
-    vListObjRef emptyList;
+    oListObjRef emptyList;
 
     src = vStringCreate(ctx, "()");
     result = vReaderRead(ctx, src);
     // We should get a list with one element, an empty list.
     assert(vObjectGetType(ctx, result) == ctx->runtime->builtInTypes.list);
-	emptyList = (vListObjRef)((vListObjRef)result)->data;
+	emptyList = (oListObjRef)((oListObjRef)result)->data;
     assert(vObjectGetType(ctx, emptyList) == ctx->runtime->builtInTypes.list);
     
     vRuntimeDestroy(runtime);
@@ -128,7 +128,7 @@ void testReadSymbol() {
     
     // We should get a list with one element, the symbol Bob2Bob
     assert(vObjectGetType(ctx, frame.readResult) == ctx->runtime->builtInTypes.list);
-	bob = (vSymbolRef)((vListObjRef)frame.readResult)->data;
+	bob = (vSymbolRef)((oListObjRef)frame.readResult)->data;
     assert(vObjectGetType(ctx, bob) == ctx->runtime->builtInTypes.symbol);
 	assert(vSymbolEquals(ctx, frame.otherBob, bob) == v_true);
 
@@ -141,8 +141,8 @@ void testReadOneListAndOneSymbol() {
     vThreadContextRef ctx = runtime->allContexts->ctx;
     vSymbolRef bob;
     vSymbolRef other;
-    vListObjRef lst;
-    vListObjRef bobLst;
+    oListObjRef lst;
+    oListObjRef bobLst;
 	struct {
 		vObject readResult;
 		vStringRef src;
@@ -160,19 +160,19 @@ void testReadOneListAndOneSymbol() {
     // We should get a list with two elements, a list with a symbol in it and a symbol
     assert(vObjectGetType(ctx, frame.readResult) == ctx->runtime->builtInTypes.list);
 
-    lst = (vListObjRef)frame.readResult;
-    assert(vListObjSize(ctx, lst) == 2);
+    lst = (oListObjRef)frame.readResult;
+    assert(oListObjSize(ctx, lst) == 2);
 
-	bobLst = (vListObjRef)vListObjFirst(ctx, lst);
+	bobLst = (oListObjRef)oListObjFirst(ctx, lst);
     assert(vObjectGetType(ctx, bobLst) == ctx->runtime->builtInTypes.list);
-    assert(vListObjSize(ctx, bobLst) == 1);
+    assert(oListObjSize(ctx, bobLst) == 1);
 
-    bob = (vSymbolRef)vListObjFirst(ctx, bobLst);
+    bob = (vSymbolRef)oListObjFirst(ctx, bobLst);
     assert(vObjectGetType(ctx, bob) == ctx->runtime->builtInTypes.symbol);
 	assert(vSymbolEquals(ctx, bob, frame.controlSym) == v_true);
 
-    lst = vListObjRest(ctx, lst);
-    other = (vSymbolRef)vListObjFirst(ctx, lst);
+    lst = oListObjRest(ctx, lst);
+    other = (vSymbolRef)oListObjFirst(ctx, lst);
     assert(vObjectGetType(ctx, other) == ctx->runtime->builtInTypes.symbol);
     frame.name = vStringCreate(ctx, "otherSym");
     frame.controlSym = vSymbolCreate(ctx, frame.name);
@@ -338,7 +338,7 @@ void testVector() {
 void testReadVector() {
     vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024 * 1000);
     vThreadContextRef ctx = runtime->allContexts->ctx;
-    vListObjRef lst;
+    oListObjRef lst;
     vSymbolRef sym;
     vVectorRef vec;
 	struct {
@@ -355,10 +355,10 @@ void testReadVector() {
     
     // We should get a list with one element, a vector of three symbols
     assert(vObjectGetType(ctx, frame.readResult) == ctx->runtime->builtInTypes.list);
-    lst = (vListObjRef)frame.readResult;
-    assert(vListObjSize(ctx, lst) == 1);
+    lst = (oListObjRef)frame.readResult;
+    assert(oListObjSize(ctx, lst) == 1);
     
-    vec = vListObjFirst(ctx, lst);
+    vec = oListObjFirst(ctx, lst);
     assert(vObjectGetType(ctx, vec) == ctx->runtime->builtInTypes.vector);
     assert(vVectorSize(ctx, vec) == 3);
     
@@ -372,7 +372,7 @@ void testReadVector() {
 void testReadKeyword() {
     vRuntimeRef runtime = vRuntimeCreate(2000 * 1024, 1024 * 1000);
     vThreadContextRef ctx = runtime->allContexts->ctx;
-    vListObjRef lst;
+    oListObjRef lst;
     oKeywordRef kw;
 	struct {
 		vObject readResult;
@@ -387,10 +387,10 @@ void testReadKeyword() {
     
     // We should get a list with one element, a vector of three symbols
     assert(vObjectGetType(ctx, frame.readResult) == ctx->runtime->builtInTypes.list);
-    lst = (vListObjRef)frame.readResult;
-    assert(vListObjSize(ctx, lst) == 1);
+    lst = (oListObjRef)frame.readResult;
+    assert(oListObjSize(ctx, lst) == 1);
     
-    kw = vListObjFirst(ctx, lst);
+    kw = oListObjFirst(ctx, lst);
     assert(vObjectGetType(ctx, kw) == ctx->runtime->builtInTypes.keyword);
     assert(vStringCompare(frame.name, oKeywordGetName(ctx, kw)) == 0);
     

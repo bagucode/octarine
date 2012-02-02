@@ -5,36 +5,36 @@
 #include "v_typedefs.h"
 
 /* List of objects of any type */
-struct vListObj {
+struct oListObj {
     vObject data;
-    vListObjRef next;
+    oListObjRef next;
 };
 
 /* data parameter is used to fill first "cons cell" */
-vListObjRef vListObjCreate(vThreadContextRef ctx,
+oListObjRef oListObjCreate(vThreadContextRef ctx,
                            vObject data);
 
-vListObjRef vListObjAddFront(vThreadContextRef ctx,
-                             vListObjRef lst,
+oListObjRef oListObjAddFront(vThreadContextRef ctx,
+                             oListObjRef lst,
                              vObject data);
 
-vListObjRef vListObjRemove(vThreadContextRef ctx,
-                           vListObjRef lst,
+oListObjRef oListObjRemove(vThreadContextRef ctx,
+                           oListObjRef lst,
                            vObject data);
 
-vListObjRef vListObjRemoveNth(vThreadContextRef ctx,
-                              vListObjRef lst,
+oListObjRef oListObjRemoveNth(vThreadContextRef ctx,
+                              oListObjRef lst,
                               uword idx);
 
-v_bool vListObjIsEmpty(vThreadContextRef ctx, vListObjRef lst);
+v_bool oListObjIsEmpty(vThreadContextRef ctx, oListObjRef lst);
 
-vListObjRef vListObjReverse(vThreadContextRef ctx, vListObjRef lst);
+oListObjRef oListObjReverse(vThreadContextRef ctx, oListObjRef lst);
 
-uword vListObjSize(vThreadContextRef ctx, vListObjRef lst);
+uword oListObjSize(vThreadContextRef ctx, oListObjRef lst);
 
-vObject vListObjFirst(vThreadContextRef ctx, vListObjRef lst);
+vObject oListObjFirst(vThreadContextRef ctx, oListObjRef lst);
 
-vListObjRef vListObjRest(vThreadContextRef ctx, vListObjRef lst);
+oListObjRef oListObjRest(vThreadContextRef ctx, oListObjRef lst);
 
 void o_bootstrap_list_init_type(vThreadContextRef ctx);
 

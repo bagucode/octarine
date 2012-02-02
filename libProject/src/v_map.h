@@ -12,7 +12,7 @@ struct vMapStrObjEntry {
 };
 
 struct vMapStrObj {
-    oArrayRef buckets; /* array of vListObj containing entries */
+    oArrayRef buckets; /* array of oListObj containing entries */
     f32 load_factor;
 };
 

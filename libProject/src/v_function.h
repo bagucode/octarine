@@ -42,7 +42,7 @@ struct oFunctionOverload {
 struct oFunction {
     /* List of oFunctionOverloadRef
      TODO: change this to a vector? */
-    vListObjRef overloads;
+    oListObjRef overloads;
 };
 
 oFunctionRef oFunctionCreate(oFunctionOverloadRef initialImpl);

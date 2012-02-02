@@ -13,51 +13,51 @@ void o_bootstrap_list_init_type(vThreadContextRef ctx) {
     ctx->runtime->builtInTypes.list->fields = o_bootstrap_type_create_field_array(ctx->runtime, ctx->heap, 2);
     ctx->runtime->builtInTypes.list->kind = V_T_OBJECT;
     ctx->runtime->builtInTypes.list->name = o_bootstrap_string_create(ctx->runtime, ctx->heap, "AnyList");
-    ctx->runtime->builtInTypes.list->size = sizeof(vListObj);
+    ctx->runtime->builtInTypes.list->size = sizeof(oListObj);
 
     fields = (vFieldRef*)oArrayDataPointer(ctx->runtime->builtInTypes.list->fields);
     
     fields[0]->name = o_bootstrap_string_create(ctx->runtime, ctx->heap, "data");
-    fields[0]->offset = offsetof(vListObj, data);
+    fields[0]->offset = offsetof(oListObj, data);
     fields[0]->type = ctx->runtime->builtInTypes.any;
 
     fields[1]->name = o_bootstrap_string_create(ctx->runtime, ctx->heap, "next");
-    fields[1]->offset = offsetof(vListObj, next);
+    fields[1]->offset = offsetof(oListObj, next);
     fields[1]->type = ctx->runtime->builtInTypes.list;
 }
 
-vListObjRef vListObjCreate(vThreadContextRef ctx, vObject data) {
+oListObjRef oListObjCreate(vThreadContextRef ctx, vObject data) {
     oROOTS(ctx)
     oENDROOTS
     if(ctx->error) return NULL;
 	oSETRET(oHeapAlloc(ctx->runtime->builtInTypes.list));
-    oGETRETT(vListObjRef)->data = data;
-    oENDFN(vListObjRef)
+    oGETRETT(oListObjRef)->data = data;
+    oENDFN(oListObjRef)
 }
 
-vListObjRef vListObjAddFront(vThreadContextRef ctx,
-                             vListObjRef lst,
+oListObjRef oListObjAddFront(vThreadContextRef ctx,
+                             oListObjRef lst,
                              vObject data) {
     oROOTS(ctx)
     oENDROOTS
     if(ctx->error) return NULL;
     oSETRET(oHeapAlloc(ctx->runtime->builtInTypes.list));
-    oGETRETT(vListObjRef)->data = data;
+    oGETRETT(oListObjRef)->data = data;
     // Only set the next pointer to the node that got passed as an argument
     // if argument node is not empty, to make it appear that the empty node
     // got "filled" instead of having another link tacked on.
-    oGETRETT(vListObjRef)->next = vListObjIsEmpty(ctx, lst) ? NULL : lst;
-    oENDFN(vListObjRef)
+    oGETRETT(oListObjRef)->next = oListObjIsEmpty(ctx, lst) ? NULL : lst;
+    oENDFN(oListObjRef)
 }
 
-static vListObjRef removeInternal(vThreadContextRef ctx,
-                                  vListObjRef head,
-                                  vListObjRef elem,
-                                  vListObjRef prev) {
+static oListObjRef removeInternal(vThreadContextRef ctx,
+                                  oListObjRef head,
+                                  oListObjRef elem,
+                                  oListObjRef prev) {
     oROOTS(ctx)
-    vListObjRef oldTmp;
-    vListObjRef newTmp;
-    vListObjRef prev;
+    oListObjRef oldTmp;
+    oListObjRef newTmp;
+    oListObjRef prev;
     oENDROOTS
     
     if(prev == NULL) {
@@ -70,7 +70,7 @@ static vListObjRef removeInternal(vThreadContextRef ctx,
                 oRETURN(elem);
             }
             else {
-                oRETURN(vListObjCreate(ctx, NULL));
+                oRETURN(oListObjCreate(ctx, NULL));
             }
         }
         else {
@@ -81,11 +81,11 @@ static vListObjRef removeInternal(vThreadContextRef ctx,
     else {
         /* Removing non-head element. Have to duplicate the list up to the
          point where the element to remove is. */
-        oSETRET(vListObjCreate(ctx, head->data));
-		oRoots.prev = oGETRETT(vListObjRef);
+        oSETRET(oListObjCreate(ctx, head->data));
+		oRoots.prev = oGETRETT(oListObjRef);
         oRoots.oldTmp = head->next;
         while (oRoots.oldTmp != elem) {
-            oRoots.newTmp = vListObjCreate(ctx, oRoots.oldTmp->data);
+            oRoots.newTmp = oListObjCreate(ctx, oRoots.oldTmp->data);
             oRoots.prev->next = oRoots.newTmp;
             oRoots.prev = oRoots.newTmp;
             oRoots.oldTmp = oRoots.oldTmp->next;
@@ -94,23 +94,23 @@ static vListObjRef removeInternal(vThreadContextRef ctx,
         oRoots.prev->next = elem->next;
     }
 
-	oENDFN(vListObjRef)
+	oENDFN(oListObjRef)
 }
 
-vListObjRef vListObjRemove(vThreadContextRef ctx,
-                          vListObjRef lst,
+oListObjRef oListObjRemove(vThreadContextRef ctx,
+                          oListObjRef lst,
                           vObject obj) {
     if(ctx->error) return NULL;
     /* TODO: implement, need equals function. */
     return lst;
 }
 
-vListObjRef vListObjRemoveNth(vThreadContextRef ctx,
-                              vListObjRef lst,
+oListObjRef oListObjRemoveNth(vThreadContextRef ctx,
+                              oListObjRef lst,
                               uword idx) {
     uword currentIdx = 0;
-    vListObjRef current = lst;
-    vListObjRef prev = NULL;
+    oListObjRef current = lst;
+    oListObjRef prev = NULL;
     
     if(ctx->error) return NULL;
     
@@ -126,25 +126,25 @@ vListObjRef vListObjRemoveNth(vThreadContextRef ctx,
     return lst;
 }
 
-v_bool vListObjIsEmpty(vThreadContextRef ctx, vListObjRef lst) {
+v_bool oListObjIsEmpty(vThreadContextRef ctx, oListObjRef lst) {
     return lst->data == NULL && lst->next == NULL;
 }
 
-vListObjRef vListObjReverse(vThreadContextRef ctx, vListObjRef lst) {
+oListObjRef oListObjReverse(vThreadContextRef ctx, oListObjRef lst) {
     oROOTS(ctx)
     oENDROOTS
     
-    oSETRET(vListObjCreate(ctx, lst->data));
+    oSETRET(oListObjCreate(ctx, lst->data));
     lst = lst->next;
     while (lst) {
-        oSETRET(vListObjAddFront(ctx, oGETRET, lst->data));
+        oSETRET(oListObjAddFront(ctx, oGETRET, lst->data));
         lst = lst->next;
     }
 
-	oENDFN(vListObjRef)
+	oENDFN(oListObjRef)
 }
 
-uword vListObjSize(vThreadContextRef ctx, vListObjRef lst) {
+uword oListObjSize(vThreadContextRef ctx, oListObjRef lst) {
     uword cnt = 0;
     while (lst) {
         ++cnt;
@@ -153,13 +153,13 @@ uword vListObjSize(vThreadContextRef ctx, vListObjRef lst) {
     return cnt;
 }
 
-vObject vListObjFirst(vThreadContextRef ctx, vListObjRef lst) {
+vObject oListObjFirst(vThreadContextRef ctx, oListObjRef lst) {
     return lst->data;
 }
 
-vListObjRef vListObjRest(vThreadContextRef ctx, vListObjRef lst) {
-    if(vListObjIsEmpty(ctx, lst)) {
-        return vListObjCreate(ctx, NULL);
+oListObjRef oListObjRest(vThreadContextRef ctx, oListObjRef lst) {
+    if(oListObjIsEmpty(ctx, lst)) {
+        return oListObjCreate(ctx, NULL);
     }
     return lst->next;
 }

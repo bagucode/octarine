@@ -66,7 +66,7 @@ int main(int argc, char** argv) {
     
     struct {
         vStringRef src;
-        vListObjRef result;
+        oListObjRef result;
         vObject obj;
         oArrayRef utf8;
     } oFrame;
@@ -118,7 +118,7 @@ int main(int argc, char** argv) {
             prevLine = NULL;
         }
         oFrame.src = vStringCreate(ctx, line);
-		oFrame.result = (vListObjRef)vReaderRead(ctx, oFrame.src);
+		oFrame.result = (oListObjRef)vReaderRead(ctx, oFrame.src);
         if(((oKeywordRef)oFrame.result) == rt->builtInConstants.needMoreData) {
             prevLine = (char*)malloc(strlen(line) + 1);
             strcpy(prevLine, line);
@@ -127,11 +127,11 @@ int main(int argc, char** argv) {
             }
         }
         else {
-            numObjs = (int)vListObjSize(ctx, oFrame.result);
+            numObjs = (int)oListObjSize(ctx, oFrame.result);
             printf("Read %d objects:\n", numObjs);
             for(i = 0; i < numObjs; ++i) {
-                oFrame.obj = vListObjFirst(ctx, oFrame.result);
-                oFrame.result = vListObjRest(ctx, oFrame.result);
+                oFrame.obj = oListObjFirst(ctx, oFrame.result);
+                oFrame.result = oListObjRest(ctx, oFrame.result);
                 oFrame.utf8 = vStringUtf8Copy(ctx, vTypeGetName(vObjectGetType(ctx, oFrame.obj)));
                 typeName = (char*)oArrayDataPointer(oFrame.utf8);
                 printf("%s\n", typeName);
