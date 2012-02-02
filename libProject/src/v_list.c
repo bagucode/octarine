@@ -27,6 +27,7 @@ void v_bootstrap_list_init_type(vThreadContextRef ctx) {
 
 vListObjRef vListObjCreate(vThreadContextRef ctx, vObject data) {
     vListObjRef ret;
+    if(ctx->error) return NULL;
 	ret = (vListObjRef)vHeapAlloc(ctx->runtime, ctx->heap, ctx->runtime->builtInTypes.list);
     ret->data = data;
     return ret;
@@ -35,7 +36,9 @@ vListObjRef vListObjCreate(vThreadContextRef ctx, vObject data) {
 vListObjRef vListObjAddFront(vThreadContextRef ctx,
                              vListObjRef lst,
                              vObject data) {
-								 vListObjRef head = (vListObjRef)vHeapAlloc(ctx->runtime, ctx->heap, ctx->runtime->builtInTypes.list);
+    vListObjRef head;
+    if(ctx->error) return NULL;
+    head = (vListObjRef)vHeapAlloc(ctx->runtime, ctx->heap, ctx->runtime->builtInTypes.list);
     head->data = data;
     // Only set the next pointer to the node that got passed as an argument
     // if argument node is not empty, to make it appear that the empty node
@@ -48,9 +51,14 @@ static vListObjRef removeInternal(vThreadContextRef ctx,
                                   vListObjRef head,
                                   vListObjRef elem,
                                   vListObjRef prev) {
-    vListObjRef oldTmp;
-    vListObjRef newHead;
-    vListObjRef newTmp;
+    struct {
+        vListObjRef oldTmp;
+        vListObjRef ret;
+        vListObjRef newTmp;
+        vListObjRef prev;
+    } frame;
+    oPUSHFRAME;
+    
     if(prev == NULL) {
         /* Removing head. */
         if(elem->next == NULL) {
@@ -58,38 +66,41 @@ static vListObjRef removeInternal(vThreadContextRef ctx,
              last element. If it is empty already, just return it. Otherwise
              return a new empty element. */
             if(elem->data == NULL) {
-                return elem;
+                frame.ret = elem;
             }
             else {
-                return vListObjCreate(ctx, NULL);
+                frame.ret = vListObjCreate(ctx, NULL);
             }
         }
         else {
             /* Just drop list head. */
-            return elem->next;
+            frame.ret = elem->next;
         }
     }
     else {
         /* Removing non-head element. Have to duplicate the list up to the
          point where the element to remove is. */
-        newHead = vListObjCreate(ctx, head->data);
-        prev = newHead;
-        oldTmp = head->next;
-        while (oldTmp != elem) {
-            newTmp = vListObjCreate(ctx, oldTmp->data);
-            prev->next = newTmp;
-            prev = newTmp;
-            oldTmp = oldTmp->next;
+        frame.ret = vListObjCreate(ctx, head->data);
+        frame.prev = frame.ret;
+        frame.oldTmp = head->next;
+        while (frame.oldTmp != elem) {
+            frame.newTmp = vListObjCreate(ctx, frame.oldTmp->data);
+            frame.prev->next = frame.newTmp;
+            frame.prev = frame.newTmp;
+            frame.oldTmp = frame.oldTmp->next;
         }
         /* Skip past elem in new list */
-        prev->next = elem->next;
-        return newHead;
+        frame.prev->next = elem->next;
     }
+    
+    oPOPFRAME;
+    return frame.ret;
 }
 
 vListObjRef vListObjRemove(vThreadContextRef ctx,
                           vListObjRef lst,
                           vObject obj) {
+    if(ctx->error) return NULL;
     /* TODO: implement, need equals function. */
     return lst;
 }
@@ -100,6 +111,8 @@ vListObjRef vListObjRemoveNth(vThreadContextRef ctx,
     uword currentIdx = 0;
     vListObjRef current = lst;
     vListObjRef prev = NULL;
+    
+    if(ctx->error) return NULL;
     
     for(; currentIdx < idx && current->next;
         ++currentIdx, current = current->next) {
@@ -114,25 +127,24 @@ vListObjRef vListObjRemoveNth(vThreadContextRef ctx,
 }
 
 v_bool vListObjIsEmpty(vThreadContextRef ctx, vListObjRef lst) {
-    /* Should really be an error if data is null but not next, right? */
     return lst->data == NULL && lst->next == NULL;
 }
 
 vListObjRef vListObjReverse(vThreadContextRef ctx, vListObjRef lst) {
     struct {
-        vListObjRef newHead;
+        vListObjRef ret;
     } frame;
-    vMemoryPushFrame(ctx, &frame, sizeof(frame));
+    oPUSHFRAME;
     
-    frame.newHead = vListObjCreate(ctx, lst->data);
+    frame.ret = vListObjCreate(ctx, lst->data);
     lst = lst->next;
     while (lst) {
-        frame.newHead = vListObjAddFront(ctx, frame.newHead, lst->data);
+        frame.ret = vListObjAddFront(ctx, frame.ret, lst->data);
         lst = lst->next;
     }
-    
-    vMemoryPopFrame(ctx);
-    return frame.newHead;
+
+    oPOPFRAME;
+    return frame.ret;
 }
 
 uword vListObjSize(vThreadContextRef ctx, vListObjRef lst) {
