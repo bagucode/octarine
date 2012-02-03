@@ -92,6 +92,6 @@ typedef oVector* oVectorRef;
 
 #define oENDVOIDFN _oENDFN
 
-#define _oC(fn, ...) fn(_oCTX, __VA_ARGS__); if(oErrorGet(ctx)) { oRoots._oRET = NULL; goto _oENDFNL; }
+#define _oC(fn, ...) fn(_oCTX, __VA_ARGS__); if(oErrorGet(_oCTX)) { oRoots._oRET = NULL; goto _oENDFNL; }
 
 #endif
