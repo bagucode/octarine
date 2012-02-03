@@ -138,6 +138,9 @@ static oObject readSymbolOrKeyword(oThreadContextRef ctx, oArrayRef src, uword* 
     oENDROOTS
     
 	oRoots.theString = readString(ctx, src, idx);
+	if(oRoots.theString == NULL) {
+		oRETURN(NULL);
+	}
     if(oStringCharAt(ctx, oRoots.theString, 0) == ':') {
         oRoots.theString = oStringSubString(ctx, oRoots.theString, 1, oStringLength(ctx, oRoots.theString));
         oRETURN(oKeywordCreate((oStringRef)oRoots.theString));

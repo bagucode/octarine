@@ -80,6 +80,8 @@ typedef oVector* oVectorRef;
 
 #define oRETURNERROR(expression) oRoots._oRET = NULL; oErrorSet(_oCTX, expression); goto _oENDFNL;
 
+#define oRETURNVOID goto _oENDFNL;
+
 #define oSETRET(expression) oRoots._oRET = expression
 
 #define oGETRET oRoots._oRET

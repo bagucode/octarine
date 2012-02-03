@@ -11,11 +11,11 @@
 
 /* Memory management */
 
-pointer vMalloc(uword size) {
+pointer oMalloc(uword size) {
     return malloc(size);
 }
 
-void vFree(pointer location) {
+void oFree(pointer location) {
     free(location);
 }
 
@@ -36,22 +36,22 @@ oNativeStringRef oNativeStringFromUtf8(const char *utf8) {
 		return NULL;
 	}
 
-	str = (oNativeStringRef)vMalloc(sizeof(oNativeString));
+	str = (oNativeStringRef)oMalloc(sizeof(oNativeString));
 	if(str == NULL) {
 		return NULL;
 	}
 	str->length = numWideChars;
 
-	str->str = (LPWSTR)vMalloc(numWideChars * sizeof(WCHAR));
+	str->str = (LPWSTR)oMalloc(numWideChars * sizeof(WCHAR));
 	if(str->str == NULL) {
-		vFree(str);
+		oFree(str);
 		return NULL;
 	}
 
 	result = MultiByteToWideChar(CP_UTF8, 0, utf8, cbMultiByte, str->str, numWideChars);
 	if(result == 0) {
-		vFree(str->str);
-		vFree(str);
+		oFree(str->str);
+		oFree(str);
 		return NULL;
 	}
 
@@ -67,14 +67,14 @@ char* oNativeStringToUtf8(oNativeStringRef str, uword* out_length) {
 		return NULL;
 	}
 
-	utf8Chars = (char*)vMalloc(*out_length);
+	utf8Chars = (char*)oMalloc(*out_length);
 	if(utf8Chars == NULL) {
 		return NULL;
 	}
 
 	result = WideCharToMultiByte(CP_UTF8, 0, str->str, str->length, utf8Chars, (int)(*out_length), NULL, NULL);
 	if(result == 0) {
-		vFree(utf8Chars);
+		oFree(utf8Chars);
 		return NULL;
 	}
 
@@ -95,8 +95,8 @@ int oNativeStringCompare(oNativeStringRef str1, oNativeStringRef str2) {
 }
 
 void oNativeStringDestroy(oNativeStringRef str) {
-	vFree(str->str);
-	vFree(str);
+	oFree(str->str);
+	oFree(str);
 }
 
 o_char oNativeStringCharAt(oNativeStringRef str, uword idx) {
@@ -117,9 +117,9 @@ oNativeStringRef oNativeStringSubstring(oNativeStringRef str, uword start, uword
 	for(i = 0; i < start; ++i) {
 		startP = CharNextW(startP);
 	}
-	newStr = (oNativeStringRef)vMalloc(sizeof(oNativeString));
+	newStr = (oNativeStringRef)oMalloc(sizeof(oNativeString));
 	newStr->length = (int)(end - start);
-	newStr->str = (LPWSTR)vMalloc(size + sizeof(WCHAR));
+	newStr->str = (LPWSTR)oMalloc(size + sizeof(WCHAR));
 	memcpy(newStr->str, startP, size);
 	newStr->str[size] = 0;
 	return newStr;
@@ -131,50 +131,50 @@ uword oNativeStringLength(oNativeStringRef str) {
 
 /* Thread local storage */
 
-struct vTLS {
+struct oTLS {
 	DWORD key;
 };
 
-vTLSRef vTLSCreate() {
-	vTLSRef tls = (vTLSRef)vMalloc(sizeof(vTLS));
+oTLSRef oTLSCreate() {
+	oTLSRef tls = (oTLSRef)oMalloc(sizeof(oTLS));
 	tls->key = TlsAlloc();
 	return tls;
 }
 
-void vTLSDestroy(vTLSRef tls) {
+void oTLSDestroy(oTLSRef tls) {
 	TlsFree(tls->key);
-	vFree(tls);
+	oFree(tls);
 }
 
-pointer vTLSGet(vTLSRef tls) {
+pointer oTLSGet(oTLSRef tls) {
 	return TlsGetValue(tls->key);
 }
 
-void vTLSSet(vTLSRef tls, pointer value) {
+void oTLSSet(oTLSRef tls, pointer value) {
 	TlsSetValue(tls->key, value);
 }
 
 /* Other threading stuff */
 
-struct vMutex {
+struct oMutex {
 	HANDLE mutex;
 };
 
-vMutexRef vMutexCreate() {
-	vMutexRef mx = (vMutexRef)vMalloc(sizeof(vMutex));
+oMutexRef oMutexCreate() {
+	oMutexRef mx = (oMutexRef)oMalloc(sizeof(oMutex));
 	mx->mutex = CreateMutexW(NULL, FALSE, NULL);
 	return mx;
 }
 
-void vMutexDestroy(vMutexRef mutex) {
+void oMutexDestroy(oMutexRef mutex) {
 	CloseHandle(mutex->mutex);
-	vFree(mutex);
+	oFree(mutex);
 }
 
-void vMutexLock(vMutexRef mutex) {
+void oMutexLock(oMutexRef mutex) {
 	WaitForSingleObject(mutex->mutex, INFINITE);
 }
 
-void vMutexUnlock(vMutexRef mutex) {
+void oMutexUnlock(oMutexRef mutex) {
 	ReleaseMutex(mutex->mutex);
 }

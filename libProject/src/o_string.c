@@ -10,10 +10,15 @@
 #include <memory.h>
 
 oStringRef oStringCreate(oThreadContextRef ctx, char *utf8) {
+	oNativeStringRef tmp;
     oROOTS(ctx)
     oENDROOTS
     oSETRET(oHeapAlloc(ctx->runtime->builtInTypes.string));
-    oGETRETT(oStringRef)->str = oNativeStringFromUtf8(utf8);
+	tmp = oNativeStringFromUtf8(utf8);
+	if(tmp == NULL) {
+		oRETURN(NULL)
+	}
+	oGETRETT(oStringRef)->str = tmp;
     oENDFN(oStringRef)
 }
 

@@ -11,6 +11,7 @@
 #include "../../libProject/src/o_type.h"
 #include "../../libProject/src/o_array.h"
 #include "../../libProject/src/o_thread_context.h"
+#include "../../libProject/src/o_error.h"
 
 int checkError(FILE* in, char* name) {
     if(ferror(in)) {
@@ -61,20 +62,17 @@ int main(int argc, char** argv) {
     char* tmp;
     char* typeName;
 
-    oRuntimeRef rt;
-    oThreadContextRef ctx;
-    
-    struct {
-        oStringRef src;
-        oListObjRef result;
-        oObject obj;
-        oArrayRef utf8;
-    } oFrame;
+    oRuntimeRef rt = oRuntimeCreate(1024 * 1000, 1024 * 1000);
+    oThreadContextRef ctx = oRuntimeGetCurrentContext(rt);
+	oErrorRef error;
 
-    rt = oRuntimeCreate(1024 * 1000, 1024 * 1000);
-    ctx = oRuntimeGetCurrentContext(rt);
-    oMemoryPushFrame(ctx, &oFrame, sizeof(oFrame));
-    
+	oROOTS(ctx)
+    oStringRef src;
+    oListObjRef result;
+    oObject obj;
+    oArrayRef utf8;
+	oENDROOTS
+
     if(argc < 2) {
         input = stdin;
         inputName = "stdin";
@@ -85,7 +83,7 @@ int main(int argc, char** argv) {
         if(!input) {
             printf("Could not open %s\n", inputName);
             ret = -1;
-            goto end;
+			oRETURNVOID
         }
     }
     
@@ -117,9 +115,9 @@ int main(int argc, char** argv) {
             line = tmp;
             prevLine = NULL;
         }
-        oFrame.src = oStringCreate(ctx, line);
-		oFrame.result = (oListObjRef)oReaderRead(ctx, oFrame.src);
-        if(((oKeywordRef)oFrame.result) == rt->builtInConstants.needMoreData) {
+        oRoots.src = oStringCreate(ctx, line);
+		oRoots.result = (oListObjRef)oReaderRead(ctx, oRoots.src);
+        if(((oKeywordRef)oRoots.result) == rt->builtInConstants.needMoreData) {
             prevLine = (char*)malloc(strlen(line) + 1);
             strcpy(prevLine, line);
             if(input == stdin) {
@@ -127,13 +125,13 @@ int main(int argc, char** argv) {
             }
         }
         else {
-            numObjs = (int)oListObjSize(ctx, oFrame.result);
+            numObjs = (int)oListObjSize(ctx, oRoots.result);
             printf("Read %d objects:\n", numObjs);
             for(i = 0; i < numObjs; ++i) {
-                oFrame.obj = oListObjFirst(ctx, oFrame.result);
-                oFrame.result = oListObjRest(ctx, oFrame.result);
-                oFrame.utf8 = oStringUtf8Copy(ctx, oTypeGetName(oObjectGetType(ctx, oFrame.obj)));
-                typeName = (char*)oArrayDataPointer(oFrame.utf8);
+                oRoots.obj = oListObjFirst(ctx, oRoots.result);
+                oRoots.result = oListObjRest(oRoots.result);
+                oRoots.utf8 = oStringUtf8Copy(ctx, oTypeGetName(oObjectGetType(ctx, oRoots.obj)));
+                typeName = (char*)oArrayDataPointer(oRoots.utf8);
                 printf("%s\n", typeName);
             }
         }
@@ -144,8 +142,11 @@ int main(int argc, char** argv) {
         }
     }
 
-end:
-    oMemoryPopFrame(ctx);
+	oENDVOIDFN; // not really, but we don't want the macro to return for us
+	error = oErrorGet(ctx);
+	if(error) {
+		printf("Reader error!\n");
+	}
     oRuntimeDestroy(rt);
 	return ret;
 }
