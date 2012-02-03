@@ -11,30 +11,36 @@ struct oListObj {
 };
 
 /* data parameter is used to fill first "cons cell" */
-oListObjRef oListObjCreate(oThreadContextRef ctx,
-                           oObject data);
+oListObjRef _oListObjCreate(oThreadContextRef ctx,
+                            oObject data);
+#define oListObjCreate(data) _oC(_oListObjCreate, data)
 
-oListObjRef oListObjAddFront(oThreadContextRef ctx,
-                             oListObjRef lst,
-                             oObject data);
-
-oListObjRef oListObjRemove(oThreadContextRef ctx,
-                           oListObjRef lst,
-                           oObject data);
-
-oListObjRef oListObjRemoveNth(oThreadContextRef ctx,
+oListObjRef _oListObjAddFront(oThreadContextRef ctx,
                               oListObjRef lst,
-                              uword idx);
+                              oObject data);
+#define oListObjAddFront(lst, data) _oC(_oListObjAddFront, lst, data)
+
+oListObjRef _oListObjRemove(oThreadContextRef ctx,
+                            oListObjRef lst,
+                            oObject data);
+#define oListObjRemove(lst, data) _oC(_oListObjRemove, lst data)
+
+oListObjRef _oListObjRemoveNth(oThreadContextRef ctx,
+                               oListObjRef lst,
+                               uword idx);
+#define oListObjRemoveNth(lst, idx) _oC(_oListObjRemoveNth, lst idx)
 
 o_bool oListObjIsEmpty(oThreadContextRef ctx, oListObjRef lst);
 
-oListObjRef oListObjReverse(oThreadContextRef ctx, oListObjRef lst);
+oListObjRef _oListObjReverse(oThreadContextRef ctx, oListObjRef lst);
+#define oListObjReverse(lst) _oC(_oListObjReverse, lst)
 
 uword oListObjSize(oThreadContextRef ctx, oListObjRef lst);
 
 oObject oListObjFirst(oThreadContextRef ctx, oListObjRef lst);
 
-oListObjRef oListObjRest(oThreadContextRef ctx, oListObjRef lst);
+oListObjRef _oListObjRest(oThreadContextRef ctx, oListObjRef lst);
+#define oListObjRest(lst) _oC(_oListObjRest, lst)
 
 void o_bootstrap_list_init_type(oThreadContextRef ctx);
 

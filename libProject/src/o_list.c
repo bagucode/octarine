@@ -26,7 +26,7 @@ void o_bootstrap_list_init_type(oThreadContextRef ctx) {
     fields[1]->type = ctx->runtime->builtInTypes.list;
 }
 
-oListObjRef oListObjCreate(oThreadContextRef ctx, oObject data) {
+oListObjRef _oListObjCreate(oThreadContextRef ctx, oObject data) {
     oROOTS(ctx)
     oENDROOTS
     if(ctx->error) return NULL;
@@ -35,9 +35,9 @@ oListObjRef oListObjCreate(oThreadContextRef ctx, oObject data) {
     oENDFN(oListObjRef)
 }
 
-oListObjRef oListObjAddFront(oThreadContextRef ctx,
-                             oListObjRef lst,
-                             oObject data) {
+oListObjRef _oListObjAddFront(oThreadContextRef ctx,
+                              oListObjRef lst,
+                              oObject data) {
     oROOTS(ctx)
     oENDROOTS
     if(ctx->error) return NULL;
@@ -70,7 +70,7 @@ static oListObjRef removeInternal(oThreadContextRef ctx,
                 oRETURN(elem);
             }
             else {
-                oRETURN(oListObjCreate(ctx, NULL));
+                oRETURN(oListObjCreate(NULL));
             }
         }
         else {
@@ -81,11 +81,11 @@ static oListObjRef removeInternal(oThreadContextRef ctx,
     else {
         /* Removing non-head element. Have to duplicate the list up to the
          point where the element to remove is. */
-        oSETRET(oListObjCreate(ctx, head->data));
+        oSETRET(oListObjCreate(head->data));
 		oRoots.prev = oGETRETT(oListObjRef);
         oRoots.oldTmp = head->next;
         while (oRoots.oldTmp != elem) {
-            oRoots.newTmp = oListObjCreate(ctx, oRoots.oldTmp->data);
+            oRoots.newTmp = oListObjCreate(oRoots.oldTmp->data);
             oRoots.prev->next = oRoots.newTmp;
             oRoots.prev = oRoots.newTmp;
             oRoots.oldTmp = oRoots.oldTmp->next;
@@ -97,17 +97,17 @@ static oListObjRef removeInternal(oThreadContextRef ctx,
 	oENDFN(oListObjRef)
 }
 
-oListObjRef oListObjRemove(oThreadContextRef ctx,
-                          oListObjRef lst,
-                          oObject obj) {
+oListObjRef _oListObjRemove(oThreadContextRef ctx,
+                           oListObjRef lst,
+                           oObject obj) {
     if(ctx->error) return NULL;
     /* TODO: implement, need equals function. */
     return lst;
 }
 
-oListObjRef oListObjRemoveNth(oThreadContextRef ctx,
-                              oListObjRef lst,
-                              uword idx) {
+oListObjRef _oListObjRemoveNth(oThreadContextRef ctx,
+                               oListObjRef lst,
+                               uword idx) {
     uword currentIdx = 0;
     oListObjRef current = lst;
     oListObjRef prev = NULL;
@@ -130,14 +130,14 @@ o_bool oListObjIsEmpty(oThreadContextRef ctx, oListObjRef lst) {
     return lst->data == NULL && lst->next == NULL;
 }
 
-oListObjRef oListObjReverse(oThreadContextRef ctx, oListObjRef lst) {
+oListObjRef _oListObjReverse(oThreadContextRef ctx, oListObjRef lst) {
     oROOTS(ctx)
     oENDROOTS
     
-    oSETRET(oListObjCreate(ctx, lst->data));
+    oSETRET(oListObjCreate(lst->data));
     lst = lst->next;
     while (lst) {
-        oSETRET(oListObjAddFront(ctx, oGETRET, lst->data));
+        oSETRET(oListObjAddFront(oGETRET, lst->data));
         lst = lst->next;
     }
 
@@ -157,9 +157,14 @@ oObject oListObjFirst(oThreadContextRef ctx, oListObjRef lst) {
     return lst->data;
 }
 
-oListObjRef oListObjRest(oThreadContextRef ctx, oListObjRef lst) {
+oListObjRef _oListObjRest(oThreadContextRef ctx, oListObjRef lst) {
+    oROOTS(ctx)
+    oENDROOTS
     if(oListObjIsEmpty(ctx, lst)) {
-        return oListObjCreate(ctx, NULL);
+        oRETURN(oListObjCreate(NULL));
     }
-    return lst->next;
+    else {
+        oRETURN(lst->next)
+    }
+    oENDFN(oListObjRef)
 }

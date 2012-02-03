@@ -25,11 +25,14 @@ void testGCAllGarbage() {
     uword i;
     oRuntimeRef runtime = oRuntimeCreate(2000 * 1024, 1024 * 1000);
     oThreadContextRef ctx = runtime->allContexts->ctx;
+    oROOTS(ctx)
+    oENDROOTS
     
     for(i = 0; i < 1000 * 1024; ++i) {
-        oListObjCreate(ctx, NULL);
+        oListObjCreate(NULL);
     }
-    
+
+    oENDVOIDFN
     oRuntimeDestroy(runtime);
 }
 
@@ -37,20 +40,16 @@ void testGCAllRetained() {
     uword i;
     oRuntimeRef runtime = oRuntimeCreate(2000 * 1024, 1024 * 1000);
     oThreadContextRef ctx = runtime->allContexts->ctx;
+    oROOTS(ctx)
+    oObject listHead;
+    oENDROOTS
 
-    struct {
-        oObject listHead;
-    } frame;
-
-    oMemoryPushFrame(ctx, &frame, sizeof(frame));
-    
-    frame.listHead = oListObjCreate(ctx, NULL);
+    oRoots.listHead = oListObjCreate(NULL);
     for(i = 0; i < 1024; ++i) {
-        frame.listHead = oListObjAddFront(ctx, (oListObjRef)frame.listHead, frame.listHead);
+        oRoots.listHead = oListObjAddFront((oListObjRef)oRoots.listHead, oRoots.listHead);
     }
 
-    oMemoryPopFrame(ctx);
-
+    oENDVOIDFN
     oRuntimeDestroy(runtime);
 }
 
@@ -143,24 +142,23 @@ void testReadOneListAndOneSymbol() {
     oSymbolRef other;
     oListObjRef lst;
     oListObjRef bobLst;
-	struct {
-		oObject readResult;
-		oStringRef src;
-        oStringRef name;
-        oSymbolRef controlSym;
-	} frame;
-	oMemoryPushFrame(ctx, &frame, sizeof(frame));
+    oROOTS(ctx)
+    oObject readResult;
+    oStringRef src;
+    oStringRef name;
+    oSymbolRef controlSym;
+    oENDROOTS
 
-    frame.name = oStringCreate(ctx, "Bob2Bob");
-    frame.src = oStringCreate(ctx, "(Bob2Bob) otherSym");
-    frame.controlSym = oSymbolCreate(ctx, frame.name);
+    oRoots.name = oStringCreate(ctx, "Bob2Bob");
+    oRoots.src = oStringCreate(ctx, "(Bob2Bob) otherSym");
+    oRoots.controlSym = oSymbolCreate(ctx, oRoots.name);
     
-    frame.readResult = oReaderRead(ctx, frame.src);
+    oRoots.readResult = oReaderRead(ctx, oRoots.src);
     
     // We should get a list with two elements, a list with a symbol in it and a symbol
-    assert(oObjectGetType(ctx, frame.readResult) == ctx->runtime->builtInTypes.list);
+    assert(oObjectGetType(ctx, oRoots.readResult) == ctx->runtime->builtInTypes.list);
 
-    lst = (oListObjRef)frame.readResult;
+    lst = (oListObjRef)oRoots.readResult;
     assert(oListObjSize(ctx, lst) == 2);
 
 	bobLst = (oListObjRef)oListObjFirst(ctx, lst);
@@ -169,16 +167,16 @@ void testReadOneListAndOneSymbol() {
 
     bob = (oSymbolRef)oListObjFirst(ctx, bobLst);
     assert(oObjectGetType(ctx, bob) == ctx->runtime->builtInTypes.symbol);
-	assert(oSymbolEquals(ctx, bob, frame.controlSym) == o_true);
+	assert(oSymbolEquals(ctx, bob, oRoots.controlSym) == o_true);
 
-    lst = oListObjRest(ctx, lst);
+    lst = oListObjRest(lst);
     other = (oSymbolRef)oListObjFirst(ctx, lst);
     assert(oObjectGetType(ctx, other) == ctx->runtime->builtInTypes.symbol);
-    frame.name = oStringCreate(ctx, "otherSym");
-    frame.controlSym = oSymbolCreate(ctx, frame.name);
-	assert(oSymbolEquals(ctx, other, frame.controlSym) == o_true);
+    oRoots.name = oStringCreate(ctx, "otherSym");
+    oRoots.controlSym = oSymbolCreate(ctx, oRoots.name);
+	assert(oSymbolEquals(ctx, other, oRoots.controlSym) == o_true);
     
-	oMemoryPopFrame(ctx);
+    oENDVOIDFN
     oRuntimeDestroy(runtime);
 }
 
