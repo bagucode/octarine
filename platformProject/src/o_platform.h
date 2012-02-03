@@ -4,26 +4,26 @@
 #include "o_basic_types.h"
 
 /* Thread local storage */
-typedef struct vTLS vTLS;
-typedef vTLS* vTLSRef;
+typedef struct oTLS oTLS;
+typedef oTLS* oTLSRef;
 
-vTLSRef vTLSCreate();
-void vTLSDestroy(vTLSRef tls);
-pointer vTLSGet(vTLSRef tls);
-void vTLSSet(vTLSRef tls, pointer value);
+oTLSRef oTLSCreate();
+void oTLSDestroy(oTLSRef tls);
+pointer oTLSGet(oTLSRef tls);
+void oTLSSet(oTLSRef tls, pointer value);
 
 /* Other threading stuff */
-typedef struct vMutex vMutex;
-typedef vMutex* vMutexRef;
+typedef struct oMutex oMutex;
+typedef oMutex* oMutexRef;
 
-vMutexRef vMutexCreate();
-void vMutexDestroy(vMutexRef mutex);
-void vMutexLock(vMutexRef mutex);
-void vMutexUnlock(vMutexRef mutex);
+oMutexRef oMutexCreate();
+void oMutexDestroy(oMutexRef mutex);
+void oMutexLock(oMutexRef mutex);
+void oMutexUnlock(oMutexRef mutex);
 
 /* Memory management */
-pointer vMalloc(uword size);
-void vFree(pointer location);
+pointer oMalloc(uword size);
+void oFree(pointer location);
 
 /* String support */
 typedef struct oNativeString oNativeString;

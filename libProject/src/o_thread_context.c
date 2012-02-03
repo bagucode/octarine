@@ -34,7 +34,7 @@ oThreadContextRef o_bootstrap_thread_context_create(oRuntimeRef runtime, oHeapRe
 oThreadContextRef oThreadContextCreate(oRuntimeRef runtime,
                                        uword threadHeapInitialSize) {
 	/* TODO: Don't malloc here. Use the regular shared heap to store these? */
-    oThreadContextRef ctx = (oThreadContextRef)vMalloc(sizeof(oThreadContext));
+    oThreadContextRef ctx = (oThreadContextRef)oMalloc(sizeof(oThreadContext));
     ctx->heap = oHeapCreate(o_false, threadHeapInitialSize);
     ctx->runtime = runtime;
     ctx->roots = oMemoryCreateRootSet();

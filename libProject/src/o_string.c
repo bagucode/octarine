@@ -34,7 +34,7 @@ oArrayRef oStringUtf8Copy(oThreadContextRef ctx, oStringRef str) {
 
     oSETRET(oArrayCreate(ctx->runtime->builtInTypes.u8, length));
 	memcpy(oArrayDataPointer(oGETRETT(oArrayRef)), utf8String, length);
-    vFree(utf8String);
+    oFree(utf8String);
 
 	oENDFN(oArrayRef)
 }

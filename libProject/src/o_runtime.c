@@ -183,22 +183,22 @@ static void init_builtInErrors(oThreadContextRef ctx) {
 
 oRuntimeRef oRuntimeCreate(uword sharedHeapInitialSize,
                            uword threadHeapInitialSize) {
-	oRuntimeRef rt = (oRuntimeRef)vMalloc(sizeof(oRuntime));
+	oRuntimeRef rt = (oRuntimeRef)oMalloc(sizeof(oRuntime));
 	oHeapRef mtHeap = oHeapCreate(o_false, threadHeapInitialSize);
 	oThreadContextRef ctx;
     
     memset(rt, 0, sizeof(oRuntime));
 
     rt->globals = oHeapCreate(o_true, sharedHeapInitialSize);
-    rt->currentContext = vTLSCreate();
+    rt->currentContext = oTLSCreate();
 
 	alloc_builtInTypes(rt, mtHeap);
 	init_builtInTypes1(rt, mtHeap);
 
 	ctx = o_bootstrap_thread_context_create(rt, mtHeap);
 	ctx->heap = mtHeap;
-	vTLSSet(rt->currentContext, ctx);
-    rt->allContexts = (oThreadContextListRef)vMalloc(sizeof(oThreadContextList));
+	oTLSSet(rt->currentContext, ctx);
+    rt->allContexts = (oThreadContextListRef)oMalloc(sizeof(oThreadContextList));
 	rt->allContexts->next = NULL;
     rt->allContexts->ctx = ctx;
 
@@ -225,13 +225,13 @@ void oRuntimeDestroy(oRuntimeRef rt) {
     while(lst) {
 		next = lst->next;
         oThreadContextDestroy(lst->ctx);
-        vFree(lst);
+        oFree(lst);
 		lst = next;
     }
     oHeapDestroy(rt->globals);
-	vFree(rt);
+	oFree(rt);
 }
 
 oThreadContextRef oRuntimeGetCurrentContext(oRuntimeRef rt) {
-    return (oThreadContextRef)vTLSGet(rt->currentContext);
+    return (oThreadContextRef)oTLSGet(rt->currentContext);
 }

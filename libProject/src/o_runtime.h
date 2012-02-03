@@ -61,7 +61,7 @@ typedef struct oRuntimeBuiltInErrors {
 
 struct oRuntime {
     oHeapRef globals;
-    vTLSRef currentContext;
+    oTLSRef currentContext;
     oThreadContextListRef allContexts;
     oRuntimeBuiltInTypes builtInTypes;
     oRuntimeBuiltInFunctions builtInFunctions;

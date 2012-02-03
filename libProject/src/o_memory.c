@@ -23,7 +23,7 @@ static uword calcBlockSize(uword dataSize) {
 
 static HeapBlockRef allocBlock(uword dataSize) {
     uword size = calcBlockSize(dataSize);
-    HeapBlockRef block = (HeapBlockRef)vMalloc(size);
+    HeapBlockRef block = (HeapBlockRef)oMalloc(size);
     oObject obj;
     if(block == NULL) {
         return NULL;
@@ -84,7 +84,7 @@ typedef struct HeapRecord {
 typedef HeapRecord* HeapRecordRef;
 
 struct oHeap {
-    vMutexRef mutex;
+    oMutexRef mutex;
     uword gcThreshold;
     uword currentSize;
     HeapRecordRef record;
@@ -93,7 +93,7 @@ struct oHeap {
 static void addHeapEntry(oHeapRef heap, HeapBlockRef block);
 
 static HeapRecordRef createRecord() {
-    HeapRecordRef rec = (HeapRecordRef)vMalloc(sizeof(HeapRecord));
+    HeapRecordRef rec = (HeapRecordRef)oMalloc(sizeof(HeapRecord));
     memset(rec, 0, sizeof(HeapRecord));
     return rec;
 }
@@ -107,8 +107,8 @@ static o_bool recordEntry(HeapRecordRef record, HeapBlockRef block) {
 }
 
 oHeapRef oHeapCreate(o_bool synchronized, uword gc_threshold) {
-    oHeapRef heap = (oHeapRef)vMalloc(sizeof(oHeap));
-	heap->mutex = synchronized ? vMutexCreate() : NULL;
+    oHeapRef heap = (oHeapRef)oMalloc(sizeof(oHeap));
+	heap->mutex = synchronized ? oMutexCreate() : NULL;
     heap->gcThreshold = gc_threshold;
     heap->currentSize = 0;
     heap->record = createRecord();
@@ -128,7 +128,7 @@ struct vRootSet {
 };
 
 vRootSetRef oMemoryCreateRootSet() {
-    vRootSetRef rootSet = (vRootSetRef)vMalloc(sizeof(vRootSet));
+    vRootSetRef rootSet = (vRootSetRef)oMalloc(sizeof(vRootSet));
     memset(rootSet, 0, sizeof(vRootSet));
     return rootSet;
 }
@@ -137,7 +137,7 @@ void oMemoryDeleteRootSet(vRootSetRef roots) {
     vRootSetRef tmp;
     while(roots) {
         tmp = roots->prev;
-        vFree(roots);
+        oFree(roots);
         roots = tmp;
     }
 }
@@ -166,7 +166,7 @@ void oMemoryPopFrame(oThreadContextRef ctx) {
     ctx->roots->numUsed--;
     if(ctx->roots->numUsed == 0 && ctx->roots->prev != NULL) {
         prev = ctx->roots->prev;
-        vFree(ctx->roots);
+        oFree(ctx->roots);
         ctx->roots = prev;
     }
 }
@@ -330,7 +330,7 @@ static void collectGarbage(oRuntimeRef rt, oHeapRef heap) {
                 if(type->finalizer) {
                     type->finalizer(getObject(block));
                 }
-                vFree(block);
+                oFree(block);
             } else {
                 clearMark(block);
                 if(recordEntry(newRecord, block) == o_false) {
@@ -343,14 +343,14 @@ static void collectGarbage(oRuntimeRef rt, oHeapRef heap) {
         }
         tmpRecord = currentRecord;
         currentRecord = currentRecord->prev;
-        vFree(tmpRecord);
+        oFree(tmpRecord);
     }
     heap->record = newRecord;
 }
 
 void oHeapForceGC(oRuntimeRef rt, oHeapRef heap) {
     if(heap->mutex != NULL) {
-        vMutexLock(heap->mutex);
+        oMutexLock(heap->mutex);
 		// TODO: if the heap has a mutex field then we assume that all threads
 		// need to wait for the collection so we have to signal all threads to
 		// wait for a GC here.
@@ -359,7 +359,7 @@ void oHeapForceGC(oRuntimeRef rt, oHeapRef heap) {
     collectGarbage(rt, heap);
     
     if(heap->mutex != NULL) {
-        vMutexUnlock(heap->mutex);
+        oMutexUnlock(heap->mutex);
     }
 }
 
@@ -475,16 +475,16 @@ void oHeapDestroy(oHeapRef heap) {
     while (currentRecord) {
         for(i = 0; i < currentRecord->numBlocks; ++i) {
             block = currentRecord->blocks[i];
-            vFree(block);
+            oFree(block);
         }
         heap->record = currentRecord->prev;
-        vFree(currentRecord);
+        oFree(currentRecord);
         currentRecord = heap->record;
     }
     if(heap->mutex) {
-        vMutexDestroy(heap->mutex);
+        oMutexDestroy(heap->mutex);
     }
-    vFree(heap);
+    oFree(heap);
 }
 
 oTypeRef oMemoryGetObjectType(oThreadContextRef ctx, oObject obj) {

@@ -5,11 +5,11 @@
 
 /* malloc & free */
 
-pointer vMalloc(uword size) {
+pointer oMalloc(uword size) {
     return malloc(size);
 }
 
-void vFree(pointer location) {
+void oFree(pointer location) {
     free(location);
 }
 
@@ -21,7 +21,7 @@ struct oNativeString {
 
 oNativeStringRef oNativeStringFromUtf8(const char *utf8) {
     uword len = strlen(utf8);
-    oNativeString *str = vMalloc(sizeof(oNativeString));
+    oNativeString *str = oMalloc(sizeof(oNativeString));
     str->str = CFStringCreateWithBytes(NULL, (const UInt8*)utf8, len, kCFStringEncodingUTF8, false);
     return str;
 }
@@ -29,14 +29,14 @@ oNativeStringRef oNativeStringFromUtf8(const char *utf8) {
 char* oNativeStringToUtf8(oNativeStringRef str, uword* out_length) {
     CFIndex numChars = CFStringGetLength(str->str);
     CFIndex bufSize = (numChars + 1) * 4; // 4 is the maximum number of bytes for a utf8 char
-    char *tmpBuffer = vMalloc(bufSize);
+    char *tmpBuffer = oMalloc(bufSize);
     char *cString;
     
     CFStringGetCString(str->str, tmpBuffer, bufSize, kCFStringEncodingUTF8);
     (*out_length) = strlen(tmpBuffer);
-    cString = vMalloc((*out_length) + 1);
+    cString = oMalloc((*out_length) + 1);
     memcpy(cString, tmpBuffer, *out_length);
-    vFree(tmpBuffer);
+    oFree(tmpBuffer);
     cString[*out_length] = 0;
     
     return cString;
@@ -48,7 +48,7 @@ int oNativeStringCompare(oNativeStringRef str1, oNativeStringRef str2) {
 
 void oNativeStringDestroy(oNativeStringRef str) {
     CFRelease(str->str);
-    vFree(str);
+    oFree(str);
 }
 
 o_char oNativeStringCharAt(oNativeStringRef str, uword idx) {
@@ -57,7 +57,7 @@ o_char oNativeStringCharAt(oNativeStringRef str, uword idx) {
 }
 
 oNativeStringRef oNativeStringSubstring(oNativeStringRef str, uword start, uword end) {
-    oNativeStringRef subStr = vMalloc(sizeof(oNativeString));
+    oNativeStringRef subStr = oMalloc(sizeof(oNativeString));
     CFRange range;
     range.location = start;
     range.length = end - start;
@@ -72,52 +72,52 @@ uword oNativeStringLength(oNativeStringRef str) {
 
 /* Thread Locals */
 
-struct vTLS {
+struct oTLS {
     pthread_key_t key;
 };
 
-vTLSRef vTLSCreate() {
-    vTLSRef tls = (vTLSRef)vMalloc(sizeof(vTLS));
+oTLSRef oTLSCreate() {
+    oTLSRef tls = (oTLSRef)oMalloc(sizeof(oTLS));
     pthread_key_create(&tls->key, NULL);
     return tls;
 }
 
-void vTLSDestroy(vTLSRef tls) {
+void oTLSDestroy(oTLSRef tls) {
     pthread_key_delete(tls->key);
-    vFree(tls);
+    oFree(tls);
 }
 
-pointer vTLSGet(vTLSRef tls) {
+pointer oTLSGet(oTLSRef tls) {
     return pthread_getspecific(tls->key);
 }
 
-void vTLSSet(vTLSRef tls, pointer value) {
+void oTLSSet(oTLSRef tls, pointer value) {
     pthread_setspecific(tls->key, value);
 }
 
 
 /* Threading */
 
-struct vMutex {
+struct oMutex {
     pthread_mutex_t mutex;
 };
 
-vMutexRef vMutexCreate() {
-    vMutexRef ret = vMalloc(sizeof(vMutex));
+oMutexRef oMutexCreate() {
+    oMutexRef ret = oMalloc(sizeof(oMutex));
     pthread_mutex_init(&ret->mutex, NULL);
     return ret;
 }
 
-void vMutexDestroy(vMutexRef mutex) {
+void oMutexDestroy(oMutexRef mutex) {
     pthread_mutex_destroy(&mutex->mutex);
-    vFree(mutex);
+    oFree(mutex);
 }
 
-void vMutexLock(vMutexRef mutex) {
+void oMutexLock(oMutexRef mutex) {
     pthread_mutex_lock(&mutex->mutex);
 }
 
-void vMutexUnlock(vMutexRef mutex) {
+void oMutexUnlock(oMutexRef mutex) {
     pthread_mutex_unlock(&mutex->mutex);
 }
 
