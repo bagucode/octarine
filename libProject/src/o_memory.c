@@ -67,6 +67,8 @@ static void setType(HeapBlockRef block, oTypeRef type) {
 }
 
 static uword getSize(HeapBlockRef block) {
+    // TODO: fix this, it is broken since alignments
+    // got implemented. It is also broken for arrays...
     oTypeRef type = getType(block);
     return sizeof(HeapBlock) + type->size;
 }
