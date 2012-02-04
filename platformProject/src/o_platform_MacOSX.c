@@ -132,7 +132,7 @@ o_bool oAtomicCompareAndSwapUword(volatile uword* uw, uword oldVal, uword newVal
 
 uword oAtomicGetUword(volatile uword* uw) {
     uword result;
-    while(true) {
+    while(1) {
         result = *uw;
         if(oAtomicCompareAndSwapUword(uw, result, result)) {
             return result;
@@ -142,7 +142,7 @@ uword oAtomicGetUword(volatile uword* uw) {
 
 void oAtomicSetUword(volatile uword* uw, uword value) {
     uword old;
-    while (true) {
+    while (1) {
         old = *uw;
         if (oAtomicCompareAndSwapUword(uw, old, value)) {
             return;
@@ -152,7 +152,7 @@ void oAtomicSetUword(volatile uword* uw, uword value) {
 
 void oSpinLockLock(oSpinLockRef lock) {
     uword old;
-    while(true) {
+    while(1) {
         old = *lock;
         if(oAtomicCompareAndSwapUword(lock, 0, 1)) {
             // spin until we change the lock from unlocked (0) to locked (1)
