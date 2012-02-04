@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <pthread.h>
+#include <libkern/OSAtomic.h>
 
 /* malloc & free */
 
@@ -121,4 +122,48 @@ void oMutexUnlock(oMutexRef mutex) {
     pthread_mutex_unlock(&mutex->mutex);
 }
 
+o_bool oAtomicCompareAndSwapUword(volatile uword* uw, uword oldVal, uword newVal) {
+#ifdef OCTARINE64
+    return OSAtomicCompareAndSwap64Barrier(oldVal, newVal, (volatile int64_t*)uw);
+#else
+    return OSAtomicCompareAndSwap32Barrier(oldVal, newVal, (volatile int32_t*)uw);
+#endif
+}
+
+uword oAtomicGetUword(volatile uword* uw) {
+    uword result;
+    while(true) {
+        result = *uw;
+        if(oAtomicCompareAndSwapUword(uw, result, result)) {
+            return result;
+        }
+    }
+}
+
+void oAtomicSetUword(volatile uword* uw, uword value) {
+    uword old;
+    while (true) {
+        old = *uw;
+        if (oAtomicCompareAndSwapUword(uw, old, value)) {
+            return;
+        }
+    }
+}
+
+void oSpinLockLock(oSpinLockRef lock) {
+    uword old;
+    while(true) {
+        old = *lock;
+        if(oAtomicCompareAndSwapUword(lock, 0, 1)) {
+            // spin until we change the lock from unlocked (0) to locked (1)
+            break;
+        }
+    }
+}
+
+void oSpinLockUnlock(oSpinLockRef lock) {
+    // No need to synchronize on this as long as the locking uses
+    // an atomic compare and swap with zero
+    (*lock) = 0;
+}
 

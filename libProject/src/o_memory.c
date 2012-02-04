@@ -147,6 +147,8 @@ void oMemoryPushFrame(oThreadContextRef ctx,
     
     memset(frame, 0, frameSize);
     
+    oSpinLockLock(&ctx->rootLock);
+    
     if(ctx->roots->numUsed < MAX_FRAMES) {
         ctx->roots->frameInfos[ctx->roots->numUsed].frame = (oObject*)frame;
         ctx->roots->frameInfos[ctx->roots->numUsed].size = frameSize;
@@ -157,16 +159,23 @@ void oMemoryPushFrame(oThreadContextRef ctx,
        ctx->roots = newRoots;
        oMemoryPushFrame(ctx, frame, frameSize);
     }
+    
+    oSpinLockUnlock(&ctx->rootLock);
 }
 
 void oMemoryPopFrame(oThreadContextRef ctx) {
     oRootSetRef prev;
+    
+    oSpinLockLock(&ctx->rootLock);
+    
     ctx->roots->numUsed--;
     if(ctx->roots->numUsed == 0 && ctx->roots->prev != NULL) {
         prev = ctx->roots->prev;
         oFree(ctx->roots);
         ctx->roots = prev;
     }
+    
+    oSpinLockUnlock(&ctx->rootLock);
 }
 
 static void traceAndMark(oRuntimeRef rt, oHeapRef heap, oObject obj, oTypeRef type) {

@@ -21,6 +21,15 @@ void oMutexDestroy(oMutexRef mutex);
 void oMutexLock(oMutexRef mutex);
 void oMutexUnlock(oMutexRef mutex);
 
+uword oAtomicGetUword(volatile uword* uw);
+void oAtomicSetUword(volatile uword* uw, uword value);
+o_bool oAtomicCompareAndSwapUword(volatile uword* uw, uword oldVal, uword newVal);
+
+typedef volatile uword oSpinLock;
+typedef oSpinLock* oSpinLockRef;
+void oSpinLockLock(oSpinLockRef lock);
+void oSpinLockUnlock(oSpinLockRef lock);
+
 /* Memory management */
 pointer oMalloc(uword size);
 void oFree(pointer location);

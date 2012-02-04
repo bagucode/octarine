@@ -9,6 +9,7 @@ struct oThreadContext {
     oRuntimeRef runtime;
     oHeapRef heap;
     oRootSetRef roots;
+    oSpinLock rootLock;
 	oReaderRef reader;
 	oErrorRef error;
 };
