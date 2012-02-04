@@ -38,9 +38,9 @@ void oMemoryPushFrame(oThreadContextRef ctx,
 void oMemoryPopFrame(oThreadContextRef ctx);
 
 /* This is a little bit internal right? Invent naming convention? */
-vRootSetRef oMemoryCreateRootSet();
+oRootSetRef oMemoryCreateRootSet();
 
-void oMemoryDeleteRootSet(vRootSetRef roots);
+void oMemoryDeleteRootSet(oRootSetRef roots);
 
 oObject o_bootstrap_object_alloc(oRuntimeRef rt,
 		                         oHeapRef heap,

@@ -8,7 +8,7 @@
 struct oThreadContext {
     oRuntimeRef runtime;
     oHeapRef heap;
-    vRootSetRef roots;
+    oRootSetRef roots;
 	oReaderRef reader;
 	oErrorRef error;
 };

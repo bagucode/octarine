@@ -119,20 +119,20 @@ typedef struct vFrameInfo {
 } vFrameInfo;
 
 #define MAX_FRAMES 500
-struct vRootSet {
+struct oRootSet {
     uword numUsed;
     vFrameInfo frameInfos[MAX_FRAMES];
-    vRootSetRef prev;
+    oRootSetRef prev;
 };
 
-vRootSetRef oMemoryCreateRootSet() {
-    vRootSetRef rootSet = (vRootSetRef)oMalloc(sizeof(vRootSet));
-    memset(rootSet, 0, sizeof(vRootSet));
+oRootSetRef oMemoryCreateRootSet() {
+    oRootSetRef rootSet = (oRootSetRef)oMalloc(sizeof(oRootSet));
+    memset(rootSet, 0, sizeof(oRootSet));
     return rootSet;
 }
 
-void oMemoryDeleteRootSet(vRootSetRef roots) {
-    vRootSetRef tmp;
+void oMemoryDeleteRootSet(oRootSetRef roots) {
+    oRootSetRef tmp;
     while(roots) {
         tmp = roots->prev;
         oFree(roots);
@@ -143,7 +143,7 @@ void oMemoryDeleteRootSet(vRootSetRef roots) {
 void oMemoryPushFrame(oThreadContextRef ctx,
                       pointer frame,
                       uword frameSize) {
-    vRootSetRef newRoots;
+    oRootSetRef newRoots;
     
     memset(frame, 0, frameSize);
     
@@ -160,7 +160,7 @@ void oMemoryPushFrame(oThreadContextRef ctx,
 }
 
 void oMemoryPopFrame(oThreadContextRef ctx) {
-    vRootSetRef prev;
+    oRootSetRef prev;
     ctx->roots->numUsed--;
     if(ctx->roots->numUsed == 0 && ctx->roots->prev != NULL) {
         prev = ctx->roots->prev;
@@ -248,7 +248,7 @@ static void traceAndMark(oRuntimeRef rt, oHeapRef heap, oObject obj, oTypeRef ty
 }
 
 static void collectGarbage(oRuntimeRef rt, oHeapRef heap) {
-    vRootSetRef roots;
+    oRootSetRef roots;
     uword i, j, nroots;
     oObject obj, *objArr;
     HeapRecordRef newRecord;

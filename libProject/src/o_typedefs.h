@@ -46,8 +46,8 @@ typedef oParameter* oParameterRef;
 typedef struct oReader oReader;
 typedef oReader* oReaderRef;
 
-typedef struct vRootSet vRootSet;
-typedef vRootSet* vRootSetRef;
+typedef struct oRootSet oRootSet;
+typedef oRootSet* oRootSetRef;
 
 typedef struct oRuntime oRuntime;
 typedef oRuntime* oRuntimeRef;
