@@ -26,8 +26,8 @@ void o_bootstrap_vector_init_type(oThreadContextRef ctx) {
     oENDVOIDFN
 }
 
-oVectorRef oVectorCreate(oThreadContextRef ctx,
-                         oTypeRef type) {
+oVectorRef _oVectorCreate(oThreadContextRef ctx,
+                          oTypeRef type) {
     oROOTS(ctx)
     oENDROOTS
     
@@ -37,10 +37,10 @@ oVectorRef oVectorCreate(oThreadContextRef ctx,
 	oENDFN(oVectorRef)
 }
 
-oVectorRef oVectorAddBack(oThreadContextRef ctx,
-                          oVectorRef vec,
-                          pointer data,
-                          oTypeRef dataType) {
+oVectorRef _oVectorAddBack(oThreadContextRef ctx,
+                           oVectorRef vec,
+                           pointer data,
+                           oTypeRef dataType) {
     oROOTS(ctx)
     oENDROOTS
     
@@ -53,11 +53,11 @@ oVectorRef oVectorAddBack(oThreadContextRef ctx,
 	oENDFN(oVectorRef)
 }
 
-uword oVectorSize(oThreadContextRef ctx, oVectorRef vec) {
+uword _oVectorSize(oThreadContextRef ctx, oVectorRef vec) {
     return vec->data->num_elements;
 }
 
-oVectorRef oVectorPut(oThreadContextRef ctx, oVectorRef vec, uword idx, pointer src, oTypeRef srcType) {
+oVectorRef _oVectorPut(oThreadContextRef ctx, oVectorRef vec, uword idx, pointer src, oTypeRef srcType) {
     oROOTS(ctx)
     oENDROOTS
 
@@ -70,7 +70,7 @@ oVectorRef oVectorPut(oThreadContextRef ctx, oVectorRef vec, uword idx, pointer 
 	oENDFN(oVectorRef)
 }
 
-void oVectorGet(oThreadContextRef ctx, oVectorRef vec, uword idx, pointer dest, oTypeRef destType) {
+void _oVectorGet(oThreadContextRef ctx, oVectorRef vec, uword idx, pointer dest, oTypeRef destType) {
     oROOTS(ctx)
     oENDROOTS
     oArrayGet(vec->data, idx, dest, destType);

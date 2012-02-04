@@ -189,12 +189,12 @@ static oObject readVector(oThreadContextRef ctx, oArrayRef src, uword* idx) {
     
     ++(*idx); // eat [
     if(eos(src, idx) == o_false) {
-        oSETRET(oVectorCreate(ctx, ctx->runtime->builtInTypes.any));
+        oSETRET(oVectorCreate(ctx->runtime->builtInTypes.any));
         while(getChar(src, *idx) != RSBRACKET
               && eos(src, idx) == o_false) {
             oRoots.tmp = read(ctx, src, idx);
             if(oRoots.tmp != NULL)
-				oSETRET(oVectorAddBack(ctx, oGETRET, oRoots.tmp, oObjectGetType(ctx, oRoots.tmp)));
+				oSETRET(oVectorAddBack(oGETRET, oRoots.tmp, oObjectGetType(ctx, oRoots.tmp)));
             // else what?
         }
         if(eos(src, idx)) {

@@ -301,6 +301,7 @@ void testVector() {
     oTypeRef i64_t = ctx->runtime->builtInTypes.i64;
     i64 one;
     i64 checki64;
+    uword size;
     oROOTS(ctx)
     oVectorRef veci64;
     oVectorRef vecStr;
@@ -308,28 +309,30 @@ void testVector() {
     oStringRef checkStr;
     oENDROOTS
 
-    oRoots.veci64 = oVectorCreate(ctx, i64_t);
-    oRoots.vecStr = oVectorCreate(ctx, str_t);
+    oRoots.veci64 = oVectorCreate(i64_t);
+    oRoots.vecStr = oVectorCreate(str_t);
     
     oRoots.str = oStringCreate("String One");
-    oRoots.vecStr = oVectorAddBack(ctx, oRoots.vecStr, oRoots.str, str_t);
-    assert(oVectorSize(ctx, oRoots.vecStr) == 1);
-    oVectorGet(ctx, oRoots.vecStr, 0, &oRoots.checkStr, str_t);
+    oRoots.vecStr = oVectorAddBack(oRoots.vecStr, oRoots.str, str_t);
+    size = oVectorSize(oRoots.vecStr);
+    assert(size == 1);
+    oVectorGet(oRoots.vecStr, 0, &oRoots.checkStr, str_t);
     assert(oObjectGetType(ctx, oRoots.checkStr) == str_t);
     assert(oStringCompare(oRoots.str, oRoots.checkStr) == 0);
     assert(oRoots.str == oRoots.checkStr);
 
     one = 1;
     checki64 = 0;
-    oRoots.veci64 = oVectorAddBack(ctx, oRoots.veci64, &one, i64_t);
-    assert(oVectorSize(ctx, oRoots.veci64) == 1);
-    oVectorGet(ctx, oRoots.veci64, 0, &checki64, i64_t);
+    oRoots.veci64 = oVectorAddBack(oRoots.veci64, &one, i64_t);
+    size = oVectorSize(oRoots.veci64);
+    assert(size == 1);
+    oVectorGet(oRoots.veci64, 0, &checki64, i64_t);
     assert(one == checki64);
 
     // Test put of object
     oRoots.str = oStringCreate("String Two");
-    oRoots.vecStr = oVectorPut(ctx, oRoots.vecStr, 0, oRoots.str, str_t);
-    oVectorGet(ctx, oRoots.vecStr, 0, &oRoots.checkStr, str_t);
+    oRoots.vecStr = oVectorPut(oRoots.vecStr, 0, oRoots.str, str_t);
+    oVectorGet(oRoots.vecStr, 0, &oRoots.checkStr, str_t);
     assert(oObjectGetType(ctx, oRoots.checkStr) == str_t);
     assert(oStringCompare(oRoots.str, oRoots.checkStr) == 0);
     assert(oRoots.str == oRoots.checkStr);
@@ -337,8 +340,8 @@ void testVector() {
     // Test put of struct
     one = 2;
     checki64 = 0;
-    oRoots.veci64 = oVectorPut(ctx, oRoots.veci64, 0, &one, i64_t);
-    oVectorGet(ctx, oRoots.veci64, 0, &checki64, i64_t);
+    oRoots.veci64 = oVectorPut(oRoots.veci64, 0, &one, i64_t);
+    oVectorGet(oRoots.veci64, 0, &checki64, i64_t);
     assert(one == checki64);
 
     oENDVOIDFN
@@ -352,6 +355,7 @@ void testReadVector() {
     oSymbolRef sym;
     oVectorRef vec;
     o_bool eqResult;
+    uword size;
     oROOTS(ctx)
     oObject readResult;
     oStringRef src;
@@ -370,9 +374,10 @@ void testReadVector() {
     
     vec = oListObjFirst(ctx, lst);
     assert(oObjectGetType(ctx, vec) == ctx->runtime->builtInTypes.vector);
-    assert(oVectorSize(ctx, vec) == 3);
+    size = oVectorSize(vec);
+    assert(size == 3);
     
-    oVectorGet(ctx, vec, 2, &sym, ctx->runtime->builtInTypes.symbol);
+    oVectorGet(vec, 2, &sym, ctx->runtime->builtInTypes.symbol);
     eqResult = oSymbolEquals(sym, oRoots.ethel);
     assert(eqResult);
 
