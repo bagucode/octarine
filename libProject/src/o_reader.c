@@ -150,7 +150,7 @@ static oObject readSymbolOrKeyword(oThreadContextRef ctx, oArrayRef src, uword* 
         oRETURN(oKeywordCreate((oStringRef)oRoots.theString));
     }
     else {
-        oRETURN(oSymbolCreate(ctx, (oStringRef)oRoots.theString));
+        oRETURN(oSymbolCreate((oStringRef)oRoots.theString));
     }
 
     oENDFN(oObject)

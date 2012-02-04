@@ -89,6 +89,7 @@ void testReaderEmptyList() {
 void testSymbolEquals() {
     oRuntimeRef runtime = oRuntimeCreate(2000 * 1024, 1024 * 1000);
     oThreadContextRef ctx = runtime->allContexts->ctx;
+    o_bool eqResult;
     oROOTS(ctx)
     oSymbolRef sym1;
     oSymbolRef sym2;
@@ -96,20 +97,23 @@ void testSymbolEquals() {
     oENDROOTS
 
 	oRoots.name = oStringCreate("Bob2Bob");
-	oRoots.sym1 = oSymbolCreate(ctx, oRoots.name);
-	oRoots.sym2 = oSymbolCreate(ctx, oRoots.name);
+	oRoots.sym1 = oSymbolCreate(oRoots.name);
+	oRoots.sym2 = oSymbolCreate(oRoots.name);
 
-	assert(oSymbolEquals(ctx, oRoots.sym1, oRoots.sym2) == o_true);
+    eqResult = oSymbolEquals(oRoots.sym1, oRoots.sym2);
+	assert(eqResult);
 
 	oRoots.name = oStringCreate("Bob2Bob"); // same name but different string instance
-	oRoots.sym1 = oSymbolCreate(ctx, oRoots.name);
+	oRoots.sym1 = oSymbolCreate(oRoots.name);
 
-	assert(oSymbolEquals(ctx, oRoots.sym1, oRoots.sym2) == o_true);
+    eqResult = oSymbolEquals(oRoots.sym1, oRoots.sym2);
+	assert(eqResult);
 
 	oRoots.name = oStringCreate("WRONG"); // other name
-	oRoots.sym2 = oSymbolCreate(ctx, oRoots.name);
+	oRoots.sym2 = oSymbolCreate(oRoots.name);
 
-	assert(oSymbolEquals(ctx, oRoots.sym1, oRoots.sym2) == o_false);
+    eqResult = oSymbolEquals(oRoots.sym1, oRoots.sym2);
+	assert(eqResult == o_false);
 
     oENDVOIDFN
     oRuntimeDestroy(runtime);
@@ -119,6 +123,7 @@ void testReadSymbol() {
     oRuntimeRef runtime = oRuntimeCreate(2000 * 1024, 1024 * 1000);
     oThreadContextRef ctx = runtime->allContexts->ctx;
     oSymbolRef bob;
+    o_bool eqResult;
     oROOTS(ctx)
     oObject readResult;
     oSymbolRef otherBob;
@@ -126,14 +131,15 @@ void testReadSymbol() {
     oENDROOTS
 
     oRoots.src = oStringCreate("Bob2Bob");
-    oRoots.otherBob = oSymbolCreate(ctx, oRoots.src);
+    oRoots.otherBob = oSymbolCreate(oRoots.src);
     oRoots.readResult = oReaderRead(ctx, oRoots.src);
     
     // We should get a list with one element, the symbol Bob2Bob
     assert(oObjectGetType(ctx, oRoots.readResult) == ctx->runtime->builtInTypes.list);
 	bob = (oSymbolRef)((oListObjRef)oRoots.readResult)->data;
     assert(oObjectGetType(ctx, bob) == ctx->runtime->builtInTypes.symbol);
-	assert(oSymbolEquals(ctx, oRoots.otherBob, bob) == o_true);
+    eqResult = oSymbolEquals(oRoots.otherBob, bob);
+	assert(eqResult);
 
     oENDVOIDFN
     oRuntimeDestroy(runtime);
@@ -146,6 +152,7 @@ void testReadOneListAndOneSymbol() {
     oSymbolRef other;
     oListObjRef lst;
     oListObjRef bobLst;
+    o_bool eqResult;
     oROOTS(ctx)
     oObject readResult;
     oStringRef src;
@@ -155,7 +162,7 @@ void testReadOneListAndOneSymbol() {
 
     oRoots.name = oStringCreate("Bob2Bob");
     oRoots.src = oStringCreate("(Bob2Bob) otherSym");
-    oRoots.controlSym = oSymbolCreate(ctx, oRoots.name);
+    oRoots.controlSym = oSymbolCreate(oRoots.name);
     
     oRoots.readResult = oReaderRead(ctx, oRoots.src);
     
@@ -171,14 +178,16 @@ void testReadOneListAndOneSymbol() {
 
     bob = (oSymbolRef)oListObjFirst(ctx, bobLst);
     assert(oObjectGetType(ctx, bob) == ctx->runtime->builtInTypes.symbol);
-	assert(oSymbolEquals(ctx, bob, oRoots.controlSym) == o_true);
+    eqResult = oSymbolEquals(bob, oRoots.controlSym);
+	assert(eqResult);
 
     lst = oListObjRest(lst);
     other = (oSymbolRef)oListObjFirst(ctx, lst);
     assert(oObjectGetType(ctx, other) == ctx->runtime->builtInTypes.symbol);
     oRoots.name = oStringCreate("otherSym");
-    oRoots.controlSym = oSymbolCreate(ctx, oRoots.name);
-	assert(oSymbolEquals(ctx, other, oRoots.controlSym) == o_true);
+    oRoots.controlSym = oSymbolCreate(oRoots.name);
+    eqResult = oSymbolEquals(other, oRoots.controlSym);
+	assert(eqResult);
     
     oENDVOIDFN
     oRuntimeDestroy(runtime);
@@ -342,6 +351,7 @@ void testReadVector() {
     oListObjRef lst;
     oSymbolRef sym;
     oVectorRef vec;
+    o_bool eqResult;
     oROOTS(ctx)
     oObject readResult;
     oStringRef src;
@@ -349,7 +359,7 @@ void testReadVector() {
     oENDROOTS
 
     oRoots.src = oStringCreate("ethel");
-    oRoots.ethel = oSymbolCreate(ctx, oRoots.src);
+    oRoots.ethel = oSymbolCreate(oRoots.src);
     oRoots.src = oStringCreate("[bob fred ethel]\n");
     oRoots.readResult = oReaderRead(ctx, oRoots.src);
     
@@ -363,7 +373,8 @@ void testReadVector() {
     assert(oVectorSize(ctx, vec) == 3);
     
     oVectorGet(ctx, vec, 2, &sym, ctx->runtime->builtInTypes.symbol);
-    assert(oSymbolEquals(ctx, sym, oRoots.ethel) == o_true);
+    eqResult = oSymbolEquals(sym, oRoots.ethel);
+    assert(eqResult);
 
     oENDVOIDFN
     oRuntimeDestroy(runtime);

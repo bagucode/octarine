@@ -9,10 +9,13 @@ struct oSymbol {
     oStringRef name;
 };
 
-oSymbolRef oSymbolCreate(oThreadContextRef ctx, oStringRef name);
-o_bool oSymbolEquals(oThreadContextRef ctx,
-                     oSymbolRef sym1,
-                     oSymbolRef sym2);
+oSymbolRef _oSymbolCreate(oThreadContextRef ctx, oStringRef name);
+#define oSymbolCreate(name) _oC(_oSymbolCreate, name)
+
+o_bool _oSymbolEquals(oThreadContextRef ctx,
+                      oSymbolRef sym1,
+                      oSymbolRef sym2);
+#define oSymbolEquals(sym1, sym2) _oC(_oSymbolEquals, sym1, sym2)
 
 void o_bootstrap_symbol_init_type(oThreadContextRef ctx);
 

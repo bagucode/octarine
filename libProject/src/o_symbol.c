@@ -26,7 +26,7 @@ void o_bootstrap_symbol_init_type(oThreadContextRef ctx) {
     oENDVOIDFN
 }
 
-oSymbolRef oSymbolCreate(oThreadContextRef ctx, oStringRef name) {
+oSymbolRef _oSymbolCreate(oThreadContextRef ctx, oStringRef name) {
     oROOTS(ctx)
     oENDROOTS
     oSETRET(oHeapAlloc(ctx->runtime->builtInTypes.symbol));
@@ -34,8 +34,8 @@ oSymbolRef oSymbolCreate(oThreadContextRef ctx, oStringRef name) {
     oENDFN(oSymbolRef)
 }
 
-o_bool oSymbolEquals(oThreadContextRef ctx,
-                     oSymbolRef sym1,
-					 oSymbolRef sym2) {
+o_bool _oSymbolEquals(oThreadContextRef ctx,
+                      oSymbolRef sym1,
+				      oSymbolRef sym2) {
 	return sym1 == sym2 || oStringCompare(sym1->name, sym2->name) == 0;
 }
