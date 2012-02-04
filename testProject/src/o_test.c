@@ -230,7 +230,7 @@ void testCreateType() {
     fields[4]->type = ctx->runtime->builtInTypes.f64;
     
     oRoots.typeName = oStringCreate("MyHappyTestType");
-    oRoots.myType = oTypeCreate(ctx, o_T_OBJECT, 0, oRoots.typeName, oRoots.fields, NULL, NULL);
+    oRoots.myType = oTypeCreate(o_T_OBJECT, 0, oRoots.typeName, oRoots.fields, NULL, NULL);
     
     assert(oRoots.myType->size == sizeof(testStruct));
     

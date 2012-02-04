@@ -39,11 +39,11 @@ void o_bootstrap_error_type_init(oThreadContextRef ctx) {
     
     oRoots.fields = oArrayCreate(ctx->runtime->builtInTypes.field, 1);
     oRoots.typeName = oStringCreate("data");
-    oRoots.field = oFieldCreate(ctx, oRoots.typeName, ctx->runtime->builtInTypes.any);
+    oRoots.field = oFieldCreate(oRoots.typeName, ctx->runtime->builtInTypes.any);
     oArrayPut(oRoots.fields, 0, oRoots.field, ctx->runtime->builtInTypes.field);
     
     oRoots.typeName = oStringCreate("Error");
-    oRoots.theType = oTypeCreate(ctx, o_T_OBJECT, 0, oRoots.typeName, oRoots.fields, NULL, NULL);
+    oRoots.theType = oTypeCreate(o_T_OBJECT, 0, oRoots.typeName, oRoots.fields, NULL, NULL);
     
     ctx->runtime->builtInTypes.error = oRoots.theType;
     oENDVOIDFN

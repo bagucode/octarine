@@ -17,11 +17,11 @@ void o_bootstrap_keyword_type_init(oThreadContextRef ctx) {
     
     oRoots.fields = oArrayCreate(ctx->runtime->builtInTypes.field, 1);
     oRoots.typeName = oStringCreate("name");
-    oRoots.field = oFieldCreate(ctx, oRoots.typeName, ctx->runtime->builtInTypes.string);
+    oRoots.field = oFieldCreate(oRoots.typeName, ctx->runtime->builtInTypes.string);
     oArrayPut(oRoots.fields, 0, oRoots.field, ctx->runtime->builtInTypes.field);
     
     oRoots.typeName = oStringCreate("Keyword");
-    oRoots.theType = oTypeCreate(ctx, o_T_OBJECT, 0, oRoots.typeName, oRoots.fields, NULL, NULL);
+    oRoots.theType = oTypeCreate(o_T_OBJECT, 0, oRoots.typeName, oRoots.fields, NULL, NULL);
     
     ctx->runtime->builtInTypes.keyword = oRoots.theType;
 

@@ -59,29 +59,31 @@ static uword nextLargerMultiple(uword of, uword largerThan) {
     return result;
 }
 
-oTypeRef oTypeCreateProtoType(oThreadContextRef ctx) {
+oTypeRef _oTypeCreateProtoType(oThreadContextRef ctx) {
     oROOTS(ctx)
     oENDROOTS
 	oRETURN(oHeapAlloc(ctx->runtime->builtInTypes.type));
     oENDFN(oTypeRef)
 }
 
-oTypeRef oTypeCreate(oThreadContextRef ctx,
-                     u8 kind,
-                     u8 alignment,
-                     oStringRef name,
-                     oArrayRef fields,
-                     oFinalizer finalizer,
-                     oTypeRef protoType) {
+oTypeRef _oTypeCreate(oThreadContextRef ctx,
+                      u8 kind,
+                      u8 alignment,
+                      oStringRef name,
+                      oArrayRef fields,
+                      oFinalizer finalizer,
+                      oTypeRef protoType) {
     oFieldRef* inFields;
     oFieldRef* members;
     uword i, largest, align;
     oROOTS(ctx)
+    oTypeRef tmp;
     oENDROOTS
     
     oSETRET(protoType);
     if(oGETRET == NULL) {
-        oSETRET(oTypeCreateProtoType(ctx));
+        oRoots.tmp = oTypeCreatePrototype();
+        oSETRET(oRoots.tmp);
     }
     
     oGETRETT(oTypeRef)->name = name;
@@ -188,12 +190,12 @@ void o_bootstrap_type_init_field(oRuntimeRef rt, oHeapRef heap) {
     fields[2]->type = rt->builtInTypes.u32;
 }
 
-o_bool oTypeEquals(oThreadContextRef ctx, oTypeRef t, oObject other) {
+o_bool _oTypeEquals(oThreadContextRef ctx, oTypeRef t, oObject other) {
     /* Types are only equal if they are the same type */
     return t == other;
 }
 
-oFieldRef oFieldCreate(oThreadContextRef ctx,
+oFieldRef _oFieldCreate(oThreadContextRef ctx,
                        oStringRef name,
                        oTypeRef type) {
     oROOTS(ctx)

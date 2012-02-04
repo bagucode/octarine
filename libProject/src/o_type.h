@@ -30,22 +30,31 @@ struct oType {
     u8 alignment;
 };
 
-oFieldRef oFieldCreate(oThreadContextRef ctx,
-                       oStringRef name,
-                       oTypeRef type);
+oFieldRef _oFieldCreate(oThreadContextRef ctx,
+                        oStringRef name,
+                        oTypeRef type);
+#define oFieldCreate(name, type) _oC(_oFieldCreate, name, type)
 
 o_bool oTypeIsPrimitive(oTypeRef t);
 o_bool oTypeIsStruct(oTypeRef t);
 o_bool oTypeIsObject(oTypeRef t);
-o_bool oTypeEquals(oThreadContextRef ctx, oTypeRef t, oObject other);
-oTypeRef oTypeCreatePrototype(oThreadContextRef ctx, o_bool shared);
-oTypeRef oTypeCreate(oThreadContextRef ctx,
-                     u8 kind,
-                     u8 alignment,
-                     oStringRef name,
-                     oArrayRef fields,
-                     oFinalizer finalizer,
-                     oTypeRef protoType);
+
+o_bool _oTypeEquals(oThreadContextRef ctx, oTypeRef t, oObject other);
+#define oTypeEquals(type, other) _oC(_oTypeEquals, type, other)
+
+oTypeRef _oTypeCreatePrototype(oThreadContextRef ctx);
+#define oTypeCreatePrototype() _oTypeCreateProtoType(_oCTX); if(oErrorGet(_oCTX)) { oRoots._oRET = NULL; goto _oENDFNL; }
+
+oTypeRef _oTypeCreate(oThreadContextRef ctx,
+                      u8 kind,
+                      u8 alignment,
+                      oStringRef name,
+                      oArrayRef fields,
+                      oFinalizer finalizer,
+                      oTypeRef protoType);
+#define oTypeCreate(kind, alignment, name, fields, finalizer, prototype) \
+_oC(_oTypeCreate, kind, alignment, name, fields, finalizer, prototype)
+
 oStringRef oTypeGetName(oTypeRef type);
 
 void o_bootstrap_type_init_type(oRuntimeRef rt, oHeapRef heap);
