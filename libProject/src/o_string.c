@@ -9,7 +9,7 @@
 #include "o_error.h"
 #include <memory.h>
 
-oStringRef oStringCreate(oThreadContextRef ctx, char *utf8) {
+oStringRef _oStringCreate(oThreadContextRef ctx, char *utf8) {
 	oNativeStringRef tmp;
     oROOTS(ctx)
     oENDROOTS
@@ -31,7 +31,7 @@ int oStringCompare(oStringRef x, oStringRef y) {
     return x == y ? 0 : oNativeStringCompare(x->str, y->str);
 }
 
-oArrayRef oStringUtf8Copy(oThreadContextRef ctx, oStringRef str) {
+oArrayRef _oStringUtf8Copy(oThreadContextRef ctx, oStringRef str) {
     uword length;
     char* utf8String = oNativeStringToUtf8(str->str, &length);
     oROOTS(ctx)
@@ -44,11 +44,11 @@ oArrayRef oStringUtf8Copy(oThreadContextRef ctx, oStringRef str) {
 	oENDFN(oArrayRef)
 }
 
-o_char oStringCharAt(oThreadContextRef ctx, oStringRef str, uword idx) {
+o_char _oStringCharAt(oThreadContextRef ctx, oStringRef str, uword idx) {
     return oNativeStringCharAt(str->str, idx);
 }
 
-oStringRef oStringSubString(oThreadContextRef ctx, oStringRef str, uword start, uword end) {
+oStringRef _oStringSubString(oThreadContextRef ctx, oStringRef str, uword start, uword end) {
     oROOTS(ctx)
     oENDROOTS
 	oSETRET(oHeapAlloc(ctx->runtime->builtInTypes.string));
@@ -62,7 +62,7 @@ oStringRef o_bootstrap_string_create(oRuntimeRef rt, oHeapRef heap, const char *
     return str;
 }
 
-uword oStringLength(oThreadContextRef ctx, oStringRef str) {
+uword _oStringLength(oThreadContextRef ctx, oStringRef str) {
     return oNativeStringLength(str->str);
 }
 

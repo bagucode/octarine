@@ -115,7 +115,7 @@ int main(int argc, char** argv) {
             line = tmp;
             prevLine = NULL;
         }
-        oRoots.src = oStringCreate(ctx, line);
+        oRoots.src = oStringCreate(line);
 		oRoots.result = (oListObjRef)oReaderRead(ctx, oRoots.src);
         if(((oKeywordRef)oRoots.result) == rt->builtInConstants.needMoreData) {
             prevLine = (char*)malloc(strlen(line) + 1);
@@ -130,7 +130,7 @@ int main(int argc, char** argv) {
             for(i = 0; i < numObjs; ++i) {
                 oRoots.obj = oListObjFirst(ctx, oRoots.result);
                 oRoots.result = oListObjRest(oRoots.result);
-                oRoots.utf8 = oStringUtf8Copy(ctx, oTypeGetName(oObjectGetType(ctx, oRoots.obj)));
+                oRoots.utf8 = oStringUtf8Copy(oTypeGetName(oObjectGetType(ctx, oRoots.obj)));
                 typeName = (char*)oArrayDataPointer(oRoots.utf8);
                 printf("%s\n", typeName);
             }

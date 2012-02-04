@@ -153,11 +153,11 @@ static void init_builtInConstants(oThreadContextRef ctx) {
     oROOTS(ctx)
     oENDROOTS
     
-    oSETRET(oStringCreate(ctx, "need-more-data"));
+    oSETRET(oStringCreate("need-more-data"));
     ctx->runtime->builtInConstants.needMoreData = oKeywordCreate(oGETRETT(oStringRef));
-    oSETRET(oStringCreate(ctx, "type-mismatch"));
+    oSETRET(oStringCreate("type-mismatch"));
     ctx->runtime->builtInConstants.typeMismatch = oKeywordCreate(oGETRETT(oStringRef));
-    oSETRET(oStringCreate(ctx, "index-out-of-bounds"));
+    oSETRET(oStringCreate("index-out-of-bounds"));
     ctx->runtime->builtInConstants.indexOutOfBounds = oKeywordCreate(oGETRETT(oStringRef));
 
     oENDVOIDFN
@@ -169,7 +169,7 @@ static oErrorRef initError(oThreadContextRef ctx, char* name) {
     oKeywordRef kw;
     oENDROOTS
 
-    oRoots.str = oStringCreate(ctx, name);
+    oRoots.str = oStringCreate(name);
     oRoots.kw = oKeywordCreate(oRoots.str);
     oSETRET(oHeapAlloc(ctx->runtime->builtInTypes.error));
     oGETRETT(oErrorRef)->data = oRoots.kw;

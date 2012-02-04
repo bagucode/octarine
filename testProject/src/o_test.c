@@ -56,10 +56,13 @@ void testGCAllRetained() {
 void testGCFinalizer() {
     oRuntimeRef runtime = oRuntimeCreate(2000 * 1024, 1024 * 1000);
     oThreadContextRef ctx = runtime->allContexts->ctx;
+    oROOTS(ctx)
+    oENDROOTS
     
-    oStringCreate(ctx, "Test string");
+    oStringCreate("Test string");
 	oHeapForceGC(ctx->runtime, ctx->heap);
     
+    oENDVOIDFN
     oRuntimeDestroy(runtime);
 }
 
@@ -69,44 +72,46 @@ void testReaderEmptyList() {
     oObject result;
     oStringRef src;
     oListObjRef emptyList;
+    oROOTS(ctx)
+    oENDROOTS
 
-    src = oStringCreate(ctx, "()");
+    src = oStringCreate("()");
     result = oReaderRead(ctx, src);
     // We should get a list with one element, an empty list.
     assert(oObjectGetType(ctx, result) == ctx->runtime->builtInTypes.list);
 	emptyList = (oListObjRef)((oListObjRef)result)->data;
     assert(oObjectGetType(ctx, emptyList) == ctx->runtime->builtInTypes.list);
     
+    oENDVOIDFN
     oRuntimeDestroy(runtime);
 }
 
 void testSymbolEquals() {
     oRuntimeRef runtime = oRuntimeCreate(2000 * 1024, 1024 * 1000);
     oThreadContextRef ctx = runtime->allContexts->ctx;
-	struct {
-		oSymbolRef sym1;
-		oSymbolRef sym2;
-		oStringRef name;
-	} frame;
-	oMemoryPushFrame(ctx, &frame, sizeof(frame));
+    oROOTS(ctx)
+    oSymbolRef sym1;
+    oSymbolRef sym2;
+    oStringRef name;
+    oENDROOTS
 
-	frame.name = oStringCreate(ctx, "Bob2Bob");
-	frame.sym1 = oSymbolCreate(ctx, frame.name);
-	frame.sym2 = oSymbolCreate(ctx, frame.name);
+	oRoots.name = oStringCreate("Bob2Bob");
+	oRoots.sym1 = oSymbolCreate(ctx, oRoots.name);
+	oRoots.sym2 = oSymbolCreate(ctx, oRoots.name);
 
-	assert(oSymbolEquals(ctx, frame.sym1, frame.sym2) == o_true);
+	assert(oSymbolEquals(ctx, oRoots.sym1, oRoots.sym2) == o_true);
 
-	frame.name = oStringCreate(ctx, "Bob2Bob"); // same name but different string instance
-	frame.sym1 = oSymbolCreate(ctx, frame.name);
+	oRoots.name = oStringCreate("Bob2Bob"); // same name but different string instance
+	oRoots.sym1 = oSymbolCreate(ctx, oRoots.name);
 
-	assert(oSymbolEquals(ctx, frame.sym1, frame.sym2) == o_true);
+	assert(oSymbolEquals(ctx, oRoots.sym1, oRoots.sym2) == o_true);
 
-	frame.name = oStringCreate(ctx, "WRONG"); // other name
-	frame.sym2 = oSymbolCreate(ctx, frame.name);
+	oRoots.name = oStringCreate("WRONG"); // other name
+	oRoots.sym2 = oSymbolCreate(ctx, oRoots.name);
 
-	assert(oSymbolEquals(ctx, frame.sym1, frame.sym2) == o_false);
+	assert(oSymbolEquals(ctx, oRoots.sym1, oRoots.sym2) == o_false);
 
-	oMemoryPopFrame(ctx);
+    oENDVOIDFN
     oRuntimeDestroy(runtime);
 }
 
@@ -114,24 +119,23 @@ void testReadSymbol() {
     oRuntimeRef runtime = oRuntimeCreate(2000 * 1024, 1024 * 1000);
     oThreadContextRef ctx = runtime->allContexts->ctx;
     oSymbolRef bob;
-	struct {
-		oObject readResult;
-        oSymbolRef otherBob;
-		oStringRef src;
-	} frame;
-	oMemoryPushFrame(ctx, &frame, sizeof(frame));
+    oROOTS(ctx)
+    oObject readResult;
+    oSymbolRef otherBob;
+    oStringRef src;
+    oENDROOTS
 
-    frame.src = oStringCreate(ctx, "Bob2Bob");
-    frame.otherBob = oSymbolCreate(ctx, frame.src);
-    frame.readResult = oReaderRead(ctx, frame.src);
+    oRoots.src = oStringCreate("Bob2Bob");
+    oRoots.otherBob = oSymbolCreate(ctx, oRoots.src);
+    oRoots.readResult = oReaderRead(ctx, oRoots.src);
     
     // We should get a list with one element, the symbol Bob2Bob
-    assert(oObjectGetType(ctx, frame.readResult) == ctx->runtime->builtInTypes.list);
-	bob = (oSymbolRef)((oListObjRef)frame.readResult)->data;
+    assert(oObjectGetType(ctx, oRoots.readResult) == ctx->runtime->builtInTypes.list);
+	bob = (oSymbolRef)((oListObjRef)oRoots.readResult)->data;
     assert(oObjectGetType(ctx, bob) == ctx->runtime->builtInTypes.symbol);
-	assert(oSymbolEquals(ctx, frame.otherBob, bob) == o_true);
+	assert(oSymbolEquals(ctx, oRoots.otherBob, bob) == o_true);
 
-	oMemoryPopFrame(ctx);
+    oENDVOIDFN
     oRuntimeDestroy(runtime);
 }
 
@@ -149,8 +153,8 @@ void testReadOneListAndOneSymbol() {
     oSymbolRef controlSym;
     oENDROOTS
 
-    oRoots.name = oStringCreate(ctx, "Bob2Bob");
-    oRoots.src = oStringCreate(ctx, "(Bob2Bob) otherSym");
+    oRoots.name = oStringCreate("Bob2Bob");
+    oRoots.src = oStringCreate("(Bob2Bob) otherSym");
     oRoots.controlSym = oSymbolCreate(ctx, oRoots.name);
     
     oRoots.readResult = oReaderRead(ctx, oRoots.src);
@@ -172,7 +176,7 @@ void testReadOneListAndOneSymbol() {
     lst = oListObjRest(lst);
     other = (oSymbolRef)oListObjFirst(ctx, lst);
     assert(oObjectGetType(ctx, other) == ctx->runtime->builtInTypes.symbol);
-    oRoots.name = oStringCreate(ctx, "otherSym");
+    oRoots.name = oStringCreate("otherSym");
     oRoots.controlSym = oSymbolCreate(ctx, oRoots.name);
 	assert(oSymbolEquals(ctx, other, oRoots.controlSym) == o_true);
     
@@ -205,18 +209,18 @@ void testCreateType() {
     for(i = 0; i < oRoots.fields->num_elements; ++i) {
 		fields[i] = oHeapAlloc(ctx->runtime->builtInTypes.field);
     }
-    fields[0]->name = oStringCreate(ctx, "one");
+    fields[0]->name = oStringCreate("one");
     fields[0]->type = ctx->runtime->builtInTypes.u8;
-    fields[1]->name = oStringCreate(ctx, "two");
+    fields[1]->name = oStringCreate("two");
     fields[1]->type = ctx->runtime->builtInTypes.u16;
-    fields[2]->name = oStringCreate(ctx, "three");
+    fields[2]->name = oStringCreate("three");
     fields[2]->type = ctx->runtime->builtInTypes.i64;
-    fields[3]->name = oStringCreate(ctx, "self");
+    fields[3]->name = oStringCreate("self");
     fields[3]->type = o_T_SELF;
-    fields[4]->name = oStringCreate(ctx, "five");
+    fields[4]->name = oStringCreate("five");
     fields[4]->type = ctx->runtime->builtInTypes.f64;
     
-    oRoots.typeName = oStringCreate(ctx, "MyHappyTestType");
+    oRoots.typeName = oStringCreate("MyHappyTestType");
     oRoots.myType = oTypeCreate(ctx, o_T_OBJECT, 0, oRoots.typeName, oRoots.fields, NULL, NULL);
     
     assert(oRoots.myType->size == sizeof(testStruct));
@@ -254,7 +258,7 @@ void testArrayPutGet() {
     oArrayGet(oRoots.objArray, 0, &oRoots.tmp1, ctx->runtime->builtInTypes.string);
     assert(oRoots.tmp1 == NULL);
 
-    oRoots.tmp1 = oStringCreate(ctx, "a string");
+    oRoots.tmp1 = oStringCreate("a string");
     oArrayPut(oRoots.objArray, 10, oRoots.tmp1, ctx->runtime->builtInTypes.string);
     oArrayGet(oRoots.objArray, 10, &oRoots.tmp2, ctx->runtime->builtInTypes.string);
     assert(oObjectGetType(ctx, oRoots.tmp2) == ctx->runtime->builtInTypes.string);
@@ -288,48 +292,47 @@ void testVector() {
     oTypeRef i64_t = ctx->runtime->builtInTypes.i64;
     i64 one;
     i64 checki64;
-    struct {
-        oVectorRef veci64;
-        oVectorRef vecStr;
-        oStringRef str;
-        oStringRef checkStr;
-    } frame;
-    oMemoryPushFrame(ctx, &frame, sizeof(frame));
+    oROOTS(ctx)
+    oVectorRef veci64;
+    oVectorRef vecStr;
+    oStringRef str;
+    oStringRef checkStr;
+    oENDROOTS
 
-    frame.veci64 = oVectorCreate(ctx, i64_t);
-    frame.vecStr = oVectorCreate(ctx, str_t);
+    oRoots.veci64 = oVectorCreate(ctx, i64_t);
+    oRoots.vecStr = oVectorCreate(ctx, str_t);
     
-    frame.str = oStringCreate(ctx, "String One");
-    frame.vecStr = oVectorAddBack(ctx, frame.vecStr, frame.str, str_t);
-    assert(oVectorSize(ctx, frame.vecStr) == 1);
-    oVectorGet(ctx, frame.vecStr, 0, &frame.checkStr, str_t);
-    assert(oObjectGetType(ctx, frame.checkStr) == str_t);
-    assert(oStringCompare(frame.str, frame.checkStr) == 0);
-    assert(frame.str == frame.checkStr);
+    oRoots.str = oStringCreate("String One");
+    oRoots.vecStr = oVectorAddBack(ctx, oRoots.vecStr, oRoots.str, str_t);
+    assert(oVectorSize(ctx, oRoots.vecStr) == 1);
+    oVectorGet(ctx, oRoots.vecStr, 0, &oRoots.checkStr, str_t);
+    assert(oObjectGetType(ctx, oRoots.checkStr) == str_t);
+    assert(oStringCompare(oRoots.str, oRoots.checkStr) == 0);
+    assert(oRoots.str == oRoots.checkStr);
 
     one = 1;
     checki64 = 0;
-    frame.veci64 = oVectorAddBack(ctx, frame.veci64, &one, i64_t);
-    assert(oVectorSize(ctx, frame.veci64) == 1);
-    oVectorGet(ctx, frame.veci64, 0, &checki64, i64_t);
+    oRoots.veci64 = oVectorAddBack(ctx, oRoots.veci64, &one, i64_t);
+    assert(oVectorSize(ctx, oRoots.veci64) == 1);
+    oVectorGet(ctx, oRoots.veci64, 0, &checki64, i64_t);
     assert(one == checki64);
 
     // Test put of object
-    frame.str = oStringCreate(ctx, "String Two");
-    frame.vecStr = oVectorPut(ctx, frame.vecStr, 0, frame.str, str_t);
-    oVectorGet(ctx, frame.vecStr, 0, &frame.checkStr, str_t);
-    assert(oObjectGetType(ctx, frame.checkStr) == str_t);
-    assert(oStringCompare(frame.str, frame.checkStr) == 0);
-    assert(frame.str == frame.checkStr);
+    oRoots.str = oStringCreate("String Two");
+    oRoots.vecStr = oVectorPut(ctx, oRoots.vecStr, 0, oRoots.str, str_t);
+    oVectorGet(ctx, oRoots.vecStr, 0, &oRoots.checkStr, str_t);
+    assert(oObjectGetType(ctx, oRoots.checkStr) == str_t);
+    assert(oStringCompare(oRoots.str, oRoots.checkStr) == 0);
+    assert(oRoots.str == oRoots.checkStr);
 
     // Test put of struct
     one = 2;
     checki64 = 0;
-    frame.veci64 = oVectorPut(ctx, frame.veci64, 0, &one, i64_t);
-    oVectorGet(ctx, frame.veci64, 0, &checki64, i64_t);
+    oRoots.veci64 = oVectorPut(ctx, oRoots.veci64, 0, &one, i64_t);
+    oVectorGet(ctx, oRoots.veci64, 0, &checki64, i64_t);
     assert(one == checki64);
-    
-    oMemoryPopFrame(ctx);
+
+    oENDVOIDFN
     oRuntimeDestroy(runtime);
 }
 
@@ -339,21 +342,20 @@ void testReadVector() {
     oListObjRef lst;
     oSymbolRef sym;
     oVectorRef vec;
-	struct {
-		oObject readResult;
-		oStringRef src;
-        oSymbolRef ethel;
-	} frame;
-	oMemoryPushFrame(ctx, &frame, sizeof(frame));
+    oROOTS(ctx)
+    oObject readResult;
+    oStringRef src;
+    oSymbolRef ethel;
+    oENDROOTS
 
-    frame.src = oStringCreate(ctx, "ethel");
-    frame.ethel = oSymbolCreate(ctx, frame.src);
-    frame.src = oStringCreate(ctx, "[bob fred ethel]\n");
-    frame.readResult = oReaderRead(ctx, frame.src);
+    oRoots.src = oStringCreate("ethel");
+    oRoots.ethel = oSymbolCreate(ctx, oRoots.src);
+    oRoots.src = oStringCreate("[bob fred ethel]\n");
+    oRoots.readResult = oReaderRead(ctx, oRoots.src);
     
     // We should get a list with one element, a vector of three symbols
-    assert(oObjectGetType(ctx, frame.readResult) == ctx->runtime->builtInTypes.list);
-    lst = (oListObjRef)frame.readResult;
+    assert(oObjectGetType(ctx, oRoots.readResult) == ctx->runtime->builtInTypes.list);
+    lst = (oListObjRef)oRoots.readResult;
     assert(oListObjSize(ctx, lst) == 1);
     
     vec = oListObjFirst(ctx, lst);
@@ -361,9 +363,9 @@ void testReadVector() {
     assert(oVectorSize(ctx, vec) == 3);
     
     oVectorGet(ctx, vec, 2, &sym, ctx->runtime->builtInTypes.symbol);
-    assert(oSymbolEquals(ctx, sym, frame.ethel) == o_true);
-    
-	oMemoryPopFrame(ctx);
+    assert(oSymbolEquals(ctx, sym, oRoots.ethel) == o_true);
+
+    oENDVOIDFN
     oRuntimeDestroy(runtime);
 }
 
@@ -378,8 +380,8 @@ void testReadKeyword() {
     oStringRef name;
     oENDROOTS
     
-    oRoots.name = oStringCreate(ctx, "lucy");
-    oRoots.src = oStringCreate(ctx, ":lucy");
+    oRoots.name = oStringCreate("lucy");
+    oRoots.src = oStringCreate(":lucy");
     oRoots.readResult = oReaderRead(ctx, oRoots.src);
     
     // We should get a list with one element, a vector of three symbols

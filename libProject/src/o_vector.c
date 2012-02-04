@@ -15,11 +15,11 @@ void o_bootstrap_vector_init_type(oThreadContextRef ctx) {
     oENDROOTS
     
     oRoots.fields = oArrayCreate(ctx->runtime->builtInTypes.field, 1);
-    oRoots.typeName = oStringCreate(ctx, "data");
+    oRoots.typeName = oStringCreate("data");
     oRoots.field = oFieldCreate(ctx, oRoots.typeName, ctx->runtime->builtInTypes.array);
     oArrayPut(oRoots.fields, 0, oRoots.field, ctx->runtime->builtInTypes.field);
     
-    oRoots.typeName = oStringCreate(ctx, "Vector");
+    oRoots.typeName = oStringCreate("Vector");
     oSETRET(oTypeCreate(ctx, o_T_OBJECT, 0, oRoots.typeName, oRoots.fields, NULL, NULL));
     ctx->runtime->builtInTypes.vector = oGETRET;
 
