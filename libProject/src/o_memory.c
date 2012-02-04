@@ -90,8 +90,6 @@ struct oHeap {
     HeapRecordRef record;
 };
 
-static void addHeapEntry(oHeapRef heap, HeapBlockRef block);
-
 static HeapRecordRef createRecord() {
     HeapRecordRef rec = (HeapRecordRef)oMalloc(sizeof(HeapRecord));
     memset(rec, 0, sizeof(HeapRecord));
@@ -376,6 +374,17 @@ static o_bool checkHeapSpace(oRuntimeRef rt,
     return o_true;
 }
 
+static void addHeapEntry(oHeapRef heap, HeapBlockRef block) {
+    HeapRecordRef tmp;
+    
+    if(recordEntry(heap->record, block) == o_false) {
+        tmp = createRecord();
+        tmp->prev = heap->record;
+        heap->record = tmp;
+        addHeapEntry(heap, block);
+    }
+}
+
 static oObject internalAlloc(oRuntimeRef rt,
                              oThreadContextRef ctx,
 	                         oHeapRef heap,
@@ -430,17 +439,6 @@ oArrayRef _oHeapAllocArray(oThreadContextRef ctx,
     arr->num_elements = numElements;
     arr->alignment = align;
     return arr;
-}
-
-static void addHeapEntry(oHeapRef heap, HeapBlockRef block) {
-    HeapRecordRef tmp;
-    
-    if(recordEntry(heap->record, block) == o_false) {
-        tmp = createRecord();
-        tmp->prev = heap->record;
-        heap->record = tmp;
-        addHeapEntry(heap, block);
-    }
 }
 
 oObject o_bootstrap_object_alloc(oRuntimeRef rt,
