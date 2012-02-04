@@ -113,15 +113,15 @@ oHeapRef oHeapCreate(o_bool synchronized, uword gc_threshold) {
     return heap;
 }
 
-typedef struct vFrameInfo {
+typedef struct oFrameInfo {
     oObject* frame;
     uword size;
-} vFrameInfo;
+} oFrameInfo;
 
 #define MAX_FRAMES 500
 struct oRootSet {
     uword numUsed;
-    vFrameInfo frameInfos[MAX_FRAMES];
+    oFrameInfo frameInfos[MAX_FRAMES];
     oRootSetRef prev;
 };
 
