@@ -226,6 +226,9 @@ oRuntimeRef oRuntimeCreate(uword sharedHeapInitialSize,
     rt->allContexts->ctx = ctx;
 
 	init_builtInTypes2(ctx);
+    init_builtInConstants(ctx);
+    init_builtInFunctions(ctx);
+    init_builtInErrors(ctx);
 
 	/*
 	Since ReaderCreate depends upon the types being defined we have to postpone
@@ -233,10 +236,6 @@ oRuntimeRef oRuntimeCreate(uword sharedHeapInitialSize,
 	TODO: do we even need a reader object? Should probably just get rid of it.
 	*/
 	ctx->reader = oReaderCreate(ctx);
-    
-    init_builtInConstants(ctx);
-    init_builtInFunctions(ctx);
-    init_builtInErrors(ctx);
 
     return rt;
 }
