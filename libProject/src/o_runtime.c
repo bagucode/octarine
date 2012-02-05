@@ -181,6 +181,27 @@ static void init_builtInErrors(oThreadContextRef ctx) {
     ctx->runtime->builtInErrors.outOfMemory = initError(ctx, "out-of-memory");
 }
 
+void _oRuntimeAddContext(oRuntimeRef rt, oThreadContextRef ctx) {
+    oThreadContextListRef lst;
+
+    oSpinLockLock(&rt->contextListLock);
+
+    lst = rt->allContexts;
+    while(lst->next) {
+        lst = lst->next;
+    }
+    
+    lst->next = (oThreadContextListRef)oMalloc(sizeof(oThreadContextList));
+	lst->next->next = NULL;
+    lst->next->ctx = ctx;
+    
+    oSpinLockUnlock(&rt->contextListLock);
+}
+
+void _oRuntimeRemoveAndDestroyContext() {
+    
+}
+
 oRuntimeRef oRuntimeCreate(uword sharedHeapInitialSize,
                            uword threadHeapInitialSize) {
 	oRuntimeRef rt = (oRuntimeRef)oMalloc(sizeof(oRuntime));
@@ -198,6 +219,8 @@ oRuntimeRef oRuntimeCreate(uword sharedHeapInitialSize,
 	ctx = o_bootstrap_thread_context_create(rt, mtHeap);
 	ctx->heap = mtHeap;
 	oTLSSet(rt->currentContext, ctx);
+    // Add first context manually since allContexts is
+    // expected to be non-NULL by AddContext
     rt->allContexts = (oThreadContextListRef)oMalloc(sizeof(oThreadContextList));
 	rt->allContexts->next = NULL;
     rt->allContexts->ctx = ctx;

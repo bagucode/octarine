@@ -63,6 +63,7 @@ struct oRuntime {
     oHeapRef globals;
     oTLSRef currentContext;
     oThreadContextListRef allContexts;
+    oSpinLock contextListLock;
     oRuntimeBuiltInTypes builtInTypes;
     oRuntimeBuiltInFunctions builtInFunctions;
     oRuntimeBuiltInConstants builtInConstants;
@@ -73,5 +74,7 @@ oRuntimeRef oRuntimeCreate(uword sharedHeapInitialSize,
                            uword threadHeapInitialSize);
 void oRuntimeDestroy(oRuntimeRef rt);
 oThreadContextRef oRuntimeGetCurrentContext(oRuntimeRef rt);
+
+void _oRuntimeAddContext(oRuntimeRef rt, oThreadContextRef ctx);
 
 #endif
