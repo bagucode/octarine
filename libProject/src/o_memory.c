@@ -6,10 +6,18 @@
 #include "o_array.h"
 #include <memory.h> /* TODO: replace this with some platform function */
 
+// Alignment of object (in bytes) within a heap block
+// Currently hardcoded to 16 to allow for SSE vectors
 #define HEAP_ALIGN 16
 
+// Since our type infos are aligned according to HEAP_ALIGN we know
+// that there will be 4 bits unused in the pointers that we can use
+// for flags.
+#define MARK_FLAG 1 << 0
+#define SHARED_FLAG 1 << 1
+
 typedef struct HeapBlock {
-    uword typeRefAndMark;
+    uword typeRefAndFlags;
 } HeapBlock;
 typedef HeapBlock *HeapBlockRef;
 
@@ -38,32 +46,48 @@ static HeapBlockRef getBlock(oObject obj) {
     return (HeapBlockRef)(*((void **)obj - 1));
 }
 
+static o_bool checkFlag(HeapBlockRef block, u8 flag) {
+    return block->typeRefAndFlags & flag;
+}
+
+static void setFlag(HeapBlockRef block, u8 flag) {
+    block->typeRefAndFlags |= flag;
+}
+
+static void clearFlag(HeapBlockRef block, u8 flag) {
+    block->typeRefAndFlags &= (~((uword)flag));
+}
+
+static o_bool isShared(HeapBlockRef block) {
+    return checkFlag(block, SHARED_FLAG);
+}
+
+static void setShared(HeapBlockRef block) {
+    setFlag(block, SHARED_FLAG);
+}
+
 static o_bool isMarked(HeapBlockRef block) {
-    return block->typeRefAndMark & 1;
+    return checkFlag(block, MARK_FLAG);
 }
 
 static void setMark(HeapBlockRef block) {
-    block->typeRefAndMark |= 1;
+    setFlag(block, MARK_FLAG);
 }
 
 static void clearMark(HeapBlockRef block) {
-#ifdef OCTARINE64
-    block->typeRefAndMark &= 0xFFFFFFFFFFFFFFFE;
-#else
-    block->typeRefAndMark &= 0xFFFFFFFE;
-#endif
+    clearFlag(block, MARK_FLAG);
 }
 
 static oTypeRef getType(HeapBlockRef block) {
 #ifdef OCTARINE64
-    return (oTypeRef)(block->typeRefAndMark & 0xFFFFFFFFFFFFFFFE);
+    return (oTypeRef)(block->typeRefAndFlags & 0xFFFFFFFFFFFFFFF0);
 #else
-    return (oTypeRef)(block->typeRefAndMark & 0xFFFFFFFE);
+    return (oTypeRef)(block->typeRefAndFlags & 0xFFFFFFF0);
 #endif
 }
 
 static void setType(HeapBlockRef block, oTypeRef type) {
-    block->typeRefAndMark = (uword)type;
+    block->typeRefAndFlags = (uword)type;
 }
 
 static uword getSize(HeapBlockRef block) {
