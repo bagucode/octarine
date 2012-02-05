@@ -217,7 +217,6 @@ oRuntimeRef oRuntimeCreate(uword sharedHeapInitialSize,
 	init_builtInTypes1(rt, mtHeap);
 
 	ctx = o_bootstrap_thread_context_create(rt, mtHeap);
-	ctx->heap = mtHeap;
 	oTLSSet(rt->currentContext, ctx);
     // Add first context manually since allContexts is
     // expected to be non-NULL by AddContext
@@ -251,6 +250,7 @@ void oRuntimeDestroy(oRuntimeRef rt) {
 		lst = next;
     }
     oHeapDestroy(rt->globals);
+    oTLSDestroy(rt->currentContext);
 	oFree(rt);
 }
 

@@ -23,25 +23,25 @@ void o_bootstrap_thread_context_type_init(oRuntimeRef rt, oHeapRef heap) {
 
 oThreadContextRef o_bootstrap_thread_context_create(oRuntimeRef runtime, oHeapRef heap) {
 	oThreadContextRef ctx = (oThreadContextRef)o_bootstrap_object_alloc(runtime, heap, runtime->builtInTypes.threadContext, sizeof(oThreadContext));
-    ctx->heap = NULL;
+    ctx->heap = heap;
     ctx->runtime = runtime;
     ctx->roots = oMemoryCreateRootSet();
-	ctx->reader = NULL;
 	ctx->error = NULL;
     ctx->rootLock = 0;
+	ctx->reader = NULL;
     return ctx;
 }
 
 oThreadContextRef oThreadContextCreate(oRuntimeRef runtime,
-                                       uword threadHeapInitialSize) {
-	/* TODO: Don't malloc here. Use the regular shared heap to store these? */
-    oThreadContextRef ctx = (oThreadContextRef)oMalloc(sizeof(oThreadContext));
-    ctx->heap = oHeapCreate(o_false, threadHeapInitialSize);
+                                       oHeapRef heap) {
+    // Have to use the bootstrap alloc here always because there is no context yet for this heap
+	oThreadContextRef ctx = (oThreadContextRef)o_bootstrap_object_alloc(runtime, heap, runtime->builtInTypes.threadContext, sizeof(oThreadContext));
+    ctx->heap = heap;
     ctx->runtime = runtime;
     ctx->roots = oMemoryCreateRootSet();
-	ctx->reader = oReaderCreate(ctx);
 	ctx->error = NULL;
     ctx->rootLock = 0;
+	ctx->reader = oReaderCreate(ctx);
     return ctx;
 }
 

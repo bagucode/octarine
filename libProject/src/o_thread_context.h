@@ -17,7 +17,7 @@ struct oThreadContext {
 oThreadContextRef oThreadContextGetCurrent(oRuntimeRef rt);
 
 oThreadContextRef oThreadContextCreate(oRuntimeRef runtime,
-                                       uword threadHeapInitialSize);
+                                       oHeapRef heap);
 
 void oThreadContextDestroy(oThreadContextRef ctx);
 
