@@ -207,6 +207,19 @@ void oAtomicSetUword(volatile uword* uw, uword value) {
     }
 }
 
+// uwords are always pointer size so these functions just wrap the uword ones
+pointer oAtomicGetPointer(volatile pointer* p) {
+    return (pointer)oAtomicGetUword((volatile uword*)p);
+}
+
+void oAtomicSetPointer(volatile pointer* p, pointer value) {
+    oAtomicSetUword((volatile uword*)p, (uword)value);
+}
+
+o_bool oAtomicCompareAndSwapPointer(volatile pointer* p, pointer oldVal, pointer newVal) {
+    return oAtomicCompareAndSwapUword((volatile uword*)p, (uword)oldVal, (uword)newVal);
+}
+
 void oSpinLockLock(oSpinLockRef lock) {
     uword old;
     while(1) {
