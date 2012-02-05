@@ -25,6 +25,10 @@ uword oAtomicGetUword(volatile uword* uw);
 void oAtomicSetUword(volatile uword* uw, uword value);
 o_bool oAtomicCompareAndSwapUword(volatile uword* uw, uword oldVal, uword newVal);
 
+pointer oAtomicGetPointer(volatile pointer* p);
+void oAtomicSetPointer(volatile pointer* p, pointer value);
+o_bool oAtomicCompareAndSwapPointer(volatile pointer* p, pointer oldVal, pointer newVal);
+
 typedef volatile uword oSpinLock;
 typedef oSpinLock* oSpinLockRef;
 void oSpinLockLock(oSpinLockRef lock);
