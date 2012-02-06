@@ -19,15 +19,9 @@ oArrayRef _oHeapAllocArray(oThreadContextRef ctx,
 
 void oHeapForceGC(oRuntimeRef rt, oHeapRef heap);
 
-// Does a deep copy of obj into the specified heap, but only if the given heap
-// is a shared (synchronized) heap.
-// A pointer to the new object is returned or NULL if there is an error, in
-// which case oErrorGet can be used to get the error object.
-// The type needs to be supplied separately to support copying of value types.
-oObject oHeapCopyObjectShared(oThreadContextRef ctx,
-                              oObject obj,
-                              oTypeRef type,
-                              oHeapRef sharedHeap);
+// Copies an object-graph to the shared heap and returns
+// the newly created copy.
+oObject oHeapCopyObjectShared(oThreadContextRef ctx, oObject obj);
 
 oTypeRef oMemoryGetObjectType(oThreadContextRef ctx, oObject obj);
 

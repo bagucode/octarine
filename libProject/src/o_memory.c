@@ -90,11 +90,33 @@ static void setType(HeapBlockRef block, oTypeRef type) {
     block->typeRefAndFlags = (uword)type;
 }
 
-static uword getSize(HeapBlockRef block) {
-    // TODO: fix this, it is broken since alignments
-    // got implemented. It is also broken for arrays...
+static uword getBlockSize(oRuntimeRef rt, HeapBlockRef block) {
+    uword blockStart = (uword)block;
+    oObject obj = getObject(block);
+    uword objStart = (uword)obj;
+    uword blockSize = objStart - blockStart;
     oTypeRef type = getType(block);
-    return sizeof(HeapBlock) + type->size;
+    
+    uword arrDataStart;
+    uword arrSize;
+    uword totalSize;
+    oArrayRef arr;
+    
+    if(type == rt->builtInTypes.array) {
+        arr = (oArrayRef)obj;
+        arrDataStart = (uword)oArrayDataPointer(arr);
+        arrSize = arrDataStart - objStart;
+        if(arr->element_type->kind == o_T_OBJECT) {
+            totalSize = blockSize + arrSize + (arr->num_elements * sizeof(pointer));
+        } else {
+            totalSize = blockSize + arrSize + (arr->num_elements * arr->element_type->size);
+        }
+    }
+    else { // Not array
+        totalSize = blockSize + type->size;
+    }
+    
+    return totalSize;
 }
 
 #define MAX_BLOCKS 100
@@ -353,7 +375,7 @@ static void collectGarbage(oRuntimeRef rt, oHeapRef heap) {
         for(i = 0; i < currentRecord->numBlocks; ++i) {
             block = currentRecord->blocks[i];
             if(!isMarked(block)) {
-                heap->currentSize -= getSize(block);
+                heap->currentSize -= getBlockSize(rt, block);
                 /* Call finalizer if there is one.
                     TODO: make sure the finalizers don't allocate memory
                     or resurrect objects */
@@ -522,21 +544,38 @@ oTypeRef oMemoryGetObjectType(oThreadContextRef ctx, oObject obj) {
     return getType(getBlock(obj));
 }
 
-// Does a deep copy of obj into the specified heap, but only if the given heap
-// is a shared (synchronized) heap.
-// A pointer to the new object is returned or NULL if there is an error, in
-// which case oErrorGet can be used to get the error object.
-// The type needs to be supplied separately to support copying of value types.
-oObject oHeapCopyObjectShared(oThreadContextRef ctx,
-                              oObject obj,
-                              oTypeRef type,
-                              oHeapRef sharedHeap) {
-    if(ctx->error) return NULL;
-    if(sharedHeap->mutex == NULL) {
-        // TODO: ERROR
-        return NULL;
+// Make public in o_object.h?
+static o_bool isObjectShared(oObject obj) {
+    return isShared(getBlock(obj));
+}
+
+oObject oHeapCopyObjectShared(oThreadContextRef ctx, oObject obj) {
+    if(isObjectShared(obj)) {
+        return obj;
     }
     
     
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
