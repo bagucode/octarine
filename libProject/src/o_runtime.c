@@ -179,6 +179,7 @@ static oErrorRef initError(oThreadContextRef ctx, char* name) {
 
 static void init_builtInErrors(oThreadContextRef ctx) {
     ctx->runtime->builtInErrors.outOfMemory = initError(ctx, "out-of-memory");
+    ctx->runtime->builtInErrors.bracketMismatch = initError(ctx, "bracket-mismatch");
 }
 
 void _oRuntimeAddContext(oRuntimeRef rt, oThreadContextRef ctx) {

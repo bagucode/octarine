@@ -57,6 +57,7 @@ typedef struct oRuntimeBuiltInConstants {
 
 typedef struct oRuntimeBuiltInErrors {
     oErrorRef outOfMemory;
+    oErrorRef bracketMismatch;
 } oRuntimeBuiltInErrors;
 
 struct oRuntime {

@@ -37,6 +37,7 @@ static ReadFn readTable[128];
 static oObject readList(oThreadContextRef ctx, oArrayRef src, uword* idx);
 static oObject readSymbolOrKeyword(oThreadContextRef ctx, oArrayRef src, uword* idx);
 static oObject readVector(oThreadContextRef ctx, oArrayRef src, uword* idx);
+static oObject mismatch(oThreadContextRef ctx, oArrayRef src, uword* idx);
 
 void o_bootstrap_reader_init_type(oThreadContextRef ctx) {
     uword i;
@@ -51,6 +52,12 @@ void o_bootstrap_reader_init_type(oThreadContextRef ctx) {
     }
     readTable[LPAREN] = readList;
     readTable[LSBRACKET] = readVector;
+    
+    // Terminators, if one is found by the reader dispatch function
+    // then that means there was a bracket mismatch
+    readTable[RPAREN] = mismatch;
+    readTable[RSBRACKET] = mismatch;
+    readTable[RCBRACKET] = mismatch;
 }
 
 o_bool isReserved(uword ch) {
@@ -143,9 +150,12 @@ static oObject readSymbolOrKeyword(oThreadContextRef ctx, oArrayRef src, uword* 
 	if(oRoots.theString == NULL) {
 		oRETURN(NULL);
 	}
+    len = oStringLength(oRoots.theString);
+    if(len == 0) {
+        oRETURN(NULL);
+    }
     c = oStringCharAt(oRoots.theString, 0);
     if(c == ':') {
-        len = oStringLength(oRoots.theString);
         oRoots.theString = oStringSubString(oRoots.theString, 1, len);
         oRETURN(oKeywordCreate((oStringRef)oRoots.theString));
     }
@@ -207,6 +217,13 @@ static oObject readVector(oThreadContextRef ctx, oArrayRef src, uword* idx) {
     oENDFN(oObject)
 }
 
+static oObject mismatch(oThreadContextRef ctx, oArrayRef src, uword* idx) {
+    oROOTS(ctx)
+    oENDROOTS
+    oRETURNERROR(ctx->runtime->builtInErrors.bracketMismatch);
+    oENDFN(oObject)
+}
+
 static oObject read(oThreadContextRef ctx, oArrayRef src, uword* idx) {
     ReadFn fn;
     uword ch;
@@ -222,12 +239,6 @@ static oObject read(oThreadContextRef ctx, oArrayRef src, uword* idx) {
         return fn(ctx, src, idx);
     }
     else {
-        // TODO: fix this, needs to check for any of the collection terminators
-        // and signal an error if any is found since that means there was
-        // a mismatch.
-        if(getChar(src, *idx) == RPAREN) {
-            return NULL;
-        }
         return readSymbolOrKeyword(ctx, src, idx);
     }
 }
@@ -237,6 +248,7 @@ oObject oReaderRead(oThreadContextRef ctx, oStringRef source) {
     oROOTS(ctx)
     oObject tmp;
     oArrayRef srcArr;
+    oErrorRef error;
     oENDROOTS
 
 	oRoots.srcArr = oStringUtf8Copy(source);
@@ -249,6 +261,12 @@ oObject oReaderRead(oThreadContextRef ctx, oStringRef source) {
             }
             else {
                 oSETRET(oListObjAddFront(oGETRET, oRoots.tmp));
+            }
+        }
+        else {
+            oRoots.error = oErrorGet(ctx);
+            if(oRoots.error) {
+                oRETURN(NULL);
             }
         }
     }
