@@ -118,9 +118,17 @@ int main(int argc, char** argv) {
         oRoots.src = oStringCreate(line);
 		oRoots.result = (oListObjRef)oReaderRead(ctx, oRoots.src);
         if(oRoots.result == NULL) {
-            oRETURNVOID
+            error = oErrorGet(ctx);
+            if(error == ctx->runtime->builtInErrors.bracketMismatch) {
+                printf("Error: bracket mismatch\n");
+                oErrorClear(ctx);
+            }
+            else if(error) {
+                free(line);
+                oRETURNVOID;
+            }
         }
-        if(((oKeywordRef)oRoots.result) == rt->builtInConstants.needMoreData) {
+        else if(((oKeywordRef)oRoots.result) == rt->builtInConstants.needMoreData) {
             prevLine = (char*)malloc(strlen(line) + 1);
             strcpy(prevLine, line);
             if(input == stdin) {

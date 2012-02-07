@@ -188,6 +188,9 @@ static oObject readList(oThreadContextRef ctx, oArrayRef src, uword* idx) {
             oSETRET(oListObjReverse((oListObjRef)oGETRET));
         }
     }
+    else {
+        oSETRET(ctx->runtime->builtInConstants.needMoreData);
+    }
 
     oENDFN(oObject)
 }
@@ -213,15 +216,16 @@ static oObject readVector(oThreadContextRef ctx, oArrayRef src, uword* idx) {
             ++(*idx); // eat ]
         }
     }
+    else {
+        oSETRET(ctx->runtime->builtInConstants.needMoreData);
+    }
 
     oENDFN(oObject)
 }
 
 static oObject mismatch(oThreadContextRef ctx, oArrayRef src, uword* idx) {
-    oROOTS(ctx)
-    oENDROOTS
-    oRETURNERROR(ctx->runtime->builtInErrors.bracketMismatch);
-    oENDFN(oObject)
+    ctx->error = ctx->runtime->builtInErrors.bracketMismatch;
+    return NULL;
 }
 
 static oObject read(oThreadContextRef ctx, oArrayRef src, uword* idx) {
