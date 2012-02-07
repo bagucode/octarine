@@ -90,30 +90,24 @@ static void setType(HeapBlockRef block, oTypeRef type) {
     block->typeRefAndFlags = (uword)type;
 }
 
+static uword calcArraySize(uword elemSize, uword numElems, u8 align) {
+    return sizeof(oArray) + (elemSize * numElems) + align - 1;
+}
+
 static uword getBlockSize(oRuntimeRef rt, HeapBlockRef block) {
-    uword blockStart = (uword)block;
-    oObject obj = getObject(block);
-    uword objStart = (uword)obj;
-    uword blockSize = objStart - blockStart;
     oTypeRef type = getType(block);
-    
-    uword arrDataStart;
-    uword arrSize;
-    uword totalSize;
     oArrayRef arr;
+    uword totalSize;
+    uword elemSize;
     
     if(type == rt->builtInTypes.array) {
-        arr = (oArrayRef)obj;
-        arrDataStart = (uword)oArrayDataPointer(arr);
-        arrSize = arrDataStart - objStart;
-        if(arr->element_type->kind == o_T_OBJECT) {
-            totalSize = blockSize + arrSize + (arr->num_elements * sizeof(pointer));
-        } else {
-            totalSize = blockSize + arrSize + (arr->num_elements * arr->element_type->size);
-        }
+        arr = (oArrayRef)getObject(block);
+        elemSize = arr->element_type->kind == o_T_OBJECT ? sizeof(pointer) : arr->element_type->size;
+        totalSize = calcArraySize(elemSize, arr->num_elements, arr->alignment);
+        totalSize += calcBlockSize(totalSize);
     }
-    else { // Not array
-        totalSize = blockSize + type->size;
+    else {
+        totalSize = calcBlockSize(type->size);
     }
     
     return totalSize;
@@ -476,10 +470,6 @@ oObject _oHeapAlloc(oThreadContextRef ctx, oTypeRef t) {
     return internalAlloc(ctx->runtime, ctx, ctx->heap, t, t->size);
 }
 
-static uword calcArraySize(uword elemSize, uword numElems, u8 align) {
-    return sizeof(oArray) + (elemSize * numElems) + align - 1;
-}
-
 oArrayRef _oHeapAllocArray(oThreadContextRef ctx,
                           oTypeRef elementType,
                           uword numElements) {
@@ -549,12 +539,231 @@ static o_bool isObjectShared(oObject obj) {
     return isShared(getBlock(obj));
 }
 
-oObject oHeapCopyObjectShared(oThreadContextRef ctx, oObject obj) {
+// ***** Object Graph Copying *****
+
+typedef struct hcpt {
+    oObject original;
+    oObject copy;
+    struct hcpt* prev;
+} HeapCopyPointerTable;
+typedef HeapCopyPointerTable* HeapCopyPointerTableRef;
+
+static HeapCopyPointerTableRef pushFrontHCPT(HeapCopyPointerTableRef hcpt, oObject orig, oObject copy) {
+    HeapCopyPointerTableRef next = (HeapCopyPointerTableRef)oMalloc(sizeof(HeapCopyPointerTable));
+    next->copy = copy;
+    next->original = orig;
+    next->prev = hcpt;
+    return next;
+}
+
+static void destroyHCPT(HeapCopyPointerTableRef hcpt, o_bool killBlocks) {
+    HeapBlockRef block;
+    HeapCopyPointerTableRef tmp;
+    
+    while (hcpt) {
+        if(killBlocks && hcpt->copy) {
+            block = getBlock(hcpt->copy);
+            oFree(block);
+        }
+        tmp = hcpt->prev;
+        oFree(hcpt);
+        hcpt = tmp;
+    }
+}
+
+static HeapCopyPointerTableRef findEntryHCPT(HeapCopyPointerTableRef hcpt, oObject orig) {
+    while (hcpt) {
+        if(hcpt->original == orig) {
+            return hcpt;
+        }
+        hcpt = hcpt->prev;
+    }
+    return NULL;
+}
+
+// This does GC if needed but does not set the shared flag or fix up
+// any internal pointers. That must be done only after all members have
+// also been copied.
+static HeapBlockRef copyBlockShared(oRuntimeRef rt, oHeapRef sharedHeap, oObject orig) {
+    HeapBlockRef origBlock;
+    HeapBlockRef copyBlock;
+    uword blockSize;
+    oTypeRef type;
+
+    origBlock = getBlock(orig);
+    type = getType(origBlock);
+    blockSize = getBlockSize(rt, origBlock);
+    if(checkHeapSpace(rt, sharedHeap, blockSize) == o_false) {
+        sharedHeap->gcThreshold *= 2;
+    }
+    copyBlock = (HeapBlockRef)oMalloc(blockSize);
+    if(copyBlock == NULL)
+        return NULL;
+    memcpy(copyBlock, origBlock, blockSize);
+    return copyBlock;
+}
+
+static oObject* getFieldpp(oObject obj, oFieldRef field) {
+    char* chObj = (char*)obj;
+    return (oObject*)(chObj + field->offset);
+}
+
+static o_bool heapCopyObjectSharedFields(oRuntimeRef rt,
+                                         oHeapRef sharedHeap,
+                                         oObject obj,
+                                         HeapCopyPointerTableRef* table);
+
+static o_bool heapCopyFieldShared(oRuntimeRef rt,
+                                  oHeapRef sharedHeap,
+                                  oObject* fieldpp,
+                                  HeapCopyPointerTableRef* table) {
+    HeapCopyPointerTableRef tableEntry;
+    HeapBlockRef fieldBlock;
+    HeapBlockRef fieldBlockCopy;
+    oObject fieldObjCopy;
+    
+    fieldBlock = getBlock(*fieldpp);
+    if(!isShared(fieldBlock)) {
+        // The block is not shared since before but it might have
+        // been copied already in this run (if there are circles), check the table
+        tableEntry = findEntryHCPT(*table, *fieldpp);
+        if(tableEntry != NULL) {
+            // Found it, just fix the pointer.
+            (*fieldpp) = tableEntry->copy;
+        }
+        else {
+            // Not copied already; copy and recurse.
+            fieldBlockCopy = copyBlockShared(rt, sharedHeap, *fieldpp);
+            if(fieldBlockCopy == NULL) {
+                return o_false;
+            }
+            fieldObjCopy = getObject(fieldBlockCopy);
+            // Add to translation table
+            (*table) = pushFrontHCPT(*table, *fieldpp, fieldObjCopy);
+            // Fix field pointer to use new copy
+            (*fieldpp) = fieldObjCopy;
+            // And do recursive call to fix/copy members of this member
+            if(heapCopyObjectSharedFields(rt, sharedHeap, fieldObjCopy, table) == o_false) {
+                return o_false;
+            }
+        }
+    }
+    return o_true;
+}
+
+static o_bool heapCopyObjectSharedFields(oRuntimeRef rt,
+                                         oHeapRef sharedHeap,
+                                         oObject obj,
+                                         HeapCopyPointerTableRef* table) {
+    HeapBlockRef block = getBlock(obj);
+    oTypeRef type = getType(block);
+    HeapBlockRef typeBlockCopy;
+    oFieldRef* fields;
+    uword e, i;
+    oObject *fieldpp, typeCopy;
+    oArrayRef arr;
+    char* arrayData;
+    
+    if(type == rt->builtInTypes.array) {
+        arr = (oArrayRef)obj;
+        if(arr->element_type->fields != NULL && arr->element_type->fields->num_elements > 0) {
+            arrayData = (char*)oArrayDataPointer(arr);
+            fields = (oFieldRef*)oArrayDataPointer(arr->element_type->fields);
+            for(e = 0; e < arr->num_elements; ++e) {
+                arrayData += e * arr->element_type->size;
+                for(i = 0; i < arr->element_type->fields->num_elements; ++i) {
+                    // TODO: immutable check & cancel mutable check
+                    if(fields[i]->type->kind == o_T_OBJECT) {
+                        fieldpp = getFieldpp((oObject)arrayData, fields[i]);
+                        if(heapCopyFieldShared(rt, sharedHeap, fieldpp, table) == o_false) {
+                            return o_false;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // This applies to arrays as well, to copy their type field
+    // so do not add en else clause
+    if(type->fields != NULL && type->fields->num_elements > 0) {
+        // The type has fields, iterate through them and follow each object field
+        fields = (oFieldRef*)oArrayDataPointer(type->fields);
+        for (i = 0; i < type->fields->num_elements; ++i) {
+            // TODO: immutable check & cancel mutable check
+            if(fields[i]->type->kind == o_T_OBJECT) {
+                fieldpp = getFieldpp(obj, fields[i]);
+                if(heapCopyFieldShared(rt, sharedHeap, fieldpp, table) == o_false) {
+                    return o_false;
+                }
+            }
+        }
+    }
+    
+    // Also copy the type used by the initial block if not shared already.
+    block = getBlock(type);
+    if(!isShared(block)) {
+        typeBlockCopy = copyBlockShared(rt, sharedHeap, type);
+        if(typeBlockCopy == NULL) {
+            return o_false;
+        }
+        typeCopy = getObject(typeBlockCopy);
+        // Add to translation table
+        (*table) = pushFrontHCPT(*table, type, typeCopy);
+        if(heapCopyObjectSharedFields(rt, sharedHeap, typeCopy, table) == o_false) {
+            return o_false;
+        }
+    }
+    // All members have been moved so it is now safe to
+    // set the initial block to shared and add a record for it
+    block = getBlock(obj);
+    setShared(block);
+    addHeapEntry(sharedHeap, block);
+    return o_true;
+}
+
+oObject _oHeapCopyObjectShared(oThreadContextRef ctx, oObject obj) {
+    oRuntimeRef rt;
+    HeapCopyPointerTableRef pointerTable;
+    HeapBlockRef copyBlock;
+    oObject copy;
+    oHeapRef sharedHeap;
+    
+    // No need to do anything if the object graph is already shared.
     if(isObjectShared(obj)) {
         return obj;
     }
     
+    rt = ctx->runtime;
+    sharedHeap = rt->globals;
+
+    oMutexLock(sharedHeap->mutex);
+
+    // Step 1. Do the first block separately here so that we can get
+    // a pointer to the return object.
     
+    // TODO: immutable check
+
+    copyBlock = copyBlockShared(rt, sharedHeap, obj);
+    if(copyBlock == NULL) {
+        oMutexUnlock(sharedHeap->mutex);
+        return NULL;
+    }
+    copy = getObject(copyBlock);
+    pointerTable = pushFrontHCPT(NULL, obj, copy);
+
+    // Step 2. Recursively follow all pointers and copy the whole graph.
+
+    if(heapCopyObjectSharedFields(rt, sharedHeap, copy, &pointerTable) == o_false) {
+        destroyHCPT(pointerTable, o_true);
+        copy = NULL;
+    }
+    else {
+        destroyHCPT(pointerTable, o_false);
+    }
+
+    oMutexUnlock(sharedHeap->mutex);
+    return copy;
 }
 
 

@@ -429,6 +429,22 @@ void testOutOfMemory() {
     oRuntimeDestroy(rt);
 }
 
+void testSimpleCopySharedDoesNotCrash() {
+    oRuntimeRef rt = oRuntimeCreate(1024 * 1000, 1024 * 1000);
+    oThreadContextRef ctx = oRuntimeGetCurrentContext(rt);
+    oROOTS(ctx)
+    oStringRef copyMe;
+    oStringRef theCopy;
+    oENDROOTS
+
+    oRoots.copyMe = oStringCreate("Hello World!");
+    oRoots.theCopy = _oHeapCopyObjectShared(ctx, oRoots.copyMe);
+    assert(oRoots.theCopy != NULL);
+    
+    oENDVOIDFN
+    oRuntimeDestroy(rt);
+}
+
 int main(int argc, char** argv) {
 
     testCreateRuntime();
@@ -445,6 +461,7 @@ int main(int argc, char** argv) {
     testReadVector();
     testReadKeyword();
     testOutOfMemory();
+//    testSimpleCopySharedDoesNotCrash();
     
 	return 0;
 }

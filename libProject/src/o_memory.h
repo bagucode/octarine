@@ -21,7 +21,7 @@ void oHeapForceGC(oRuntimeRef rt, oHeapRef heap);
 
 // Copies an object-graph to the shared heap and returns
 // the newly created copy.
-oObject oHeapCopyObjectShared(oThreadContextRef ctx, oObject obj);
+oObject _oHeapCopyObjectShared(oThreadContextRef ctx, oObject obj);
 
 oTypeRef oMemoryGetObjectType(oThreadContextRef ctx, oObject obj);
 
