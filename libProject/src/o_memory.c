@@ -6,6 +6,15 @@
 #include "o_array.h"
 #include <memory.h> /* TODO: replace this with some platform function */
 
+#include <stdio.h>
+#include "o_string.h"
+
+void dbg_print1(oThreadContextRef ctx, oStringRef str) {
+	oArrayRef arr = _oStringUtf8Copy(ctx, str);
+	char* utf8 = (char*)oArrayDataPointer(arr);
+	printf("%s\n", utf8);
+}
+
 // Alignment of object (in bytes) within a heap block
 // Currently hardcoded to 16 to allow for SSE vectors
 #define HEAP_ALIGN 16
@@ -608,12 +617,14 @@ static oObject* getFieldpp(oObject obj, oFieldRef field) {
     return (oObject*)(chObj + field->offset);
 }
 
-static o_bool heapCopyObjectSharedFields(oRuntimeRef rt,
+static o_bool heapCopyObjectSharedFields(oThreadContextRef DBG,
+oRuntimeRef rt,
                                          oHeapRef sharedHeap,
                                          oObject obj,
                                          HeapCopyPointerTableRef* table);
 
-static o_bool heapCopyFieldShared(oRuntimeRef rt,
+static o_bool heapCopyFieldShared(oThreadContextRef DBG,
+								  oRuntimeRef rt,
                                   oHeapRef sharedHeap,
                                   oObject* fieldpp,
                                   HeapCopyPointerTableRef* table) {
@@ -643,7 +654,7 @@ static o_bool heapCopyFieldShared(oRuntimeRef rt,
             // Fix field pointer to use new copy
             (*fieldpp) = fieldObjCopy;
             // And do recursive call to fix/copy members of this member
-            if(heapCopyObjectSharedFields(rt, sharedHeap, fieldObjCopy, table) == o_false) {
+            if(heapCopyObjectSharedFields(DBG, rt, sharedHeap, fieldObjCopy, table) == o_false) {
                 return o_false;
             }
         }
@@ -651,10 +662,14 @@ static o_bool heapCopyFieldShared(oRuntimeRef rt,
     return o_true;
 }
 
-static o_bool heapCopyObjectSharedFields(oRuntimeRef rt,
+int level;
+
+static o_bool heapCopyObjectSharedFields(oThreadContextRef DBG,
+oRuntimeRef rt,
                                          oHeapRef sharedHeap,
                                          oObject obj,
                                          HeapCopyPointerTableRef* table) {
+    HeapCopyPointerTableRef tableEntry;
     HeapBlockRef block = getBlock(obj);
     oTypeRef type = getType(block);
     HeapBlockRef typeBlockCopy;
@@ -663,6 +678,14 @@ static o_bool heapCopyObjectSharedFields(oRuntimeRef rt,
     oObject *fieldpp, typeCopy;
     oArrayRef arr;
     char* arrayData;
+
+	++level;
+	printf("%d: Copying field of type: ", level);
+	dbg_print1(DBG, type->name);
+	if(type == DBG->runtime->builtInTypes.type) {
+		printf("  Type! Name: ");
+		dbg_print1(DBG, ((oTypeRef)obj)->name);
+	}
     
     if(type == rt->builtInTypes.array) {
         arr = (oArrayRef)obj;
@@ -672,7 +695,7 @@ static o_bool heapCopyObjectSharedFields(oRuntimeRef rt,
                 for(e = 0; e < arr->num_elements; ++e) {
                     fieldpp = &(((oObject*)arrayData)[e]);
                     if(*fieldpp) {
-                        if(heapCopyFieldShared(rt, sharedHeap, fieldpp, table) == o_false) {
+                        if(heapCopyFieldShared(DBG, rt, sharedHeap, fieldpp, table) == o_false) {
                             return o_false;
                         }
                     }
@@ -688,7 +711,7 @@ static o_bool heapCopyObjectSharedFields(oRuntimeRef rt,
                         if(fields[i]->type->kind == o_T_OBJECT) {
                             fieldpp = getFieldpp((oObject)arrayData, fields[i]);
                             if(*fieldpp) {
-                                if(heapCopyFieldShared(rt, sharedHeap, fieldpp, table) == o_false) {
+                                if(heapCopyFieldShared(DBG, rt, sharedHeap, fieldpp, table) == o_false) {
                                     return o_false;
                                 }
                             }
@@ -709,7 +732,7 @@ static o_bool heapCopyObjectSharedFields(oRuntimeRef rt,
             if(fields[i]->type->kind == o_T_OBJECT) {
                 fieldpp = getFieldpp(obj, fields[i]);
                 if(*fieldpp) {
-                    if(heapCopyFieldShared(rt, sharedHeap, fieldpp, table) == o_false) {
+                    if(heapCopyFieldShared(DBG, rt, sharedHeap, fieldpp, table) == o_false) {
                         return o_false;
                     }
                 }
@@ -717,22 +740,34 @@ static o_bool heapCopyObjectSharedFields(oRuntimeRef rt,
         }
     }
     
-    // Also copy the type used by the initial block if not shared already.
+    // Also copy the type used by the initial block if not shared or copied already.
     block = getBlock(type);
     if(!isShared(block)) {
-        typeBlockCopy = copyBlockShared(rt, sharedHeap, type);
-        if(typeBlockCopy == NULL) {
-            return o_false;
+        tableEntry = findEntryHCPT(*table, type);
+        if(tableEntry != NULL) {
+            // Found it, just fix the block type of the object.
+			block = getBlock(obj);
+			setType(block, (oTypeRef)tableEntry->copy);
         }
-        typeCopy = getObject(typeBlockCopy);
-        // Add to translation table
-        (*table) = pushFrontHCPT(*table, type, typeCopy);
-        if(heapCopyObjectSharedFields(rt, sharedHeap, typeCopy, table) == o_false) {
-            return o_false;
-        }
+		else {
+			typeBlockCopy = copyBlockShared(rt, sharedHeap, type);
+			if(typeBlockCopy == NULL) {
+				return o_false;
+			}
+			typeCopy = getObject(typeBlockCopy);
+			// Add to translation table
+			(*table) = pushFrontHCPT(*table, type, typeCopy);
+			if(heapCopyObjectSharedFields(DBG, rt, sharedHeap, typeCopy, table) == o_false) {
+				return o_false;
+			}
+		}
     }
     // All members have been moved so it is now safe to
     // set the initial block to shared and add a record for it
+	printf("%d: ", level);
+	dbg_print1(DBG, type->name);
+	printf(" Done!\n\n");
+	--level;
     block = getBlock(obj);
     setShared(block);
     addHeapEntry(sharedHeap, block);
@@ -745,6 +780,8 @@ oObject _oHeapCopyObjectShared(oThreadContextRef ctx, oObject obj) {
     HeapBlockRef copyBlock;
     oObject copy;
     oHeapRef sharedHeap;
+
+	level = -1;
     
     // No need to do anything if the object graph is already shared.
     if(isObjectShared(obj)) {
@@ -771,7 +808,7 @@ oObject _oHeapCopyObjectShared(oThreadContextRef ctx, oObject obj) {
 
     // Step 2. Recursively follow all pointers and copy the whole graph.
 
-    if(heapCopyObjectSharedFields(rt, sharedHeap, copy, &pointerTable) == o_false) {
+    if(heapCopyObjectSharedFields(ctx, rt, sharedHeap, copy, &pointerTable) == o_false) {
         destroyHCPT(pointerTable, o_true);
         copy = NULL;
     }
