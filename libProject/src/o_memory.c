@@ -667,20 +667,35 @@ static o_bool heapCopyObjectSharedFields(oRuntimeRef rt,
     if(type == rt->builtInTypes.array) {
         arr = (oArrayRef)obj;
         if(arr->element_type->fields != NULL && arr->element_type->fields->num_elements > 0) {
-            arrayData = (char*)oArrayDataPointer(arr);
-            fields = (oFieldRef*)oArrayDataPointer(arr->element_type->fields);
-            for(e = 0; e < arr->num_elements; ++e) {
-                arrayData += e * arr->element_type->size;
-                for(i = 0; i < arr->element_type->fields->num_elements; ++i) {
-                    // TODO: immutable check & cancel mutable check
-                    if(fields[i]->type->kind == o_T_OBJECT) {
-                        fieldpp = getFieldpp((oObject)arrayData, fields[i]);
+            if(arr->element_type->kind == o_T_OBJECT) {
+                arrayData = (char*)oArrayDataPointer(arr);
+                for(e = 0; e < arr->num_elements; ++e) {
+                    fieldpp = &(((oObject*)arrayData)[e]);
+                    if(*fieldpp) {
                         if(heapCopyFieldShared(rt, sharedHeap, fieldpp, table) == o_false) {
                             return o_false;
                         }
                     }
-                }
+                } // elements loop
             }
+            else { // struct type
+                arrayData = (char*)oArrayDataPointer(arr);
+                fields = (oFieldRef*)oArrayDataPointer(arr->element_type->fields);
+                for(e = 0; e < arr->num_elements; ++e) {
+                    arrayData += e * arr->element_type->size;
+                    for(i = 0; i < arr->element_type->fields->num_elements; ++i) {
+                        // TODO: immutable check & cancel mutable check
+                        if(fields[i]->type->kind == o_T_OBJECT) {
+                            fieldpp = getFieldpp((oObject)arrayData, fields[i]);
+                            if(*fieldpp) {
+                                if(heapCopyFieldShared(rt, sharedHeap, fieldpp, table) == o_false) {
+                                    return o_false;
+                                }
+                            }
+                        } // field kind check
+                    } // fields loop
+                } // elements loop
+            } // else struct type
         }
     }
 
@@ -693,8 +708,10 @@ static o_bool heapCopyObjectSharedFields(oRuntimeRef rt,
             // TODO: immutable check & cancel mutable check
             if(fields[i]->type->kind == o_T_OBJECT) {
                 fieldpp = getFieldpp(obj, fields[i]);
-                if(heapCopyFieldShared(rt, sharedHeap, fieldpp, table) == o_false) {
-                    return o_false;
+                if(*fieldpp) {
+                    if(heapCopyFieldShared(rt, sharedHeap, fieldpp, table) == o_false) {
+                        return o_false;
+                    }
                 }
             }
         }
