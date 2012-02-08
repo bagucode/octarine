@@ -6,15 +6,6 @@
 #include "o_array.h"
 #include <memory.h> /* TODO: replace this with some platform function */
 
-#include <stdio.h>
-#include "o_string.h"
-
-void dbg_print1(oThreadContextRef ctx, oStringRef str) {
-	oArrayRef arr = _oStringUtf8Copy(ctx, str);
-	char* utf8 = (char*)oArrayDataPointer(arr);
-	printf("%s\n", utf8);
-}
-
 // Alignment of object (in bytes) within a heap block
 // Currently hardcoded to 16 to allow for SSE vectors
 #define HEAP_ALIGN 16
@@ -667,8 +658,6 @@ static o_bool heapCopyFieldShared(oThreadContextRef DBG,
     return o_true;
 }
 
-int level;
-
 static o_bool heapCopyObjectSharedFields(oThreadContextRef DBG,
 oRuntimeRef rt,
                                          oHeapRef sharedHeap,
@@ -684,14 +673,6 @@ oRuntimeRef rt,
     oArrayRef arr;
     char* arrayData;
 
-	++level;
-	printf("%d: Copying field of type: ", level);
-	dbg_print1(DBG, type->name);
-	if(type == DBG->runtime->builtInTypes.type) {
-		printf("  Type! Name: ");
-		dbg_print1(DBG, ((oTypeRef)obj)->name);
-	}
-    
     if(type == rt->builtInTypes.array) {
         arr = (oArrayRef)obj;
         if(arr->element_type->fields != NULL && arr->element_type->fields->num_elements > 0) {
@@ -770,10 +751,6 @@ oRuntimeRef rt,
     }
     // All members have been moved so it is now safe to
     // set the initial block to shared and add a record for it
-	printf("%d: ", level);
-	dbg_print1(DBG, type->name);
-	printf(" Done!\n\n");
-	--level;
     block = getBlock(obj);
     setShared(block);
     addHeapEntry(sharedHeap, block);
@@ -787,8 +764,6 @@ oObject _oHeapCopyObjectShared(oThreadContextRef ctx, oObject obj) {
     oObject copy;
     oHeapRef sharedHeap;
 
-	level = -1;
-    
     // No need to do anything if the object graph is already shared.
     if(isObjectShared(obj)) {
         return obj;
