@@ -38,6 +38,10 @@ static uword calcBlockSize(uword dataSize) {
     return sizeof(HeapBlock) + dataSize + (HEAP_ALIGN - 1) + sizeof(void*);
 }
 
+static void setBlock(oObject obj, HeapBlockRef block) {
+    (*((void **)obj - 1)) = (void*)block;
+}
+
 static HeapBlockRef allocBlock(uword dataSize) {
     uword size = calcBlockSize(dataSize);
     HeapBlockRef block = (HeapBlockRef)oMalloc(size);
@@ -47,7 +51,7 @@ static HeapBlockRef allocBlock(uword dataSize) {
     }
 	memset(block, 0, size);
     obj = getObject(block);
-    (*((void **)obj - 1)) = (void*)block;
+	setBlock(obj, block);
     return block;
 }
 
@@ -649,6 +653,7 @@ static o_bool heapCopyFieldShared(oThreadContextRef DBG,
                 return o_false;
             }
             fieldObjCopy = getObject(fieldBlockCopy);
+			setBlock(fieldObjCopy, fieldBlockCopy);
             // Add to translation table
             (*table) = pushFrontHCPT(*table, *fieldpp, fieldObjCopy);
             // Fix field pointer to use new copy
@@ -755,6 +760,7 @@ oRuntimeRef rt,
 				return o_false;
 			}
 			typeCopy = getObject(typeBlockCopy);
+			setBlock(typeCopy, typeBlockCopy);
 			// Add to translation table
 			(*table) = pushFrontHCPT(*table, type, typeCopy);
 			if(heapCopyObjectSharedFields(DBG, rt, sharedHeap, typeCopy, table) == o_false) {
@@ -804,6 +810,7 @@ oObject _oHeapCopyObjectShared(oThreadContextRef ctx, oObject obj) {
         return NULL;
     }
     copy = getObject(copyBlock);
+	setBlock(copy, copyBlock);
     pointerTable = pushFrontHCPT(NULL, obj, copy);
 
     // Step 2. Recursively follow all pointers and copy the whole graph.

@@ -447,20 +447,20 @@ void testSimpleCopySharedDoesNotCrash() {
 
 int main(int argc, char** argv) {
 
-//    testCreateRuntime();
-//    testGCAllGarbage();
-//    testGCAllRetained();
-//    testGCFinalizer();
-//    testReaderEmptyList();
-//	testSymbolEquals();
-//    testReadSymbol();
-//    testReadOneListAndOneSymbol();
-//    testCreateType();
-//    testArrayPutGet();
-//    testVector();
-//    testReadVector();
-//    testReadKeyword();
-//    testOutOfMemory();
+    testCreateRuntime();
+    testGCAllGarbage();
+    testGCAllRetained();
+    testGCFinalizer();
+    testReaderEmptyList();
+	testSymbolEquals();
+    testReadSymbol();
+    testReadOneListAndOneSymbol();
+    testCreateType();
+    testArrayPutGet();
+    testVector();
+    testReadVector();
+    testReadKeyword();
+    testOutOfMemory();
     testSimpleCopySharedDoesNotCrash();
     
 	return 0;
