@@ -687,8 +687,7 @@ static o_bool heapCopyObjectSharedFields(oRuntimeRef rt,
             else { // struct type
                 arrayData = (char*)oArrayDataPointer(arr);
                 fields = (oFieldRef*)oArrayDataPointer(arr->element_type->fields);
-                for(e = 0; e < arr->num_elements; ++e) {
-                    arrayData += e * arr->element_type->size;
+                for(e = 0; e < arr->num_elements; ++e, arrayData += arr->element_type->size) {
                     for(i = 0; i < arr->element_type->fields->num_elements; ++i) {
                         // TODO: immutable check & cancel mutable check
                         if(fields[i]->type->kind == o_T_OBJECT) {
@@ -706,7 +705,7 @@ static o_bool heapCopyObjectSharedFields(oRuntimeRef rt,
     }
 
     // This applies to arrays as well, to copy their type field
-    // so do not add en else clause
+    // so do not add an else clause
     if(type->fields != NULL && type->fields->num_elements > 0) {
         // The type has fields, iterate through them and follow each object field
         fields = (oFieldRef*)oArrayDataPointer(type->fields);
