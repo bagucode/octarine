@@ -670,9 +670,14 @@ static o_bool heapCopyObjectSharedFields(oRuntimeRef rt,
     oArrayRef arr;
     char* arrayData;
 
+    // Arrays need special handling.
     if(type == rt->builtInTypes.array) {
         arr = (oArrayRef)obj;
+        // Only process the array if it contains elements of aggregate type,
+        // primitive types contain no internal pointers.
         if(arr->element_type->fields != NULL && arr->element_type->fields->num_elements > 0) {
+            // If the array contains elements of object type, just iterate through the
+            // pointers and process them recirsively if they are not null
             if(arr->element_type->kind == o_T_OBJECT) {
                 arrayData = (char*)oArrayDataPointer(arr);
                 for(e = 0; e < arr->num_elements; ++e) {
@@ -684,7 +689,10 @@ static o_bool heapCopyObjectSharedFields(oRuntimeRef rt,
                     }
                 } // elements loop
             }
-            else { // struct type
+            // The array contains elements of an aggregate value type, we need to
+            // go through all the entries and check the fields in the entries for
+            // object pointers to follow.
+            else {
                 arrayData = (char*)oArrayDataPointer(arr);
                 fields = (oFieldRef*)oArrayDataPointer(arr->element_type->fields);
                 for(e = 0; e < arr->num_elements; ++e, arrayData += arr->element_type->size) {
@@ -704,8 +712,8 @@ static o_bool heapCopyObjectSharedFields(oRuntimeRef rt,
         }
     }
 
-    // This applies to arrays as well, to copy their type field
-    // so do not add an else clause
+    // Non array case, but this applies to arrays as well, to copy their type field
+    // so do not change this to an else-if statement.
     if(type->fields != NULL && type->fields->num_elements > 0) {
         // The type has fields, iterate through them and follow each object field
         fields = (oFieldRef*)oArrayDataPointer(type->fields);
