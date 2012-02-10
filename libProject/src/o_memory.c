@@ -612,14 +612,12 @@ static oObject* getFieldpp(oObject obj, oFieldRef field) {
     return (oObject*)(chObj + field->offset);
 }
 
-static o_bool heapCopyObjectSharedFields(oThreadContextRef DBG,
-oRuntimeRef rt,
+static o_bool heapCopyObjectSharedFields(oRuntimeRef rt,
                                          oHeapRef sharedHeap,
                                          oObject obj,
                                          HeapCopyPointerTableRef* table);
 
-static o_bool heapCopyFieldShared(oThreadContextRef DBG,
-								  oRuntimeRef rt,
+static o_bool heapCopyFieldShared(oRuntimeRef rt,
                                   oHeapRef sharedHeap,
                                   oObject* fieldpp,
                                   HeapCopyPointerTableRef* table) {
@@ -650,7 +648,7 @@ static o_bool heapCopyFieldShared(oThreadContextRef DBG,
             // Fix field pointer to use new copy
             (*fieldpp) = fieldObjCopy;
             // And do recursive call to fix/copy members of this member
-            if(heapCopyObjectSharedFields(DBG, rt, sharedHeap, fieldObjCopy, table) == o_false) {
+            if(heapCopyObjectSharedFields(rt, sharedHeap, fieldObjCopy, table) == o_false) {
                 return o_false;
             }
         }
@@ -658,8 +656,7 @@ static o_bool heapCopyFieldShared(oThreadContextRef DBG,
     return o_true;
 }
 
-static o_bool heapCopyObjectSharedFields(oThreadContextRef DBG,
-oRuntimeRef rt,
+static o_bool heapCopyObjectSharedFields(oRuntimeRef rt,
                                          oHeapRef sharedHeap,
                                          oObject obj,
                                          HeapCopyPointerTableRef* table) {
@@ -681,7 +678,7 @@ oRuntimeRef rt,
                 for(e = 0; e < arr->num_elements; ++e) {
                     fieldpp = &(((oObject*)arrayData)[e]);
                     if(*fieldpp) {
-                        if(heapCopyFieldShared(DBG, rt, sharedHeap, fieldpp, table) == o_false) {
+                        if(heapCopyFieldShared(rt, sharedHeap, fieldpp, table) == o_false) {
                             return o_false;
                         }
                     }
@@ -697,7 +694,7 @@ oRuntimeRef rt,
                         if(fields[i]->type->kind == o_T_OBJECT) {
                             fieldpp = getFieldpp((oObject)arrayData, fields[i]);
                             if(*fieldpp) {
-                                if(heapCopyFieldShared(DBG, rt, sharedHeap, fieldpp, table) == o_false) {
+                                if(heapCopyFieldShared(rt, sharedHeap, fieldpp, table) == o_false) {
                                     return o_false;
                                 }
                             }
@@ -718,7 +715,7 @@ oRuntimeRef rt,
             if(fields[i]->type->kind == o_T_OBJECT) {
                 fieldpp = getFieldpp(obj, fields[i]);
                 if(*fieldpp) {
-                    if(heapCopyFieldShared(DBG, rt, sharedHeap, fieldpp, table) == o_false) {
+                    if(heapCopyFieldShared(rt, sharedHeap, fieldpp, table) == o_false) {
                         return o_false;
                     }
                 }
@@ -744,7 +741,7 @@ oRuntimeRef rt,
 			setBlock(typeCopy, typeBlockCopy);
 			// Add to translation table
 			(*table) = pushFrontHCPT(*table, type, typeCopy);
-			if(heapCopyObjectSharedFields(DBG, rt, sharedHeap, typeCopy, table) == o_false) {
+			if(heapCopyObjectSharedFields(rt, sharedHeap, typeCopy, table) == o_false) {
 				return o_false;
 			}
 		}
@@ -790,7 +787,7 @@ oObject _oHeapCopyObjectShared(oThreadContextRef ctx, oObject obj) {
 
     // Step 2. Recursively follow all pointers and copy the whole graph.
 
-    if(heapCopyObjectSharedFields(ctx, rt, sharedHeap, copy, &pointerTable) == o_false) {
+    if(heapCopyObjectSharedFields(rt, sharedHeap, copy, &pointerTable) == o_false) {
         destroyHCPT(pointerTable, o_true);
         copy = NULL;
     }
