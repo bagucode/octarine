@@ -269,7 +269,7 @@ static void traceAndMark(oRuntimeRef rt, oHeapRef heap, oObject obj, oTypeRef ty
 				}
 			}
             /* Some types don't have fields */
-            else if(type->fields) {
+            if(type->fields) {
                 fields = (oFieldRef*)oArrayDataPointer(type->fields);
                 for(i = 0; i < type->fields->num_elements; ++i) {
                     field = fields[i];
