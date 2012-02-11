@@ -24,7 +24,7 @@ oArrayRef _oArrayCreate(oThreadContextRef ctx,
 }
 
 pointer oArrayDataPointer(oArrayRef arr) {
-    return (pointer)alignOffset((uword)arr->data, arr->alignment);
+    return (pointer)alignOffset(((uword)arr) + sizeof(oArray), arr->alignment);
 }
 
 uword oArraySize(oArrayRef arr) {

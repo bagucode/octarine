@@ -144,7 +144,7 @@ oArrayRef o_bootstrap_type_create_field_array(oRuntimeRef rt,
 
 void o_bootstrap_type_init_type(oRuntimeRef rt, oHeapRef heap) {
     oFieldRef *fields;
-    rt->builtInTypes.type->fields = o_bootstrap_type_create_field_array(rt, heap, 4);
+    rt->builtInTypes.type->fields = o_bootstrap_type_create_field_array(rt, heap, 7);
     rt->builtInTypes.type->kind = o_T_OBJECT;
     rt->builtInTypes.type->name = o_bootstrap_string_create(rt, heap, "Type");
     rt->builtInTypes.type->size = sizeof(oType);
@@ -158,14 +158,27 @@ void o_bootstrap_type_init_type(oRuntimeRef rt, oHeapRef heap) {
     fields[1]->name = o_bootstrap_string_create(rt, heap, "fields");
     fields[1]->offset = offsetof(oType, fields);
     fields[1]->type = rt->builtInTypes.array;
+
+    fields[2]->name = o_bootstrap_string_create(rt, heap, "attributes");
+    fields[2]->offset = offsetof(oType, attributes);
+    fields[2]->type = rt->builtInTypes.array;
+
+    fields[3]->name = o_bootstrap_string_create(rt, heap, "finalizer");
+    fields[3]->offset = offsetof(oType, finalizer);
+    fields[3]->type = rt->builtInTypes.pointer;
+
+    fields[4]->name = o_bootstrap_string_create(rt, heap, "size");
+    fields[4]->offset = offsetof(oType, size);
+    fields[4]->type = rt->builtInTypes.uword;
     
-    fields[2]->name = o_bootstrap_string_create(rt, heap, "size");
-    fields[2]->offset = offsetof(oType, size);
-    fields[2]->type = rt->builtInTypes.uword;
-    
-    fields[3]->name = o_bootstrap_string_create(rt, heap, "kind");
-    fields[3]->offset = offsetof(oType, kind);
-    fields[3]->type = rt->builtInTypes.u8;
+    fields[5]->name = o_bootstrap_string_create(rt, heap, "kind");
+    fields[5]->offset = offsetof(oType, kind);
+    fields[5]->type = rt->builtInTypes.u8;
+
+    fields[6]->name = o_bootstrap_string_create(rt, heap, "alignment");
+    fields[6]->offset = offsetof(oType, alignment);
+    fields[6]->type = rt->builtInTypes.u8;
+
 }
 
 void o_bootstrap_type_init_field(oRuntimeRef rt, oHeapRef heap) {

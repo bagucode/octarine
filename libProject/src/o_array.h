@@ -8,7 +8,6 @@ struct oArray {
     oTypeRef element_type;
     uword num_elements;
     u8 alignment;
-    char data[0];
     /* Data is allocated at the end of this struct, after
      any padding needed for the alignment. */
 };

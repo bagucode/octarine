@@ -754,6 +754,11 @@ static o_bool heapCopyObjectSharedFields(oRuntimeRef rt,
 			setBlock(typeCopy, typeBlockCopy);
 			// Add to translation table
 			(*table) = pushFrontHCPT(*table, type, typeCopy);
+			// Now that we have a new copy of the type, fix the type
+			// of the object block to use the new, shared copy.
+			block = getBlock(obj);
+			setType(block, (oTypeRef)typeCopy);
+			// And recursively copy any objects the type object depends on.
 			if(heapCopyObjectSharedFields(rt, sharedHeap, typeCopy, table) == o_false) {
 				return o_false;
 			}
