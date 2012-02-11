@@ -248,8 +248,28 @@ static void traceAndMark(oRuntimeRef rt, oHeapRef heap, oObject obj, oTypeRef ty
             if(block) {
                 setMark(block);
             }
+            if(type == rt->builtInTypes.array) {
+				array = (oArrayRef)obj;
+				if(!oTypeIsPrimitive(array->element_type)) {
+					if(array->element_type->kind == o_T_OBJECT) {
+						arrayObjs = (oObject*)oArrayDataPointer(array);
+						for(i = 0; i < array->num_elements; ++i) {
+							traceAndMark(rt, heap, arrayObjs[i], array->element_type);
+						}
+					}
+					else {
+						// TODO: take array alignment into account once that is implemented
+						arrayStride = array->element_type->size;
+						fieldPtr = oArrayDataPointer(array);
+						for(i = 0; i < array->num_elements; ++i) {
+							traceAndMark(rt, heap, fieldPtr, array->element_type);
+							fieldPtr = ((char*)fieldPtr) + arrayStride;
+						}
+					}
+				}
+			}
             /* Some types don't have fields */
-            if(type->fields) {
+            else if(type->fields) {
                 fields = (oFieldRef*)oArrayDataPointer(type->fields);
                 for(i = 0; i < type->fields->num_elements; ++i) {
                     field = fields[i];
@@ -270,27 +290,6 @@ static void traceAndMark(oRuntimeRef rt, oHeapRef heap, oObject obj, oTypeRef ty
                     }
                 }
             }
-			/* else clause for field NULL check, array handling */
-			else if(type == rt->builtInTypes.array) {
-				array = (oArrayRef)obj;
-				if(!oTypeIsPrimitive(array->element_type)) {
-					if(array->element_type->kind == o_T_OBJECT) {
-						arrayObjs = (oObject*)oArrayDataPointer(array);
-						for(i = 0; i < array->num_elements; ++i) {
-							traceAndMark(rt, heap, arrayObjs[i], array->element_type);
-						}
-					}
-					else {
-						// TODO: take array alignment into account once that is implemented
-						arrayStride = array->element_type->size;
-						fieldPtr = oArrayDataPointer(array);
-						for(i = 0; i < array->num_elements; ++i) {
-							traceAndMark(rt, heap, fieldPtr, array->element_type);
-							fieldPtr = ((char*)fieldPtr) + arrayStride;
-						}
-					}
-				}
-			}
         }
     }
     // Also mark the type to make sure that does not disappear
