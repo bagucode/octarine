@@ -21,12 +21,19 @@ typedef struct HeapBlock {
 } HeapBlock;
 typedef HeapBlock *HeapBlockRef;
 
+#define BLOCKSIZE sizeof(HeapBlock) + (HEAP_ALIGN - 1) + sizeof(pointer)
+
+static uword alignOffset(uword offset, uword on) {
+    return (offset + (on - 1)) & (~(on - 1));
+}
+
 static oObject getObject(HeapBlockRef block) {
-    return (void*)(((uword)block + sizeof(void*) + HEAP_ALIGN - 1) & ~(HEAP_ALIGN - 1));
+	uword offset = ((uword)block) + sizeof(HeapBlock) + sizeof(pointer);
+	return (void*)alignOffset(offset, HEAP_ALIGN);
 }
 
 static uword calcBlockSize(uword dataSize) {
-    return sizeof(HeapBlock) + dataSize + (HEAP_ALIGN - 1) + sizeof(void*);
+	return BLOCKSIZE + dataSize;
 }
 
 static void setBlock(oObject obj, HeapBlockRef block) {
