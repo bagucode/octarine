@@ -15,6 +15,9 @@ typedef oError* oErrorRef;
 typedef struct oField oField;
 typedef oField* oFieldRef;
 
+typedef struct _oGraphIterator _oGraphIterator;
+typedef _oGraphIterator* _oGraphIteratorRef;
+
 typedef struct oFunction oFunction;
 typedef oFunction* oFunctionRef;
 

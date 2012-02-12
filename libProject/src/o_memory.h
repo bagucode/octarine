@@ -36,6 +36,10 @@ oRootSetRef oMemoryCreateRootSet();
 
 void oMemoryDeleteRootSet(oRootSetRef roots);
 
+_oGraphIteratorRef _oGraphIteratorCreate(oObject obj, o_bool stopAtShared);
+void _oGraphIteratorDestroy(_oGraphIteratorRef gi);
+oObject _oGraphIteratorNext(_oGraphIteratorRef gi);
+
 oObject o_bootstrap_object_alloc(oRuntimeRef rt,
 		                         oHeapRef heap,
                                  oTypeRef proto_type,
