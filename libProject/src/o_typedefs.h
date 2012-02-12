@@ -6,6 +6,12 @@
 typedef struct oArray oArray;
 typedef oArray* oArrayRef;
 
+typedef struct _oChunkedList _oChunkedList;
+typedef _oChunkedList* _oChunkedListRef;
+
+typedef struct _oChunkedListIterator _oChunkedListIterator;
+typedef _oChunkedListIterator* _oChunkedListIteratorRef;
+
 typedef struct oClosure oClosure;
 typedef oClosure* oClosureRef;
 

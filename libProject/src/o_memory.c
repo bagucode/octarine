@@ -6,6 +6,176 @@
 #include "o_array.h"
 #include <memory.h> /* TODO: replace this with some platform function */
 
+// Chunked List
+
+typedef struct _oChunkedListChunk {
+    uword usedSlots;
+    struct _oChunkedListChunk* next;
+    struct _oChunkedListChunk* prev;
+    uword padding; // for 16 byte data alignment (perhaps not needed here?)
+    char data[0];
+} _oChunkedListChunk;
+typedef _oChunkedListChunk* _oChunkedListChunkRef;
+
+struct _oChunkedList {
+    uword chunkSize;
+    uword elementSize;
+    _oChunkedListChunkRef head;
+    _oChunkedListChunkRef tail;
+};
+
+static uword _oChunkedListTotalChunkSize(uword chunkSize, uword elementSize) {
+    return chunkSize * elementSize + sizeof(_oChunkedListChunk);
+}
+
+static _oChunkedListChunkRef _oChunkedListAllocChunk(_oChunkedListRef lst) {
+    uword size = _oChunkedListTotalChunkSize(lst->chunkSize, lst->elementSize);
+    _oChunkedListChunkRef chunk = (_oChunkedListChunkRef)oMalloc(size);
+    if(chunk == NULL) {
+        return NULL;
+    }
+    memset(chunk, 0, size);
+    return chunk;
+}
+
+_oChunkedListRef _oChunkedListCreate(uword chunkSize, uword elementSize) {
+    _oChunkedListRef lst;
+    lst = (_oChunkedListRef)oMalloc(sizeof(_oChunkedList));
+    if(lst == NULL) {
+        return NULL;
+    }
+    lst->chunkSize = chunkSize;
+    lst->elementSize = elementSize;
+    lst->head = _oChunkedListAllocChunk(lst);
+    if(lst->head == NULL) {
+        oFree(lst);
+        return NULL;
+    }
+    lst->tail = lst->head;
+    return lst;
+}
+
+void _oChunkedListDestroy(_oChunkedListRef cl) {
+    _oChunkedListChunkRef chunk, tmp;
+    chunk = cl->head;
+    while(chunk) {
+        tmp = chunk->next;
+        oFree(chunk);
+        chunk = tmp;
+    }
+    oFree(cl);
+}
+
+void _oChunkedListAdd(_oChunkedListRef cl, pointer element) {
+    _oChunkedListChunkRef tmp, chunk = cl->tail;
+    pointer chunkElement;
+    if(chunk->usedSlots == cl->chunkSize) {
+        tmp = _oChunkedListAllocChunk(cl);
+        // TODO: handle allocation error with return code?
+        cl->tail = tmp;
+        chunk->next = cl->tail;
+        cl->tail->prev = chunk;
+        chunk = cl->tail;
+    }
+    chunkElement = (pointer)(chunk->usedSlots * cl->elementSize + chunk->data);
+    memcpy(chunkElement, element, cl->elementSize);
+    ++chunk->usedSlots;
+}
+
+pointer _oChunkedListFindFirst(_oChunkedListRef cl, pointer data) {
+    _oChunkedListIteratorRef iter = _oChunkedListIteratorCreate(cl, o_false);
+    pointer element = _oChunkedListIteratorNext(iter);
+    while(element) {
+        if(memcmp(data, element, cl->elementSize) == 0) {
+            break;
+        }
+        element = _oChunkedListIteratorNext(iter);
+    }
+    _oChunkedListIteratorDestroy(iter);
+    return element;
+}
+
+pointer _oChunkedListFindLast(_oChunkedListRef cl, pointer data) {
+    _oChunkedListIteratorRef iter = _oChunkedListIteratorCreate(cl, o_true);
+    pointer element = _oChunkedListIteratorNext(iter);
+    while(element) {
+        if(memcmp(data, element, cl->elementSize) == 0) {
+            break;
+        }
+        element = _oChunkedListIteratorNext(iter);
+    }
+    _oChunkedListIteratorDestroy(iter);
+    return element;
+}
+
+struct _oChunkedListIterator {
+    uword idx;
+    _oChunkedListRef cl;
+    _oChunkedListChunkRef chunk;
+    o_bool reverse;
+};
+
+_oChunkedListIteratorRef _oChunkedListIteratorCreate(_oChunkedListRef cl, o_bool reverse) {
+    _oChunkedListIteratorRef iter = (_oChunkedListIteratorRef)oMalloc(sizeof(_oChunkedListIterator));
+    if(iter == NULL) {
+        return NULL;
+    }
+    iter->cl = cl;
+    iter->reverse = reverse;
+    if(reverse) {
+        iter->chunk = cl->tail;
+        iter->idx = iter->chunk->usedSlots;
+    }
+    else {
+        iter->chunk = cl->head;
+        iter->idx = 0;
+    }
+    return iter;
+}
+
+void _oChunkedListIteratorDestroy(_oChunkedListIteratorRef cli) {
+    oFree(cli);
+}
+
+pointer _oChunkedListIteratorNext(_oChunkedListIteratorRef cli) {
+    uword idx;
+    if(cli->reverse) {
+        if(cli->idx == 0) {
+            if(cli->chunk->prev == NULL) {
+                return NULL;
+            }
+            cli->chunk = cli->chunk->prev;
+            cli->idx = cli->chunk->usedSlots;
+        }
+        --cli->idx;
+        idx = cli->idx;
+    }
+    else {
+        if(cli->idx == cli->chunk->usedSlots) {
+            if(cli->chunk->next == NULL) {
+                return NULL;
+            }
+            cli->chunk = cli->chunk->next;
+            cli->idx = 0;
+        }
+        idx = cli->idx;
+        ++cli->idx;
+    }
+    return (pointer)(idx * cli->cl->elementSize + cli->chunk->data);
+}
+
+// Graph Iterator
+
+_oGraphIteratorRef _oGraphIteratorCreate(oObject obj, o_bool stopAtShared) {
+}
+
+void _oGraphIteratorDestroy(_oGraphIteratorRef gi) {
+}
+
+oObject _oGraphIteratorNext(_oGraphIteratorRef gi) {
+}
+
+
 // Alignment of object (in bytes) within a heap block
 // Currently hardcoded to 16 to allow for SSE vectors
 #define HEAP_ALIGN 16

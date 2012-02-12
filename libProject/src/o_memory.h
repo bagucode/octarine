@@ -36,6 +36,20 @@ oRootSetRef oMemoryCreateRootSet();
 
 void oMemoryDeleteRootSet(oRootSetRef roots);
 
+// Chunked List
+
+_oChunkedListRef _oChunkedListCreate(uword chunkSize, uword elementSize);
+void _oChunkedListDestroy(_oChunkedListRef cl);
+void _oChunkedListAdd(_oChunkedListRef cl, pointer element);
+pointer _oChunkedListFindFirst(_oChunkedListRef cl, pointer data);
+pointer _oChunkedListFindLast(_oChunkedListRef cl, pointer data);
+
+_oChunkedListIteratorRef _oChunkedListIteratorCreate(_oChunkedListRef cl, o_bool reverse);
+void _oChunkedListIteratorDestroy(_oChunkedListIteratorRef cli);
+pointer _oChunkedListIteratorNext(_oChunkedListIteratorRef cli);
+
+// Graph Iterator
+
 _oGraphIteratorRef _oGraphIteratorCreate(oObject obj, o_bool stopAtShared);
 void _oGraphIteratorDestroy(_oGraphIteratorRef gi);
 oObject _oGraphIteratorNext(_oGraphIteratorRef gi);
