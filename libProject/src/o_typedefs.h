@@ -1,7 +1,12 @@
 #ifndef octarine_typedefs_h
 #define octarine_typedefs_h
 
-/* Please put in alphabetical order. */
+#include "../../platformProject/src/o_basic_types.h"
+
+/* Please put in alphabetical order.
+   (Unless it is impossible due to dependencies) */
+
+typedef void* oObject;
 
 typedef struct oArray oArray;
 typedef oArray* oArrayRef;
@@ -24,6 +29,8 @@ typedef oField* oFieldRef;
 typedef struct _oGraphIterator _oGraphIterator;
 typedef _oGraphIterator* _oGraphIteratorRef;
 
+typedef o_bool (*_oGraphIteratorStopTest)(oObject obj, pointer userData);
+
 typedef struct oFunction oFunction;
 typedef oFunction* oFunctionRef;
 
@@ -44,8 +51,6 @@ typedef oMapStrObj* oMapStrObjRef;
 
 typedef struct oMapStrObjEntry oMapStrObjEntry;
 typedef oMapStrObjEntry* oMapStrObjEntryRef;
-
-typedef void* oObject;
 
 typedef void (*oFinalizer)(oObject obj);
 

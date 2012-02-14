@@ -41,16 +41,19 @@ void oMemoryDeleteRootSet(oRootSetRef roots);
 _oChunkedListRef _oChunkedListCreate(uword chunkSize, uword elementSize);
 void _oChunkedListDestroy(_oChunkedListRef cl);
 void _oChunkedListAdd(_oChunkedListRef cl, pointer element);
-pointer _oChunkedListFindFirst(_oChunkedListRef cl, pointer data);
-pointer _oChunkedListFindLast(_oChunkedListRef cl, pointer data);
+o_bool _oChunkedListFindFirst(_oChunkedListIteratorRef cli, pointer compare, pointer dest);
+o_bool _oChunkedListFindLast(_oChunkedListIteratorRef cli, pointer compare, pointer dest);
+o_bool _oChunkedListRemoveLast(_oChunkedListRef cl, pointer dest);
 
 _oChunkedListIteratorRef _oChunkedListIteratorCreate(_oChunkedListRef cl, o_bool reverse);
 void _oChunkedListIteratorDestroy(_oChunkedListIteratorRef cli);
-pointer _oChunkedListIteratorNext(_oChunkedListIteratorRef cli);
+o_bool _oChunkedListIteratorNext(_oChunkedListIteratorRef cli, pointer dest);
 
 // Graph Iterator
 
-_oGraphIteratorRef _oGraphIteratorCreate(oObject obj, o_bool stopAtShared);
+_oGraphIteratorRef _oGraphIteratorCreate(oObject start,
+                                         _oGraphIteratorStopTest sTest,
+                                         pointer userData);
 void _oGraphIteratorDestroy(_oGraphIteratorRef gi);
 oObject _oGraphIteratorNext(_oGraphIteratorRef gi);
 

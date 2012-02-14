@@ -82,32 +82,6 @@ void _oChunkedListAdd(_oChunkedListRef cl, pointer element) {
     ++chunk->usedSlots;
 }
 
-pointer _oChunkedListFindFirst(_oChunkedListRef cl, pointer data) {
-    _oChunkedListIteratorRef iter = _oChunkedListIteratorCreate(cl, o_false);
-    pointer element = _oChunkedListIteratorNext(iter);
-    while(element) {
-        if(memcmp(data, element, cl->elementSize) == 0) {
-            break;
-        }
-        element = _oChunkedListIteratorNext(iter);
-    }
-    _oChunkedListIteratorDestroy(iter);
-    return element;
-}
-
-pointer _oChunkedListFindLast(_oChunkedListRef cl, pointer data) {
-    _oChunkedListIteratorRef iter = _oChunkedListIteratorCreate(cl, o_true);
-    pointer element = _oChunkedListIteratorNext(iter);
-    while(element) {
-        if(memcmp(data, element, cl->elementSize) == 0) {
-            break;
-        }
-        element = _oChunkedListIteratorNext(iter);
-    }
-    _oChunkedListIteratorDestroy(iter);
-    return element;
-}
-
 struct _oChunkedListIterator {
     uword idx;
     _oChunkedListRef cl;
@@ -115,21 +89,48 @@ struct _oChunkedListIterator {
     o_bool reverse;
 };
 
+static o_bool _oChunkedListFind(_oChunkedListIteratorRef cli,
+                                pointer compare,
+                                pointer dest,
+                                o_bool reverse) {
+    o_bool ret = o_false;
+    while(_oChunkedListIteratorNext(cli, dest)) {
+        if(memcmp(compare, dest, cli->cl->elementSize) == 0) {
+            ret = o_true;
+            break;
+        }
+    }
+    return ret;
+}
+
+o_bool _oChunkedListFindFirst(_oChunkedListIteratorRef cli, pointer compare, pointer dest) {
+    return _oChunkedListFind(cli, compare, dest, o_false);
+}
+o_bool _oChunkedListFindLast(_oChunkedListIteratorRef cli, pointer compare, pointer dest) {
+    return _oChunkedListFind(cli, compare, dest, o_true);
+}
+
+static void _oChunkedListIteratorCreateStatic(_oChunkedListIteratorRef cli,
+                                              _oChunkedListRef cl,
+                                              o_bool reverse) {
+    cli->cl = cl;
+    cli->reverse = reverse;
+    if(reverse) {
+        cli->chunk = cl->tail;
+        cli->idx = cli->chunk->usedSlots;
+    }
+    else {
+        cli->chunk = cl->head;
+        cli->idx = 0;
+    }
+}
+
 _oChunkedListIteratorRef _oChunkedListIteratorCreate(_oChunkedListRef cl, o_bool reverse) {
     _oChunkedListIteratorRef iter = (_oChunkedListIteratorRef)oMalloc(sizeof(_oChunkedListIterator));
     if(iter == NULL) {
         return NULL;
     }
-    iter->cl = cl;
-    iter->reverse = reverse;
-    if(reverse) {
-        iter->chunk = cl->tail;
-        iter->idx = iter->chunk->usedSlots;
-    }
-    else {
-        iter->chunk = cl->head;
-        iter->idx = 0;
-    }
+    _oChunkedListIteratorCreateStatic(iter, cl, reverse);
     return iter;
 }
 
@@ -137,12 +138,12 @@ void _oChunkedListIteratorDestroy(_oChunkedListIteratorRef cli) {
     oFree(cli);
 }
 
-pointer _oChunkedListIteratorNext(_oChunkedListIteratorRef cli) {
+o_bool _oChunkedListIteratorNext(_oChunkedListIteratorRef cli, pointer dest) {
     uword idx;
     if(cli->reverse) {
         if(cli->idx == 0) {
             if(cli->chunk->prev == NULL) {
-                return NULL;
+                return o_false;
             }
             cli->chunk = cli->chunk->prev;
             cli->idx = cli->chunk->usedSlots;
@@ -153,7 +154,7 @@ pointer _oChunkedListIteratorNext(_oChunkedListIteratorRef cli) {
     else {
         if(cli->idx == cli->chunk->usedSlots) {
             if(cli->chunk->next == NULL) {
-                return NULL;
+                return o_false;
             }
             cli->chunk = cli->chunk->next;
             cli->idx = 0;
@@ -161,18 +162,61 @@ pointer _oChunkedListIteratorNext(_oChunkedListIteratorRef cli) {
         idx = cli->idx;
         ++cli->idx;
     }
-    return (pointer)(idx * cli->cl->elementSize + cli->chunk->data);
+    memcpy(dest, cli->cl->elementSize * idx + cli->chunk->data, cli->cl->elementSize);
+    return o_true;
+}
+
+o_bool _oChunkedListRemoveLast(_oChunkedListRef cl, pointer dest) {
+    _oChunkedListChunkRef prev;
+    if(cl->tail->usedSlots == 0) {
+        return o_false;
+    }
+    --cl->tail->usedSlots;
+    memcpy(dest, cl->elementSize * cl->tail->usedSlots + cl->tail->data, cl->elementSize);
+    if(cl->tail->usedSlots == 0 && cl->tail != cl->head) {
+        prev = cl->tail->prev;
+        prev->next = NULL;
+        oFree(cl->tail);
+        cl->tail = prev;
+    }
+    return o_true;
 }
 
 // Graph Iterator
 
-_oGraphIteratorRef _oGraphIteratorCreate(oObject obj, o_bool stopAtShared) {
+typedef struct _oGraphIteratorEntry {
+    oObject obj;
+    uword idx; // field or array idx
+} _oGraphIteratorEntry;
+
+struct _oGraphIterator {
+    _oChunkedListRef stack;
+    _oGraphIteratorEntry current;
+    _oGraphIteratorStopTest stopTest;
+    pointer userData;
+};
+
+_oGraphIteratorRef _oGraphIteratorCreate(oObject start,
+                                         _oGraphIteratorStopTest sTest,
+                                         pointer userData) {
+    _oGraphIteratorRef gi = (_oGraphIteratorRef)oMalloc(sizeof(_oGraphIterator));
+    if(gi == NULL) {
+        return NULL;
+    }
+    gi->current.idx = 0;
+    gi->current.obj = start;
+    gi->userData = userData;
+    gi->stack = _oChunkedListCreate(100, sizeof(_oGraphIteratorEntry));
+    gi->stopTest = sTest;
+    return gi;
 }
 
 void _oGraphIteratorDestroy(_oGraphIteratorRef gi) {
+    oFree(gi);
 }
 
 oObject _oGraphIteratorNext(_oGraphIteratorRef gi) {
+    
 }
 
 
