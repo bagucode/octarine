@@ -14,6 +14,8 @@ typedef oArray* oArrayRef;
 typedef struct _oChunkedList _oChunkedList;
 typedef _oChunkedList* _oChunkedListRef;
 
+typedef uword (*_oChunkedListComparer)(pointer x, pointer y);
+
 typedef struct _oChunkedListIterator _oChunkedListIterator;
 typedef _oChunkedListIterator* _oChunkedListIteratorRef;
 

@@ -41,8 +41,14 @@ void oMemoryDeleteRootSet(oRootSetRef roots);
 _oChunkedListRef _oChunkedListCreate(uword chunkSize, uword elementSize);
 void _oChunkedListDestroy(_oChunkedListRef cl);
 void _oChunkedListAdd(_oChunkedListRef cl, pointer element);
-o_bool _oChunkedListFindFirst(_oChunkedListIteratorRef cli, pointer compare, pointer dest);
-o_bool _oChunkedListFindLast(_oChunkedListIteratorRef cli, pointer compare, pointer dest);
+o_bool _oChunkedListFindFirst(_oChunkedListIteratorRef cli,
+                              _oChunkedListComparer comparer,
+                              pointer compare,
+                              pointer dest);
+o_bool _oChunkedListFindLast(_oChunkedListIteratorRef cli,
+                             _oChunkedListComparer comparer,
+                             pointer compare,
+                             pointer dest);
 o_bool _oChunkedListRemoveLast(_oChunkedListRef cl, pointer dest);
 
 _oChunkedListIteratorRef _oChunkedListIteratorCreate(_oChunkedListRef cl, o_bool reverse);

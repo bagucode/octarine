@@ -90,12 +90,13 @@ struct _oChunkedListIterator {
 };
 
 static o_bool _oChunkedListFind(_oChunkedListIteratorRef cli,
+                                _oChunkedListComparer comparer,
                                 pointer compare,
                                 pointer dest,
                                 o_bool reverse) {
     o_bool ret = o_false;
     while(_oChunkedListIteratorNext(cli, dest)) {
-        if(memcmp(compare, dest, cli->cl->elementSize) == 0) {
+        if(comparer(compare, dest) == 0) {
             ret = o_true;
             break;
         }
@@ -103,11 +104,18 @@ static o_bool _oChunkedListFind(_oChunkedListIteratorRef cli,
     return ret;
 }
 
-o_bool _oChunkedListFindFirst(_oChunkedListIteratorRef cli, pointer compare, pointer dest) {
-    return _oChunkedListFind(cli, compare, dest, o_false);
+o_bool _oChunkedListFindFirst(_oChunkedListIteratorRef cli,
+                              _oChunkedListComparer comparer,
+                              pointer compare,
+                              pointer dest) {
+    return _oChunkedListFind(cli, comparer, compare, dest, o_false);
 }
-o_bool _oChunkedListFindLast(_oChunkedListIteratorRef cli, pointer compare, pointer dest) {
-    return _oChunkedListFind(cli, compare, dest, o_true);
+
+o_bool _oChunkedListFindLast(_oChunkedListIteratorRef cli,
+                             _oChunkedListComparer comparer,
+                             pointer compare,
+                             pointer dest) {
+    return _oChunkedListFind(cli, comparer, compare, dest, o_true);
 }
 
 static void _oChunkedListIteratorCreateStatic(_oChunkedListIteratorRef cli,
@@ -181,44 +189,6 @@ o_bool _oChunkedListRemoveLast(_oChunkedListRef cl, pointer dest) {
     }
     return o_true;
 }
-
-// Graph Iterator
-
-typedef struct _oGraphIteratorEntry {
-    oObject obj;
-    uword idx; // field or array idx
-} _oGraphIteratorEntry;
-
-struct _oGraphIterator {
-    _oChunkedListRef stack;
-    _oGraphIteratorEntry current;
-    _oGraphIteratorStopTest stopTest;
-    pointer userData;
-};
-
-_oGraphIteratorRef _oGraphIteratorCreate(oObject start,
-                                         _oGraphIteratorStopTest sTest,
-                                         pointer userData) {
-    _oGraphIteratorRef gi = (_oGraphIteratorRef)oMalloc(sizeof(_oGraphIterator));
-    if(gi == NULL) {
-        return NULL;
-    }
-    gi->current.idx = 0;
-    gi->current.obj = start;
-    gi->userData = userData;
-    gi->stack = _oChunkedListCreate(100, sizeof(_oGraphIteratorEntry));
-    gi->stopTest = sTest;
-    return gi;
-}
-
-void _oGraphIteratorDestroy(_oGraphIteratorRef gi) {
-    oFree(gi);
-}
-
-oObject _oGraphIteratorNext(_oGraphIteratorRef gi) {
-    
-}
-
 
 // Alignment of object (in bytes) within a heap block
 // Currently hardcoded to 16 to allow for SSE vectors
@@ -1031,6 +1001,67 @@ oObject _oHeapCopyObjectShared(oThreadContextRef ctx, oObject obj) {
     return copy;
 }
 
+// Graph Iterator
+
+typedef struct _oGraphIteratorEntry {
+    oObject obj;
+    uword idx; // field or array idx
+} _oGraphIteratorEntry;
+
+struct _oGraphIterator {
+    _oChunkedListRef stack;
+    _oGraphIteratorEntry current;
+    _oGraphIteratorStopTest stopTest;
+    pointer userData;
+};
+
+static uword _oGraphIteratorEntryComparer(pointer x, pointer y) {
+    _oGraphIteratorEntry* e1 = x;
+    _oGraphIteratorEntry* e2 = y;
+    return e2->obj - e1->obj;
+}
+
+_oGraphIteratorRef _oGraphIteratorCreate(oObject start,
+                                         _oGraphIteratorStopTest sTest,
+                                         pointer userData) {
+    _oGraphIteratorRef gi = (_oGraphIteratorRef)oMalloc(sizeof(_oGraphIterator));
+    if(gi == NULL) {
+        return NULL;
+    }
+    gi->current.idx = 0;
+    gi->current.obj = start;
+    gi->userData = userData;
+    gi->stack = _oChunkedListCreate(100, sizeof(_oGraphIteratorEntry));
+    gi->stopTest = sTest;
+    return gi;
+}
+
+void _oGraphIteratorDestroy(_oGraphIteratorRef gi) {
+    oFree(gi);
+}
+
+oObject _oGraphIteratorNext(_oGraphIteratorRef gi) {
+    HeapBlockRef block;
+    oTypeRef type;
+    _oChunkedListIterator cli;
+    _oGraphIteratorEntry entry;
+    
+    if(gi->stopTest(gi->current.obj, gi->userData) == o_false) {
+        return NULL;
+    }
+    
+    _oChunkedListIteratorCreateStatic(&cli, gi->stack, o_true);
+    if(_oChunkedListFindLast(&cli, _oGraphIteratorEntryComparer, &gi->current, &entry)) {
+        // the current object is the last in the stack, that means we are finished
+        // with it if we have traversed all the members and its type
+        
+    }
+    
+    block = getBlock(gi->current.obj);
+    type = getType(block);
+
+    
+}
 
 
 
