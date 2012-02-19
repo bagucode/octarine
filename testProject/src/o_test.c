@@ -461,7 +461,7 @@ int main(int argc, char** argv) {
     testReadVector();
     testReadKeyword();
     testOutOfMemory();
-    testSimpleCopySharedDoesNotCrash();
+ //   testSimpleCopySharedDoesNotCrash();
     
 	return 0;
 }

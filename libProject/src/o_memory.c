@@ -1016,9 +1016,9 @@ struct _oGraphIterator {
 };
 
 static uword _oGraphIteratorEntryComparer(pointer x, pointer y) {
-    _oGraphIteratorEntry* e1 = x;
-    _oGraphIteratorEntry* e2 = y;
-    return e2->obj - e1->obj;
+    _oGraphIteratorEntry* e1 = (_oGraphIteratorEntry*)x;
+    _oGraphIteratorEntry* e2 = (_oGraphIteratorEntry*)y;
+    return ((char*)e2->obj) - ((char*)e1->obj);
 }
 
 _oGraphIteratorRef _oGraphIteratorCreate(oObject start,
