@@ -49,6 +49,12 @@ o_bool _oChunkedListFindLast(_oChunkedListIteratorRef cli,
                              _oChunkedListComparer comparer,
                              pointer compare,
                              pointer dest);
+/**
+    Removes the last element from the list and copies it to the
+	location pointed to by dest.
+	Return value is o_true if there was an element to remove.
+	dest may be NULL in which case nothing is copied.
+*/
 o_bool _oChunkedListRemoveLast(_oChunkedListRef cl, pointer dest);
 
 _oChunkedListIteratorRef _oChunkedListIteratorCreate(_oChunkedListRef cl, o_bool reverse);

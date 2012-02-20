@@ -180,7 +180,9 @@ o_bool _oChunkedListRemoveLast(_oChunkedListRef cl, pointer dest) {
         return o_false;
     }
     --cl->tail->usedSlots;
-    memcpy(dest, cl->elementSize * cl->tail->usedSlots + cl->tail->data, cl->elementSize);
+	if(dest) {
+		memcpy(dest, cl->elementSize * cl->tail->usedSlots + cl->tail->data, cl->elementSize);
+	}
     if(cl->tail->usedSlots == 0 && cl->tail != cl->head) {
         prev = cl->tail->prev;
         prev->next = NULL;
@@ -1010,6 +1012,10 @@ typedef struct _oGraphIteratorEntry {
 
 struct _oGraphIterator {
     _oChunkedListRef stack;
+// TODO: Should use pointers here instead of an inline copy because
+// the same entry may (theoretically) be pushed many times on the stack and
+// because of that we have to make sure that the index, if changed, matches
+// in all the instances of the entry on the stack.
     _oGraphIteratorEntry current;
     _oGraphIteratorStopTest stopTest;
     pointer userData;
@@ -1031,7 +1037,7 @@ _oGraphIteratorRef _oGraphIteratorCreate(oObject start,
     gi->current.idx = 0;
     gi->current.obj = start;
     gi->userData = userData;
-    gi->stack = _oChunkedListCreate(100, sizeof(_oGraphIteratorEntry));
+    gi->stack = _oChunkedListCreate(32, sizeof(_oGraphIteratorEntry));
     gi->stopTest = sTest;
     return gi;
 }
@@ -1047,15 +1053,18 @@ oObject _oGraphIteratorNext(_oGraphIteratorRef gi) {
     _oGraphIteratorEntry entry;
     
     if(gi->stopTest(gi->current.obj, gi->userData) == o_false) {
-        return NULL;
+        // Stoptest says to not traverse current object, check if there
+		// are previous objects in the stack. If there are, set the last
+		// one to be the current object. If not, we are done.
+		if(_oChunkedListRemoveLast(gi->stack, &entry)) {
+			gi->current = entry;
+		}
+		else {
+			// No more objects on the stack. We are done.
+			return NULL;
+		}
     }
     
-    _oChunkedListIteratorCreateStatic(&cli, gi->stack, o_true);
-    if(_oChunkedListFindLast(&cli, _oGraphIteratorEntryComparer, &gi->current, &entry)) {
-        // the current object is the last in the stack, that means we are finished
-        // with it if we have traversed all the members and its type
-        
-    }
     
     block = getBlock(gi->current.obj);
     type = getType(block);
