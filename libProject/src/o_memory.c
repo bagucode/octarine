@@ -804,6 +804,11 @@ static oObject* getFieldpp(oObject obj, oFieldRef field) {
     return (oObject*)(chObj + field->offset);
 }
 
+static oObject getField(oObject obj, oFieldRef field) {
+    char* chObj = (char*)obj;
+    return (oObject)(chObj + field->offset);
+}
+
 static o_bool heapCopyObjectSharedFields(oRuntimeRef rt,
                                          oHeapRef sharedHeap,
                                          oObject obj,
@@ -1012,12 +1017,8 @@ typedef struct _oGraphIteratorEntry {
 
 struct _oGraphIterator {
     _oChunkedListRef stack;
-// TODO: Should use pointers here instead of an inline copy because
-// the same entry may (theoretically) be pushed many times on the stack and
-// because of that we have to make sure that the index, if changed, matches
-// in all the instances of the entry on the stack.
     _oGraphIteratorEntry current;
-    _oGraphIteratorStopTest stopTest;
+    _oGraphIteratorTest testFn;
     pointer userData;
 };
 
@@ -1028,7 +1029,7 @@ static uword _oGraphIteratorEntryComparer(pointer x, pointer y) {
 }
 
 _oGraphIteratorRef _oGraphIteratorCreate(oObject start,
-                                         _oGraphIteratorStopTest sTest,
+                                         _oGraphIteratorTest testFn,
                                          pointer userData) {
     _oGraphIteratorRef gi = (_oGraphIteratorRef)oMalloc(sizeof(_oGraphIterator));
     if(gi == NULL) {
@@ -1037,8 +1038,8 @@ _oGraphIteratorRef _oGraphIteratorCreate(oObject start,
     gi->current.idx = 0;
     gi->current.obj = start;
     gi->userData = userData;
-    gi->stack = _oChunkedListCreate(32, sizeof(_oGraphIteratorEntry));
-    gi->stopTest = sTest;
+    gi->stack = _oChunkedListCreate(128, sizeof(_oGraphIteratorEntry));
+    gi->testFn = testFn;
     return gi;
 }
 
@@ -1049,27 +1050,48 @@ void _oGraphIteratorDestroy(_oGraphIteratorRef gi) {
 oObject _oGraphIteratorNext(_oGraphIteratorRef gi) {
     HeapBlockRef block;
     oTypeRef type;
+	oFieldRef* fieldInfoArray;
+	oFieldRef fieldInfo;
+	oObject field;
     _oChunkedListIterator cli;
-    _oGraphIteratorEntry entry;
+    _oGraphIteratorEntry tmp;
+	_oGraphIteratorEntry fieldEntry;
     
-    if(gi->stopTest(gi->current.obj, gi->userData) == o_false) {
-        // Stoptest says to not traverse current object, check if there
-		// are previous objects in the stack. If there are, set the last
-		// one to be the current object. If not, we are done.
-		if(_oChunkedListRemoveLast(gi->stack, &entry)) {
-			gi->current = entry;
+    block = getBlock(gi->current.obj);
+    type = getType(block);
+	while(type->fields == NULL || type->fields->num_elements == gi->current.idx) {
+		// Nothing to do for the current entry.
+		// Get next from stack or return NULL if the stack is empty.
+		if(_oChunkedListRemoveLast(gi->stack, &tmp)) {
+			gi->current = tmp;
+			block = getBlock(gi->current.obj);
+			type = getType(block);
 		}
 		else {
 			// No more objects on the stack. We are done.
 			return NULL;
 		}
-    }
-    
-    
-    block = getBlock(gi->current.obj);
-    type = getType(block);
+	}
 
-    
+	fieldInfoArray = (oFieldRef*)oArrayDataPointer(type->fields);
+
+	for(; gi->current.idx < type->fields->num_elements; ++gi->current.idx) {
+		fieldInfo = fieldInfoArray[gi->current.idx];
+		if(fieldInfo->type->kind != o_T_STRUCT) {
+			field = getField(gi->current.obj, fieldInfo);
+			if(field != NULL && gi->testFn(field, gi->userData)) {
+
+			}
+		}
+		else {
+			// struct type, find and follow embedded pointers
+			// ARGH! These can be arbitrarily nested. Need to somehow
+			// get all the pointers out. Seems eerily similar to what
+			// this whole iterator is supposed to do...
+		}
+	}
+
+	// If we end up here that means that 
 }
 
 

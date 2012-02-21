@@ -63,8 +63,12 @@ o_bool _oChunkedListIteratorNext(_oChunkedListIteratorRef cli, pointer dest);
 
 // Graph Iterator
 
+/**
+    The Test function should return true if the iterator is allowed to
+	process the tested object.
+*/
 _oGraphIteratorRef _oGraphIteratorCreate(oObject start,
-                                         _oGraphIteratorStopTest sTest,
+                                         _oGraphIteratorTest testFn,
                                          pointer userData);
 void _oGraphIteratorDestroy(_oGraphIteratorRef gi);
 oObject _oGraphIteratorNext(_oGraphIteratorRef gi);

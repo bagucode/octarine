@@ -31,7 +31,7 @@ typedef oField* oFieldRef;
 typedef struct _oGraphIterator _oGraphIterator;
 typedef _oGraphIterator* _oGraphIteratorRef;
 
-typedef o_bool (*_oGraphIteratorStopTest)(oObject obj, pointer userData);
+typedef o_bool (*_oGraphIteratorTest)(oObject obj, pointer userData);
 
 typedef struct oFunction oFunction;
 typedef oFunction* oFunctionRef;
