@@ -1043,7 +1043,22 @@ _oGraphIteratorRef _oGraphIteratorCreate(oObject start,
     return gi;
 }
 
+/**
+	Clear marks on any blocks still in the stack.
+*/
+static void _oGraphIteratorClearMarks(_oGraphIteratorRef gi) {
+	_oChunkedListIterator i;
+	_oGraphIteratorEntry entry;
+	HeapBlockRef block;
+	_oChunkedListIteratorCreateStatic(&i, gi->stack, o_false);
+	while(_oChunkedListIteratorNext(&i, &entry)) {
+		block = getBlock(entry.obj);
+		clearMark(block);
+	}
+}
+
 void _oGraphIteratorDestroy(_oGraphIteratorRef gi) {
+	_oGraphIteratorClearMarks(gi);
     oFree(gi);
 }
 
@@ -1079,8 +1094,24 @@ oObject _oGraphIteratorNext(_oGraphIteratorRef gi) {
 		fieldInfo = fieldInfoArray[gi->current.idx];
 		if(fieldInfo->type->kind != o_T_STRUCT) {
 			field = getField(gi->current.obj, fieldInfo);
-			if(field != NULL && gi->testFn(field, gi->userData)) {
+			if(field != NULL) {
+				block = getBlock(field);
+				type = getType(block);
+				if((!isMarked(block)) && gi->testFn(field, gi->userData)) {
+					// Block was not visited before, and it passed the user test.
+					// Push the current entry on the stack, mark the block of the field
+					// as visited, set the field as current entry and return it.
 
+					// Since we break the loop here we need to increment "manually" so
+					// that we don't check the same field when we get back up the
+					// stack to this entry again.
+					++gi->current.idx;
+					_oChunkedListAdd(gi->stack, &gi->current);
+					setMark(block);
+					gi->current.idx = 0;
+					gi->current.obj = field;
+					return field;
+				}
 			}
 		}
 		else {
