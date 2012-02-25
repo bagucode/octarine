@@ -11,14 +11,6 @@ typedef void* oObject;
 typedef struct oArray oArray;
 typedef oArray* oArrayRef;
 
-typedef struct _oChunkedList _oChunkedList;
-typedef _oChunkedList* _oChunkedListRef;
-
-typedef uword (*_oChunkedListComparer)(pointer x, pointer y);
-
-typedef struct _oChunkedListIterator _oChunkedListIterator;
-typedef _oChunkedListIterator* _oChunkedListIteratorRef;
-
 typedef struct oClosure oClosure;
 typedef oClosure* oClosureRef;
 
@@ -27,11 +19,6 @@ typedef oError* oErrorRef;
 
 typedef struct oField oField;
 typedef oField* oFieldRef;
-
-typedef struct _oGraphIterator _oGraphIterator;
-typedef _oGraphIterator* _oGraphIteratorRef;
-
-typedef o_bool (*_oGraphIteratorTest)(oObject obj, pointer userData);
 
 typedef struct oFunction oFunction;
 typedef oFunction* oFunctionRef;

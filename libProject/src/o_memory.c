@@ -17,12 +17,13 @@ typedef struct _oChunkedListChunk {
 } _oChunkedListChunk;
 typedef _oChunkedListChunk* _oChunkedListChunkRef;
 
-struct _oChunkedList {
+typedef struct _oChunkedList {
     uword chunkSize;
     uword elementSize;
     _oChunkedListChunkRef head;
     _oChunkedListChunkRef tail;
-};
+} _oChunkedList;
+typedef _oChunkedList* _oChunkedListRef;
 
 static uword _oChunkedListTotalChunkSize(uword chunkSize, uword elementSize) {
     return chunkSize * elementSize + sizeof(_oChunkedListChunk);
@@ -82,21 +83,23 @@ void _oChunkedListAdd(_oChunkedListRef cl, pointer element) {
     ++chunk->usedSlots;
 }
 
-struct _oChunkedListIterator {
+typedef struct _oChunkedListIterator {
     uword idx;
     _oChunkedListRef cl;
     _oChunkedListChunkRef chunk;
     o_bool reverse;
-};
+} _oChunkedListIterator;
+typedef _oChunkedListIterator* _oChunkedListIteratorRef;
+
+o_bool _oChunkedListIteratorNext(_oChunkedListIteratorRef cli, pointer dest);
 
 static o_bool _oChunkedListFind(_oChunkedListIteratorRef cli,
-                                _oChunkedListComparer comparer,
                                 pointer compare,
                                 pointer dest,
                                 o_bool reverse) {
     o_bool ret = o_false;
     while(_oChunkedListIteratorNext(cli, dest)) {
-        if(comparer(compare, dest) == 0) {
+        if(memcmp(compare, dest, cli->cl->elementSize)) {
             ret = o_true;
             break;
         }
@@ -105,17 +108,15 @@ static o_bool _oChunkedListFind(_oChunkedListIteratorRef cli,
 }
 
 o_bool _oChunkedListFindFirst(_oChunkedListIteratorRef cli,
-                              _oChunkedListComparer comparer,
                               pointer compare,
                               pointer dest) {
-    return _oChunkedListFind(cli, comparer, compare, dest, o_false);
+    return _oChunkedListFind(cli, compare, dest, o_false);
 }
 
 o_bool _oChunkedListFindLast(_oChunkedListIteratorRef cli,
-                             _oChunkedListComparer comparer,
                              pointer compare,
                              pointer dest) {
-    return _oChunkedListFind(cli, comparer, compare, dest, o_true);
+    return _oChunkedListFind(cli, compare, dest, o_true);
 }
 
 static void _oChunkedListIteratorCreateStatic(_oChunkedListIteratorRef cli,
@@ -1012,34 +1013,28 @@ oObject _oHeapCopyObjectShared(oThreadContextRef ctx, oObject obj) {
 
 typedef struct _oGraphIteratorEntry {
     oObject obj;
+    // keep type separate to support embedded struct instances
+    oTypeRef type;
     uword idx; // field or array idx
 } _oGraphIteratorEntry;
 
-struct _oGraphIterator {
+typedef struct _oGraphIterator {
     _oChunkedListRef stack;
     _oGraphIteratorEntry current;
-    _oGraphIteratorTest testFn;
     pointer userData;
-};
+} _oGraphIterator;
+typedef _oGraphIterator* _oGraphIteratorRef;
 
-static uword _oGraphIteratorEntryComparer(pointer x, pointer y) {
-    _oGraphIteratorEntry* e1 = (_oGraphIteratorEntry*)x;
-    _oGraphIteratorEntry* e2 = (_oGraphIteratorEntry*)y;
-    return ((char*)e2->obj) - ((char*)e1->obj);
-}
-
-_oGraphIteratorRef _oGraphIteratorCreate(oObject start,
-                                         _oGraphIteratorTest testFn,
-                                         pointer userData) {
+_oGraphIteratorRef _oGraphIteratorCreate(oObject start, pointer userData) {
     _oGraphIteratorRef gi = (_oGraphIteratorRef)oMalloc(sizeof(_oGraphIterator));
     if(gi == NULL) {
         return NULL;
     }
     gi->current.idx = 0;
     gi->current.obj = start;
+    gi->current.type = getType(getBlock(start));
     gi->userData = userData;
     gi->stack = _oChunkedListCreate(128, sizeof(_oGraphIteratorEntry));
-    gi->testFn = testFn;
     return gi;
 }
 
@@ -1052,8 +1047,10 @@ static void _oGraphIteratorClearMarks(_oGraphIteratorRef gi) {
 	HeapBlockRef block;
 	_oChunkedListIteratorCreateStatic(&i, gi->stack, o_false);
 	while(_oChunkedListIteratorNext(&i, &entry)) {
-		block = getBlock(entry.obj);
-		clearMark(block);
+        if(entry.type->kind == o_T_OBJECT) {
+            block = getBlock(entry.obj);
+            clearMark(block);
+        }
 	}
 }
 
@@ -1064,23 +1061,24 @@ void _oGraphIteratorDestroy(_oGraphIteratorRef gi) {
 
 oObject _oGraphIteratorNext(_oGraphIteratorRef gi) {
     HeapBlockRef block;
-    oTypeRef type;
 	oFieldRef* fieldInfoArray;
 	oFieldRef fieldInfo;
 	oObject field;
-    _oChunkedListIterator cli;
-    _oGraphIteratorEntry tmp;
-	_oGraphIteratorEntry fieldEntry;
-    
-    block = getBlock(gi->current.obj);
-    type = getType(block);
-	while(type->fields == NULL || type->fields->num_elements == gi->current.idx) {
+
+    // using a label to do recursion instead of actually calling the function again
+    // so that we don't eat any stack space
+start:
+
+	while(gi->current.type->fields == NULL || gi->current.type->fields->num_elements == gi->current.idx) {
 		// Nothing to do for the current entry.
-		// Get next from stack or return NULL if the stack is empty.
-		if(_oChunkedListRemoveLast(gi->stack, &tmp)) {
-			gi->current = tmp;
-			block = getBlock(gi->current.obj);
-			type = getType(block);
+		// Pop next off stack or return NULL if the stack is empty.
+		if(_oChunkedListRemoveLast(gi->stack, &gi->current)) {
+            if(gi->current.type->kind == o_T_OBJECT) {
+                // remove mark when popping an object entry off the stack
+                // because we might be done with it
+                block = getBlock(gi->current.obj);
+                clearMark(block);
+            }
 		}
 		else {
 			// No more objects on the stack. We are done.
@@ -1088,41 +1086,69 @@ oObject _oGraphIteratorNext(_oGraphIteratorRef gi) {
 		}
 	}
 
-	fieldInfoArray = (oFieldRef*)oArrayDataPointer(type->fields);
+	fieldInfoArray = (oFieldRef*)oArrayDataPointer(gi->current.type->fields);
 
-	for(; gi->current.idx < type->fields->num_elements; ++gi->current.idx) {
+	for(; gi->current.idx < gi->current.type->fields->num_elements; ++gi->current.idx) {
+
 		fieldInfo = fieldInfoArray[gi->current.idx];
-		if(fieldInfo->type->kind != o_T_STRUCT) {
-			field = getField(gi->current.obj, fieldInfo);
+        field = getField(gi->current.obj, fieldInfo);
+        
+        // TODO: arrays!
+        if(fieldInfo->type->kind == o_T_OBJECT) {
 			if(field != NULL) {
 				block = getBlock(field);
-				type = getType(block);
-				if((!isMarked(block)) && gi->testFn(field, gi->userData)) {
-					// Block was not visited before, and it passed the user test.
-					// Push the current entry on the stack, mark the block of the field
-					// as visited, set the field as current entry and return it.
+				if(!isMarked(block)) {
+					// Block was not visited before.
+					// Push the current entry on the stack,
+                    // set the field as current entry and return it.
+
+                    if(gi->current.type->kind == o_T_OBJECT) {
+                        // mark the block of the entry we are pushing to prevent graph loops
+                        block = getBlock(gi->current.obj);
+                        setMark(block);
+                    }
 
 					// Since we break the loop here we need to increment "manually" so
 					// that we don't check the same field when we get back up the
 					// stack to this entry again.
 					++gi->current.idx;
 					_oChunkedListAdd(gi->stack, &gi->current);
-					setMark(block);
+
 					gi->current.idx = 0;
 					gi->current.obj = field;
-					return field;
+                    gi->current.type = fieldInfo->type;
+					return gi->current.obj;
 				}
 			}
 		}
-		else {
-			// struct type, find and follow embedded pointers
-			// ARGH! These can be arbitrarily nested. Need to somehow
-			// get all the pointers out. Seems eerily similar to what
-			// this whole iterator is supposed to do...
+		else if(fieldInfo->type->fields != NULL && fieldInfo->type->fields->num_elements > 0) {
+			// aggregate struct type
+
+            // 1. push current object on the stack, make field current
+            if(gi->current.type->kind == o_T_OBJECT) {
+                // mark the block of the entry we are pushing to prevent graph loops
+                block = getBlock(gi->current.obj);
+                setMark(block);
+            }
+
+            ++gi->current.idx;
+            _oChunkedListAdd(gi->stack, &gi->current);
+
+            gi->current.idx = 0;
+            gi->current.obj = field;
+            gi->current.type = fieldInfo->type;
+            
+            // 2. Since this is not an object member it only represents
+            // internal structure and we should not return it. Instead we
+            // start over from the first loop to find embedded object members.
+            goto start;
 		}
 	}
 
-	// If we end up here that means that 
+    // if we fall out of the second loop that means we are done with the current
+    // entry and need to pop another one from the stack, or finish. So we just
+    // start over from the first loop
+    goto start;
 }
 
 

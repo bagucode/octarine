@@ -36,43 +36,6 @@ oRootSetRef oMemoryCreateRootSet();
 
 void oMemoryDeleteRootSet(oRootSetRef roots);
 
-// Chunked List
-
-_oChunkedListRef _oChunkedListCreate(uword chunkSize, uword elementSize);
-void _oChunkedListDestroy(_oChunkedListRef cl);
-void _oChunkedListAdd(_oChunkedListRef cl, pointer element);
-o_bool _oChunkedListFindFirst(_oChunkedListIteratorRef cli,
-                              _oChunkedListComparer comparer,
-                              pointer compare,
-                              pointer dest);
-o_bool _oChunkedListFindLast(_oChunkedListIteratorRef cli,
-                             _oChunkedListComparer comparer,
-                             pointer compare,
-                             pointer dest);
-/**
-    Removes the last element from the list and copies it to the
-	location pointed to by dest.
-	Return value is o_true if there was an element to remove.
-	dest may be NULL in which case nothing is copied.
-*/
-o_bool _oChunkedListRemoveLast(_oChunkedListRef cl, pointer dest);
-
-_oChunkedListIteratorRef _oChunkedListIteratorCreate(_oChunkedListRef cl, o_bool reverse);
-void _oChunkedListIteratorDestroy(_oChunkedListIteratorRef cli);
-o_bool _oChunkedListIteratorNext(_oChunkedListIteratorRef cli, pointer dest);
-
-// Graph Iterator
-
-/**
-    The Test function should return true if the iterator is allowed to
-	process the tested object.
-*/
-_oGraphIteratorRef _oGraphIteratorCreate(oObject start,
-                                         _oGraphIteratorTest testFn,
-                                         pointer userData);
-void _oGraphIteratorDestroy(_oGraphIteratorRef gi);
-oObject _oGraphIteratorNext(_oGraphIteratorRef gi);
-
 oObject o_bootstrap_object_alloc(oRuntimeRef rt,
 		                         oHeapRef heap,
                                  oTypeRef proto_type,
