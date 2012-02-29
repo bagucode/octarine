@@ -1015,25 +1015,25 @@ typedef struct _oGraphIteratorEntry {
     oObject obj;
     // keep type separate to support embedded struct instances
     oTypeRef type;
-    uword idx; // field or array idx
+    uword fieldIdx;
+	uword arrayIdx;
 } _oGraphIteratorEntry;
 
 typedef struct _oGraphIterator {
     _oChunkedListRef stack;
     _oGraphIteratorEntry current;
-    pointer userData;
 } _oGraphIterator;
 typedef _oGraphIterator* _oGraphIteratorRef;
 
-_oGraphIteratorRef _oGraphIteratorCreate(oObject start, pointer userData) {
+_oGraphIteratorRef _oGraphIteratorCreate(oObject start) {
     _oGraphIteratorRef gi = (_oGraphIteratorRef)oMalloc(sizeof(_oGraphIterator));
     if(gi == NULL) {
         return NULL;
     }
-    gi->current.idx = 0;
+    gi->current.fieldIdx = 0;
+	gi->current.arrayIdx = 0;
     gi->current.obj = start;
     gi->current.type = getType(getBlock(start));
-    gi->userData = userData;
     gi->stack = _oChunkedListCreate(128, sizeof(_oGraphIteratorEntry));
     return gi;
 }
@@ -1065,39 +1065,69 @@ oObject _oGraphIteratorNext(oThreadContextRef ctx, _oGraphIteratorRef gi) {
 	oFieldRef fieldInfo;
 	oObject field;
 
+	// THIS IS BROKEN!
+	// TODO: fix!
+	// The error is that some elements may be returned more than once
+	// because even though using the mark handles cycles in the recursion
+	// we could traverse some parts of the graph again later because we
+	// clear the marks when popping objects off the stack and any subgraph
+	// may have any number of objects pointing to it.
+	// Have to keep track of all objects traversed in a separate list and
+	// use that list to clear all the marks at once after we are all done.
+
+	// May not be able to use mark bits at all if that messes with collection
+	// of the shared heap?
+	// What happens if a graph iterator is running in a thread that is
+	// stopped by the shared heap gc to have its roots examined?
+	// That running iterator and the gc will mess up the marks for each other.
+	// If the shared heap gc has to wait for any graph iterator in a thread
+	// being stopped to complete then we get a deadlock situation because
+	// the graph iterator could be used for graph copying to the shared heap
+	// and any allocation in the shared heap has to wait for shared heap gc
+	// to finish.
+
 start:
 
+	// Handle arrays first since they are the most special case
     if(fieldInfo->type == ctx->runtime->builtInTypes.array) {
-        // Do array contents first?
-        // Or should this code be after the while loop?
+
     }
 
-	while(gi->current.type->fields == NULL || gi->current.type->fields->num_elements == gi->current.idx) {
-        
-        // TODO: make sure the type is also followed here!
-        // 
-        
-		// Nothing to do for the current entry.
-		// Pop next off stack or return NULL if the stack is empty.
-		if(_oChunkedListRemoveLast(gi->stack, &gi->current)) {
+	while(gi->current.type->fields == NULL || gi->current.type->fields->num_elements == gi->current.fieldIdx) {
+		// Check if the type of current has been followed as well
+		// and make type the current object if not.
+		block = getBlock(gi->current.type);
+		if(!isMarked(block)) {
+			gi->current.fieldIdx = 0;
+			gi->current.obj = gi->current.type;
+			gi->current.type = ctx->runtime->builtInTypes.type;
+			return gi->current.obj;
+		}
+		// Pop next object off stack
+		else if(_oChunkedListRemoveLast(gi->stack, &gi->current)) {
             if(gi->current.type->kind == o_T_OBJECT) {
                 // remove mark when popping an object entry off the stack
                 // because we might be done with it
                 block = getBlock(gi->current.obj);
                 clearMark(block);
+				// if the popped object is also an array, go back to the
+				// start so that the members are iterated.
+				if(gi->current.type == ctx->runtime->builtInTypes.array) {
+					goto start;
+				}
             }
 		}
+		// No more objects on the stack. We are done.
 		else {
-			// No more objects on the stack. We are done.
 			return NULL;
 		}
 	}
 
 	fieldInfoArray = (oFieldRef*)oArrayDataPointer(gi->current.type->fields);
 
-	for(; gi->current.idx < gi->current.type->fields->num_elements; ++gi->current.idx) {
+	for(; gi->current.fieldIdx < gi->current.type->fields->num_elements; ++gi->current.fieldIdx) {
 
-		fieldInfo = fieldInfoArray[gi->current.idx];
+		fieldInfo = fieldInfoArray[gi->current.fieldIdx];
         field = getField(gi->current.obj, fieldInfo);
         
         if(fieldInfo->type->kind == o_T_OBJECT) {
@@ -1117,10 +1147,10 @@ start:
 					// Since we break the loop here we need to increment "manually" so
 					// that we don't check the same field when we get back up the
 					// stack to this entry again.
-					++gi->current.idx;
+					++gi->current.fieldIdx;
 					_oChunkedListAdd(gi->stack, &gi->current);
 
-					gi->current.idx = 0;
+					gi->current.fieldIdx = 0;
 					gi->current.obj = field;
                     gi->current.type = fieldInfo->type;
 					return gi->current.obj;
@@ -1137,10 +1167,10 @@ start:
                 setMark(block);
             }
 
-            ++gi->current.idx;
+            ++gi->current.fieldIdx;
             _oChunkedListAdd(gi->stack, &gi->current);
 
-            gi->current.idx = 0;
+            gi->current.fieldIdx = 0;
             gi->current.obj = field;
             gi->current.type = fieldInfo->type;
             
