@@ -1059,17 +1059,24 @@ void _oGraphIteratorDestroy(_oGraphIteratorRef gi) {
     oFree(gi);
 }
 
-oObject _oGraphIteratorNext(_oGraphIteratorRef gi) {
+oObject _oGraphIteratorNext(oThreadContextRef ctx, _oGraphIteratorRef gi) {
     HeapBlockRef block;
 	oFieldRef* fieldInfoArray;
 	oFieldRef fieldInfo;
 	oObject field;
 
-    // using a label to do recursion instead of actually calling the function again
-    // so that we don't eat any stack space
 start:
 
+    if(fieldInfo->type == ctx->runtime->builtInTypes.array) {
+        // Do array contents first?
+        // Or should this code be after the while loop?
+    }
+
 	while(gi->current.type->fields == NULL || gi->current.type->fields->num_elements == gi->current.idx) {
+        
+        // TODO: make sure the type is also followed here!
+        // 
+        
 		// Nothing to do for the current entry.
 		// Pop next off stack or return NULL if the stack is empty.
 		if(_oChunkedListRemoveLast(gi->stack, &gi->current)) {
@@ -1093,7 +1100,6 @@ start:
 		fieldInfo = fieldInfoArray[gi->current.idx];
         field = getField(gi->current.obj, fieldInfo);
         
-        // TODO: arrays!
         if(fieldInfo->type->kind == o_T_OBJECT) {
 			if(field != NULL) {
 				block = getBlock(field);
@@ -1124,7 +1130,7 @@ start:
 		else if(fieldInfo->type->fields != NULL && fieldInfo->type->fields->num_elements > 0) {
 			// aggregate struct type
 
-            // 1. push current object on the stack, make field current
+            // 1. Push current object on the stack, make field current
             if(gi->current.type->kind == o_T_OBJECT) {
                 // mark the block of the entry we are pushing to prevent graph loops
                 block = getBlock(gi->current.obj);
