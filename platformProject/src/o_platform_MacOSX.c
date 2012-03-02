@@ -10,6 +10,10 @@ pointer oMalloc(uword size) {
     return malloc(size);
 }
 
+pointer oReAlloc(pointer loc, uword size) {
+    return realloc(loc, size);
+}
+
 void oFree(pointer location) {
     free(location);
 }

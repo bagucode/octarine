@@ -36,6 +36,7 @@ void oSpinLockUnlock(oSpinLockRef lock);
 
 /* Memory management */
 pointer oMalloc(uword size);
+pointer oReAlloc(pointer loc, uword size);
 void oFree(pointer location);
 
 /* String support */
