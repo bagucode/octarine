@@ -10,11 +10,16 @@
 // Internal helper data types
 ///////////////////////////////////////////////////////////////////////////////
 
-// Cuckoo hashing set to store addresses
+// Cuckoo hash table
+
+typedef struct CuckooEntry {
+    oObject key;
+    oObject val;
+} CuckooEntry;
 
 typedef struct Cuckoo {
 	uword capacity;
-	oObject* table;
+	CuckooEntry* table;
 } Cuckoo;
 typedef Cuckoo* CuckooRef;
 
@@ -32,8 +37,8 @@ static CuckooRef CuckooCreate(uword initialCap) {
     
 	ck = (CuckooRef)oMalloc(sizeof(Cuckoo));
 	ck->capacity = nextp2(initialCap);
-	byteSize = ck->capacity * sizeof(oObject);
-	ck->table = (oObject*)oMalloc(byteSize);
+	byteSize = ck->capacity * sizeof(CuckooEntry);
+	ck->table = (CuckooEntry*)oMalloc(byteSize);
 	memset(ck->table, 0, byteSize);
     
 	return ck;
@@ -56,31 +61,31 @@ static uword CuckooHash3(oObject p) {
 	return ((uword)p) * 31;
 }
 
-static oObject CuckooTryPut(CuckooRef ck, oObject val) {
-	oObject tmp;
+static o_bool CuckooTryPut(CuckooRef ck, CuckooEntry* entry) {
 	uword i, mask;
+    CuckooEntry tmp;
     
 	mask = ck->capacity - 1;
     
-	i = CuckooHash1(val) & mask;
+	i = CuckooHash1(entry->key) & mask;
 	tmp = ck->table[i];
-	ck->table[i] = val;
-	val = tmp;
-    if(val == NULL) return NULL;
-    
-	i = CuckooHash2(val) & mask;
+	ck->table[i] = *entry;
+	*entry = tmp;
+    if(entry->key == NULL) return o_true;
+
+	i = CuckooHash2(entry->key) & mask;
 	tmp = ck->table[i];
-	ck->table[i] = val;
-	val = tmp;
-    if(val == NULL) return NULL;
-    
-	i = CuckooHash3(val) & mask;
+	ck->table[i] = *entry;
+	*entry = tmp;
+    if(entry->key == NULL) return o_true;
+
+	i = CuckooHash3(entry->key) & mask;
 	tmp = ck->table[i];
-	ck->table[i] = val;
-	val = tmp;
-    if(val == NULL) return NULL;
-    
-	return val;
+	ck->table[i] = *entry;
+	*entry = tmp;
+    if(entry->key == NULL) return o_true;
+
+	return o_false;
 }
 
 static void CuckooGrow(CuckooRef ck) {
@@ -88,8 +93,8 @@ static void CuckooGrow(CuckooRef ck) {
 	uword i, cap;
 	
 	for(i = 0; i < ck->capacity; ++i) {
-		if(ck->table[i] != NULL) {
-			if(CuckooTryPut(bigger, ck->table[i]) != NULL) {
+		if(ck->table[i].key != NULL) {
+			if(CuckooTryPut(bigger, &ck->table[i]) == o_false) {
 				cap = bigger->capacity + 1;
 				CuckooDestroy(bigger);
 				bigger = CuckooCreate(cap);
@@ -102,14 +107,16 @@ static void CuckooGrow(CuckooRef ck) {
 	oFree(bigger);
 }
 
-static void CuckooPut(CuckooRef ck, oObject val) {
+static void CuckooPut(CuckooRef ck, oObject key, oObject val) {
 	uword i, mask;
+    CuckooEntry entry;
     
+    entry.key = key;
+    entry.val = val;
 	mask = ck->capacity - 1;
 	while(o_true) {
 		for(i = 0; i < 5; ++i) {
-			val = CuckooTryPut(ck, val);
-			if(val == NULL) {
+			if(CuckooTryPut(ck, &entry)) {
 				return;
 			}
 		}
@@ -117,21 +124,21 @@ static void CuckooPut(CuckooRef ck, oObject val) {
 	}
 }
 
-static o_bool CuckooContains(CuckooRef ck, oObject val) {
+static oObject CuckooGet(CuckooRef ck, oObject key) {
 	uword i, mask;
     
 	mask = ck->capacity - 1;
     
-	i = CuckooHash1(val) & mask;
-	if(ck->table[i] == val) return o_true;
+	i = CuckooHash1(key) & mask;
+	if(ck->table[i].key == key) return ck->table[i].val;
     
-	i = CuckooHash2(val) & mask;
-	if(ck->table[i] == val) return o_true;
-    
-	i = CuckooHash3(val) & mask;
-	if(ck->table[i] == val) return o_true;
-    
-	return o_false;
+	i = CuckooHash2(key) & mask;
+	if(ck->table[i].key == key) return ck->table[i].val;
+
+	i = CuckooHash3(key) & mask;
+	if(ck->table[i].key == key) return ck->table[i].val;
+
+	return NULL;
 }
 
 // Graph Iterator
@@ -184,27 +191,31 @@ static o_bool EntryStackPop(EntryStackRef stack, GraphIteratorEntry* out) {
 
 // Graph Iterator continued
 
+typedef o_bool (*GraphIteratorCheckFn)(oObject obj, pointer userData);
+
 typedef struct GraphIterator {
     EntryStackRef stack;
-    CuckooRef seen;
+    GraphIteratorCheckFn checkFn;
+    pointer userData;
     GraphIteratorEntry current;
 } GraphIterator;
 typedef GraphIterator* GraphIteratorRef;
 
-static GraphIteratorRef GraphIteratorCreate(oObject start) {
+static GraphIteratorRef GraphIteratorCreate(oObject start,
+                                            GraphIteratorCheckFn checkFn,
+                                            pointer userData) {
     GraphIteratorRef gi = (GraphIteratorRef)oMalloc(sizeof(GraphIterator));
     gi->current.idx = 0;
     gi->current.obj = start;
     gi->current.type = oMemoryGetObjectType(NULL, start);
     gi->stack = EntryStackCreate(500);
-    gi->seen = CuckooCreate(1000);
-    CuckooPut(gi->seen, start);
+    gi->checkFn = checkFn;
+    gi->userData = userData;
     return gi;
 }
 
 static void GraphIteratorDestroy(GraphIteratorRef gi) {
     EntryStackDestroy(gi->stack);
-    CuckooDestroy(gi->seen);
     oFree(gi);
 }
 
@@ -223,18 +234,13 @@ static oObject GraphIteratorNext(oThreadContextRef ctx, GraphIteratorRef gi) {
     
 start:
 	while(gi->current.type->fields == NULL || gi->current.type->fields->num_elements <= gi->current.idx) {
-		// Check if the type of current has been followed as well
-		// and make type the current object if not.
-		if(CuckooContains(gi->seen, gi->current.type) == o_false) {
-            CuckooPut(gi->seen, gi->current.type);
+		if(gi->checkFn(gi->current.type, gi->userData)) {
 			gi->current.idx = 0;
 			gi->current.obj = gi->current.type;
 			gi->current.type = ctx->runtime->builtInTypes.type;
 			return gi->current.obj;
 		}
         else if(gi->current.type == ctx->runtime->builtInTypes.array) {
-            // Done with the regular fields but we still have to
-            // follow any objects in the array
             arr = (oArrayRef)gi->current.obj;
             arrayIdx = gi->current.idx - gi->current.type->fields->num_elements;
             for(; arrayIdx < arr->num_elements; ++arrayIdx) {
@@ -243,12 +249,9 @@ start:
                 if(arr->element_type->kind == o_T_OBJECT) {
                     field = *((oObject*)field);
                     if(field != NULL) {
-                        if(CuckooContains(gi->seen, field) == o_false) {
-                            CuckooPut(gi->seen, field);
-                            
+                        if(gi->checkFn(field, gi->userData)) {
                             gi->current.idx = arrayIdx + gi->current.type->fields->num_elements + 1;
                             EntryStackPush(gi->stack, &gi->current);
-                            
                             gi->current.idx = 0;
                             gi->current.obj = field;
                             gi->current.type = arr->element_type;
@@ -259,7 +262,6 @@ start:
                 else if(arr->element_type->fields != NULL && arr->element_type->fields->num_elements > 0) {
                     gi->current.idx = arrayIdx + gi->current.type->fields->num_elements + 1;
                     EntryStackPush(gi->stack, &gi->current);
-                    
                     gi->current.idx = 0;
                     gi->current.obj = field;
                     gi->current.type = arr->element_type;
@@ -280,12 +282,9 @@ start:
         if(fieldInfo->type->kind == o_T_OBJECT) {
             field = getField(gi->current.obj, fieldInfo);
 			if(field != NULL) {
-				if(CuckooContains(gi->seen, field) == o_false) {
-                    CuckooPut(gi->seen, field);
-
+				if(gi->checkFn(field, gi->userData)) {
 					++gi->current.idx; // Don't check this field again
                     EntryStackPush(gi->stack, &gi->current);
-
 					gi->current.idx = 0;
 					gi->current.obj = field;
                     gi->current.type = fieldInfo->type;
@@ -295,10 +294,8 @@ start:
 		}
 		else if(fieldInfo->type->fields != NULL && fieldInfo->type->fields->num_elements > 0) {
 			// aggregate struct type
-
             ++gi->current.idx; // Don't check this field again
             EntryStackPush(gi->stack, &gi->current);
-            
             gi->current.idx = 0;
             gi->current.obj = field;
             gi->current.type = fieldInfo->type;
