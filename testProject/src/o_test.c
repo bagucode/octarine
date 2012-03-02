@@ -32,7 +32,8 @@ void testGCAllGarbage() {
         oListObjCreate(NULL);
     }
 
-    oENDVOIDFN
+    oENDVOIDFN 
+    //Add check that heap is almost empty (wait unil/force)
     oRuntimeDestroy(runtime);
 }
 

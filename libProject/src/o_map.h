@@ -6,21 +6,22 @@
 
 /* A hash map where the keys are strings and the values objects of any type */
 
-struct oMapStrObjEntry {
-    oStringRef key;
+struct oMapEntry {
+    oObject key;
     oObject value;
 };
 
-struct oMapStrObj {
+struct oMap {
     oArrayRef buckets; /* array of oListObj containing entries */
-    f32 load_factor;
+    uword numEntries;
+    f32 loadFactor;
 };
 
-oMapStrObjRef oMapStrObjCreate(oThreadContextRef ctx);
-void oMapStrObjDestroy(oMapStrObjRef map);
-void oMapStrObjPut(oMapStrObjRef map, oStringRef key, oObject value);
+oMapRef oMapCreate(oThreadContextRef ctx);
+void oMapPut(oMapRef map, oStringRef key, oObject value);
 /* Type of returned object is Nothing if there was no entry. */
-oObject oMapStrObjGet(oMapStrObjRef map, oStringRef key);
+oObject oMapGet(oMapRef map, oStringRef key);
+
 
 void o_bootstrap_map_init_type(oThreadContextRef ctx);
 
