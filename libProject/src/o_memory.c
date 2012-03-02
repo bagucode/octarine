@@ -6,6 +6,193 @@
 #include "o_array.h"
 #include <memory.h> /* TODO: replace this with some platform function */
 
+// Chunked List
+
+typedef struct _oChunkedListChunk {
+    uword usedSlots;
+    struct _oChunkedListChunk* next;
+    struct _oChunkedListChunk* prev;
+    uword padding; // for 16 byte data alignment (perhaps not needed here?)
+    char data[0];
+} _oChunkedListChunk;
+typedef _oChunkedListChunk* _oChunkedListChunkRef;
+
+typedef struct _oChunkedList {
+    uword chunkSize;
+    uword elementSize;
+    _oChunkedListChunkRef head;
+    _oChunkedListChunkRef tail;
+} _oChunkedList;
+typedef _oChunkedList* _oChunkedListRef;
+
+static uword _oChunkedListTotalChunkSize(uword chunkSize, uword elementSize) {
+    return chunkSize * elementSize + sizeof(_oChunkedListChunk);
+}
+
+static _oChunkedListChunkRef _oChunkedListAllocChunk(_oChunkedListRef lst) {
+    uword size = _oChunkedListTotalChunkSize(lst->chunkSize, lst->elementSize);
+    _oChunkedListChunkRef chunk = (_oChunkedListChunkRef)oMalloc(size);
+    if(chunk == NULL) {
+        return NULL;
+    }
+    memset(chunk, 0, size);
+    return chunk;
+}
+
+_oChunkedListRef _oChunkedListCreate(uword chunkSize, uword elementSize) {
+    _oChunkedListRef lst;
+    lst = (_oChunkedListRef)oMalloc(sizeof(_oChunkedList));
+    if(lst == NULL) {
+        return NULL;
+    }
+    lst->chunkSize = chunkSize;
+    lst->elementSize = elementSize;
+    lst->head = _oChunkedListAllocChunk(lst);
+    if(lst->head == NULL) {
+        oFree(lst);
+        return NULL;
+    }
+    lst->tail = lst->head;
+    return lst;
+}
+
+void _oChunkedListDestroy(_oChunkedListRef cl) {
+    _oChunkedListChunkRef chunk, tmp;
+    chunk = cl->head;
+    while(chunk) {
+        tmp = chunk->next;
+        oFree(chunk);
+        chunk = tmp;
+    }
+    oFree(cl);
+}
+
+void _oChunkedListAdd(_oChunkedListRef cl, pointer element) {
+    _oChunkedListChunkRef tmp, chunk = cl->tail;
+    pointer chunkElement;
+    if(chunk->usedSlots == cl->chunkSize) {
+        tmp = _oChunkedListAllocChunk(cl);
+        // TODO: handle allocation error with return code?
+        cl->tail = tmp;
+        chunk->next = cl->tail;
+        cl->tail->prev = chunk;
+        chunk = cl->tail;
+    }
+    chunkElement = (pointer)(chunk->usedSlots * cl->elementSize + chunk->data);
+    memcpy(chunkElement, element, cl->elementSize);
+    ++chunk->usedSlots;
+}
+
+typedef struct _oChunkedListIterator {
+    uword idx;
+    _oChunkedListRef cl;
+    _oChunkedListChunkRef chunk;
+    o_bool reverse;
+} _oChunkedListIterator;
+typedef _oChunkedListIterator* _oChunkedListIteratorRef;
+
+o_bool _oChunkedListIteratorNext(_oChunkedListIteratorRef cli, pointer dest);
+
+static o_bool _oChunkedListFind(_oChunkedListIteratorRef cli,
+                                pointer compare,
+                                pointer dest,
+                                o_bool reverse) {
+    o_bool ret = o_false;
+    while(_oChunkedListIteratorNext(cli, dest)) {
+        if(memcmp(compare, dest, cli->cl->elementSize)) {
+            ret = o_true;
+            break;
+        }
+    }
+    return ret;
+}
+
+o_bool _oChunkedListFindFirst(_oChunkedListIteratorRef cli,
+                              pointer compare,
+                              pointer dest) {
+    return _oChunkedListFind(cli, compare, dest, o_false);
+}
+
+o_bool _oChunkedListFindLast(_oChunkedListIteratorRef cli,
+                             pointer compare,
+                             pointer dest) {
+    return _oChunkedListFind(cli, compare, dest, o_true);
+}
+
+static void _oChunkedListIteratorCreateStatic(_oChunkedListIteratorRef cli,
+                                              _oChunkedListRef cl,
+                                              o_bool reverse) {
+    cli->cl = cl;
+    cli->reverse = reverse;
+    if(reverse) {
+        cli->chunk = cl->tail;
+        cli->idx = cli->chunk->usedSlots;
+    }
+    else {
+        cli->chunk = cl->head;
+        cli->idx = 0;
+    }
+}
+
+_oChunkedListIteratorRef _oChunkedListIteratorCreate(_oChunkedListRef cl, o_bool reverse) {
+    _oChunkedListIteratorRef iter = (_oChunkedListIteratorRef)oMalloc(sizeof(_oChunkedListIterator));
+    if(iter == NULL) {
+        return NULL;
+    }
+    _oChunkedListIteratorCreateStatic(iter, cl, reverse);
+    return iter;
+}
+
+void _oChunkedListIteratorDestroy(_oChunkedListIteratorRef cli) {
+    oFree(cli);
+}
+
+o_bool _oChunkedListIteratorNext(_oChunkedListIteratorRef cli, pointer dest) {
+    uword idx;
+    if(cli->reverse) {
+        if(cli->idx == 0) {
+            if(cli->chunk->prev == NULL) {
+                return o_false;
+            }
+            cli->chunk = cli->chunk->prev;
+            cli->idx = cli->chunk->usedSlots;
+        }
+        --cli->idx;
+        idx = cli->idx;
+    }
+    else {
+        if(cli->idx == cli->chunk->usedSlots) {
+            if(cli->chunk->next == NULL) {
+                return o_false;
+            }
+            cli->chunk = cli->chunk->next;
+            cli->idx = 0;
+        }
+        idx = cli->idx;
+        ++cli->idx;
+    }
+    memcpy(dest, cli->cl->elementSize * idx + cli->chunk->data, cli->cl->elementSize);
+    return o_true;
+}
+
+o_bool _oChunkedListRemoveLast(_oChunkedListRef cl, pointer dest) {
+    _oChunkedListChunkRef prev;
+    if(cl->tail->usedSlots == 0) {
+        return o_false;
+    }
+    --cl->tail->usedSlots;
+	if(dest) {
+		memcpy(dest, cl->elementSize * cl->tail->usedSlots + cl->tail->data, cl->elementSize);
+	}
+    if(cl->tail->usedSlots == 0 && cl->tail != cl->head) {
+        prev = cl->tail->prev;
+        prev->next = NULL;
+        oFree(cl->tail);
+        cl->tail = prev;
+    }
+    return o_true;
+}
+
 // Alignment of object (in bytes) within a heap block
 // Currently hardcoded to 16 to allow for SSE vectors
 #define HEAP_ALIGN 16
@@ -21,12 +208,23 @@ typedef struct HeapBlock {
 } HeapBlock;
 typedef HeapBlock *HeapBlockRef;
 
+#define BLOCKSIZE sizeof(HeapBlock) + (HEAP_ALIGN - 1) + sizeof(pointer)
+
+static uword alignOffset(uword offset, uword on) {
+    return (offset + (on - 1)) & (~(on - 1));
+}
+
 static oObject getObject(HeapBlockRef block) {
-    return (void*)(((uword)block + sizeof(void*) + HEAP_ALIGN - 1) & ~(HEAP_ALIGN - 1));
+	uword offset = ((uword)block) + sizeof(HeapBlock) + sizeof(pointer);
+	return (void*)alignOffset(offset, HEAP_ALIGN);
 }
 
 static uword calcBlockSize(uword dataSize) {
-    return sizeof(HeapBlock) + dataSize + (HEAP_ALIGN - 1) + sizeof(void*);
+	return BLOCKSIZE + dataSize;
+}
+
+static void setBlock(oObject obj, HeapBlockRef block) {
+    (*((void **)obj - 1)) = (void*)block;
 }
 
 static HeapBlockRef allocBlock(uword dataSize) {
@@ -38,7 +236,7 @@ static HeapBlockRef allocBlock(uword dataSize) {
     }
 	memset(block, 0, size);
     obj = getObject(block);
-    (*((void **)obj - 1)) = (void*)block;
+	setBlock(obj, block);
     return block;
 }
 
@@ -244,6 +442,26 @@ static void traceAndMark(oRuntimeRef rt, oHeapRef heap, oObject obj, oTypeRef ty
             if(block) {
                 setMark(block);
             }
+            if(type == rt->builtInTypes.array) {
+				array = (oArrayRef)obj;
+				if(!oTypeIsPrimitive(array->element_type)) {
+					if(array->element_type->kind == o_T_OBJECT) {
+						arrayObjs = (oObject*)oArrayDataPointer(array);
+						for(i = 0; i < array->num_elements; ++i) {
+							traceAndMark(rt, heap, arrayObjs[i], array->element_type);
+						}
+					}
+					else {
+						// TODO: take array alignment into account once that is implemented
+						arrayStride = array->element_type->size;
+						fieldPtr = oArrayDataPointer(array);
+						for(i = 0; i < array->num_elements; ++i) {
+							traceAndMark(rt, heap, fieldPtr, array->element_type);
+							fieldPtr = ((char*)fieldPtr) + arrayStride;
+						}
+					}
+				}
+			}
             /* Some types don't have fields */
             if(type->fields) {
                 fields = (oFieldRef*)oArrayDataPointer(type->fields);
@@ -266,27 +484,6 @@ static void traceAndMark(oRuntimeRef rt, oHeapRef heap, oObject obj, oTypeRef ty
                     }
                 }
             }
-			/* else clause for field NULL check, array handling */
-			else if(type == rt->builtInTypes.array) {
-				array = (oArrayRef)obj;
-				if(!oTypeIsPrimitive(array->element_type)) {
-					if(array->element_type->kind == o_T_OBJECT) {
-						arrayObjs = (oObject*)oArrayDataPointer(array);
-						for(i = 0; i < array->num_elements; ++i) {
-							traceAndMark(rt, heap, arrayObjs[i], array->element_type);
-						}
-					}
-					else {
-						// TODO: take array alignment into account once that is implemented
-						arrayStride = array->element_type->size;
-						fieldPtr = oArrayDataPointer(array);
-						for(i = 0; i < array->num_elements; ++i) {
-							traceAndMark(rt, heap, fieldPtr, array->element_type);
-							fieldPtr = ((char*)fieldPtr) + arrayStride;
-						}
-					}
-				}
-			}
         }
     }
     // Also mark the type to make sure that does not disappear
@@ -608,6 +805,11 @@ static oObject* getFieldpp(oObject obj, oFieldRef field) {
     return (oObject*)(chObj + field->offset);
 }
 
+static oObject getField(oObject obj, oFieldRef field) {
+    char* chObj = (char*)obj;
+    return (oObject)(chObj + field->offset);
+}
+
 static o_bool heapCopyObjectSharedFields(oRuntimeRef rt,
                                          oHeapRef sharedHeap,
                                          oObject obj,
@@ -638,6 +840,7 @@ static o_bool heapCopyFieldShared(oRuntimeRef rt,
                 return o_false;
             }
             fieldObjCopy = getObject(fieldBlockCopy);
+			setBlock(fieldObjCopy, fieldBlockCopy);
             // Add to translation table
             (*table) = pushFrontHCPT(*table, *fieldpp, fieldObjCopy);
             // Fix field pointer to use new copy
@@ -655,6 +858,7 @@ static o_bool heapCopyObjectSharedFields(oRuntimeRef rt,
                                          oHeapRef sharedHeap,
                                          oObject obj,
                                          HeapCopyPointerTableRef* table) {
+    HeapCopyPointerTableRef tableEntry;
     HeapBlockRef block = getBlock(obj);
     oTypeRef type = getType(block);
     HeapBlockRef typeBlockCopy;
@@ -663,29 +867,51 @@ static o_bool heapCopyObjectSharedFields(oRuntimeRef rt,
     oObject *fieldpp, typeCopy;
     oArrayRef arr;
     char* arrayData;
-    
+
+    // Arrays need special handling.
     if(type == rt->builtInTypes.array) {
         arr = (oArrayRef)obj;
+        // Only process the array if it contains elements of aggregate type,
+        // primitive types contain no internal pointers.
         if(arr->element_type->fields != NULL && arr->element_type->fields->num_elements > 0) {
-            arrayData = (char*)oArrayDataPointer(arr);
-            fields = (oFieldRef*)oArrayDataPointer(arr->element_type->fields);
-            for(e = 0; e < arr->num_elements; ++e) {
-                arrayData += e * arr->element_type->size;
-                for(i = 0; i < arr->element_type->fields->num_elements; ++i) {
-                    // TODO: immutable check & cancel mutable check
-                    if(fields[i]->type->kind == o_T_OBJECT) {
-                        fieldpp = getFieldpp((oObject)arrayData, fields[i]);
+            // If the array contains elements of object type, just iterate through the
+            // pointers and process them recirsively if they are not null
+            if(arr->element_type->kind == o_T_OBJECT) {
+                arrayData = (char*)oArrayDataPointer(arr);
+                for(e = 0; e < arr->num_elements; ++e) {
+                    fieldpp = &(((oObject*)arrayData)[e]);
+                    if(*fieldpp) {
                         if(heapCopyFieldShared(rt, sharedHeap, fieldpp, table) == o_false) {
                             return o_false;
                         }
                     }
-                }
+                } // elements loop
             }
+            // The array contains elements of an aggregate value type, we need to
+            // go through all the entries and check the fields in the entries for
+            // object pointers to follow.
+            else {
+                arrayData = (char*)oArrayDataPointer(arr);
+                fields = (oFieldRef*)oArrayDataPointer(arr->element_type->fields);
+                for(e = 0; e < arr->num_elements; ++e, arrayData += arr->element_type->size) {
+                    for(i = 0; i < arr->element_type->fields->num_elements; ++i) {
+                        // TODO: immutable check & cancel mutable check
+                        if(fields[i]->type->kind == o_T_OBJECT) {
+                            fieldpp = getFieldpp((oObject)arrayData, fields[i]);
+                            if(*fieldpp) {
+                                if(heapCopyFieldShared(rt, sharedHeap, fieldpp, table) == o_false) {
+                                    return o_false;
+                                }
+                            }
+                        } // field kind check
+                    } // fields loop
+                } // elements loop
+            } // else struct type
         }
     }
 
-    // This applies to arrays as well, to copy their type field
-    // so do not add en else clause
+    // Non array case, but this applies to arrays as well, to copy their type field
+    // so do not change this to an else-if statement.
     if(type->fields != NULL && type->fields->num_elements > 0) {
         // The type has fields, iterate through them and follow each object field
         fields = (oFieldRef*)oArrayDataPointer(type->fields);
@@ -693,26 +919,42 @@ static o_bool heapCopyObjectSharedFields(oRuntimeRef rt,
             // TODO: immutable check & cancel mutable check
             if(fields[i]->type->kind == o_T_OBJECT) {
                 fieldpp = getFieldpp(obj, fields[i]);
-                if(heapCopyFieldShared(rt, sharedHeap, fieldpp, table) == o_false) {
-                    return o_false;
+                if(*fieldpp) {
+                    if(heapCopyFieldShared(rt, sharedHeap, fieldpp, table) == o_false) {
+                        return o_false;
+                    }
                 }
             }
         }
     }
     
-    // Also copy the type used by the initial block if not shared already.
+    // Also copy the type used by the initial block if not shared or copied already.
     block = getBlock(type);
     if(!isShared(block)) {
-        typeBlockCopy = copyBlockShared(rt, sharedHeap, type);
-        if(typeBlockCopy == NULL) {
-            return o_false;
+        tableEntry = findEntryHCPT(*table, type);
+        if(tableEntry != NULL) {
+            // Found it, just fix the block type of the object.
+			block = getBlock(obj);
+			setType(block, (oTypeRef)tableEntry->copy);
         }
-        typeCopy = getObject(typeBlockCopy);
-        // Add to translation table
-        (*table) = pushFrontHCPT(*table, type, typeCopy);
-        if(heapCopyObjectSharedFields(rt, sharedHeap, typeCopy, table) == o_false) {
-            return o_false;
-        }
+		else {
+			typeBlockCopy = copyBlockShared(rt, sharedHeap, type);
+			if(typeBlockCopy == NULL) {
+				return o_false;
+			}
+			typeCopy = getObject(typeBlockCopy);
+			setBlock(typeCopy, typeBlockCopy);
+			// Add to translation table
+			(*table) = pushFrontHCPT(*table, type, typeCopy);
+			// Now that we have a new copy of the type, fix the type
+			// of the object block to use the new, shared copy.
+			block = getBlock(obj);
+			setType(block, (oTypeRef)typeCopy);
+			// And recursively copy any objects the type object depends on.
+			if(heapCopyObjectSharedFields(rt, sharedHeap, typeCopy, table) == o_false) {
+				return o_false;
+			}
+		}
     }
     // All members have been moved so it is now safe to
     // set the initial block to shared and add a record for it
@@ -728,7 +970,7 @@ oObject _oHeapCopyObjectShared(oThreadContextRef ctx, oObject obj) {
     HeapBlockRef copyBlock;
     oObject copy;
     oHeapRef sharedHeap;
-    
+
     // No need to do anything if the object graph is already shared.
     if(isObjectShared(obj)) {
         return obj;
@@ -750,6 +992,7 @@ oObject _oHeapCopyObjectShared(oThreadContextRef ctx, oObject obj) {
         return NULL;
     }
     copy = getObject(copyBlock);
+	setBlock(copy, copyBlock);
     pointerTable = pushFrontHCPT(NULL, obj, copy);
 
     // Step 2. Recursively follow all pointers and copy the whole graph.
@@ -766,6 +1009,183 @@ oObject _oHeapCopyObjectShared(oThreadContextRef ctx, oObject obj) {
     return copy;
 }
 
+// Graph Iterator
+
+typedef struct _oGraphIteratorEntry {
+    oObject obj;
+    // keep type separate to support embedded struct instances
+    oTypeRef type;
+    uword fieldIdx;
+	uword arrayIdx;
+} _oGraphIteratorEntry;
+
+typedef struct _oGraphIterator {
+    _oChunkedListRef stack;
+    _oGraphIteratorEntry current;
+} _oGraphIterator;
+typedef _oGraphIterator* _oGraphIteratorRef;
+
+_oGraphIteratorRef _oGraphIteratorCreate(oObject start) {
+    _oGraphIteratorRef gi = (_oGraphIteratorRef)oMalloc(sizeof(_oGraphIterator));
+    if(gi == NULL) {
+        return NULL;
+    }
+    gi->current.fieldIdx = 0;
+	gi->current.arrayIdx = 0;
+    gi->current.obj = start;
+    gi->current.type = getType(getBlock(start));
+    gi->stack = _oChunkedListCreate(128, sizeof(_oGraphIteratorEntry));
+    return gi;
+}
+
+/**
+	Clear marks on any blocks still in the stack.
+*/
+static void _oGraphIteratorClearMarks(_oGraphIteratorRef gi) {
+	_oChunkedListIterator i;
+	_oGraphIteratorEntry entry;
+	HeapBlockRef block;
+	_oChunkedListIteratorCreateStatic(&i, gi->stack, o_false);
+	while(_oChunkedListIteratorNext(&i, &entry)) {
+        if(entry.type->kind == o_T_OBJECT) {
+            block = getBlock(entry.obj);
+            clearMark(block);
+        }
+	}
+}
+
+void _oGraphIteratorDestroy(_oGraphIteratorRef gi) {
+	_oGraphIteratorClearMarks(gi);
+    oFree(gi);
+}
+
+oObject _oGraphIteratorNext(oThreadContextRef ctx, _oGraphIteratorRef gi) {
+    HeapBlockRef block;
+	oFieldRef* fieldInfoArray;
+	oFieldRef fieldInfo;
+	oObject field;
+
+	// THIS IS BROKEN!
+	// TODO: fix!
+	// The error is that some elements may be returned more than once
+	// because even though using the mark handles cycles in the recursion
+	// we could traverse some parts of the graph again later because we
+	// clear the marks when popping objects off the stack and any subgraph
+	// may have any number of objects pointing to it.
+	// Have to keep track of all objects traversed in a separate list and
+	// use that list to clear all the marks at once after we are all done.
+
+	// May not be able to use mark bits at all if that messes with collection
+	// of the shared heap?
+	// What happens if a graph iterator is running in a thread that is
+	// stopped by the shared heap gc to have its roots examined?
+	// That running iterator and the gc will mess up the marks for each other.
+	// If the shared heap gc has to wait for any graph iterator in a thread
+	// being stopped to complete then we get a deadlock situation because
+	// the graph iterator could be used for graph copying to the shared heap
+	// and any allocation in the shared heap has to wait for shared heap gc
+	// to finish.
+
+start:
+
+	// Handle arrays first since they are the most special case
+    if(fieldInfo->type == ctx->runtime->builtInTypes.array) {
+
+    }
+
+	while(gi->current.type->fields == NULL || gi->current.type->fields->num_elements == gi->current.fieldIdx) {
+		// Check if the type of current has been followed as well
+		// and make type the current object if not.
+		block = getBlock(gi->current.type);
+		if(!isMarked(block)) {
+			gi->current.fieldIdx = 0;
+			gi->current.obj = gi->current.type;
+			gi->current.type = ctx->runtime->builtInTypes.type;
+			return gi->current.obj;
+		}
+		// Pop next object off stack
+		else if(_oChunkedListRemoveLast(gi->stack, &gi->current)) {
+            if(gi->current.type->kind == o_T_OBJECT) {
+                // remove mark when popping an object entry off the stack
+                // because we might be done with it
+                block = getBlock(gi->current.obj);
+                clearMark(block);
+				// if the popped object is also an array, go back to the
+				// start so that the members are iterated.
+				if(gi->current.type == ctx->runtime->builtInTypes.array) {
+					goto start;
+				}
+            }
+		}
+		// No more objects on the stack. We are done.
+		else {
+			return NULL;
+		}
+	}
+
+	fieldInfoArray = (oFieldRef*)oArrayDataPointer(gi->current.type->fields);
+
+	for(; gi->current.fieldIdx < gi->current.type->fields->num_elements; ++gi->current.fieldIdx) {
+
+		fieldInfo = fieldInfoArray[gi->current.fieldIdx];
+        field = getField(gi->current.obj, fieldInfo);
+        
+        if(fieldInfo->type->kind == o_T_OBJECT) {
+			if(field != NULL) {
+				block = getBlock(field);
+				if(!isMarked(block)) {
+					// Block was not visited before.
+					// Push the current entry on the stack,
+                    // set the field as current entry and return it.
+
+                    if(gi->current.type->kind == o_T_OBJECT) {
+                        // mark the block of the entry we are pushing to prevent graph loops
+                        block = getBlock(gi->current.obj);
+                        setMark(block);
+                    }
+
+					// Since we break the loop here we need to increment "manually" so
+					// that we don't check the same field when we get back up the
+					// stack to this entry again.
+					++gi->current.fieldIdx;
+					_oChunkedListAdd(gi->stack, &gi->current);
+
+					gi->current.fieldIdx = 0;
+					gi->current.obj = field;
+                    gi->current.type = fieldInfo->type;
+					return gi->current.obj;
+				}
+			}
+		}
+		else if(fieldInfo->type->fields != NULL && fieldInfo->type->fields->num_elements > 0) {
+			// aggregate struct type
+
+            // 1. Push current object on the stack, make field current
+            if(gi->current.type->kind == o_T_OBJECT) {
+                // mark the block of the entry we are pushing to prevent graph loops
+                block = getBlock(gi->current.obj);
+                setMark(block);
+            }
+
+            ++gi->current.fieldIdx;
+            _oChunkedListAdd(gi->stack, &gi->current);
+
+            gi->current.fieldIdx = 0;
+            gi->current.obj = field;
+            gi->current.type = fieldInfo->type;
+            
+            // 2. Since this is not an object member it only represents
+            // internal structure and we should not return it. Instead we
+            // start over from the first loop to find embedded object members.
+            goto start;
+		}
+	}
+
+    // if we fall out of the second loop that means we are done with the current
+    // entry and need to pop another one from the stack, or finish. So we just
+    // start over from the first loop
+    goto start;
+}
 
 
 

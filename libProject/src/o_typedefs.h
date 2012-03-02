@@ -1,7 +1,12 @@
 #ifndef octarine_typedefs_h
 #define octarine_typedefs_h
 
-/* Please put in alphabetical order. */
+#include "../../platformProject/src/o_basic_types.h"
+
+/* Please put in alphabetical order.
+   (Unless it is impossible due to dependencies) */
+
+typedef void* oObject;
 
 typedef struct oArray oArray;
 typedef oArray* oArrayRef;
@@ -35,8 +40,6 @@ typedef oMap* oMapRef;
 
 typedef struct oMapEntry oMapEntry;
 typedef oMapEntry* oMapEntryRef;
-
-typedef void* oObject;
 
 typedef void (*oFinalizer)(oObject obj);
 
