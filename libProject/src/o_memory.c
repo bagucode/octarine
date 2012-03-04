@@ -141,173 +141,169 @@ static oObject CuckooGet(CuckooRef ck, oObject key) {
 	return NULL;
 }
 
-// Graph Iterator
+// Stack, used in the iterators below
 
-typedef struct GraphIteratorEntry {
-    oObject obj;
-    // keep type separate to support embedded struct instances
-    oTypeRef type;
-    uword idx;
-} GraphIteratorEntry;
-
-// Expanding stack to store entries
-
-typedef struct EntryStack {
+typedef struct Stack {
     uword capacity;
     uword top;
-    GraphIteratorEntry* stack;
-} EntryStack;
-typedef EntryStack* EntryStackRef;
+    uword entrySize;
+    char* stack;
+} Stack;
+typedef Stack* StackRef;
 
-static EntryStackRef EntryStackCreate(uword initialCap) {
-    EntryStackRef stack = (EntryStackRef)oMalloc(sizeof(EntryStack));
+static StackRef StackCreate(uword entrySize, uword initialCap) {
+    StackRef stack = (StackRef)oMalloc(sizeof(Stack));
     stack->capacity = initialCap;
     stack->top = 0;
-    stack->stack = (GraphIteratorEntry*)oMalloc(sizeof(GraphIteratorEntry) * initialCap);
+    stack->entrySize = entrySize;
+    stack->stack = (char*)oMalloc(entrySize * initialCap);
     return stack;
 }
 
-static void EntryStackDestroy(EntryStackRef stack) {
+static void StackDestroy(StackRef stack) {
     oFree(stack->stack);
     oFree(stack);
 }
 
-static void EntryStackPush(EntryStackRef stack, GraphIteratorEntry* entry) {
+static void StackPush(StackRef stack, pointer entry) {
+    uword index;
+    
     if(stack->capacity == stack->top) {
         stack->capacity *= 2;
-        stack->stack = oReAlloc(stack->stack, sizeof(GraphIteratorEntry) * stack->capacity);
+        stack->stack = oReAlloc(stack->stack, stack->entrySize * stack->capacity);
     }
-    stack->stack[stack->top++] = (*entry);
+    index = stack->entrySize * stack->top;
+    memcpy(stack->stack + index, entry, stack->entrySize);
+    ++stack->top;
 }
 
-static o_bool EntryStackPop(EntryStackRef stack, GraphIteratorEntry* out) {
+static o_bool StackPop(StackRef stack, pointer out) {
+    uword index;
+    
     if(stack->top == 0) {
         return o_false;
     }
     --stack->top;
-    (*out) = stack->stack[stack->top];
+    index = stack->entrySize * stack->top;
+    memcpy(out, stack->stack + index, stack->entrySize);
     return o_true;
 }
 
-// Graph Iterator continued
+// Object-embedded object pointer iterator
 
-typedef o_bool (*GraphIteratorCheckFn)(oObject obj, pointer userData);
+typedef struct PointerIteratorEntry {
+    oObject obj;
+    oTypeRef type;
+    uword idx;
+} PointerIteratorEntry;
+typedef PointerIteratorEntry* PointerIteratorEntryRef;
 
-typedef struct GraphIterator {
-    EntryStackRef stack;
-    GraphIteratorCheckFn checkFn;
-    pointer userData;
-    GraphIteratorEntry current;
-} GraphIterator;
-typedef GraphIterator* GraphIteratorRef;
+typedef struct PointerIterator {
+    StackRef stack;
+    PointerIteratorEntry current;
+} PointerIterator;
+typedef PointerIterator* PointerIteratorRef;
 
-static GraphIteratorRef GraphIteratorCreate(oObject start,
-                                            GraphIteratorCheckFn checkFn,
-                                            pointer userData) {
-    GraphIteratorRef gi = (GraphIteratorRef)oMalloc(sizeof(GraphIterator));
-    gi->current.idx = 0;
-    gi->current.obj = start;
-    gi->current.type = oMemoryGetObjectType(NULL, start);
-    gi->stack = EntryStackCreate(500);
-    gi->checkFn = checkFn;
-    gi->userData = userData;
-    return gi;
+static PointerIteratorRef PointerIteratorCreate(oObject obj) {
+    PointerIteratorRef iter = (PointerIteratorRef)oMalloc(sizeof(PointerIterator));
+    iter->stack = StackCreate(sizeof(PointerIteratorEntry), 10);
+    iter->current.obj = obj;
+    iter->current.idx = 0;
+    iter->current.type = oMemoryGetObjectType(NULL, obj);
+    return iter;
 }
 
-static void GraphIteratorDestroy(GraphIteratorRef gi) {
-    EntryStackDestroy(gi->stack);
-    oFree(gi);
+static void PointerIteratorDestroy(PointerIteratorRef pi) {
+    StackDestroy(pi->stack);
+    oFree(pi);
 }
 
-static oObject getField(oObject obj, oFieldRef field) {
-    char* chObj = (char*)obj;
-    return (oObject)(chObj + field->offset);
-}
-
-static oObject GraphIteratorNext(oThreadContextRef ctx, GraphIteratorRef gi) {
-	oFieldRef* fieldInfoArray;
-	oFieldRef fieldInfo;
+static oObject* PointerIteratorNext(oRuntimeRef rt, PointerIteratorRef pi) {
+    oFieldRef* fieldArr;
+    oFieldRef field;
     oArrayRef arr;
-    char* arrData;
-	oObject field;
     uword arrayIdx;
-    
-start:
-	while(gi->current.type->fields == NULL || gi->current.type->fields->num_elements <= gi->current.idx) {
-		if(gi->checkFn(gi->current.type, gi->userData)) {
-			gi->current.idx = 0;
-			gi->current.obj = gi->current.type;
-			gi->current.type = ctx->runtime->builtInTypes.type;
-			return gi->current.obj;
-		}
-        else if(gi->current.type == ctx->runtime->builtInTypes.array) {
-            arr = (oArrayRef)gi->current.obj;
-            arrayIdx = gi->current.idx - gi->current.type->fields->num_elements;
-            for(; arrayIdx < arr->num_elements; ++arrayIdx) {
-                arrData = oArrayDataPointer(arr);
-                field = arrData + arr->element_type->size * arrayIdx;
-                if(arr->element_type->kind == o_T_OBJECT) {
-                    field = *((oObject*)field);
-                    if(field != NULL) {
-                        if(gi->checkFn(field, gi->userData)) {
-                            gi->current.idx = arrayIdx + gi->current.type->fields->num_elements + 1;
-                            EntryStackPush(gi->stack, &gi->current);
-                            gi->current.idx = 0;
-                            gi->current.obj = field;
-                            gi->current.type = arr->element_type;
-                            return gi->current.obj;
+    char* arrayData;
+
+    while(pi->current.obj != NULL) {
+        if(pi->current.type->fields != NULL) {
+
+            if(pi->current.idx < pi->current.type->fields->num_elements
+               && pi->current.type != rt->builtInTypes.array) {
+                fieldArr = (oFieldRef*)oArrayDataPointer(pi->current.type->fields);
+                field = fieldArr[pi->current.idx++];
+                if(field->type->kind == o_T_OBJECT) {
+                    return (oObject*)(((char*)pi->current.obj) + field->offset);
+                }
+                else {
+                    // Embedded struct field. Push current on stack and make
+                    // the struct field current, then start over.
+                    StackPush(pi->stack, &pi->current);
+                    pi->current.obj = (oObject)(((char*)pi->current.obj) + field->offset);
+                    pi->current.type = field->type;
+                    pi->current.idx = 0;
+                    continue;
+                }
+            }
+
+            else if(pi->current.type == rt->builtInTypes.array) {
+                arr = (oArrayRef)pi->current.obj;
+                if(arr->element_type->fields != NULL) {
+                    arrayIdx = pi->current.idx - rt->builtInTypes.array->fields->num_elements;
+                    if(arrayIdx < arr->num_elements) {
+                        ++pi->current.idx;
+                        arrayData = (char*)oArrayDataPointer(arr);
+                        if(arr->element_type->kind == o_T_OBJECT) {
+                            return (oObject*)(arrayData + (arr->element_type->size * arrayIdx));
+                        }
+                        else {
+                            StackPush(pi->stack, &pi->current);
+                            pi->current.obj = (oObject)(arrayData + (arr->element_type->size * arrayIdx));
+                            pi->current.type = arr->element_type;
+                            pi->current.idx = 0;
+                            continue;
                         }
                     }
                 }
-                else if(arr->element_type->fields != NULL && arr->element_type->fields->num_elements > 0) {
-                    gi->current.idx = arrayIdx + gi->current.type->fields->num_elements + 1;
-                    EntryStackPush(gi->stack, &gi->current);
-                    gi->current.idx = 0;
-                    gi->current.obj = field;
-                    gi->current.type = arr->element_type;
-                    
-                    goto start;
-                }
             }
-        }
-        if(EntryStackPop(gi->stack, &gi->current) == o_false) {
-            return NULL;
-        }
-	}
-    
-	fieldInfoArray = (oFieldRef*)oArrayDataPointer(gi->current.type->fields);
-    
-	for(; gi->current.idx < gi->current.type->fields->num_elements; ++gi->current.idx) {
-		fieldInfo = fieldInfoArray[gi->current.idx];
-        if(fieldInfo->type->kind == o_T_OBJECT) {
-            field = getField(gi->current.obj, fieldInfo);
-			if(field != NULL) {
-				if(gi->checkFn(field, gi->userData)) {
-					++gi->current.idx; // Don't check this field again
-                    EntryStackPush(gi->stack, &gi->current);
-					gi->current.idx = 0;
-					gi->current.obj = field;
-                    gi->current.type = fieldInfo->type;
-					return gi->current.obj;
-				}
-			}
-		}
-		else if(fieldInfo->type->fields != NULL && fieldInfo->type->fields->num_elements > 0) {
-			// aggregate struct type
-            ++gi->current.idx; // Don't check this field again
-            EntryStackPush(gi->stack, &gi->current);
-            gi->current.idx = 0;
-            gi->current.obj = field;
-            gi->current.type = fieldInfo->type;
             
-            goto start;
-		}
-	}
+        }
+        if(StackPop(pi->stack, &pi->current) == o_false) {
+            // All done if there are no pushed fields left on the stack
+            pi->current.obj = NULL;
+        }
+    }
+    return NULL;
+}
+
+typedef struct OPArray {
+    uword size;
+    oObject** ops;
+} OPArray;
+
+static OPArray findEmbeddedPointers(oRuntimeRef rt, oObject obj) {
+    OPArray ret;
+    oObject* op;
+    uword currSize = 20;
+    PointerIteratorRef pi = PointerIteratorCreate(obj);
     
-    // if we fall out of the second loop that means we are done with the current
-    // entry and need to pop another one from the stack, or finish. So we just
-    // start over from the first loop
-    goto start;
+    ret.ops = (oObject**)oMalloc(sizeof(oObject*) * currSize);
+    ret.size = 0;
+    while((op = PointerIteratorNext(rt, pi)) != NULL) {
+        ret.ops[ret.size++] = op;
+        if(ret.size > currSize) {
+            currSize *= 2;
+            ret.ops = (oObject**)oReAlloc(ret.ops, sizeof(oObject*) * currSize);
+        }
+    }
+    
+    PointerIteratorDestroy(pi);
+    ret.ops = (oObject**)oReAlloc(ret.ops, sizeof(oObject*) * ret.size);
+    return ret;
+}
+
+static void OPArrayDestroy(OPArray op) {
+    oFree(op.ops);
 }
 
 
@@ -860,272 +856,38 @@ static o_bool isObjectShared(oObject obj) {
     return isShared(getBlock(obj));
 }
 
-// ***** Object Graph Copying *****
+///////////////////////////////////////////////////////////////////////////////
+// Graph Copying
+///////////////////////////////////////////////////////////////////////////////
 
-typedef struct hcpt {
-    oObject original;
-    oObject copy;
-    struct hcpt* prev;
-} HeapCopyPointerTable;
-typedef HeapCopyPointerTable* HeapCopyPointerTableRef;
-
-static HeapCopyPointerTableRef pushFrontHCPT(HeapCopyPointerTableRef hcpt, oObject orig, oObject copy) {
-    HeapCopyPointerTableRef next = (HeapCopyPointerTableRef)oMalloc(sizeof(HeapCopyPointerTable));
-    next->copy = copy;
-    next->original = orig;
-    next->prev = hcpt;
-    return next;
-}
-
-static void destroyHCPT(HeapCopyPointerTableRef hcpt, o_bool killBlocks) {
+static oObject copyObject(oRuntimeRef rt, oObject obj) {
     HeapBlockRef block;
-    HeapCopyPointerTableRef tmp;
-    
-    while (hcpt) {
-        if(killBlocks && hcpt->copy) {
-            block = getBlock(hcpt->copy);
-            oFree(block);
-        }
-        tmp = hcpt->prev;
-        oFree(hcpt);
-        hcpt = tmp;
-    }
-}
-
-static HeapCopyPointerTableRef findEntryHCPT(HeapCopyPointerTableRef hcpt, oObject orig) {
-    while (hcpt) {
-        if(hcpt->original == orig) {
-            return hcpt;
-        }
-        hcpt = hcpt->prev;
-    }
-    return NULL;
-}
-
-// This does GC if needed but does not set the shared flag or fix up
-// any internal pointers. That must be done only after all members have
-// also been copied.
-static HeapBlockRef copyBlockShared(oRuntimeRef rt, oHeapRef sharedHeap, oObject orig) {
-    HeapBlockRef origBlock;
-    HeapBlockRef copyBlock;
+    HeapBlockRef blockCpy;
+    oObject objCpy;
     uword blockSize;
-    oTypeRef type;
-
-    origBlock = getBlock(orig);
-    type = getType(origBlock);
-    blockSize = getBlockSize(rt, origBlock);
-    if(checkHeapSpace(rt, sharedHeap, blockSize) == o_false) {
-        sharedHeap->gcThreshold *= 2;
-    }
-    copyBlock = (HeapBlockRef)oMalloc(blockSize);
-    if(copyBlock == NULL)
-        return NULL;
-    memcpy(copyBlock, origBlock, blockSize);
-    return copyBlock;
-}
-
-static oObject* getFieldpp(oObject obj, oFieldRef field) {
-    char* chObj = (char*)obj;
-    return (oObject*)(chObj + field->offset);
-}
-
-static o_bool heapCopyObjectSharedFields(oRuntimeRef rt,
-                                         oHeapRef sharedHeap,
-                                         oObject obj,
-                                         HeapCopyPointerTableRef* table);
-
-static o_bool heapCopyFieldShared(oRuntimeRef rt,
-                                  oHeapRef sharedHeap,
-                                  oObject* fieldpp,
-                                  HeapCopyPointerTableRef* table) {
-    HeapCopyPointerTableRef tableEntry;
-    HeapBlockRef fieldBlock;
-    HeapBlockRef fieldBlockCopy;
-    oObject fieldObjCopy;
     
-    fieldBlock = getBlock(*fieldpp);
-    if(!isShared(fieldBlock)) {
-        // The block is not shared since before but it might have
-        // been copied already in this run (if there are circles), check the table
-        tableEntry = findEntryHCPT(*table, *fieldpp);
-        if(tableEntry != NULL) {
-            // Found it, just fix the pointer.
-            (*fieldpp) = tableEntry->copy;
-        }
-        else {
-            // Not copied already; copy and recurse.
-            fieldBlockCopy = copyBlockShared(rt, sharedHeap, *fieldpp);
-            if(fieldBlockCopy == NULL) {
-                return o_false;
-            }
-            fieldObjCopy = getObject(fieldBlockCopy);
-			setBlock(fieldObjCopy, fieldBlockCopy);
-            // Add to translation table
-            (*table) = pushFrontHCPT(*table, *fieldpp, fieldObjCopy);
-            // Fix field pointer to use new copy
-            (*fieldpp) = fieldObjCopy;
-            // And do recursive call to fix/copy members of this member
-            if(heapCopyObjectSharedFields(rt, sharedHeap, fieldObjCopy, table) == o_false) {
-                return o_false;
-            }
-        }
-    }
-    return o_true;
-}
-
-static o_bool heapCopyObjectSharedFields(oRuntimeRef rt,
-                                         oHeapRef sharedHeap,
-                                         oObject obj,
-                                         HeapCopyPointerTableRef* table) {
-    HeapCopyPointerTableRef tableEntry;
-    HeapBlockRef block = getBlock(obj);
-    oTypeRef type = getType(block);
-    HeapBlockRef typeBlockCopy;
-    oFieldRef* fields;
-    uword e, i;
-    oObject *fieldpp, typeCopy;
-    oArrayRef arr;
-    char* arrayData;
-
-    // Arrays need special handling.
-    if(type == rt->builtInTypes.array) {
-        arr = (oArrayRef)obj;
-        // Only process the array if it contains elements of aggregate type,
-        // primitive types contain no internal pointers.
-        if(arr->element_type->fields != NULL && arr->element_type->fields->num_elements > 0) {
-            // If the array contains elements of object type, just iterate through the
-            // pointers and process them recirsively if they are not null
-            if(arr->element_type->kind == o_T_OBJECT) {
-                arrayData = (char*)oArrayDataPointer(arr);
-                for(e = 0; e < arr->num_elements; ++e) {
-                    fieldpp = &(((oObject*)arrayData)[e]);
-                    if(*fieldpp) {
-                        if(heapCopyFieldShared(rt, sharedHeap, fieldpp, table) == o_false) {
-                            return o_false;
-                        }
-                    }
-                } // elements loop
-            }
-            // The array contains elements of an aggregate value type, we need to
-            // go through all the entries and check the fields in the entries for
-            // object pointers to follow.
-            else {
-                arrayData = (char*)oArrayDataPointer(arr);
-                fields = (oFieldRef*)oArrayDataPointer(arr->element_type->fields);
-                for(e = 0; e < arr->num_elements; ++e, arrayData += arr->element_type->size) {
-                    for(i = 0; i < arr->element_type->fields->num_elements; ++i) {
-                        // TODO: immutable check & cancel mutable check
-                        if(fields[i]->type->kind == o_T_OBJECT) {
-                            fieldpp = getFieldpp((oObject)arrayData, fields[i]);
-                            if(*fieldpp) {
-                                if(heapCopyFieldShared(rt, sharedHeap, fieldpp, table) == o_false) {
-                                    return o_false;
-                                }
-                            }
-                        } // field kind check
-                    } // fields loop
-                } // elements loop
-            } // else struct type
-        }
-    }
-
-    // Non array case, but this applies to arrays as well, to copy their type field
-    // so do not change this to an else-if statement.
-    if(type->fields != NULL && type->fields->num_elements > 0) {
-        // The type has fields, iterate through them and follow each object field
-        fields = (oFieldRef*)oArrayDataPointer(type->fields);
-        for (i = 0; i < type->fields->num_elements; ++i) {
-            // TODO: immutable check & cancel mutable check
-            if(fields[i]->type->kind == o_T_OBJECT) {
-                fieldpp = getFieldpp(obj, fields[i]);
-                if(*fieldpp) {
-                    if(heapCopyFieldShared(rt, sharedHeap, fieldpp, table) == o_false) {
-                        return o_false;
-                    }
-                }
-            }
-        }
-    }
-    
-    // Also copy the type used by the initial block if not shared or copied already.
-    block = getBlock(type);
-    if(!isShared(block)) {
-        tableEntry = findEntryHCPT(*table, type);
-        if(tableEntry != NULL) {
-            // Found it, just fix the block type of the object.
-			block = getBlock(obj);
-			setType(block, (oTypeRef)tableEntry->copy);
-        }
-		else {
-			typeBlockCopy = copyBlockShared(rt, sharedHeap, type);
-			if(typeBlockCopy == NULL) {
-				return o_false;
-			}
-			typeCopy = getObject(typeBlockCopy);
-			setBlock(typeCopy, typeBlockCopy);
-			// Add to translation table
-			(*table) = pushFrontHCPT(*table, type, typeCopy);
-			// Now that we have a new copy of the type, fix the type
-			// of the object block to use the new, shared copy.
-			block = getBlock(obj);
-			setType(block, (oTypeRef)typeCopy);
-			// And recursively copy any objects the type object depends on.
-			if(heapCopyObjectSharedFields(rt, sharedHeap, typeCopy, table) == o_false) {
-				return o_false;
-			}
-		}
-    }
-    // All members have been moved so it is now safe to
-    // set the initial block to shared and add a record for it
     block = getBlock(obj);
-    setShared(block);
-    addHeapEntry(sharedHeap, block);
-    return o_true;
+    blockSize = getBlockSize(rt, block);
+    blockCpy = (HeapBlockRef)oMalloc(blockSize);
+    if(blockCpy == NULL) {
+        return NULL;
+    }
+	memcpy(blockCpy, block, blockSize);
+    objCpy = getObject(blockCpy);
+	setBlock(objCpy, blockCpy);
+    setShared(blockCpy);
+    return objCpy;
 }
 
 oObject _oHeapCopyObjectShared(oThreadContextRef ctx, oObject obj) {
-    oRuntimeRef rt;
-    HeapCopyPointerTableRef pointerTable;
-    HeapBlockRef copyBlock;
-    oObject copy;
-    oHeapRef sharedHeap;
 
     // No need to do anything if the object graph is already shared.
     if(isObjectShared(obj)) {
         return obj;
     }
     
-    rt = ctx->runtime;
-    sharedHeap = rt->globals;
-
-    oMutexLock(sharedHeap->mutex);
-
-    // Step 1. Do the first block separately here so that we can get
-    // a pointer to the return object.
     
-    // TODO: immutable check
-
-    copyBlock = copyBlockShared(rt, sharedHeap, obj);
-    if(copyBlock == NULL) {
-        oMutexUnlock(sharedHeap->mutex);
-        return NULL;
-    }
-    copy = getObject(copyBlock);
-	setBlock(copy, copyBlock);
-    pointerTable = pushFrontHCPT(NULL, obj, copy);
-
-    // Step 2. Recursively follow all pointers and copy the whole graph.
-
-    if(heapCopyObjectSharedFields(rt, sharedHeap, copy, &pointerTable) == o_false) {
-        destroyHCPT(pointerTable, o_true);
-        copy = NULL;
-    }
-    else {
-        destroyHCPT(pointerTable, o_false);
-    }
-
-    oMutexUnlock(sharedHeap->mutex);
-    return copy;
+    return NULL;
 }
 
 
