@@ -19,6 +19,10 @@ void oFree(pointer location) {
     free(location);
 }
 
+pointer oReAlloc(pointer loc, uword size) {
+	return realloc(loc, size);
+}
+
 /* Strings */
 
 struct oNativeString {
