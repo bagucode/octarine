@@ -860,34 +860,109 @@ static o_bool isObjectShared(oObject obj) {
 // Graph Copying
 ///////////////////////////////////////////////////////////////////////////////
 
-static oObject copyObject(oRuntimeRef rt, oObject obj) {
+static oObject copyObject(oRuntimeRef rt, oObject obj, uword* size) {
     HeapBlockRef block;
     HeapBlockRef blockCpy;
     oObject objCpy;
-    uword blockSize;
     
     block = getBlock(obj);
-    blockSize = getBlockSize(rt, block);
-    blockCpy = (HeapBlockRef)oMalloc(blockSize);
+    *size = getBlockSize(rt, block);
+    blockCpy = (HeapBlockRef)oMalloc(*size);
     if(blockCpy == NULL) {
         return NULL;
     }
-	memcpy(blockCpy, block, blockSize);
+	memcpy(blockCpy, block, *size);
     objCpy = getObject(blockCpy);
 	setBlock(objCpy, blockCpy);
     setShared(blockCpy);
     return objCpy;
 }
 
-oObject _oHeapCopyObjectShared(oThreadContextRef ctx, oObject obj) {
+typedef struct GraphCopyEntry {
+	oObject obj;
+	oObject copy;
+	uword idx;
+	OPArray pointers;
+} GraphCopyEntry;
 
+oObject _oHeapCopyObjectShared(oThreadContextRef ctx, oObject obj) {
+	CuckooRef seen;
+	oObject childCopy;
+	StackRef stack;
+	GraphCopyEntry current;
+	OPArray copyPointers;
+	uword i, blockSize, totalSize;
+	oTypeRef type;
+	
     // No need to do anything if the object graph is already shared.
     if(isObjectShared(obj)) {
         return obj;
     }
-    
-    
-    return NULL;
+
+	totalSize = 0;
+	seen = CuckooCreate(500);
+	stack = StackCreate(sizeof(GraphCopyEntry), 250);
+
+	current.pointers = findEmbeddedPointers(ctx->runtime, obj);
+	current.idx = 0;
+	current.obj = obj;
+	current.copy = copyObject(ctx->runtime, obj, &blockSize);
+	totalSize += blockSize;
+
+	oMutexLock(ctx->runtime->globals->mutex);
+
+	while(current.obj != NULL) {
+		if(current.idx < current.pointers.size) {
+			obj = *current.pointers.ops[current.idx++];
+			if(obj != NULL && !isObjectShared(obj) && CuckooGet(seen, obj) == NULL) {
+				// Go depth first so we can fix the child pointers in the same pass
+				StackPush(stack, &current);
+				current.pointers = findEmbeddedPointers(ctx->runtime, obj);
+				current.idx = 0;
+				current.obj = obj;
+				current.copy = copyObject(ctx->runtime, obj, &blockSize);
+				totalSize += blockSize;
+				CuckooPut(seen, obj, current.copy);
+			}
+		}
+		else {
+			// All children copied. Fix up the pointers.
+			copyPointers = findEmbeddedPointers(ctx->runtime, current.copy);
+			for(i = 0; i < copyPointers.size; ++i) {
+				if(*copyPointers.ops[i] != NULL) {
+					childCopy = CuckooGet(seen, *copyPointers.ops[i]);
+					if(childCopy) {
+						*copyPointers.ops[i] = childCopy;
+					}
+				}
+			}
+			OPArrayDestroy(copyPointers);
+
+			// Now add it to the shared heap records
+			addHeapEntry(ctx->runtime->globals, getBlock(current.copy));
+
+			// Pop next off stack
+			OPArrayDestroy(current.pointers);
+			if(StackPop(stack, &current) == o_false) {
+				// All done!
+				current.obj = NULL;
+			}
+		}
+	}
+
+	// All records have been added. Make a temporary root for the top
+	// object in the graph and run a space check so that the GC will
+	// kick in if we went over the limit.
+	oMemoryPushFrame(ctx, &current.copy, 1);
+	checkHeapSpace(ctx->runtime, ctx->runtime->globals, totalSize);
+	oMemoryPopFrame(ctx);
+
+	oMutexUnlock(ctx->runtime->globals->mutex);
+
+	StackDestroy(stack);
+	CuckooDestroy(seen);
+
+	return current.copy;
 }
 
 

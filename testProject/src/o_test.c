@@ -441,6 +441,7 @@ void testSimpleCopySharedDoesNotCrash() {
     oRoots.copyMe = oStringCreate("Hello World!");
     oRoots.theCopy = _oHeapCopyObjectShared(ctx, oRoots.copyMe);
     assert(oRoots.theCopy != NULL);
+	assert(oRoots.theCopy != oRoots.copyMe);
     
     oENDVOIDFN
     oRuntimeDestroy(rt);
@@ -462,7 +463,7 @@ int main(int argc, char** argv) {
     testReadVector();
     testReadKeyword();
     testOutOfMemory();
- //   testSimpleCopySharedDoesNotCrash();
+    testSimpleCopySharedDoesNotCrash();
     
 	return 0;
 }
