@@ -199,22 +199,20 @@ typedef struct testStruct {
     u16 two;
     i64 three;
     struct testStruct* self;
+	oListObjRef list;
     f64 five;
 } testStruct;
 
-void testCreateType() {
-    oRuntimeRef runtime = oRuntimeCreate(2000 * 1024, 1024 * 1000);
-    oThreadContextRef ctx = runtime->allContexts->ctx;
+oTypeRef createTestStructType(oThreadContextRef ctx) {
     oFieldRef* fields;
     uword i;
     oROOTS(ctx)
     oArrayRef fields;
     oTypeRef myType;
     oStringRef typeName;
-    testStruct* instance;
     oENDROOTS
     
-    oRoots.fields = oArrayCreate(ctx->runtime->builtInTypes.field, 5);
+    oRoots.fields = oArrayCreate(ctx->runtime->builtInTypes.field, 6);
     fields = (oFieldRef*)oArrayDataPointer(oRoots.fields);
     for(i = 0; i < oRoots.fields->num_elements; ++i) {
 		fields[i] = oHeapAlloc(ctx->runtime->builtInTypes.field);
@@ -227,11 +225,26 @@ void testCreateType() {
     fields[2]->type = ctx->runtime->builtInTypes.i64;
     fields[3]->name = oStringCreate("self");
     fields[3]->type = o_T_SELF;
-    fields[4]->name = oStringCreate("five");
-    fields[4]->type = ctx->runtime->builtInTypes.f64;
+    fields[4]->name = oStringCreate("list");
+	fields[4]->type = ctx->runtime->builtInTypes.list;
+    fields[5]->name = oStringCreate("five");
+    fields[5]->type = ctx->runtime->builtInTypes.f64;
     
     oRoots.typeName = oStringCreate("MyHappyTestType");
     oRoots.myType = oTypeCreate(o_T_OBJECT, 0, oRoots.typeName, oRoots.fields, NULL, NULL);
+	oRETURN(oRoots.myType);
+	oENDFN(oTypeRef)
+}
+
+void testCreateType() {
+    oRuntimeRef runtime = oRuntimeCreate(2000 * 1024, 1024 * 1000);
+    oThreadContextRef ctx = runtime->allContexts->ctx;
+    oROOTS(ctx)
+    oTypeRef myType;
+    testStruct* instance;
+    oENDROOTS
+    
+	oRoots.myType = createTestStructType(ctx);
     
     assert(oRoots.myType->size == sizeof(testStruct));
     
@@ -242,6 +255,7 @@ void testCreateType() {
     oRoots.instance->three = 500000;
     oRoots.instance->self = oRoots.instance;
     oRoots.instance->five = 0.01;
+	oRoots.instance->list = NULL;
 
     oENDVOIDFN
     oRuntimeDestroy(runtime);
@@ -447,6 +461,50 @@ void testSimpleCopySharedDoesNotCrash() {
     oRuntimeDestroy(rt);
 }
 
+void testComplicatedCopyShared() {
+    oRuntimeRef rt = oRuntimeCreate(1024 * 1000, 1024 * 1000);
+    oThreadContextRef ctx = oRuntimeGetCurrentContext(rt);
+	f64 someval;
+	i64 check;
+    oROOTS(ctx)
+    testStruct* copyMe;
+    testStruct* theCopy;
+	oTypeRef myType;
+	oObject tmp;
+    oENDROOTS;
+
+	oRoots.myType = createTestStructType(ctx);
+
+	oRoots.copyMe = oHeapAlloc(oRoots.myType);
+	oRoots.copyMe->five = 5;
+	oRoots.copyMe->one = 1;
+	oRoots.copyMe->self = oRoots.copyMe;
+	oRoots.copyMe->three = 3;
+	oRoots.copyMe->two = 2;
+
+	oRoots.tmp = oStringCreate("Hello World");
+	oRoots.copyMe->list = oListObjCreate(oRoots.tmp);
+	oRoots.tmp = oArrayCreate(rt->builtInTypes.any, 10);
+	oArrayPut((oArrayRef)oRoots.tmp, 4, oRoots.copyMe, oRoots.myType);
+	oRoots.copyMe->list = oListObjAddFront(oRoots.copyMe->list, oRoots.tmp);
+	oRoots.tmp = oArrayCreate(rt->builtInTypes.f64, 100);
+	someval = 100.3;
+	oArrayPut((oArrayRef)oRoots.tmp, 0, &someval, rt->builtInTypes.f64);
+	oRoots.copyMe->list = oListObjAddFront(oRoots.copyMe->list, oRoots.tmp);
+
+    oRoots.theCopy = _oHeapCopyObjectShared(ctx, oRoots.copyMe);
+    assert(oRoots.theCopy != NULL);
+	assert(oRoots.theCopy != oRoots.copyMe);
+	assert(oRoots.theCopy->one == 1);
+	assert(oRoots.theCopy->list != oRoots.copyMe->list);
+	assert(oListObjSize(ctx, oRoots.copyMe->list) == oListObjSize(ctx, oRoots.theCopy->list));
+	assert(oRoots.theCopy->five == 5);
+	assert(oRoots.theCopy->self == oRoots.theCopy);
+    
+    oENDVOIDFN
+    oRuntimeDestroy(rt);
+}
+
 int main(int argc, char** argv) {
 
     testCreateRuntime();
@@ -464,6 +522,7 @@ int main(int argc, char** argv) {
     testReadKeyword();
     testOutOfMemory();
     testSimpleCopySharedDoesNotCrash();
+	testComplicatedCopyShared();
     
 	return 0;
 }

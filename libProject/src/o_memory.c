@@ -222,7 +222,7 @@ static oObject* PointerIteratorNext(oRuntimeRef rt, PointerIteratorRef pi) {
     oFieldRef* fieldArr;
     oFieldRef field;
     oArrayRef arr;
-    uword arrayIdx;
+	uword arrIdx;
     char* arrayData;
 
     while(pi->current.obj != NULL) {
@@ -248,17 +248,16 @@ static oObject* PointerIteratorNext(oRuntimeRef rt, PointerIteratorRef pi) {
 
             else if(pi->current.type == rt->builtInTypes.array) {
                 arr = (oArrayRef)pi->current.obj;
-                if(arr->element_type->fields != NULL) {
-                    arrayIdx = pi->current.idx - rt->builtInTypes.array->fields->num_elements;
-                    if(arrayIdx < arr->num_elements) {
-                        ++pi->current.idx;
+				if(arr->element_type->kind == o_T_OBJECT || arr->element_type->fields != NULL) {
+					if(pi->current.idx < arr->num_elements) {
+                        arrIdx = pi->current.idx++;
                         arrayData = (char*)oArrayDataPointer(arr);
                         if(arr->element_type->kind == o_T_OBJECT) {
-                            return (oObject*)(arrayData + (arr->element_type->size * arrayIdx));
+                            return (oObject*)(arrayData + (arr->element_type->size * arrIdx));
                         }
                         else {
                             StackPush(pi->stack, &pi->current);
-                            pi->current.obj = (oObject)(arrayData + (arr->element_type->size * arrayIdx));
+                            pi->current.obj = (oObject)(arrayData + (arr->element_type->size * arrIdx));
                             pi->current.type = arr->element_type;
                             pi->current.idx = 0;
                             continue;
@@ -422,7 +421,7 @@ static uword getBlockSize(oRuntimeRef rt, HeapBlockRef block) {
         arr = (oArrayRef)getObject(block);
         elemSize = arr->element_type->kind == o_T_OBJECT ? sizeof(pointer) : arr->element_type->size;
         totalSize = calcArraySize(elemSize, arr->num_elements, arr->alignment);
-        totalSize += calcBlockSize(totalSize);
+        totalSize = calcBlockSize(totalSize);
     }
     else {
         totalSize = calcBlockSize(type->size);
@@ -864,17 +863,27 @@ static oObject copyObject(oRuntimeRef rt, oObject obj, uword* size) {
     HeapBlockRef block;
     HeapBlockRef blockCpy;
     oObject objCpy;
+	oTypeRef type;
+	oArrayRef arr;
     
-    block = getBlock(obj);
-    *size = getBlockSize(rt, block);
-    blockCpy = (HeapBlockRef)oMalloc(*size);
+	block = getBlock(obj);
+	type = getType(block);
+	if(type == rt->builtInTypes.array) {
+		arr = (oArrayRef)obj;
+		*size = calcArraySize(arr->element_type->size, arr->num_elements, arr->alignment);
+	}
+	else {
+		*size = type->size;
+	}
+	blockCpy = allocBlock(*size);
     if(blockCpy == NULL) {
         return NULL;
     }
-	memcpy(blockCpy, block, *size);
-    objCpy = getObject(blockCpy);
-	setBlock(objCpy, blockCpy);
+	setType(blockCpy, type);
     setShared(blockCpy);
+    objCpy = getObject(blockCpy);
+	memcpy(objCpy, obj, *size);
+	*size = calcBlockSize(*size);
     return objCpy;
 }
 
@@ -908,6 +917,7 @@ oObject _oHeapCopyObjectShared(oThreadContextRef ctx, oObject obj) {
 	current.obj = obj;
 	current.copy = copyObject(ctx->runtime, obj, &blockSize);
 	totalSize += blockSize;
+	CuckooPut(seen, obj, current.copy);
 
 	oMutexLock(ctx->runtime->globals->mutex);
 
@@ -953,7 +963,8 @@ oObject _oHeapCopyObjectShared(oThreadContextRef ctx, oObject obj) {
 	// All records have been added. Make a temporary root for the top
 	// object in the graph and run a space check so that the GC will
 	// kick in if we went over the limit.
-	oMemoryPushFrame(ctx, &current.copy, 1);
+	oMemoryPushFrame(ctx, &childCopy, 1);
+	childCopy = current.copy;
 	checkHeapSpace(ctx->runtime, ctx->runtime->globals, totalSize);
 	oMemoryPopFrame(ctx);
 
