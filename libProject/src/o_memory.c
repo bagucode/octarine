@@ -865,6 +865,8 @@ static oObject copyObject(oRuntimeRef rt, oObject obj, uword* size) {
     oObject objCpy;
 	oTypeRef type;
 	oArrayRef arr;
+    pointer arrData;
+    pointer arrDataCpy;
     
 	block = getBlock(obj);
 	type = getType(block);
@@ -882,7 +884,15 @@ static oObject copyObject(oRuntimeRef rt, oObject obj, uword* size) {
 	setType(blockCpy, type);
     setShared(blockCpy);
     objCpy = getObject(blockCpy);
-	memcpy(objCpy, obj, *size);
+    if(type == rt->builtInTypes.array) {
+        memcpy(objCpy, obj, rt->builtInTypes.array->size);
+        arrData = oArrayDataPointer((oArrayRef)obj);
+        arrDataCpy = oArrayDataPointer((oArrayRef)objCpy);
+        memcpy(arrDataCpy, arrData, arr->element_type->size * arr->num_elements);
+    }
+    else {
+        memcpy(objCpy, obj, *size);
+    }
 	*size = calcBlockSize(*size);
     return objCpy;
 }
@@ -901,7 +911,6 @@ oObject _oHeapCopyObjectShared(oThreadContextRef ctx, oObject obj) {
 	GraphCopyEntry current;
 	OPArray copyPointers;
 	uword i, blockSize, totalSize;
-	oTypeRef type;
 	
     // No need to do anything if the object graph is already shared.
     if(isObjectShared(obj)) {
