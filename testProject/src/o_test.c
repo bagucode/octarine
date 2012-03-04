@@ -465,7 +465,6 @@ void testComplicatedCopyShared() {
     oRuntimeRef rt = oRuntimeCreate(1024 * 1000, 1024 * 1000);
     oThreadContextRef ctx = oRuntimeGetCurrentContext(rt);
 	f64 someval;
-	i64 check;
     oROOTS(ctx)
     testStruct* copyMe;
     testStruct* theCopy;
@@ -476,7 +475,7 @@ void testComplicatedCopyShared() {
 	oRoots.myType = createTestStructType(ctx);
 
 	oRoots.copyMe = oHeapAlloc(oRoots.myType);
-	oRoots.copyMe->five = 5;
+	oRoots.copyMe->five = 5.0;
 	oRoots.copyMe->one = 1;
 	oRoots.copyMe->self = oRoots.copyMe;
 	oRoots.copyMe->three = 3;
@@ -498,7 +497,7 @@ void testComplicatedCopyShared() {
 	assert(oRoots.theCopy->one == 1);
 	assert(oRoots.theCopy->list != oRoots.copyMe->list);
 	assert(oListObjSize(ctx, oRoots.copyMe->list) == oListObjSize(ctx, oRoots.theCopy->list));
-	assert(oRoots.theCopy->five == 5);
+	assert(oRoots.theCopy->five == 5.0);
 	assert(oRoots.theCopy->self == oRoots.theCopy);
     
     oENDVOIDFN

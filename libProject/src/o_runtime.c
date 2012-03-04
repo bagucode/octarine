@@ -56,6 +56,7 @@ static void alloc_builtInTypes(oRuntimeRef rt, oHeapRef heap) {
 #ifdef OCTARINE32
 	rt->builtInTypes.i64->alignment = 4;
 	rt->builtInTypes.u64->alignment = 4;
+	rt->builtInTypes.f64->alignment = 4;
 #endif
 #endif
 }
