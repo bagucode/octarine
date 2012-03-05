@@ -5,6 +5,7 @@
 #include "../../platformProject/src/o_platform.h"
 #include "o_array.h"
 #include <memory.h> /* TODO: replace this with some platform function */
+#include <stddef.h>
 
 ///////////////////////////////////////////////////////////////////////////////
 // Internal helper data types
@@ -249,8 +250,11 @@ static oObject* PointerIteratorNext(oRuntimeRef rt, PointerIteratorRef pi) {
             else if(pi->current.type == rt->builtInTypes.array) {
                 arr = (oArrayRef)pi->current.obj;
 				if(arr->element_type->kind == o_T_OBJECT || arr->element_type->fields != NULL) {
-					if(pi->current.idx < arr->num_elements) {
-                        arrIdx = pi->current.idx++;
+                    if(pi->current.idx++ == 0) {
+                        return (oObject*)(((char*)arr) + offsetof(oArray, element_type));
+                    }
+                    arrIdx = pi->current.idx++ - 1;
+					if(arrIdx < arr->num_elements) {
                         arrayData = (char*)oArrayDataPointer(arr);
                         if(arr->element_type->kind == o_T_OBJECT) {
                             return (oObject*)(arrayData + (arr->element_type->size * arrIdx));
