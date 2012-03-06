@@ -11,6 +11,7 @@
 #include "o_vector.h"
 #include "o_keyword.h"
 #include "o_error.h"
+#include "o_namespace.h"
 
 #include <memory.h>
 
@@ -52,6 +53,7 @@ static void alloc_builtInTypes(oRuntimeRef rt, oHeapRef heap) {
     rt->builtInTypes.keyword = alloc_built_in(rt, heap);
 	rt->builtInTypes.threadContext = alloc_built_in(rt, heap);
     rt->builtInTypes.error = alloc_built_in(rt, heap);
+	rt->builtInTypes.name_space = alloc_built_in(rt, heap);
 #ifdef __GNUC__
 #ifdef OCTARINE32
 	rt->builtInTypes.i64->alignment = 4;
@@ -145,6 +147,7 @@ static void init_builtInTypes2(oThreadContextRef ctx) {
     o_bootstrap_vector_init_type(ctx);
     o_bootstrap_keyword_type_init(ctx);
     o_bootstrap_error_type_init(ctx);
+	o_bootstrap_namespace_type_init(ctx);
 }
 
 static void init_builtInFunctions(oThreadContextRef ctx) {

@@ -43,6 +43,7 @@ typedef struct oRuntimeBuiltInTypes {
     oTypeRef keyword;
     oTypeRef threadContext;
     oTypeRef error;
+	oTypeRef name_space;
 } oRuntimeBuiltInTypes;
 
 typedef struct oRuntimeBuiltInFunctions {
