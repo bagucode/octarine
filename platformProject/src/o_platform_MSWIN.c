@@ -183,11 +183,15 @@ void oMutexUnlock(oMutexRef mutex) {
 	ReleaseMutex(mutex->mutex);
 }
 
+void oSleepMillis(uword millis) {
+	Sleep(millis);
+}
+
 o_bool oAtomicCompareAndSwapUword(volatile uword* uw, uword oldVal, uword newVal) {
 #ifdef OCTARINE64
-	return InterlockedCompareExchange64((volatile LONG64*)uw, newVal, oldVal);
+	return InterlockedCompareExchange64((volatile LONG64*)uw, newVal, oldVal) == oldVal;
 #else
-	return InterlockedCompareExchange((volatile LONG32*)uw, newVal, oldVal);
+	return InterlockedCompareExchange((volatile LONG32*)uw, newVal, oldVal) == oldVal;
 #endif
 }
 

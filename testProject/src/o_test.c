@@ -36,9 +36,10 @@ void testGCAllGarbage() {
     oROOTS(ctx)
     oENDROOTS
     
-    for(i = 0; i < 1000 * 1024; ++i) {
+    for(i = 0; i < 1024; ++i) {
         oListObjCreate(NULL);
     }
+	oHeapForceGC(runtime, ctx->heap);
 
     oENDVOIDFN 
     //Add check that heap is almost empty (wait unil/force)
