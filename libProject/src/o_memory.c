@@ -437,8 +437,8 @@ static uword getBlockSize(oRuntimeRef rt, HeapBlockRef block) {
 
 typedef struct HeapRecord {
     uword numBlocks;
-    HeapBlockRef blocks[MAX_BLOCKS];
     struct HeapRecord *prev;
+    HeapBlockRef blocks[MAX_BLOCKS];
 } HeapRecord;
 
 typedef HeapRecord* HeapRecordRef;
@@ -478,11 +478,11 @@ typedef struct oFrameInfo {
     uword size;
 } oFrameInfo;
 
-#define MAX_FRAMES 500
+#define MAX_FRAMES 32
 struct oRootSet {
     uword numUsed;
-    oFrameInfo frameInfos[MAX_FRAMES];
     oRootSetRef prev;
+    oFrameInfo frameInfos[MAX_FRAMES];
 };
 
 oRootSetRef oMemoryCreateRootSet() {
