@@ -623,6 +623,7 @@ static void collectGarbage(oRuntimeRef rt, oHeapRef heap) {
     HeapBlockRef block;
     oTypeRef type;
 	o_bool shared;
+	oThreadContextRef ctx;
 
 	oThreadContextListRef lst, next;
 
@@ -637,12 +638,14 @@ static void collectGarbage(oRuntimeRef rt, oHeapRef heap) {
 		}
     }
     // thread contexts
+	oSpinLockLock(&rt->contextListLock);
 	lst = rt->allContexts;
     while(lst) {
 		next = lst->next;
 		markGraph(rt, lst->ctx, shared);
 		lst = next;
 	}
+	oSpinLockUnlock(&rt->contextListLock);
     // constants
     j = sizeof(oRuntimeBuiltInConstants) / sizeof(pointer);
     objArr = (oObject*)&rt->builtInConstants;
@@ -657,19 +660,49 @@ static void collectGarbage(oRuntimeRef rt, oHeapRef heap) {
         markGraph(rt, objArr[i], shared);
     }
 
-	roots = oRuntimeGetCurrentContext(rt)->roots;
-    while (roots) {
-        for(i = 0; i < roots->numUsed; ++i) {
-            nroots = roots->frameInfos[i].size / sizeof(pointer);
-            for(j = 0; j < nroots; ++j) {
-                obj = roots->frameInfos[i].frame[j];
-                if(obj != NULL) {
-					markGraph(rt, obj, shared);
-                }
-            }
-        }
-        roots = roots->prev;
-    }
+	ctx = oRuntimeGetCurrentContext(rt);
+	if(shared) {
+		oSpinLockLock(&rt->contextListLock);
+		lst = rt->allContexts;
+		while(lst) {
+			if(lst->ctx != ctx) {
+				oSpinLockLock(&lst->ctx->rootLock);
+			}
+			roots = lst->ctx->roots;
+			while (roots) {
+				for(i = 0; i < roots->numUsed; ++i) {
+					nroots = roots->frameInfos[i].size / sizeof(pointer);
+					for(j = 0; j < nroots; ++j) {
+						obj = roots->frameInfos[i].frame[j];
+						if(obj != NULL) {
+							markGraph(rt, obj, shared);
+						}
+					}
+				}
+				roots = roots->prev;
+			}
+			if(lst->ctx != ctx) {
+				oSpinLockUnlock(&lst->ctx->rootLock);
+			}
+			lst = lst->next;
+		}
+		oSpinLockUnlock(&rt->contextListLock);
+	}
+	else {
+		roots = ctx->roots;
+		while (roots) {
+			for(i = 0; i < roots->numUsed; ++i) {
+				nroots = roots->frameInfos[i].size / sizeof(pointer);
+				for(j = 0; j < nroots; ++j) {
+					obj = roots->frameInfos[i].frame[j];
+					if(obj != NULL) {
+						markGraph(rt, obj, shared);
+					}
+				}
+			}
+			roots = roots->prev;
+		}
+	}
         
     /* Phase 2, sweep. */
     newRecord = createRecord();
