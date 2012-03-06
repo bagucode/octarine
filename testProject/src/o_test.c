@@ -21,6 +21,14 @@ void testCreateRuntime() {
     oRuntimeDestroy(runtime);
 }
 
+void testGCWithoutGarbage() {
+    oRuntimeRef runtime = oRuntimeCreate(2000 * 1024, 1024 * 1000);
+	oThreadContextRef ctx = oRuntimeGetCurrentContext(runtime);
+	oHeapForceGC(runtime, ctx->heap);
+	oHeapForceGC(runtime, ctx->heap);
+	oRuntimeDestroy(runtime);
+}
+
 void testGCAllGarbage() {
     uword i;
     oRuntimeRef runtime = oRuntimeCreate(2000 * 1024, 1024 * 1000);
@@ -47,6 +55,23 @@ void testGCAllRetained() {
 
     oRoots.listHead = oListObjCreate(NULL);
     for(i = 0; i < 1024; ++i) {
+        oRoots.listHead = oListObjAddFront((oListObjRef)oRoots.listHead, oRoots.listHead);
+    }
+
+    oENDVOIDFN
+    oRuntimeDestroy(runtime);
+}
+
+void testGCAllRetainedShouldNotBlowStack() {
+    uword i;
+    oRuntimeRef runtime = oRuntimeCreate(2000 * 1024, 1024 * 1000);
+    oThreadContextRef ctx = runtime->allContexts->ctx;
+    oROOTS(ctx)
+    oObject listHead;
+    oENDROOTS
+
+    oRoots.listHead = oListObjCreate(NULL);
+    for(i = 0; i < 1024 * 1000; ++i) {
         oRoots.listHead = oListObjAddFront((oListObjRef)oRoots.listHead, oRoots.listHead);
     }
 
@@ -507,9 +532,11 @@ void testComplicatedCopyShared() {
 int main(int argc, char** argv) {
 
     testCreateRuntime();
+	testGCWithoutGarbage();
     testGCAllGarbage();
     testGCAllRetained();
-    testGCFinalizer();
+	//testGCAllRetainedShouldNotBlowStack();
+	testGCFinalizer();
     testReaderEmptyList();
 	testSymbolEquals();
     testReadSymbol();

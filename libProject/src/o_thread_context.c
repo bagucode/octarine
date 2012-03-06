@@ -9,7 +9,7 @@
 
 void o_bootstrap_thread_context_type_init(oRuntimeRef rt, oHeapRef heap) {
     oFieldRef *fields;
-    rt->builtInTypes.threadContext->fields = o_bootstrap_type_create_field_array(rt, heap, 1);
+    rt->builtInTypes.threadContext->fields = o_bootstrap_type_create_field_array(rt, heap, 2);
     rt->builtInTypes.threadContext->kind = o_T_OBJECT;
     rt->builtInTypes.threadContext->name = o_bootstrap_string_create(rt, heap, "ThreadContext");
     rt->builtInTypes.threadContext->size = sizeof(oThreadContext);
@@ -19,6 +19,10 @@ void o_bootstrap_thread_context_type_init(oRuntimeRef rt, oHeapRef heap) {
     fields[0]->name = o_bootstrap_string_create(rt, heap, "error");
     fields[0]->offset = offsetof(oThreadContext, error);
     fields[0]->type = rt->builtInTypes.any;
+
+    fields[1]->name = o_bootstrap_string_create(rt, heap, "reader");
+    fields[1]->offset = offsetof(oThreadContext, reader);
+    fields[1]->type = rt->builtInTypes.reader;
 }
 
 oThreadContextRef o_bootstrap_thread_context_create(oRuntimeRef runtime, oHeapRef heap) {

@@ -4,7 +4,7 @@
 #include "o_runtime.h"
 #include "../../platformProject/src/o_platform.h"
 #include "o_array.h"
-#include <memory.h> /* TODO: replace this with some platform function */
+#include <memory.h>
 #include <stddef.h>
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -171,7 +171,7 @@ static void StackPush(StackRef stack, pointer entry) {
     
     if(stack->capacity == stack->top) {
         stack->capacity *= 2;
-        stack->stack = oReAlloc(stack->stack, stack->entrySize * stack->capacity);
+        stack->stack = (char*)oReAlloc(stack->stack, stack->entrySize * stack->capacity);
     }
     index = stack->entrySize * stack->top;
     memcpy(stack->stack + index, entry, stack->entrySize);
@@ -250,14 +250,16 @@ static oObject* PointerIteratorNext(oRuntimeRef rt, PointerIteratorRef pi) {
             else if(pi->current.type == rt->builtInTypes.array) {
                 arr = (oArrayRef)pi->current.obj;
 				if(arr->element_type->kind == o_T_OBJECT || arr->element_type->fields != NULL) {
-                    if(pi->current.idx++ == 0) {
+                    if(pi->current.idx == 0) {
+						++pi->current.idx;
                         return (oObject*)(((char*)arr) + offsetof(oArray, element_type));
                     }
-                    arrIdx = pi->current.idx++ - 1;
+                    arrIdx = pi->current.idx - 1;
+					++pi->current.idx;
 					if(arrIdx < arr->num_elements) {
                         arrayData = (char*)oArrayDataPointer(arr);
                         if(arr->element_type->kind == o_T_OBJECT) {
-                            return (oObject*)(arrayData + (arr->element_type->size * arrIdx));
+						    return (oObject*)(arrayData + (sizeof(pointer) * arrIdx));
                         }
                         else {
                             StackPush(pi->stack, &pi->current);
@@ -433,7 +435,7 @@ static uword getBlockSize(oRuntimeRef rt, HeapBlockRef block) {
     return totalSize;
 }
 
-#define MAX_BLOCKS 100
+#define MAX_BLOCKS 126
 
 typedef struct HeapRecord {
     uword numBlocks;
@@ -538,81 +540,77 @@ void oMemoryPopFrame(oThreadContextRef ctx) {
     oSpinLockUnlock(&ctx->rootLock);
 }
 
-static void traceAndMark(oRuntimeRef rt, oHeapRef heap, oObject obj, oTypeRef type) {
-    oObject fieldPtr;
-    oFieldRef field;
-    oFieldRef* fields;
-    oTypeRef fieldType;
-    HeapBlockRef block;
-    uword i, arrayStride;
-	oArrayRef array;
-	oObject* arrayObjs;
+typedef struct MarkEntry {
+	oObject obj;
+	uword idx;
+	OPArray pointers;
+} MarkEntry;
 
-    /* TODO: for collecting the shared heap, we should check if a root
-     points into the shared heap because we should skip it if it does not.
-     (Because an object in the shared heap cannot point into a thread
-     specific heap)
-     Likewise, thread local roots that point into the shared heap need
-     to be ignored when marking a thread local heap because there will
-     be no sweep in the shared heap to reset the marks. */
-    if(obj) {
-        block = NULL;
-        if(oTypeIsObject(type)) {
-            block = getBlock(obj);
-        }
-        if(block == NULL || isMarked(block) == o_false) {
-            if(block) {
-                setMark(block);
-            }
-            if(type == rt->builtInTypes.array) {
-				array = (oArrayRef)obj;
-				if(!oTypeIsPrimitive(array->element_type)) {
-					if(array->element_type->kind == o_T_OBJECT) {
-						arrayObjs = (oObject*)oArrayDataPointer(array);
-						for(i = 0; i < array->num_elements; ++i) {
-							traceAndMark(rt, heap, arrayObjs[i], array->element_type);
-						}
-					}
-					else {
-						// TODO: take array alignment into account once that is implemented
-						arrayStride = array->element_type->size;
-						fieldPtr = oArrayDataPointer(array);
-						for(i = 0; i < array->num_elements; ++i) {
-							traceAndMark(rt, heap, fieldPtr, array->element_type);
-							fieldPtr = ((char*)fieldPtr) + arrayStride;
+static void markGraph(oRuntimeRef rt, oObject obj, o_bool shared) {
+	StackRef stack;
+	HeapBlockRef block;
+	oTypeRef type;
+	MarkEntry entry;
+
+	block = getBlock(obj);
+	if(!isMarked(block) && isShared(block) == shared) {
+		setMark(block);
+		stack = StackCreate(sizeof(MarkEntry), 250);
+		entry.obj = obj;
+		entry.idx = 0;
+		entry.pointers = findEmbeddedPointers(rt, obj);
+
+		// also check type
+		type = getType(block);
+		block = getBlock(type);
+		if(!isMarked(block) && isShared(block) == shared) {
+			setMark(block);
+			StackPush(stack, &entry);
+			entry.obj = type;
+			entry.idx = 0;
+			entry.pointers = findEmbeddedPointers(rt, type);
+		}
+
+		while(entry.obj != NULL) {
+
+			block = getBlock(entry.obj);
+			type = getType(block);
+
+			if(entry.idx < entry.pointers.size) {
+				obj = *entry.pointers.ops[entry.idx++];
+				if(obj != NULL) {
+					block = getBlock(obj);
+					if(!isMarked(block) && isShared(block) == shared) {
+						setMark(block);
+						StackPush(stack, &entry);
+						entry.pointers = findEmbeddedPointers(rt, obj);
+						entry.idx = 0;
+						entry.obj = obj;
+
+						// also check type
+						type = getType(block);
+						block = getBlock(type);
+						if(!isMarked(block) && isShared(block) == shared) {
+							setMark(block);
+							StackPush(stack, &entry);
+							entry.obj = type;
+							entry.idx = 0;
+							entry.pointers = findEmbeddedPointers(rt, type);
 						}
 					}
 				}
 			}
-            /* Some types don't have fields */
-            if(type->fields) {
-                fields = (oFieldRef*)oArrayDataPointer(type->fields);
-                for(i = 0; i < type->fields->num_elements; ++i) {
-                    field = fields[i];
-                    if(!oTypeIsPrimitive(field->type)) {
-                        fieldPtr = *((oObject*)(((char*)obj) + field->offset));
-                        if(fieldPtr) {
-                            /* if the type is Any we have to get the actual runtime
-                             type of the object here */
-                            if(field->type == rt->builtInTypes.any) {
-                                fieldType = getType(getBlock(fieldPtr));
-                            } else {
-                                fieldType = field->type;
-                            }
-                            /* TODO: make this iterative instead of recursive.
-                             It segfaults now if the object graph is too large. */
-                            traceAndMark(rt, heap, fieldPtr, fieldType);
-                        }
-                    }
-                }
-            }
-        }
-    }
-    // Also mark the type to make sure that does not disappear
-    block = getBlock(type);
-    if(!isMarked(block)) {
-        traceAndMark(rt, heap, type, rt->builtInTypes.type);
-    }
+			else {
+				// Pop next off stack
+				OPArrayDestroy(entry.pointers);
+				if(StackPop(stack, &entry) == o_false) {
+					// All done!
+					entry.obj = NULL;
+				}
+			}
+		}
+		StackDestroy(stack);
+	}
 }
 
 static void collectGarbage(oRuntimeRef rt, oHeapRef heap) {
@@ -624,32 +622,25 @@ static void collectGarbage(oRuntimeRef rt, oHeapRef heap) {
     HeapRecordRef tmpRecord;
     HeapBlockRef block;
     oTypeRef type;
-    
+	o_bool shared;
+
 	oThreadContextListRef lst, next;
 
-    /* Phase 1, mark. */
-    /* TODO: need to trace from the roots in all threads when doing
-        a collection of the shared heap (a heap with mutex set).
-        It is also important to not actually mark objects in the shared
-        heap when doing a local collection or we may retain garbage
-        in the shared heap the next time it is collected. */
-        
-    // TODO: remove the tracing of the built ins here. They should all
-    // reside in the shared heap once copy to the shared heap is working
-    // which means there is no need to trace them when doing
-    // a local collection
+	shared = rt->globals == heap;
 
     // types
     j = sizeof(oRuntimeBuiltInTypes) / sizeof(pointer);
     objArr = (oObject*)&rt->builtInTypes;
     for(i = 0; i < j; ++i) {
-        traceAndMark(rt, heap, objArr[i], rt->builtInTypes.type);
+		if(objArr[i] != NULL) {
+			markGraph(rt, objArr[i], shared);
+		}
     }
     // thread contexts
 	lst = rt->allContexts;
     while(lst) {
 		next = lst->next;
-		traceAndMark(rt, heap, lst->ctx, rt->builtInTypes.threadContext);
+		markGraph(rt, lst->ctx, shared);
 		lst = next;
 	}
     // constants
@@ -657,13 +648,13 @@ static void collectGarbage(oRuntimeRef rt, oHeapRef heap) {
     objArr = (oObject*)&rt->builtInConstants;
     for(i = 0; i < j; ++i) {
         // TODO: this will break when there are constants other than keywords
-        traceAndMark(rt, heap, objArr[i], rt->builtInTypes.keyword);
+        markGraph(rt, objArr[i], shared);
     }
     // errors
     j = sizeof(oRuntimeBuiltInErrors) / sizeof(pointer);
     objArr = (oObject*)&rt->builtInErrors;
     for(i = 0; i < j; ++i) {
-        traceAndMark(rt, heap, objArr[i], rt->builtInTypes.error);
+        markGraph(rt, objArr[i], shared);
     }
 
 	roots = oRuntimeGetCurrentContext(rt)->roots;
@@ -673,8 +664,7 @@ static void collectGarbage(oRuntimeRef rt, oHeapRef heap) {
             for(j = 0; j < nroots; ++j) {
                 obj = roots->frameInfos[i].frame[j];
                 if(obj != NULL) {
-                    block = getBlock(obj);
-                    traceAndMark(rt, heap, obj, getType(block));
+					markGraph(rt, obj, shared);
                 }
             }
         }
@@ -687,7 +677,7 @@ static void collectGarbage(oRuntimeRef rt, oHeapRef heap) {
     while (currentRecord) {
         for(i = 0; i < currentRecord->numBlocks; ++i) {
             block = currentRecord->blocks[i];
-            if(!isMarked(block)) {
+			if(!isMarked(block) && isShared(block) == shared) {
                 heap->currentSize -= getBlockSize(rt, block);
                 /* Call finalizer if there is one.
                     TODO: make sure the finalizers don't allocate memory
@@ -697,7 +687,7 @@ static void collectGarbage(oRuntimeRef rt, oHeapRef heap) {
                     type->finalizer(getObject(block));
                 }
                 oFree(block);
-            } else {
+			} else if(isShared(block) == shared) {
                 clearMark(block);
                 if(recordEntry(newRecord, block) == o_false) {
                     tmpRecord = newRecord;

@@ -86,5 +86,6 @@ oObject oMapGet(oMapRef map, oStringRef key) {
 
 
 
-void o_bootstrap_map_init_type(oThreadContextRef rt) {
+void o_bootstrap_map_init_type(oThreadContextRef ctx) {
+	ctx->runtime->builtInTypes.map = NULL;
 }
