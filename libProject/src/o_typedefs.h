@@ -20,6 +20,8 @@ typedef oError* oErrorRef;
 typedef struct oField oField;
 typedef oField* oFieldRef;
 
+typedef void (*oFinalizer)(oObject obj);
+
 typedef struct oFunction oFunction;
 typedef oFunction* oFunctionRef;
 
@@ -41,7 +43,8 @@ typedef oMap* oMapRef;
 typedef struct oMapEntry oMapEntry;
 typedef oMapEntry* oMapEntryRef;
 
-typedef void (*oFinalizer)(oObject obj);
+typedef struct oNamespace oNamespace;
+typedef oNamespace* oNamespaceRef;
 
 typedef struct oParameter oParameter;
 typedef oParameter* oParameterRef;
