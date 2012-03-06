@@ -407,7 +407,7 @@ static oTypeRef getType(HeapBlockRef block) {
 }
 
 static void setType(HeapBlockRef block, oTypeRef type) {
-    block->typeRefAndFlags = (uword)type;
+	block->typeRefAndFlags = ((uword)type) | (block->typeRefAndFlags & ALL_FLAGS);
 }
 
 static uword calcArraySize(uword elemSize, uword numElems, u8 align) {
