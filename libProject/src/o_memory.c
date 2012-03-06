@@ -326,6 +326,9 @@ static void OPArrayDestroy(OPArray op) {
 #define MARK_FLAG 1 << 0
 #define SHARED_FLAG 1 << 1
 
+// For clearing and such
+#define ALL_FLAGS 0xF
+
 typedef struct HeapBlock {
     uword typeRefAndFlags;
 } HeapBlock;
@@ -400,11 +403,7 @@ static void clearMark(HeapBlockRef block) {
 }
 
 static oTypeRef getType(HeapBlockRef block) {
-#ifdef OCTARINE64
-    return (oTypeRef)(block->typeRefAndFlags & 0xFFFFFFFFFFFFFFF0);
-#else
-    return (oTypeRef)(block->typeRefAndFlags & 0xFFFFFFF0);
-#endif
+	return (oTypeRef)(block->typeRefAndFlags & ~ALL_FLAGS);
 }
 
 static void setType(HeapBlockRef block, oTypeRef type) {
