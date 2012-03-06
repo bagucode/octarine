@@ -3,6 +3,7 @@
 #include <CoreFoundation/CoreFoundation.h>
 #include <pthread.h>
 #include <libkern/OSAtomic.h>
+#include <unistd.h>
 
 /* malloc & free */
 
@@ -124,6 +125,15 @@ void oMutexLock(oMutexRef mutex) {
 
 void oMutexUnlock(oMutexRef mutex) {
     pthread_mutex_unlock(&mutex->mutex);
+}
+
+void oSleepMillis(uword millis) {
+    if(millis == 0) {
+        pthread_yield_np();
+    }
+    else {
+        usleep(millis * 1000);
+    }
 }
 
 o_bool oAtomicCompareAndSwapUword(volatile uword* uw, uword oldVal, uword newVal) {

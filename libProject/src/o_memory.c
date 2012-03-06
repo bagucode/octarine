@@ -507,9 +507,14 @@ void oMemoryPushFrame(oThreadContextRef ctx,
                       uword frameSize) {
     oRootSetRef newRoots;
     
-    memset(frame, 0, frameSize);
+    if(oAtomicGetUword(&ctx->suspendRequested) == 1) {
+        oAtomicSetUword(&ctx->suspendRequested, 2);
+        while(oAtomicGetUword(&ctx->suspendRequested) != 0) {
+            oSleepMillis(0);
+        }
+    }
     
-    oSpinLockLock(&ctx->rootLock);
+    memset(frame, 0, frameSize);
     
     if(ctx->roots->numUsed < MAX_FRAMES) {
         ctx->roots->frameInfos[ctx->roots->numUsed].frame = (oObject*)frame;
@@ -521,14 +526,17 @@ void oMemoryPushFrame(oThreadContextRef ctx,
        ctx->roots = newRoots;
        oMemoryPushFrame(ctx, frame, frameSize);
     }
-    
-    oSpinLockUnlock(&ctx->rootLock);
 }
 
 void oMemoryPopFrame(oThreadContextRef ctx) {
     oRootSetRef prev;
     
-    oSpinLockLock(&ctx->rootLock);
+    if(oAtomicGetUword(&ctx->suspendRequested) == 1) {
+        oAtomicSetUword(&ctx->suspendRequested, 2);
+        while(oAtomicGetUword(&ctx->suspendRequested) != 0) {
+            oSleepMillis(0);
+        }
+    }
     
     ctx->roots->numUsed--;
     if(ctx->roots->numUsed == 0 && ctx->roots->prev != NULL) {
@@ -536,8 +544,6 @@ void oMemoryPopFrame(oThreadContextRef ctx) {
         oFree(ctx->roots);
         ctx->roots = prev;
     }
-    
-    oSpinLockUnlock(&ctx->rootLock);
 }
 
 typedef struct MarkEntry {
@@ -666,7 +672,12 @@ static void collectGarbage(oRuntimeRef rt, oHeapRef heap) {
 		lst = rt->allContexts;
 		while(lst) {
 			if(lst->ctx != ctx) {
-				oSpinLockLock(&lst->ctx->rootLock);
+                // This code only works if threads are always started automatically
+                // right after the context has been created and added to the list
+				oAtomicSetUword(&lst->ctx->suspendRequested, 1);
+                while(oAtomicGetUword(&lst->ctx->suspendRequested) != 2) {
+                    oSleepMillis(0);
+                }
 			}
 			roots = lst->ctx->roots;
 			while (roots) {
@@ -682,7 +693,7 @@ static void collectGarbage(oRuntimeRef rt, oHeapRef heap) {
 				roots = roots->prev;
 			}
 			if(lst->ctx != ctx) {
-				oSpinLockUnlock(&lst->ctx->rootLock);
+                oAtomicSetUword(&lst->ctx->suspendRequested, 0);
 			}
 			lst = lst->next;
 		}

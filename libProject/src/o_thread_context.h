@@ -9,9 +9,9 @@ struct oThreadContext {
     oRuntimeRef runtime;
     oHeapRef heap;
     oRootSetRef roots;
-    oSpinLock rootLock;
 	oReaderRef reader;
 	oErrorRef error;
+    volatile uword suspendRequested;
 };
 
 oThreadContextRef oThreadContextGetCurrent(oRuntimeRef rt);

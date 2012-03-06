@@ -31,7 +31,7 @@ oThreadContextRef o_bootstrap_thread_context_create(oRuntimeRef runtime, oHeapRe
     ctx->runtime = runtime;
     ctx->roots = oMemoryCreateRootSet();
 	ctx->error = NULL;
-    ctx->rootLock = 0;
+    ctx->suspendRequested = 0;
 	ctx->reader = NULL;
     return ctx;
 }
@@ -44,7 +44,7 @@ oThreadContextRef oThreadContextCreate(oRuntimeRef runtime,
     ctx->runtime = runtime;
     ctx->roots = oMemoryCreateRootSet();
 	ctx->error = NULL;
-    ctx->rootLock = 0;
+    ctx->suspendRequested = 0;
 	ctx->reader = oReaderCreate(ctx);
     return ctx;
 }

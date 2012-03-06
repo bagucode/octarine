@@ -34,6 +34,8 @@ typedef oSpinLock* oSpinLockRef;
 void oSpinLockLock(oSpinLockRef lock);
 void oSpinLockUnlock(oSpinLockRef lock);
 
+void oSleepMillis(uword millis);
+
 /* Memory management */
 pointer oMalloc(uword size);
 pointer oReAlloc(pointer loc, uword size);
