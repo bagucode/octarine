@@ -4,6 +4,7 @@
 
 #include "o_typedefs.h"
 #include "../../platformProject/src/o_platform.h"
+#include "o_utils.h"
     
 typedef struct oThreadContextList {
     oThreadContextRef ctx;
@@ -70,6 +71,7 @@ struct oRuntime {
     oRuntimeBuiltInFunctions builtInFunctions;
     oRuntimeBuiltInConstants builtInConstants;
     oRuntimeBuiltInErrors builtInErrors;
+	CuckooRef namespaces;
 };
 
 oRuntimeRef oRuntimeCreate(uword sharedHeapInitialSize,

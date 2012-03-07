@@ -484,6 +484,13 @@ static void collectGarbage(oRuntimeRef rt, oHeapRef heap) {
         markGraph(rt, objArr[i], shared);
     }
 
+	/*
+#error Add marking of namespaces and their bindings here. \
+After that and having an octarine namespace where \
+all the bootstrap stuff gets bound we can remove \
+the crap above here.
+*/
+
 	ctx = oRuntimeGetCurrentContext(rt);
 	if(shared) {
 		oSpinLockLock(&rt->contextListLock);

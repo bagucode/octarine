@@ -215,6 +215,8 @@ oRuntimeRef oRuntimeCreate(uword sharedHeapInitialSize,
     
     memset(rt, 0, sizeof(oRuntime));
 
+	rt->namespaces = CuckooCreate(100, o_internal_namespace_equals);
+
     rt->globals = oHeapCreate(o_true, sharedHeapInitialSize);
     rt->currentContext = oTLSCreate();
 
@@ -256,6 +258,7 @@ void oRuntimeDestroy(oRuntimeRef rt) {
     }
     oHeapDestroy(rt->globals);
     oTLSDestroy(rt->currentContext);
+	CuckooDestroy(rt->namespaces);
 	oFree(rt);
 }
 
