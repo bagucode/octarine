@@ -25,6 +25,12 @@ struct oNativeString {
     CFStringRef str;
 };
 
+oNativeStringRef oNativeStringCopy(oNativeStringRef str) {
+    oNativeStringRef copy = (oNativeStringRef)oMalloc(sizeof(oNativeString));
+    copy->str = CFStringCreateCopy(NULL, str->str);
+    return copy;
+}
+
 oNativeStringRef oNativeStringFromUtf8(const char *utf8) {
     uword len = strlen(utf8);
     oNativeString *str = oMalloc(sizeof(oNativeString));
