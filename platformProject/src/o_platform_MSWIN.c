@@ -30,6 +30,14 @@ struct oNativeString {
 	int length;
 };
 
+oNativeStringRef oNativeStringCopy(oNativeStringRef str) {
+	oNativeStringRef native = (oNativeStringRef)oMalloc(sizeof(oNativeString));
+	native->length = str->length;
+	native->str = (LPWSTR)oMalloc(sizeof(WCHAR) * str->length);
+	memcpy(native->str, str->str, sizeof(WCHAR) * str->length);
+	return native;
+}
+
 oNativeStringRef oNativeStringFromUtf8(const char *utf8) {
 	int result;
 	int cbMultiByte = (int)strlen(utf8);
@@ -64,14 +72,14 @@ oNativeStringRef oNativeStringFromUtf8(const char *utf8) {
 
 char* oNativeStringToUtf8(oNativeStringRef str, uword* out_length) {
 	int result;
-	char *utf8Chars, *ret;
+	char *utf8Chars;
 	(*out_length) = WideCharToMultiByte(CP_UTF8, 0, str->str, str->length, NULL, 0, NULL, NULL);
 
 	if((*out_length) == 0) {
 		return NULL;
 	}
 
-	utf8Chars = (char*)oMalloc(*out_length);
+	utf8Chars = (char*)oMalloc((*out_length) + 1);
 	if(utf8Chars == NULL) {
 		return NULL;
 	}
@@ -82,12 +90,9 @@ char* oNativeStringToUtf8(oNativeStringRef str, uword* out_length) {
 		return NULL;
 	}
 
-	ret = (char*)oMalloc((*out_length) + 1);
-	memcpy(ret, utf8Chars, *out_length);
-	ret[*out_length] = 0;
-	oFree(utf8Chars);
+	utf8Chars[*out_length] = 0;
 
-	return ret;
+	return utf8Chars;
 }
 
 int oNativeStringCompare(oNativeStringRef str1, oNativeStringRef str2) {

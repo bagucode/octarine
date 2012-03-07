@@ -19,7 +19,7 @@
 #define FNV_OFFSET_BASIS 14695981039346656037U
 #endif
 
-static uword fnv1a(const char* data, uword datasize) {
+static uword fnv1a(const u8* data, uword datasize) {
 	uword hash = FNV_OFFSET_BASIS;
 	uword i;
 	for(i = 0; i < datasize; ++i) {
@@ -39,7 +39,7 @@ oStringRef _oStringCreate(oThreadContextRef ctx, char *utf8) {
 		oRETURN(NULL)
 	}
 	oGETRETT(oStringRef)->str = tmp;
-	oGETRETT(oStringRef)->hashCode = fnv1a(utf8, strlen(utf8));
+	oGETRETT(oStringRef)->hashCode = fnv1a((const u8*)utf8, strlen(utf8));
     oENDFN(oStringRef)
 }
 
@@ -84,7 +84,7 @@ oStringRef _oStringSubString(oThreadContextRef ctx, oStringRef str, uword start,
 	data = oNativeStringToUtf8(native, &length);
 	oSETRET(oHeapAlloc(ctx->runtime->builtInTypes.string));
 	oGETRETT(oStringRef)->str = native;
-	oGETRETT(oStringRef)->hashCode = fnv1a(data, length);
+	oGETRETT(oStringRef)->hashCode = fnv1a((const u8*)data, length);
 	oFree(data);
     oENDFN(oStringRef)
 }
@@ -92,7 +92,7 @@ oStringRef _oStringSubString(oThreadContextRef ctx, oStringRef str, uword start,
 oStringRef o_bootstrap_string_create(oRuntimeRef rt, oHeapRef heap, const char *utf8) {
     oStringRef str = (oStringRef)o_bootstrap_object_alloc(rt, heap, rt->builtInTypes.string, sizeof(oString));
     str->str = oNativeStringFromUtf8(utf8);
-	str->hashCode = fnv1a(utf8, strlen(utf8));
+	str->hashCode = fnv1a((const u8*)utf8, strlen(utf8));
     return str;
 }
 
@@ -104,10 +104,17 @@ uword _oStringHash(oThreadContextRef ctx, oStringRef str) {
 	return str->hashCode;
 }
 
+static void CopyHelper(oObject o1, oObject o2) {
+	oStringRef src = (oStringRef)o1;
+	oStringRef dest = (oStringRef)o2;
+	dest->str = oNativeStringCopy(src->str);
+}
+
 void o_bootstrap_string_init_type(oRuntimeRef rt, oHeapRef heap) {
     rt->builtInTypes.string->fields = NULL;
     rt->builtInTypes.string->kind = o_T_OBJECT;
     rt->builtInTypes.string->name = o_bootstrap_string_create(rt, heap, "String");
     rt->builtInTypes.string->size = sizeof(oString);
     rt->builtInTypes.string->finalizer = finalizer;
+	rt->builtInTypes.string->copyInternals = CopyHelper;
 }

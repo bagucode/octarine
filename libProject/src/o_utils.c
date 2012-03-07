@@ -121,13 +121,16 @@ pointer CuckooGet(CuckooRef ck, pointer key) {
 	keyHash = ck->hash(key);
     
 	i = CuckooHash1(keyHash) & mask;
-	if(ck->compare(ck->table[i].key, key)) return ck->table[i].val;
+	if(ck->table[i].key != NULL && ck->compare(ck->table[i].key, key))
+		return ck->table[i].val;
     
 	i = CuckooHash2(keyHash) & mask;
-	if(ck->compare(ck->table[i].key, key)) return ck->table[i].val;
+	if(ck->table[i].key != NULL && ck->compare(ck->table[i].key, key))
+		return ck->table[i].val;
 
 	i = CuckooHash3(keyHash) & mask;
-	if(ck->compare(ck->table[i].key, key)) return ck->table[i].val;
+	if(ck->table[i].key != NULL && ck->compare(ck->table[i].key, key))
+		return ck->table[i].val;
 
 	return NULL;
 }

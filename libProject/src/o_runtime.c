@@ -200,6 +200,18 @@ static void bindBuiltins(oThreadContextRef ctx, oNamespaceRef ns) {
 			bindType(ctx, ns, typeArr[i]);
 		}
 	}
+
+	// Functions
+	//bind(ctx, ns, "=", ctx->runtime->builtInFunctions.equals);
+
+	// Errors
+	bind(ctx, ns, "out-of-memory", ctx->runtime->builtInErrors.outOfMemory);
+	bind(ctx, ns, "bracket-mismatch", ctx->runtime->builtInErrors.bracketMismatch);
+
+	// Other Constants
+	bind(ctx, ns, "need-more-data", ctx->runtime->builtInConstants.needMoreData);
+	bind(ctx, ns, "type-mismatch", ctx->runtime->builtInConstants.typeMismatch);
+	bind(ctx, ns, "index-out-of-bounds", ctx->runtime->builtInConstants.indexOutOfBounds);
 }
 
 static void init_builtInErrors(oThreadContextRef ctx) {
@@ -253,9 +265,18 @@ oNamespaceRef _oRuntimeFindNamespace(oRuntimeRef rt, oStringRef name) {
 oRuntimeRef oRuntimeCreate(uword sharedHeapInitialSize,
                            uword threadHeapInitialSize) {
 	oRuntimeRef rt = (oRuntimeRef)oMalloc(sizeof(oRuntime));
-	oHeapRef mtHeap = oHeapCreate(o_false, threadHeapInitialSize);
+	oHeapRef mtHeap;
 	oThreadContextRef ctx;
 	oNamespaceRef octarineNs;
+
+	if(threadHeapInitialSize < 1024 * 2000) {
+		threadHeapInitialSize = 1024 * 2000;
+	}
+	if(sharedHeapInitialSize < 1024 * 2000) {
+		sharedHeapInitialSize = 1024 * 2000;
+	}
+
+	mtHeap = oHeapCreate(o_false, threadHeapInitialSize);
     
     memset(rt, 0, sizeof(oRuntime));
 
@@ -303,6 +324,14 @@ void oRuntimeDestroy(oRuntimeRef rt) {
     /* TODO: synchronize stopping of all threads before deleting the heaps */
     oThreadContextListRef lst = rt->allContexts;
 	oThreadContextListRef next;
+
+	// Run all finalizers to clean up any non-heap resources
+	oHeapRunFinalizers(rt->globals);
+	while(lst) {
+		oHeapRunFinalizers(lst->ctx->heap);
+		lst = lst->next;
+	}
+	lst = rt->allContexts;
 
 	// Destroy the namespace table first so that the GC will not retain
 	// the objects in it.

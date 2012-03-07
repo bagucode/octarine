@@ -25,6 +25,7 @@ struct oType {
      be a single signature that has no return value
      and takes only an Any as parameter. */
     oFinalizer finalizer;
+	oCopyObjectInternals copyInternals;
     uword size;
     u8 kind;
     u8 alignment;

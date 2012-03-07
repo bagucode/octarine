@@ -14,6 +14,8 @@ typedef oArray* oArrayRef;
 typedef struct oClosure oClosure;
 typedef oClosure* oClosureRef;
 
+typedef void(*oCopyObjectInternals)(oObject src, oObject dest);
+
 typedef struct oError oError;
 typedef oError* oErrorRef;
 

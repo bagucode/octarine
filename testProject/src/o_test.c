@@ -39,6 +39,7 @@ void testGCAllGarbage() {
     for(i = 0; i < 1024; ++i) {
         oListObjCreate(NULL);
     }
+	oStringCreate("mos");
 	oHeapForceGC(runtime, ctx->heap);
 
     oENDVOIDFN 

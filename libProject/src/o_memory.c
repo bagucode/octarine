@@ -687,22 +687,38 @@ oArrayRef o_bootstrap_array_alloc(oRuntimeRef rt,
     return arr;
 }
 
-void oHeapDestroy(oHeapRef heap) {
-    HeapBlockRef block;
+void oHeapRunFinalizers(oHeapRef heap) {
+	oTypeRef type;
     HeapRecordRef currentRecord;
     uword i;
     
     currentRecord = heap->record;
     while (currentRecord) {
         for(i = 0; i < currentRecord->numBlocks; ++i) {
-            block = currentRecord->blocks[i];
-            oFree(block);
+			type = getType(currentRecord->blocks[i]);
+			if(type->finalizer != NULL) {
+				type->finalizer(getObject(currentRecord->blocks[i]));
+			}
+        }
+		currentRecord = currentRecord->prev;
+    }
+}
+
+void oHeapDestroy(oHeapRef heap) {
+    HeapRecordRef currentRecord;
+    uword i;
+    
+    currentRecord = heap->record;
+    while (currentRecord) {
+        for(i = 0; i < currentRecord->numBlocks; ++i) {
+			oFree(currentRecord->blocks[i]);
         }
         heap->record = currentRecord->prev;
-        oFree(currentRecord);
+		oFree(currentRecord);
         currentRecord = heap->record;
     }
-    if(heap->mutex) {
+	
+	if(heap->mutex) {
         oMutexDestroy(heap->mutex);
     }
     oFree(heap);
@@ -712,8 +728,7 @@ oTypeRef oMemoryGetObjectType(oThreadContextRef ctx, oObject obj) {
     return getType(getBlock(obj));
 }
 
-// Make public in o_object.h?
-static o_bool isObjectShared(oObject obj) {
+o_bool oMemoryIsObjectShared(oObject obj) {
     return isShared(getBlock(obj));
 }
 
@@ -755,6 +770,9 @@ static oObject copyObject(oRuntimeRef rt, oObject obj, uword* size) {
     else {
         memcpy(objCpy, obj, *size);
     }
+	if(type->copyInternals) {
+		type->copyInternals(objCpy, obj);
+	}
 	*size = calcBlockSize(*size);
     return objCpy;
 }
@@ -775,7 +793,7 @@ oObject _oHeapCopyObjectShared(oThreadContextRef ctx, oObject obj) {
 	uword i, blockSize, totalSize;
 	
     // No need to do anything if the object graph is already shared.
-    if(isObjectShared(obj)) {
+    if(oMemoryIsObjectShared(obj)) {
         return obj;
     }
 
@@ -795,7 +813,7 @@ oObject _oHeapCopyObjectShared(oThreadContextRef ctx, oObject obj) {
 	while(current.obj != NULL) {
 		if(current.idx < current.pointers.size) {
 			obj = *current.pointers.ops[current.idx++];
-			if(obj != NULL && !isObjectShared(obj) && CuckooGet(seen, obj) == NULL) {
+			if(obj != NULL && !oMemoryIsObjectShared(obj) && CuckooGet(seen, obj) == NULL) {
 				// Go depth first so we can fix the child pointers in the same pass
 				StackPush(stack, &current);
 				current.pointers = findEmbeddedPointers(ctx->runtime, obj);

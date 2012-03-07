@@ -20,3 +20,6 @@ oTypeRef oObjectGetType(oThreadContextRef ctx, oObject obj) {
     return oMemoryGetObjectType(ctx, obj);
 }
 
+o_bool oObjectIsShared(oThreadContextRef ctx, oObject obj) {
+	return oMemoryIsObjectShared(obj);
+}

@@ -52,5 +52,6 @@ void oNativeStringDestroy(oNativeStringRef str);
 o_char oNativeStringCharAt(oNativeStringRef str, uword idx);
 oNativeStringRef oNativeStringSubstring(oNativeStringRef str, uword start, uword end);
 uword oNativeStringLength(oNativeStringRef str);
+oNativeStringRef oNativeStringCopy(oNativeStringRef str);
 
 #endif

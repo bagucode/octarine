@@ -6,7 +6,7 @@
 #include "o_typedefs.h"
 
 oHeapRef oHeapCreate(o_bool synchronized, uword gc_threshold);
-
+void oHeapRunFinalizers(oHeapRef heap);
 void oHeapDestroy(oHeapRef heap);
 
 oObject _oHeapAlloc(oThreadContextRef ctx, oTypeRef t);
@@ -24,6 +24,8 @@ void oHeapForceGC(oRuntimeRef rt, oHeapRef heap);
 oObject _oHeapCopyObjectShared(oThreadContextRef ctx, oObject obj);
 
 oTypeRef oMemoryGetObjectType(oThreadContextRef ctx, oObject obj);
+
+o_bool oMemoryIsObjectShared(oObject obj);
 
 void oMemoryPushFrame(oThreadContextRef ctx,
                       pointer frame,
