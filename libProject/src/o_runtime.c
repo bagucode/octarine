@@ -181,10 +181,25 @@ static oErrorRef initError(oThreadContextRef ctx, char* name) {
     oENDFN(oErrorRef)
 }
 
+static void bind(oThreadContextRef ctx, oNamespaceRef ns, char* utf8Name, oObject obj) {
+	_oNamespaceBind(ctx, ns, _oSymbolCreate(ctx, _oStringCreate(ctx, utf8Name)), obj);
+}
+
+static void bindType(oThreadContextRef ctx, oNamespaceRef ns, oTypeRef type) {
+	_oNamespaceBind(ctx, ns, _oSymbolCreate(ctx, type->name), type);
+}
+
 static void bindBuiltins(oThreadContextRef ctx, oNamespaceRef ns) {
-	oSymbolRef sym;
+	uword i, n;
+	oTypeRef* typeArr;
 
-
+	n = sizeof(oRuntimeBuiltInTypes) / sizeof(pointer);
+	typeArr = (oTypeRef*)&ctx->runtime->builtInTypes;
+	for(i = 0; i < n; ++i) {
+		if(typeArr[i] != NULL) {
+			bindType(ctx, ns, typeArr[i]);
+		}
+	}
 }
 
 static void init_builtInErrors(oThreadContextRef ctx) {
@@ -278,6 +293,8 @@ oRuntimeRef oRuntimeCreate(uword sharedHeapInitialSize,
 	octarineNs = _oNamespaceCreate(ctx, _oStringCreate(ctx, "octarine"));
 	_oRuntimeAddNamespace(rt, octarineNs);
 	bindBuiltins(ctx, octarineNs);
+
+	oThreadContextSetNS(ctx, octarineNs);
 
     return rt;
 }

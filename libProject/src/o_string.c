@@ -19,7 +19,7 @@
 #define FNV_OFFSET_BASIS 14695981039346656037
 #endif
 
-static uword fnv1a(char* data, uword datasize) {
+static uword fnv1a(const char* data, uword datasize) {
 	uword hash = FNV_OFFSET_BASIS;
 	uword i;
 	for(i = 0; i < datasize; ++i) {
@@ -92,6 +92,7 @@ oStringRef _oStringSubString(oThreadContextRef ctx, oStringRef str, uword start,
 oStringRef o_bootstrap_string_create(oRuntimeRef rt, oHeapRef heap, const char *utf8) {
     oStringRef str = (oStringRef)o_bootstrap_object_alloc(rt, heap, rt->builtInTypes.string, sizeof(oString));
     str->str = oNativeStringFromUtf8(utf8);
+	str->hashCode = fnv1a(utf8, strlen(utf8));
     return str;
 }
 

@@ -99,12 +99,11 @@ static void CuckooGrow(CuckooRef ck) {
 }
 
 void CuckooPut(CuckooRef ck, pointer key, pointer val) {
-	uword i, mask;
+	uword i;
     CuckooEntry entry;
     
     entry.key = key;
     entry.val = val;
-	mask = ck->capacity - 1;
 	while(o_true) {
 		for(i = 0; i < 5; ++i) {
 			if(CuckooTryPut(ck, &entry)) {
