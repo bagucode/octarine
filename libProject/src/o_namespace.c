@@ -37,6 +37,7 @@ oObject _oNamespaceBind(oThreadContextRef ctx, oNamespaceRef ns, oSymbolRef key,
 	oSpinLockLock(&ns->bindingsLock);
 	CuckooPut(ns->bindings, key, value);
 	oSpinLockUnlock(&ns->bindingsLock);
+    return value;
 }
 
 oObject _oNamespaceLookup(oThreadContextRef ctx, oNamespaceRef ns, oSymbolRef key) {

@@ -12,11 +12,11 @@
 
 // Move FNV function to utils?
 #ifdef OCTARINE32
-#define FNV_PRIME 16777619
-#define FNV_OFFSET_BASIS 2166136261
+#define FNV_PRIME 16777619U
+#define FNV_OFFSET_BASIS 2166136261U
 #else
-#define FNV_PRIME 1099511628211
-#define FNV_OFFSET_BASIS 14695981039346656037
+#define FNV_PRIME 1099511628211U
+#define FNV_OFFSET_BASIS 14695981039346656037U
 #endif
 
 static uword fnv1a(const char* data, uword datasize) {
