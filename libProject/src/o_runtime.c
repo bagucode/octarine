@@ -181,6 +181,12 @@ static oErrorRef initError(oThreadContextRef ctx, char* name) {
     oENDFN(oErrorRef)
 }
 
+static void bindBuiltins(oThreadContextRef ctx, oNamespaceRef ns) {
+	oSymbolRef sym;
+
+
+}
+
 static void init_builtInErrors(oThreadContextRef ctx) {
     ctx->runtime->builtInErrors.outOfMemory = initError(ctx, "out-of-memory");
     ctx->runtime->builtInErrors.bracketMismatch = initError(ctx, "bracket-mismatch");
@@ -234,6 +240,7 @@ oRuntimeRef oRuntimeCreate(uword sharedHeapInitialSize,
 	oRuntimeRef rt = (oRuntimeRef)oMalloc(sizeof(oRuntime));
 	oHeapRef mtHeap = oHeapCreate(o_false, threadHeapInitialSize);
 	oThreadContextRef ctx;
+	oNamespaceRef octarineNs;
     
     memset(rt, 0, sizeof(oRuntime));
 
@@ -265,6 +272,13 @@ oRuntimeRef oRuntimeCreate(uword sharedHeapInitialSize,
 	*/
 	ctx->reader = oReaderCreate(ctx);
 
+	// All built in types, functions and constants are now initialized.
+	// Create the octarine namespace and bind them to it so that they can
+	// be found by octarine code and also not be eaten by the GC.
+	octarineNs = _oNamespaceCreate(ctx, _oStringCreate(ctx, "octarine"));
+	_oRuntimeAddNamespace(rt, octarineNs);
+	bindBuiltins(ctx, octarineNs);
+
     return rt;
 }
 
@@ -272,7 +286,13 @@ void oRuntimeDestroy(oRuntimeRef rt) {
     /* TODO: synchronize stopping of all threads before deleting the heaps */
     oThreadContextListRef lst = rt->allContexts;
 	oThreadContextListRef next;
-    while(lst) {
+
+	// Destroy the namespace table first so that the GC will not retain
+	// the objects in it.
+	CuckooDestroy(rt->namespaces);
+	// dummy table so that the GC does not freak out
+	rt->namespaces = CuckooCreate(1, NULL, NULL);
+	while(lst) {
 		next = lst->next;
         oThreadContextDestroy(lst->ctx);
         oFree(lst);

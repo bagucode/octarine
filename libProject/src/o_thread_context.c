@@ -57,3 +57,11 @@ void oThreadContextDestroy(oThreadContextRef ctx) {
     oHeapDestroy(ctx->heap);
 }
 
+void oThreadContextSetNS(oThreadContextRef ctx, oNamespaceRef ns) {
+	ctx->currentNs = ns;
+}
+
+oNamespaceRef oThreadContextGetNS(oThreadContextRef ctx) {
+	return ctx->currentNs;
+}
+

@@ -10,6 +10,7 @@
 #include <string.h>
 #include <memory.h>
 
+// Move FNV function to utils?
 #ifdef OCTARINE32
 #define FNV_PRIME 16777619
 #define FNV_OFFSET_BASIS 2166136261

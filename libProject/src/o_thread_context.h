@@ -22,6 +22,10 @@ oThreadContextRef oThreadContextCreate(oRuntimeRef runtime,
 
 void oThreadContextDestroy(oThreadContextRef ctx);
 
+void oThreadContextSetNS(oThreadContextRef ctx, oNamespaceRef ns);
+
+oNamespaceRef oThreadContextGetNS(oThreadContextRef ctx);
+
 void o_bootstrap_thread_context_type_init(oRuntimeRef rt, oHeapRef heap);
 
 oThreadContextRef o_bootstrap_thread_context_create(oRuntimeRef runtime, oHeapRef heap);
