@@ -39,3 +39,7 @@ o_bool _oSymbolEquals(oThreadContextRef ctx,
 				      oSymbolRef sym2) {
 	return sym1 == sym2 || oStringCompare(sym1->name, sym2->name) == 0;
 }
+
+uword _oSymbolHash(oThreadContextRef ctx, oSymbolRef sym) {
+	return _oStringHash(ctx, sym->name) * 17;
+}

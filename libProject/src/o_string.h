@@ -6,6 +6,7 @@
 
 struct oString {
 	oNativeStringRef str;
+	uword hashCode;
 };
 
 oStringRef _oStringCreate(oThreadContextRef ctx, char *utf8);
@@ -24,6 +25,12 @@ oStringRef _oStringSubString(oThreadContextRef ctx, oStringRef str, uword start,
 
 uword _oStringLength(oThreadContextRef ctx, oStringRef str);
 #define oStringLength(str) _oC(_oStringLength, str)
+
+o_bool _oStringEquals(oThreadContextRef ctx, oStringRef str1, oStringRef str2);
+#define oStringEquals(str1, str2) _oC(_oStringEquals, str1, str2)
+
+uword _oStringHash(oThreadContextRef ctx, oStringRef str);
+#define oStringHash(str) _oC(_oStringHash, str)
 
 oStringRef o_bootstrap_string_create(oRuntimeRef rt, oHeapRef heap, const char *utf8);
 void o_bootstrap_string_init_type(oRuntimeRef rt, oHeapRef heap);

@@ -64,7 +64,7 @@ oNativeStringRef oNativeStringFromUtf8(const char *utf8) {
 
 char* oNativeStringToUtf8(oNativeStringRef str, uword* out_length) {
 	int result;
-	char *utf8Chars;
+	char *utf8Chars, *ret;
 	(*out_length) = WideCharToMultiByte(CP_UTF8, 0, str->str, str->length, NULL, 0, NULL, NULL);
 
 	if((*out_length) == 0) {
@@ -82,7 +82,12 @@ char* oNativeStringToUtf8(oNativeStringRef str, uword* out_length) {
 		return NULL;
 	}
 
-	return utf8Chars;
+	ret = (char*)oMalloc((*out_length) + 1);
+	memcpy(ret, utf8Chars, *out_length);
+	ret[*out_length] = 0;
+	oFree(utf8Chars);
+
+	return ret;
 }
 
 int oNativeStringCompare(oNativeStringRef str1, oNativeStringRef str2) {
@@ -123,9 +128,8 @@ oNativeStringRef oNativeStringSubstring(oNativeStringRef str, uword start, uword
 	}
 	newStr = (oNativeStringRef)oMalloc(sizeof(oNativeString));
 	newStr->length = (int)(end - start);
-	newStr->str = (LPWSTR)oMalloc(size + sizeof(WCHAR));
+	newStr->str = (LPWSTR)oMalloc(size);
 	memcpy(newStr->str, startP, size);
-	newStr->str[size] = 0;
 	return newStr;
 }
 

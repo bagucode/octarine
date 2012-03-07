@@ -7,7 +7,26 @@
 #include "o_type.h"
 #include "o_array.h"
 #include "o_error.h"
+#include <string.h>
 #include <memory.h>
+
+#ifdef OCTARINE32
+#define FNV_PRIME 16777619
+#define FNV_OFFSET_BASIS 2166136261
+#else
+#define FNV_PRIME 1099511628211
+#define FNV_OFFSET_BASIS 14695981039346656037
+#endif
+
+static uword fnv1a(char* data, uword datasize) {
+	uword hash = FNV_OFFSET_BASIS;
+	uword i;
+	for(i = 0; i < datasize; ++i) {
+		hash = hash ^ data[i];
+		hash = hash * FNV_PRIME;
+	}
+	return hash;
+}
 
 oStringRef _oStringCreate(oThreadContextRef ctx, char *utf8) {
 	oNativeStringRef tmp;
@@ -19,6 +38,7 @@ oStringRef _oStringCreate(oThreadContextRef ctx, char *utf8) {
 		oRETURN(NULL)
 	}
 	oGETRETT(oStringRef)->str = tmp;
+	oGETRETT(oStringRef)->hashCode = fnv1a(utf8, strlen(utf8));
     oENDFN(oStringRef)
 }
 
@@ -29,6 +49,10 @@ static void finalizer(oObject obj) {
 
 int oStringCompare(oStringRef x, oStringRef y) {
     return x == y ? 0 : oNativeStringCompare(x->str, y->str);
+}
+
+o_bool _oStringEquals(oThreadContextRef ctx, oStringRef str1, oStringRef str2) {
+	return oStringCompare(str1, str2) == 0;
 }
 
 oArrayRef _oStringUtf8Copy(oThreadContextRef ctx, oStringRef str) {
@@ -49,10 +73,18 @@ o_char _oStringCharAt(oThreadContextRef ctx, oStringRef str, uword idx) {
 }
 
 oStringRef _oStringSubString(oThreadContextRef ctx, oStringRef str, uword start, uword end) {
+	oNativeStringRef native;
+	char* data;
+	uword length;
     oROOTS(ctx)
     oENDROOTS
+	// possible leaks in here ...
+	native = oNativeStringSubstring(str->str, start, end);
+	data = oNativeStringToUtf8(native, &length);
 	oSETRET(oHeapAlloc(ctx->runtime->builtInTypes.string));
-    oGETRETT(oStringRef)->str = oNativeStringSubstring(str->str, start, end);
+	oGETRETT(oStringRef)->str = native;
+	oGETRETT(oStringRef)->hashCode = fnv1a(data, length);
+	oFree(data);
     oENDFN(oStringRef)
 }
 
@@ -64,6 +96,10 @@ oStringRef o_bootstrap_string_create(oRuntimeRef rt, oHeapRef heap, const char *
 
 uword _oStringLength(oThreadContextRef ctx, oStringRef str) {
     return oNativeStringLength(str->str);
+}
+
+uword _oStringHash(oThreadContextRef ctx, oStringRef str) {
+	return str->hashCode;
 }
 
 void o_bootstrap_string_init_type(oRuntimeRef rt, oHeapRef heap) {

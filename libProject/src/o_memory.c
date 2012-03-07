@@ -780,7 +780,7 @@ oObject _oHeapCopyObjectShared(oThreadContextRef ctx, oObject obj) {
     }
 
 	totalSize = 0;
-	seen = CuckooCreate(500, NULL);
+	seen = CuckooCreate(500, NULL, NULL);
 	stack = StackCreate(sizeof(GraphCopyEntry), 250);
 
 	current.pointers = findEmbeddedPointers(ctx->runtime, obj);

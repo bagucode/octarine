@@ -24,7 +24,9 @@ oStringRef _oNamespaceGetName(oThreadContextRef ctx, oNamespaceRef ns);
 oObject _oNamespaceBind(oThreadContextRef ctx, oNamespaceRef ns, oSymbolRef key, oObject value);
 #define oNamespaceBind(ns, key, value) _oC(_oNamespaceBind, ns, key, value)
 
+oObject _oNamespaceLookup(oThreadContextRef ctx, oNamespaceRef ns, oSymbolRef key);
+#define oNamespaceLookup(ns, key) _oC(_oNamespaceLookup, ns, key)
+
 void o_bootstrap_namespace_type_init(oThreadContextRef ctx);
-o_bool o_internal_namespace_equals(pointer ns1, pointer ns2);
 
 #endif

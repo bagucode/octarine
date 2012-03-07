@@ -11,6 +11,7 @@ struct oThreadContext {
     oRootSetRef roots;
 	oReaderRef reader;
 	oErrorRef error;
+	oNamespaceRef currentNs;
     volatile uword suspendRequested;
 };
 

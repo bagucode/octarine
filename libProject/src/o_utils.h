@@ -11,17 +11,20 @@ typedef struct CuckooEntry {
 } CuckooEntry;
 
 typedef o_bool(*CuckooKeyCompareFn)(pointer key1, pointer key2);
+typedef uword(*CuckooKeyHashFn)(pointer key);
 
 typedef struct Cuckoo {
 	uword capacity;
 	CuckooKeyCompareFn compare;
+	CuckooKeyHashFn hash;
 	CuckooEntry* table;
 } Cuckoo;
 typedef Cuckoo* CuckooRef;
 
 // Compare fn may be NULL, in which case addresses are compared
+// Hash fn may be NULL, in which case the address of the key is used
 // Keys may not be NULL.
-CuckooRef CuckooCreate(uword initialCap, CuckooKeyCompareFn compare);
+CuckooRef CuckooCreate(uword initialCap, CuckooKeyCompareFn compare, CuckooKeyHashFn hash);
 void CuckooDestroy(CuckooRef ck);
 void CuckooPut(CuckooRef ck, pointer key, pointer val);
 pointer CuckooGet(CuckooRef ck, pointer key);

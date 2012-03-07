@@ -207,6 +207,28 @@ void _oRuntimeRemoveAndDestroyContext() {
     
 }
 
+static o_bool NSMapKeyEquals(pointer p1, pointer p2) {
+	return oStringCompare((oStringRef)p1, (oStringRef)p2) == 0;
+}
+
+static uword NSMapKeyHash(pointer p) {
+	return _oStringHash(NULL, (oStringRef)p);
+}
+
+void _oRuntimeAddNamespace(oRuntimeRef rt, oNamespaceRef ns) {
+	oSpinLockLock(&rt->namespaceLock);
+	CuckooPut(rt->namespaces, ns->name, ns);
+	oSpinLockUnlock(&rt->namespaceLock);
+}
+
+oNamespaceRef _oRuntimeFindNamespace(oRuntimeRef rt, oStringRef name) {
+	oNamespaceRef ns;
+	oSpinLockLock(&rt->namespaceLock);
+	ns = (oNamespaceRef)CuckooGet(rt->namespaces, name);
+	oSpinLockUnlock(&rt->namespaceLock);
+	return ns;
+}
+
 oRuntimeRef oRuntimeCreate(uword sharedHeapInitialSize,
                            uword threadHeapInitialSize) {
 	oRuntimeRef rt = (oRuntimeRef)oMalloc(sizeof(oRuntime));
@@ -215,7 +237,7 @@ oRuntimeRef oRuntimeCreate(uword sharedHeapInitialSize,
     
     memset(rt, 0, sizeof(oRuntime));
 
-	rt->namespaces = CuckooCreate(100, o_internal_namespace_equals);
+	rt->namespaces = CuckooCreate(100, NSMapKeyEquals, NSMapKeyHash);
 
     rt->globals = oHeapCreate(o_true, sharedHeapInitialSize);
     rt->currentContext = oTLSCreate();

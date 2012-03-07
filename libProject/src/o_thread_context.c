@@ -9,7 +9,7 @@
 
 void o_bootstrap_thread_context_type_init(oRuntimeRef rt, oHeapRef heap) {
     oFieldRef *fields;
-    rt->builtInTypes.threadContext->fields = o_bootstrap_type_create_field_array(rt, heap, 2);
+    rt->builtInTypes.threadContext->fields = o_bootstrap_type_create_field_array(rt, heap, 3);
     rt->builtInTypes.threadContext->kind = o_T_OBJECT;
     rt->builtInTypes.threadContext->name = o_bootstrap_string_create(rt, heap, "ThreadContext");
     rt->builtInTypes.threadContext->size = sizeof(oThreadContext);
@@ -23,6 +23,10 @@ void o_bootstrap_thread_context_type_init(oRuntimeRef rt, oHeapRef heap) {
     fields[1]->name = o_bootstrap_string_create(rt, heap, "reader");
     fields[1]->offset = offsetof(oThreadContext, reader);
     fields[1]->type = rt->builtInTypes.reader;
+
+    fields[2]->name = o_bootstrap_string_create(rt, heap, "current-ns");
+    fields[2]->offset = offsetof(oThreadContext, currentNs);
+	fields[2]->type = rt->builtInTypes.name_space;
 }
 
 oThreadContextRef o_bootstrap_thread_context_create(oRuntimeRef runtime, oHeapRef heap) {
@@ -30,9 +34,7 @@ oThreadContextRef o_bootstrap_thread_context_create(oRuntimeRef runtime, oHeapRe
     ctx->heap = heap;
     ctx->runtime = runtime;
     ctx->roots = oMemoryCreateRootSet();
-	ctx->error = NULL;
     ctx->suspendRequested = 0;
-	ctx->reader = NULL;
     return ctx;
 }
 
@@ -43,7 +45,6 @@ oThreadContextRef oThreadContextCreate(oRuntimeRef runtime,
     ctx->heap = heap;
     ctx->runtime = runtime;
     ctx->roots = oMemoryCreateRootSet();
-	ctx->error = NULL;
     ctx->suspendRequested = 0;
 	ctx->reader = oReaderCreate(ctx);
     return ctx;

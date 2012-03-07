@@ -72,6 +72,7 @@ struct oRuntime {
     oRuntimeBuiltInConstants builtInConstants;
     oRuntimeBuiltInErrors builtInErrors;
 	CuckooRef namespaces;
+	oSpinLock namespaceLock;
 };
 
 oRuntimeRef oRuntimeCreate(uword sharedHeapInitialSize,
@@ -80,5 +81,9 @@ void oRuntimeDestroy(oRuntimeRef rt);
 oThreadContextRef oRuntimeGetCurrentContext(oRuntimeRef rt);
 
 void _oRuntimeAddContext(oRuntimeRef rt, oThreadContextRef ctx);
+
+void _oRuntimeAddNamespace(oRuntimeRef rt, oNamespaceRef ns);
+
+oNamespaceRef _oRuntimeFindNamespace(oRuntimeRef rt, oStringRef name);
 
 #endif

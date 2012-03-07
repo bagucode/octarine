@@ -15,13 +15,18 @@ static o_bool CuckooDefaultCompare(pointer key1, pointer key2) {
 	return key1 == key2;
 }
 
-CuckooRef CuckooCreate(uword initialCap, CuckooKeyCompareFn compare) {
+static uword CuckooDefaultHash(pointer key) {
+	return (uword)key;
+}
+
+CuckooRef CuckooCreate(uword initialCap, CuckooKeyCompareFn compare, CuckooKeyHashFn hash) {
 	CuckooRef ck;
 	uword byteSize;
     
 	ck = (CuckooRef)oMalloc(sizeof(Cuckoo));
 	ck->capacity = nextp2(initialCap);
 	ck->compare = compare != NULL ? compare : CuckooDefaultCompare;
+	ck->hash = hash != NULL ? hash : CuckooDefaultHash;
 	byteSize = ck->capacity * sizeof(CuckooEntry);
 	ck->table = (CuckooEntry*)oMalloc(byteSize);
 	memset(ck->table, 0, byteSize);
@@ -34,37 +39,38 @@ void CuckooDestroy(CuckooRef ck) {
 	oFree(ck);
 }
 
-static uword CuckooHash1(pointer p) {
-	return (uword)p;
+static uword CuckooHash1(uword h) {
+	return h;
 }
 
-static uword CuckooHash2(pointer p) {
-	return ((uword)p) >> 4;
+static uword CuckooHash2(uword h) {
+	return h >> 4;
 }
 
-static uword CuckooHash3(pointer p) {
-	return ((uword)p) * 31;
+static uword CuckooHash3(uword h) {
+	return h * 31;
 }
 
 static o_bool CuckooTryPut(CuckooRef ck, CuckooEntry* entry) {
-	uword i, mask;
+	uword i, mask, keyHash;
     CuckooEntry tmp;
     
 	mask = ck->capacity - 1;
+	keyHash = ck->hash(entry->key);
     
-	i = CuckooHash1(entry->key) & mask;
+	i = CuckooHash1(keyHash) & mask;
 	tmp = ck->table[i];
 	ck->table[i] = *entry;
 	if(tmp.key == NULL || ck->compare(tmp.key, entry->key)) return o_true;
 	*entry = tmp;
 
-	i = CuckooHash2(entry->key) & mask;
+	i = CuckooHash2(keyHash) & mask;
 	tmp = ck->table[i];
 	ck->table[i] = *entry;
 	if(tmp.key == NULL || ck->compare(tmp.key, entry->key)) return o_true;
 	*entry = tmp;
 
-	i = CuckooHash3(entry->key) & mask;
+	i = CuckooHash3(keyHash) & mask;
 	tmp = ck->table[i];
 	ck->table[i] = *entry;
 	if(tmp.key == NULL || ck->compare(tmp.key, entry->key)) return o_true;
@@ -74,7 +80,7 @@ static o_bool CuckooTryPut(CuckooRef ck, CuckooEntry* entry) {
 }
 
 static void CuckooGrow(CuckooRef ck) {
-	CuckooRef bigger = CuckooCreate(ck->capacity + 1, ck->compare);
+	CuckooRef bigger = CuckooCreate(ck->capacity + 1, ck->compare, ck->hash);
 	uword i, cap;
 	
 	for(i = 0; i < ck->capacity; ++i) {
@@ -82,7 +88,7 @@ static void CuckooGrow(CuckooRef ck) {
 			if(CuckooTryPut(bigger, &ck->table[i]) == o_false) {
 				cap = bigger->capacity + 1;
 				CuckooDestroy(bigger);
-				bigger = CuckooCreate(cap, ck->compare);
+				bigger = CuckooCreate(cap, ck->compare, ck->hash);
 				i = 0;
 			}
 		}
@@ -110,17 +116,18 @@ void CuckooPut(CuckooRef ck, pointer key, pointer val) {
 }
 
 pointer CuckooGet(CuckooRef ck, pointer key) {
-	uword i, mask;
+	uword i, mask, keyHash;
     
 	mask = ck->capacity - 1;
+	keyHash = ck->hash(key);
     
-	i = CuckooHash1(key) & mask;
+	i = CuckooHash1(keyHash) & mask;
 	if(ck->compare(ck->table[i].key, key)) return ck->table[i].val;
     
-	i = CuckooHash2(key) & mask;
+	i = CuckooHash2(keyHash) & mask;
 	if(ck->compare(ck->table[i].key, key)) return ck->table[i].val;
 
-	i = CuckooHash3(key) & mask;
+	i = CuckooHash3(keyHash) & mask;
 	if(ck->compare(ck->table[i].key, key)) return ck->table[i].val;
 
 	return NULL;

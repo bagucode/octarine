@@ -84,9 +84,12 @@ void testGCFinalizer() {
     oRuntimeRef runtime = oRuntimeCreate(2000 * 1024, 1024 * 1000);
     oThreadContextRef ctx = runtime->allContexts->ctx;
     oROOTS(ctx)
+	oStringRef tmpRoot;
     oENDROOTS
     
-    oStringCreate("Test string");
+    oRoots.tmpRoot = oStringCreate("Test string");
+	oStringSubString(oRoots.tmpRoot, 0, 3);
+	oRoots.tmpRoot = NULL;
 	oHeapForceGC(ctx->runtime, ctx->heap);
     
     oENDVOIDFN
