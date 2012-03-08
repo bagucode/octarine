@@ -42,6 +42,7 @@ oNamespaceRef _oNamespaceCreate(oThreadContextRef ctx, oStringRef name) {
 	oSETRET(oHeapAlloc(ctx->runtime->builtInTypes.name_space));
 	oGETRETT(oNamespaceRef)->name = name;
 	oGETRETT(oNamespaceRef)->bindings = CuckooCreate(100, NSBindingKeyEquals, NSBindingKeyHash);
+	oGETRETT(oNamespaceRef)->bindingsLock = oSpinLockCreate(4000);
     oENDFN(oNamespaceRef)
 }
 
@@ -52,7 +53,7 @@ oStringRef _oNamespaceGetName(oThreadContextRef ctx, oNamespaceRef ns) {
 oObject _oNamespaceBind(oThreadContextRef ctx, oNamespaceRef ns, oSymbolRef key, oObject value) {
 	NSBindingRef binding;
 
-	oSpinLockLock(&ns->bindingsLock);
+	oSpinLockLock(ns->bindingsLock);
 
 	binding = (NSBindingRef)CuckooGet(ns->bindings, key);
 
@@ -78,14 +79,14 @@ oObject _oNamespaceBind(oThreadContextRef ctx, oNamespaceRef ns, oSymbolRef key,
 		CuckooPut(binding->threadLocals, ctx, value);
 	}
 
-	oSpinLockUnlock(&ns->bindingsLock);
+	oSpinLockUnlock(ns->bindingsLock);
     return value;
 }
 
 oObject _oNamespaceLookup(oThreadContextRef ctx, oNamespaceRef ns, oSymbolRef key) {
 	NSBindingRef binding;
 	oObject ret = NULL;
-	oSpinLockLock(&ns->bindingsLock);
+	oSpinLockLock(ns->bindingsLock);
 	binding = (NSBindingRef)CuckooGet(ns->bindings, key);
 	if(binding) {
 		if(binding->isShared) {
@@ -95,7 +96,7 @@ oObject _oNamespaceLookup(oThreadContextRef ctx, oNamespaceRef ns, oSymbolRef ke
 			ret = CuckooGet(binding->threadLocals, ctx);
 		}
 	}
-	oSpinLockUnlock(&ns->bindingsLock);
+	oSpinLockUnlock(ns->bindingsLock);
 	return ret;
 }
 
@@ -110,6 +111,7 @@ static void NamespaceDestroy(oObject ns) {
 		}
 	}
 	CuckooDestroy(nsx->bindings);
+	oSpinLockDestroy(nsx->bindingsLock);
 }
 
 void o_bootstrap_namespace_type_init(oThreadContextRef ctx) {

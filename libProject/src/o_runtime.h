@@ -66,13 +66,13 @@ struct oRuntime {
     oHeapRef globals;
     oTLSRef currentContext;
     oThreadContextListRef allContexts;
-    oSpinLock contextListLock;
+    oSpinLockRef contextListLock;
     oRuntimeBuiltInTypes builtInTypes;
     oRuntimeBuiltInFunctions builtInFunctions;
     oRuntimeBuiltInConstants builtInConstants;
     oRuntimeBuiltInErrors builtInErrors;
 	CuckooRef namespaces;
-	oSpinLock namespaceLock;
+	oSpinLockRef namespaceLock;
 };
 
 oRuntimeRef oRuntimeCreate(uword sharedHeapInitialSize,

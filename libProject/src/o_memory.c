@@ -462,14 +462,14 @@ static void collectGarbage(oRuntimeRef rt, oHeapRef heap) {
 		}
     }
     // thread contexts
-	oSpinLockLock(&rt->contextListLock);
+	oSpinLockLock(rt->contextListLock);
 	lst = rt->allContexts;
     while(lst) {
 		next = lst->next;
 		markGraph(rt, lst->ctx, shared);
 		lst = next;
 	}
-	oSpinLockUnlock(&rt->contextListLock);
+	oSpinLockUnlock(rt->contextListLock);
     // constants
     j = sizeof(oRuntimeBuiltInConstants) / sizeof(pointer);
     objArr = (oObject*)&rt->builtInConstants;
@@ -493,7 +493,7 @@ the crap above here.
 
 	ctx = oRuntimeGetCurrentContext(rt);
 	if(shared) {
-		oSpinLockLock(&rt->contextListLock);
+		oSpinLockLock(rt->contextListLock);
 		lst = rt->allContexts;
 		while(lst) {
 			if(lst->ctx != ctx) {
@@ -522,7 +522,7 @@ the crap above here.
 			}
 			lst = lst->next;
 		}
-		oSpinLockUnlock(&rt->contextListLock);
+		oSpinLockUnlock(rt->contextListLock);
 	}
 	else {
 		roots = ctx->roots;
