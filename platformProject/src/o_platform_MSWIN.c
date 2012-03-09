@@ -193,7 +193,7 @@ void oMutexUnlock(oMutexRef mutex) {
 }
 
 void oSleepMillis(uword millis) {
-	Sleep(millis);
+	Sleep((DWORD)millis);
 }
 
 o_bool oAtomicCompareAndSwapUword(volatile uword* uw, uword oldVal, uword newVal) {
@@ -245,7 +245,7 @@ struct oSpinLock {
 
 oSpinLockRef oSpinLockCreate(uword spinCount) {
 	oSpinLockRef sl = (oSpinLockRef)oMalloc(sizeof(oSpinLock));
-	InitializeCriticalSectionAndSpinCount(&sl->cs, spinCount);
+	InitializeCriticalSectionAndSpinCount(&sl->cs, (DWORD)spinCount);
 	return sl;
 }
 
