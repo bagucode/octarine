@@ -183,20 +183,38 @@ o_bool oAtomicCompareAndSwapPointer(volatile pointer* p, pointer oldVal, pointer
     return oAtomicCompareAndSwapUword((volatile uword*)p, (uword)oldVal, (uword)newVal);
 }
 
+struct oSpinLock {
+    uword spincount;
+    volatile uword lock;
+};
+
+oSpinLockRef oSpinLockCreate(uword spinCount) {
+    oSpinLockRef sl = (oSpinLockRef)oMalloc(sizeof(oSpinLock));
+    sl->spincount = spinCount;
+    sl->lock = 0;
+    return sl;
+}
+
+void oSpinLockDestroy(oSpinLockRef lock) {
+    oFree(lock);
+}
+
 void oSpinLockLock(oSpinLockRef lock) {
-    uword old;
-    while(1) {
-        old = *lock;
-        if(oAtomicCompareAndSwapUword(lock, 0, 1)) {
-            // spin until we change the lock from unlocked (0) to locked (1)
-            break;
+    uword spins = 0;
+    while(o_true) {
+        if(oAtomicCompareAndSwapUword(&lock->lock, 0, 1)) {
+            return;
+        }
+        if(spins < lock->spincount) {
+            ++spins;
+        }
+        else {
+            oSleepMillis(0); // Yield
         }
     }
 }
 
 void oSpinLockUnlock(oSpinLockRef lock) {
-    // No need to synchronize on this as long as the locking uses
-    // an atomic compare and swap with zero
-    (*lock) = 0;
+    oAtomicSetUword(&lock->lock, 0);
 }
 

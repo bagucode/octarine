@@ -10,7 +10,6 @@
 
 void o_bootstrap_list_init_type(oThreadContextRef ctx) {
     oFieldRef *fields;
-	oHeapRef heap = ctx->runtime->globals;
     ctx->runtime->builtInTypes.list->fields = o_bootstrap_type_create_field_array(ctx->runtime, 2);
     ctx->runtime->builtInTypes.list->kind = o_T_OBJECT;
     ctx->runtime->builtInTypes.list->name = o_bootstrap_string_create(ctx->runtime, "AnyList");
