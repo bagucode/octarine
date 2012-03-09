@@ -12,6 +12,7 @@
 #include "../../libProject/src/o_vector.h"
 #include "../../libProject/src/o_keyword.h"
 #include "../../libProject/src/o_error.h"
+#include "../../libProject/src/o_namespace.h"
 
 #include <memory.h>
 #include <assert.h>
@@ -531,6 +532,29 @@ void testComplicatedCopyShared() {
 	assert(oRoots.theCopy->self == oRoots.theCopy);
     
     oENDVOIDFN
+    oRuntimeDestroy(rt);
+}
+
+void testNamespaceBindAndLookup() {
+    oRuntimeRef rt = oRuntimeCreate();
+    oThreadContextRef ctx = oRuntimeGetCurrentContext(rt);
+    oROOTS(ctx);
+    oSymbolRef bindName;
+    oStringRef text;
+    oStringRef lookupResult;
+    oNamespaceRef ns;
+    oENDROOTS;
+    
+    oRoots.text = oStringCreate("msg");
+    oRoots.bindName = oSymbolCreate(oRoots.text);
+    oRoots.text = oStringCreate("Hello World!");
+    oRoots.ns = oThreadContextGetNS(ctx);
+    oNamespaceBind(oRoots.ns, oRoots.bindName, oRoots.text);
+    oRoots.lookupResult = oNamespaceLookup(oRoots.ns, oRoots.bindName);
+    
+    assert(oRoots.lookupResult == oRoots.text);
+    
+    oENDVOIDFN;
     oRuntimeDestroy(rt);
 }
 
