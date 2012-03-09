@@ -29,8 +29,11 @@ pointer oAtomicGetPointer(volatile pointer* p);
 void oAtomicSetPointer(volatile pointer* p, pointer value);
 o_bool oAtomicCompareAndSwapPointer(volatile pointer* p, pointer oldVal, pointer newVal);
 
-typedef volatile uword oSpinLock;
+typedef struct oSpinLock oSpinLock;
 typedef oSpinLock* oSpinLockRef;
+
+oSpinLockRef oSpinLockCreate(uword spinCount);
+void oSpinLockDestroy(oSpinLockRef lock);
 void oSpinLockLock(oSpinLockRef lock);
 void oSpinLockUnlock(oSpinLockRef lock);
 

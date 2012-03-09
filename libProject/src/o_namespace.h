@@ -12,7 +12,7 @@ struct oNamespace {
 	// handling since it can contain pointers to both shared
 	// and local objects even though namespaces are considered shared.
 	CuckooRef bindings;
-	oSpinLock bindingsLock;
+	oSpinLockRef bindingsLock;
 };
 
 typedef struct oNSBinding {

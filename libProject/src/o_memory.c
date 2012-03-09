@@ -476,22 +476,22 @@ static void collectGarbage(oRuntimeRef rt, oHeapRef heap) {
 
     // Mark thread contexts if the shared heap is being collected
 	if(shared) {
-		oSpinLockLock(&rt->contextListLock);
+		oSpinLockLock(rt->contextListLock);
 		lst = rt->allContexts;
 		while(lst) {
 			markGraph(rt, lst->ctx, shared);
 			lst = lst->next;
 		}
-		oSpinLockUnlock(&rt->contextListLock);
+		oSpinLockUnlock(rt->contextListLock);
 	}
 
 	// Mark all namespaces and their bindings
-	oSpinLockLock(&rt->namespaceLock);
+	oSpinLockLock(rt->namespaceLock);
 	for(i = 0; i < rt->namespaces->capacity; ++i) {
 		ns = (oNamespaceRef)rt->namespaces->table[i].val;
 		if(ns) {
 			markGraph(rt, ns, shared);
-			oSpinLockLock(&ns->bindingsLock);
+			oSpinLockLock(ns->bindingsLock);
 			for(j = 0; j < ns->bindings->capacity; ++j) {
 				binding = (oNSBindingRef)ns->bindings->table[j].val;
 				if(binding && binding->isShared == shared) {
@@ -507,14 +507,14 @@ static void collectGarbage(oRuntimeRef rt, oHeapRef heap) {
 					}
 				}
 			}
-			oSpinLockUnlock(&ns->bindingsLock);
+			oSpinLockUnlock(ns->bindingsLock);
 		}
 	}
-	oSpinLockUnlock(&rt->namespaceLock);
+	oSpinLockUnlock(rt->namespaceLock);
 
 	// Mark stack roots
 	if(shared) {
-		oSpinLockLock(&rt->contextListLock);
+		oSpinLockLock(rt->contextListLock);
 		lst = rt->allContexts;
 		while(lst) {
 			if(lst->ctx != ctx) {
@@ -543,7 +543,7 @@ static void collectGarbage(oRuntimeRef rt, oHeapRef heap) {
 			}
 			lst = lst->next;
 		}
-		oSpinLockUnlock(&rt->contextListLock);
+		oSpinLockUnlock(rt->contextListLock);
 	}
 	else { // not shared
 		roots = ctx->roots;

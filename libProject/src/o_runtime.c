@@ -227,7 +227,7 @@ static void init_builtInErrors(oThreadContextRef ctx) {
 void _oRuntimeAddContext(oRuntimeRef rt, oThreadContextRef ctx) {
     oThreadContextListRef lst;
 
-    oSpinLockLock(&rt->contextListLock);
+    oSpinLockLock(rt->contextListLock);
 
     lst = rt->allContexts;
     while(lst->next) {
@@ -238,7 +238,7 @@ void _oRuntimeAddContext(oRuntimeRef rt, oThreadContextRef ctx) {
 	lst->next->next = NULL;
     lst->next->ctx = ctx;
     
-    oSpinLockUnlock(&rt->contextListLock);
+    oSpinLockUnlock(rt->contextListLock);
 }
 
 void _oRuntimeRemoveAndDestroyContext() {
@@ -254,16 +254,16 @@ static uword NSMapKeyHash(pointer p) {
 }
 
 void _oRuntimeAddNamespace(oRuntimeRef rt, oNamespaceRef ns) {
-	oSpinLockLock(&rt->namespaceLock);
+	oSpinLockLock(rt->namespaceLock);
 	CuckooPut(rt->namespaces, ns->name, ns);
-	oSpinLockUnlock(&rt->namespaceLock);
+	oSpinLockUnlock(rt->namespaceLock);
 }
 
 oNamespaceRef _oRuntimeFindNamespace(oRuntimeRef rt, oStringRef name) {
 	oNamespaceRef ns;
-	oSpinLockLock(&rt->namespaceLock);
+	oSpinLockLock(rt->namespaceLock);
 	ns = (oNamespaceRef)CuckooGet(rt->namespaces, name);
-	oSpinLockUnlock(&rt->namespaceLock);
+	oSpinLockUnlock(rt->namespaceLock);
 	return ns;
 }
 
@@ -274,6 +274,8 @@ oRuntimeRef oRuntimeCreate() {
 
     memset(rt, 0, sizeof(oRuntime));
 
+	rt->contextListLock = oSpinLockCreate(4000);
+	rt->namespaceLock = oSpinLockCreate(4000);
 	rt->namespaces = CuckooCreate(100, NSMapKeyEquals, NSMapKeyHash);
 
     rt->globals = oHeapCreate(o_true, 1024 * 2000);
@@ -344,6 +346,8 @@ void oRuntimeDestroy(oRuntimeRef rt) {
     oHeapDestroy(rt->globals);
     oTLSDestroy(rt->currentContext);
 	CuckooDestroy(rt->namespaces);
+	oSpinLockDestroy(rt->contextListLock);
+	oSpinLockDestroy(rt->namespaceLock);
 	oFree(rt);
 }
 
