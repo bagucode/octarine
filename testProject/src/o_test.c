@@ -17,12 +17,12 @@
 #include <assert.h>
 
 void testCreateRuntime() {
-    oRuntimeRef runtime = oRuntimeCreate(2000 * 1024, 1024 * 1000);
+    oRuntimeRef runtime = oRuntimeCreate();
     oRuntimeDestroy(runtime);
 }
 
 void testGCWithoutGarbage() {
-    oRuntimeRef runtime = oRuntimeCreate(2000 * 1024, 1024 * 1000);
+    oRuntimeRef runtime = oRuntimeCreate();
 	oThreadContextRef ctx = oRuntimeGetCurrentContext(runtime);
 	oHeapForceGC(runtime, ctx->heap);
 	oHeapForceGC(runtime, ctx->heap);
@@ -31,7 +31,7 @@ void testGCWithoutGarbage() {
 
 void testGCAllGarbage() {
     uword i;
-    oRuntimeRef runtime = oRuntimeCreate(2000 * 1024, 1024 * 1000);
+    oRuntimeRef runtime = oRuntimeCreate();
     oThreadContextRef ctx = runtime->allContexts->ctx;
     oROOTS(ctx)
     oENDROOTS
@@ -49,7 +49,7 @@ void testGCAllGarbage() {
 
 void testGCAllRetained() {
     uword i;
-    oRuntimeRef runtime = oRuntimeCreate(2000 * 1024, 1024 * 1000);
+    oRuntimeRef runtime = oRuntimeCreate();
     oThreadContextRef ctx = runtime->allContexts->ctx;
     oROOTS(ctx)
     oObject listHead;
@@ -66,7 +66,7 @@ void testGCAllRetained() {
 
 void testGCAllRetainedShouldNotBlowStack() {
     uword i;
-    oRuntimeRef runtime = oRuntimeCreate(2000 * 1024, 1024 * 1000);
+    oRuntimeRef runtime = oRuntimeCreate();
     oThreadContextRef ctx = runtime->allContexts->ctx;
     oROOTS(ctx)
     oObject listHead;
@@ -82,7 +82,7 @@ void testGCAllRetainedShouldNotBlowStack() {
 }
 
 void testGCFinalizer() {
-    oRuntimeRef runtime = oRuntimeCreate(2000 * 1024, 1024 * 1000);
+    oRuntimeRef runtime = oRuntimeCreate();
     oThreadContextRef ctx = runtime->allContexts->ctx;
     oROOTS(ctx)
 	oStringRef tmpRoot;
@@ -98,7 +98,7 @@ void testGCFinalizer() {
 }
 
 void testReaderEmptyList() {
-    oRuntimeRef runtime = oRuntimeCreate(2000 * 1024, 1024 * 1000);
+    oRuntimeRef runtime = oRuntimeCreate();
     oThreadContextRef ctx = runtime->allContexts->ctx;
     oObject result;
     oStringRef src;
@@ -107,7 +107,7 @@ void testReaderEmptyList() {
     oENDROOTS
 
     src = oStringCreate("()");
-    result = oReaderRead(ctx, src);
+    result = oRead(ctx, src);
     // We should get a list with one element, an empty list.
     assert(oObjectGetType(ctx, result) == ctx->runtime->builtInTypes.list);
 	emptyList = (oListObjRef)((oListObjRef)result)->data;
@@ -118,7 +118,7 @@ void testReaderEmptyList() {
 }
 
 void testSymbolEquals() {
-    oRuntimeRef runtime = oRuntimeCreate(2000 * 1024, 1024 * 1000);
+    oRuntimeRef runtime = oRuntimeCreate();
     oThreadContextRef ctx = runtime->allContexts->ctx;
     o_bool eqResult;
     oROOTS(ctx)
@@ -151,7 +151,7 @@ void testSymbolEquals() {
 }
 
 void testReadSymbol() {
-    oRuntimeRef runtime = oRuntimeCreate(2000 * 1024, 1024 * 1000);
+    oRuntimeRef runtime = oRuntimeCreate();
     oThreadContextRef ctx = runtime->allContexts->ctx;
     oSymbolRef bob;
     o_bool eqResult;
@@ -163,7 +163,7 @@ void testReadSymbol() {
 
     oRoots.src = oStringCreate("Bob2Bob");
     oRoots.otherBob = oSymbolCreate(oRoots.src);
-    oRoots.readResult = oReaderRead(ctx, oRoots.src);
+    oRoots.readResult = oRead(ctx, oRoots.src);
     
     // We should get a list with one element, the symbol Bob2Bob
     assert(oObjectGetType(ctx, oRoots.readResult) == ctx->runtime->builtInTypes.list);
@@ -177,7 +177,7 @@ void testReadSymbol() {
 }
 
 void testReadOneListAndOneSymbol() {
-    oRuntimeRef runtime = oRuntimeCreate(2000 * 1024, 1024 * 1000);
+    oRuntimeRef runtime = oRuntimeCreate();
     oThreadContextRef ctx = runtime->allContexts->ctx;
     oSymbolRef bob;
     oSymbolRef other;
@@ -195,7 +195,7 @@ void testReadOneListAndOneSymbol() {
     oRoots.src = oStringCreate("(Bob2Bob) otherSym");
     oRoots.controlSym = oSymbolCreate(oRoots.name);
     
-    oRoots.readResult = oReaderRead(ctx, oRoots.src);
+    oRoots.readResult = oRead(ctx, oRoots.src);
     
     // We should get a list with two elements, a list with a symbol in it and a symbol
     assert(oObjectGetType(ctx, oRoots.readResult) == ctx->runtime->builtInTypes.list);
@@ -267,7 +267,7 @@ oTypeRef createTestStructType(oThreadContextRef ctx) {
 }
 
 void testCreateType() {
-    oRuntimeRef runtime = oRuntimeCreate(2000 * 1024, 1024 * 1000);
+    oRuntimeRef runtime = oRuntimeCreate();
     oThreadContextRef ctx = runtime->allContexts->ctx;
     oROOTS(ctx)
     oTypeRef myType;
@@ -292,7 +292,7 @@ void testCreateType() {
 }
 
 void testArrayPutGet() {
-    oRuntimeRef runtime = oRuntimeCreate(2000 * 1024, 1024 * 1000);
+    oRuntimeRef runtime = oRuntimeCreate();
     oThreadContextRef ctx = runtime->allContexts->ctx;
     i64 one;
     i64 two;
@@ -340,7 +340,7 @@ void testArrayPutGet() {
 }
 
 void testVector() {
-    oRuntimeRef runtime = oRuntimeCreate(2000 * 1024, 1024 * 1000);
+    oRuntimeRef runtime = oRuntimeCreate();
     oThreadContextRef ctx = runtime->allContexts->ctx;
     oTypeRef str_t = ctx->runtime->builtInTypes.string;
     oTypeRef i64_t = ctx->runtime->builtInTypes.i64;
@@ -394,7 +394,7 @@ void testVector() {
 }
 
 void testReadVector() {
-    oRuntimeRef runtime = oRuntimeCreate(2000 * 1024, 1024 * 1000);
+    oRuntimeRef runtime = oRuntimeCreate();
     oThreadContextRef ctx = runtime->allContexts->ctx;
     oListObjRef lst;
     oSymbolRef sym;
@@ -410,7 +410,7 @@ void testReadVector() {
     oRoots.src = oStringCreate("ethel");
     oRoots.ethel = oSymbolCreate(oRoots.src);
     oRoots.src = oStringCreate("[bob fred ethel]\n");
-    oRoots.readResult = oReaderRead(ctx, oRoots.src);
+    oRoots.readResult = oRead(ctx, oRoots.src);
     
     // We should get a list with one element, a vector of three symbols
     assert(oObjectGetType(ctx, oRoots.readResult) == ctx->runtime->builtInTypes.list);
@@ -431,7 +431,7 @@ void testReadVector() {
 }
 
 void testReadKeyword() {
-    oRuntimeRef runtime = oRuntimeCreate(2000 * 1024, 1024 * 1000);
+    oRuntimeRef runtime = oRuntimeCreate();
     oThreadContextRef ctx = runtime->allContexts->ctx;
     oListObjRef lst;
     oKeywordRef kw;
@@ -443,7 +443,7 @@ void testReadKeyword() {
     
     oRoots.name = oStringCreate("lucy");
     oRoots.src = oStringCreate(":lucy");
-    oRoots.readResult = oReaderRead(ctx, oRoots.src);
+    oRoots.readResult = oRead(ctx, oRoots.src);
     
     // We should get a list with one element, a vector of three symbols
     assert(oObjectGetType(ctx, oRoots.readResult) == ctx->runtime->builtInTypes.list);
@@ -460,7 +460,7 @@ void testReadKeyword() {
 }
 
 void testOutOfMemory() {
-    oRuntimeRef rt = oRuntimeCreate(1024 * 1000, 1024 * 1000);
+    oRuntimeRef rt = oRuntimeCreate();
     oThreadContextRef ctx = oRuntimeGetCurrentContext(rt);
     oROOTS(ctx)
     oENDROOTS
@@ -475,7 +475,7 @@ void testOutOfMemory() {
 }
 
 void testSimpleCopySharedDoesNotCrash() {
-    oRuntimeRef rt = oRuntimeCreate(1024 * 1000, 1024 * 1000);
+    oRuntimeRef rt = oRuntimeCreate();
     oThreadContextRef ctx = oRuntimeGetCurrentContext(rt);
     oROOTS(ctx)
     oStringRef copyMe;
@@ -492,7 +492,7 @@ void testSimpleCopySharedDoesNotCrash() {
 }
 
 void testComplicatedCopyShared() {
-    oRuntimeRef rt = oRuntimeCreate(1024 * 1000, 1024 * 1000);
+    oRuntimeRef rt = oRuntimeCreate();
     oThreadContextRef ctx = oRuntimeGetCurrentContext(rt);
 	f64 someval;
     oROOTS(ctx)

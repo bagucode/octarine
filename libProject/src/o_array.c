@@ -32,12 +32,11 @@ uword oArraySize(oArrayRef arr) {
 }
 
 oArrayRef o_bootstrap_array_create(oRuntimeRef rt,
-	                               oHeapRef heap,
                                    oTypeRef type,
                                    uword num_elements,
                                    uword elem_size,
                                    u8 alignment) {
-    return o_bootstrap_array_alloc(rt, heap, type, num_elements, elem_size, alignment);
+    return o_bootstrap_array_alloc(rt, type, num_elements, elem_size, alignment);
 }
 
 void _oArrayCopy(oThreadContextRef ctx, oArrayRef from, oArrayRef to) {
@@ -131,24 +130,24 @@ void _oArrayGet(oThreadContextRef ctx, oArrayRef arr, uword idx, pointer dest, o
     }
 }
 
-void o_bootstrap_array_init_type(oRuntimeRef rt, oHeapRef heap) {
+void o_bootstrap_array_init_type(oRuntimeRef rt) {
     oFieldRef *fields;
-    rt->builtInTypes.array->fields = o_bootstrap_type_create_field_array(rt, heap, 3);
+    rt->builtInTypes.array->fields = o_bootstrap_type_create_field_array(rt, 3);
     rt->builtInTypes.array->kind = o_T_OBJECT;
-    rt->builtInTypes.array->name = o_bootstrap_string_create(rt, heap, "Array");
+    rt->builtInTypes.array->name = o_bootstrap_string_create(rt, "Array");
     rt->builtInTypes.array->size = sizeof(oArray);
     
     fields = (oFieldRef*)oArrayDataPointer(rt->builtInTypes.array->fields);
     
-    fields[0]->name = o_bootstrap_string_create(rt, heap, "element-type");
+    fields[0]->name = o_bootstrap_string_create(rt, "element-type");
     fields[0]->offset = offsetof(oArray, element_type);
     fields[0]->type = rt->builtInTypes.type;
     
-    fields[1]->name = o_bootstrap_string_create(rt, heap, "length");
+    fields[1]->name = o_bootstrap_string_create(rt, "length");
     fields[1]->offset = offsetof(oArray, num_elements);
     fields[1]->type = rt->builtInTypes.uword;
     
-    fields[2]->name = o_bootstrap_string_create(rt, heap, "alignment");
+    fields[2]->name = o_bootstrap_string_create(rt, "alignment");
     fields[2]->offset = offsetof(oArray, alignment);
     fields[2]->type = rt->builtInTypes.u8;
 }

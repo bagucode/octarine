@@ -10,18 +10,19 @@
 
 void o_bootstrap_list_init_type(oThreadContextRef ctx) {
     oFieldRef *fields;
-    ctx->runtime->builtInTypes.list->fields = o_bootstrap_type_create_field_array(ctx->runtime, ctx->heap, 2);
+	oHeapRef heap = ctx->runtime->globals;
+    ctx->runtime->builtInTypes.list->fields = o_bootstrap_type_create_field_array(ctx->runtime, 2);
     ctx->runtime->builtInTypes.list->kind = o_T_OBJECT;
-    ctx->runtime->builtInTypes.list->name = o_bootstrap_string_create(ctx->runtime, ctx->heap, "AnyList");
+    ctx->runtime->builtInTypes.list->name = o_bootstrap_string_create(ctx->runtime, "AnyList");
     ctx->runtime->builtInTypes.list->size = sizeof(oListObj);
 
     fields = (oFieldRef*)oArrayDataPointer(ctx->runtime->builtInTypes.list->fields);
     
-    fields[0]->name = o_bootstrap_string_create(ctx->runtime, ctx->heap, "data");
+    fields[0]->name = o_bootstrap_string_create(ctx->runtime, "data");
     fields[0]->offset = offsetof(oListObj, data);
     fields[0]->type = ctx->runtime->builtInTypes.any;
 
-    fields[1]->name = o_bootstrap_string_create(ctx->runtime, ctx->heap, "next");
+    fields[1]->name = o_bootstrap_string_create(ctx->runtime, "next");
     fields[1]->offset = offsetof(oListObj, next);
     fields[1]->type = ctx->runtime->builtInTypes.list;
 }

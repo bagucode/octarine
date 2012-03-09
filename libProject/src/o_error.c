@@ -5,6 +5,7 @@
 #include "o_array.h"
 #include "o_string.h"
 #include "o_type.h"
+#include <stddef.h>
 
 // Returns NULL if there was no error set for this context
 oErrorRef oErrorGet(oThreadContextRef ctx) {
@@ -30,21 +31,15 @@ void oErrorSet(oThreadContextRef ctx, oObject data) {
 }
 
 void o_bootstrap_error_type_init(oThreadContextRef ctx) {
-    oROOTS(ctx)
-    oArrayRef fields;
-    oTypeRef theType;
-    oStringRef typeName;
-    oFieldRef field;
-    oENDROOTS
+    oFieldRef *fields;
+	ctx->runtime->builtInTypes.error->fields = o_bootstrap_type_create_field_array(ctx->runtime, 1);
+    ctx->runtime->builtInTypes.error->kind = o_T_OBJECT;
+	ctx->runtime->builtInTypes.error->name = o_bootstrap_string_create(ctx->runtime, "Error");
+	ctx->runtime->builtInTypes.error->size = sizeof(oError);
+
+    fields = (oFieldRef*)oArrayDataPointer(ctx->runtime->builtInTypes.error->fields);
     
-    oRoots.fields = oArrayCreate(ctx->runtime->builtInTypes.field, 1);
-    oRoots.typeName = oStringCreate("data");
-    oRoots.field = oFieldCreate(oRoots.typeName, ctx->runtime->builtInTypes.any);
-    oArrayPut(oRoots.fields, 0, oRoots.field, ctx->runtime->builtInTypes.field);
-    
-    oRoots.typeName = oStringCreate("Error");
-    oRoots.theType = oTypeCreate(o_T_OBJECT, 0, oRoots.typeName, oRoots.fields, NULL, NULL);
-    
-    ctx->runtime->builtInTypes.error = oRoots.theType;
-    oENDVOIDFN
+    fields[0]->name = o_bootstrap_string_create(ctx->runtime, "data");
+	fields[0]->offset = offsetof(oError, data);
+	fields[0]->type = ctx->runtime->builtInTypes.any;
 }

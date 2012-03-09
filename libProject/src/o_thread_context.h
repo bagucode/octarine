@@ -9,7 +9,6 @@ struct oThreadContext {
     oRuntimeRef runtime;
     oHeapRef heap;
     oRootSetRef roots;
-	oReaderRef reader;
 	oErrorRef error;
 	oNamespaceRef currentNs;
     volatile uword suspendRequested;
@@ -17,8 +16,7 @@ struct oThreadContext {
 
 oThreadContextRef oThreadContextGetCurrent(oRuntimeRef rt);
 
-oThreadContextRef oThreadContextCreate(oRuntimeRef runtime,
-                                       oHeapRef heap);
+oThreadContextRef oThreadContextCreate(oRuntimeRef runtime);
 
 void oThreadContextDestroy(oThreadContextRef ctx);
 
@@ -26,8 +24,6 @@ void oThreadContextSetNS(oThreadContextRef ctx, oNamespaceRef ns);
 
 oNamespaceRef oThreadContextGetNS(oThreadContextRef ctx);
 
-void o_bootstrap_thread_context_type_init(oRuntimeRef rt, oHeapRef heap);
-
-oThreadContextRef o_bootstrap_thread_context_create(oRuntimeRef runtime, oHeapRef heap);
+void o_bootstrap_thread_context_type_init(oRuntimeRef rt);
 
 #endif

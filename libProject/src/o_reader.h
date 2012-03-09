@@ -5,15 +5,8 @@
 #include "../../platformProject/src/o_basic_types.h"
 #include "o_typedefs.h"
 
-// TODO: just remove?
-struct oReader {
-	uword dummy;
-};
+oObject oRead(oThreadContextRef ctx, oStringRef source);
 
-oReaderRef oReaderCreate(oThreadContextRef ctx);
-
-oObject oReaderRead(oThreadContextRef ctx, oStringRef source);
-
-void o_bootstrap_reader_init_type(oThreadContextRef ctx);
+void o_bootstrap_reader_init();
 
 #endif

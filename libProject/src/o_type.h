@@ -58,10 +58,8 @@ _oC(_oTypeCreate, kind, alignment, name, fields, finalizer, prototype)
 
 oStringRef oTypeGetName(oTypeRef type);
 
-void o_bootstrap_type_init_type(oRuntimeRef rt, oHeapRef heap);
-void o_bootstrap_type_init_field(oRuntimeRef rt, oHeapRef heap);
-oArrayRef o_bootstrap_type_create_field_array(oRuntimeRef rt,
-	                                          oHeapRef heap,
-                                              uword numFields);
+void o_bootstrap_type_init_type(oRuntimeRef rt);
+void o_bootstrap_type_init_field(oRuntimeRef rt);
+oArrayRef o_bootstrap_type_create_field_array(oRuntimeRef rt, uword numFields);
 
 #endif

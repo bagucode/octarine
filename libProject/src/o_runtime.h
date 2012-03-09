@@ -38,7 +38,6 @@ typedef struct oRuntimeBuiltInTypes {
     oTypeRef list;
     oTypeRef any;
     oTypeRef map;
-    oTypeRef reader;
     oTypeRef symbol;
     oTypeRef vector;
     oTypeRef keyword;
@@ -75,8 +74,7 @@ struct oRuntime {
 	oSpinLock namespaceLock;
 };
 
-oRuntimeRef oRuntimeCreate(uword sharedHeapInitialSize,
-                           uword threadHeapInitialSize);
+oRuntimeRef oRuntimeCreate();
 void oRuntimeDestroy(oRuntimeRef rt);
 oThreadContextRef oRuntimeGetCurrentContext(oRuntimeRef rt);
 

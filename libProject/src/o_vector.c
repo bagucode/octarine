@@ -6,24 +6,20 @@
 #include "o_string.h"
 #include "o_memory.h"
 #include "o_error.h"
+#include <stddef.h>
 
 void o_bootstrap_vector_init_type(oThreadContextRef ctx) {
-    oROOTS(ctx)
-    oArrayRef fields;
-    oStringRef typeName;
-    oFieldRef field;
-    oENDROOTS
-    
-    oRoots.fields = oArrayCreate(ctx->runtime->builtInTypes.field, 1);
-    oRoots.typeName = oStringCreate("data");
-    oRoots.field = oFieldCreate(oRoots.typeName, ctx->runtime->builtInTypes.array);
-    oArrayPut(oRoots.fields, 0, oRoots.field, ctx->runtime->builtInTypes.field);
-    
-    oRoots.typeName = oStringCreate("Vector");
-    oSETRET(oTypeCreate(o_T_OBJECT, 0, oRoots.typeName, oRoots.fields, NULL, NULL));
-    ctx->runtime->builtInTypes.vector = oGETRET;
+    oFieldRef *fields;
+	ctx->runtime->builtInTypes.vector->fields = o_bootstrap_type_create_field_array(ctx->runtime, 1);
+    ctx->runtime->builtInTypes.vector->kind = o_T_OBJECT;
+	ctx->runtime->builtInTypes.vector->name = o_bootstrap_string_create(ctx->runtime, "Vector");
+	ctx->runtime->builtInTypes.vector->size = sizeof(oVector);
 
-    oENDVOIDFN
+    fields = (oFieldRef*)oArrayDataPointer(ctx->runtime->builtInTypes.vector->fields);
+    
+    fields[0]->name = o_bootstrap_string_create(ctx->runtime, "data");
+	fields[0]->offset = offsetof(oVector, data);
+    fields[0]->type = ctx->runtime->builtInTypes.array;
 }
 
 oVectorRef _oVectorCreate(oThreadContextRef ctx,

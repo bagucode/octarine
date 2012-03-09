@@ -6,26 +6,20 @@
 #include "o_array.h"
 #include "o_string.h"
 #include "o_error.h"
+#include <stddef.h>
 
 void o_bootstrap_keyword_type_init(oThreadContextRef ctx) {
-    oROOTS(ctx)
-    oArrayRef fields;
-    oTypeRef theType;
-    oStringRef typeName;
-    oFieldRef field;
-    oENDROOTS
-    
-    oRoots.fields = oArrayCreate(ctx->runtime->builtInTypes.field, 1);
-    oRoots.typeName = oStringCreate("name");
-    oRoots.field = oFieldCreate(oRoots.typeName, ctx->runtime->builtInTypes.string);
-    oArrayPut(oRoots.fields, 0, oRoots.field, ctx->runtime->builtInTypes.field);
-    
-    oRoots.typeName = oStringCreate("Keyword");
-    oRoots.theType = oTypeCreate(o_T_OBJECT, 0, oRoots.typeName, oRoots.fields, NULL, NULL);
-    
-    ctx->runtime->builtInTypes.keyword = oRoots.theType;
+    oFieldRef *fields;
+	ctx->runtime->builtInTypes.keyword->fields = o_bootstrap_type_create_field_array(ctx->runtime, 1);
+    ctx->runtime->builtInTypes.keyword->kind = o_T_OBJECT;
+	ctx->runtime->builtInTypes.keyword->name = o_bootstrap_string_create(ctx->runtime, "Keyword");
+	ctx->runtime->builtInTypes.keyword->size = sizeof(oKeyword);
 
-    oENDVOIDFN
+    fields = (oFieldRef*)oArrayDataPointer(ctx->runtime->builtInTypes.keyword->fields);
+    
+    fields[0]->name = o_bootstrap_string_create(ctx->runtime, "name");
+	fields[0]->offset = offsetof(oKeyword, name);
+    fields[0]->type = ctx->runtime->builtInTypes.string;
 }
 
 oKeywordRef _oKeywordCreate(oThreadContextRef ctx, oStringRef name) {

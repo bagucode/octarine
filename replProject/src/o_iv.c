@@ -116,7 +116,7 @@ int main(int argc, char** argv) {
             prevLine = NULL;
         }
         oRoots.src = oStringCreate(line);
-		oRoots.result = (oListObjRef)oReaderRead(ctx, oRoots.src);
+		oRoots.result = (oListObjRef)oRead(ctx, oRoots.src);
         if(oRoots.result == NULL) {
             error = oErrorGet(ctx);
             if(error == ctx->runtime->builtInErrors.bracketMismatch) {

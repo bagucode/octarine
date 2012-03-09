@@ -15,6 +15,15 @@ struct oNamespace {
 	oSpinLock bindingsLock;
 };
 
+typedef struct oNSBinding {
+	union {
+		CuckooRef threadLocals;
+		oObject value;
+	};
+	o_bool isShared;
+} oNSBinding;
+typedef oNSBinding* oNSBindingRef;
+
 oNamespaceRef _oNamespaceCreate(oThreadContextRef ctx, oStringRef name);
 #define oNamespaceCreate(name) _oC(_oNamespaceCreate, name)
 

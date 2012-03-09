@@ -25,6 +25,7 @@ CuckooRef CuckooCreate(uword initialCap, CuckooKeyCompareFn compare, CuckooKeyHa
     
 	ck = (CuckooRef)oMalloc(sizeof(Cuckoo));
 	ck->capacity = nextp2(initialCap);
+	ck->size = 0;
 	ck->compare = compare != NULL ? compare : CuckooDefaultCompare;
 	ck->hash = hash != NULL ? hash : CuckooDefaultHash;
 	byteSize = ck->capacity * sizeof(CuckooEntry);
@@ -52,28 +53,36 @@ static uword CuckooHash3(uword h) {
 }
 
 static o_bool CuckooTryPut(CuckooRef ck, CuckooEntry* entry) {
-	uword i, mask, keyHash;
+	uword i, mask;
     CuckooEntry tmp;
     
 	mask = ck->capacity - 1;
-	keyHash = ck->hash(entry->key);
     
-	i = CuckooHash1(keyHash) & mask;
+	i = CuckooHash1(ck->hash(entry->key)) & mask;
 	tmp = ck->table[i];
 	ck->table[i] = *entry;
-	if(tmp.key == NULL || ck->compare(tmp.key, entry->key)) return o_true;
+	if(tmp.key == NULL || ck->compare(tmp.key, entry->key)) {
+		++ck->size;
+		return o_true;
+	}
 	*entry = tmp;
 
-	i = CuckooHash2(keyHash) & mask;
+	i = CuckooHash2(ck->hash(entry->key)) & mask;
 	tmp = ck->table[i];
 	ck->table[i] = *entry;
-	if(tmp.key == NULL || ck->compare(tmp.key, entry->key)) return o_true;
+	if(tmp.key == NULL || ck->compare(tmp.key, entry->key)) {
+		++ck->size;
+		return o_true;
+	}
 	*entry = tmp;
 
-	i = CuckooHash3(keyHash) & mask;
+	i = CuckooHash3(ck->hash(entry->key)) & mask;
 	tmp = ck->table[i];
 	ck->table[i] = *entry;
-	if(tmp.key == NULL || ck->compare(tmp.key, entry->key)) return o_true;
+	if(tmp.key == NULL || ck->compare(tmp.key, entry->key)) {
+		++ck->size;
+		return o_true;
+	}
 	*entry = tmp;
 
 	return o_false;

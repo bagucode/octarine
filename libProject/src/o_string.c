@@ -89,8 +89,8 @@ oStringRef _oStringSubString(oThreadContextRef ctx, oStringRef str, uword start,
     oENDFN(oStringRef)
 }
 
-oStringRef o_bootstrap_string_create(oRuntimeRef rt, oHeapRef heap, const char *utf8) {
-    oStringRef str = (oStringRef)o_bootstrap_object_alloc(rt, heap, rt->builtInTypes.string, sizeof(oString));
+oStringRef o_bootstrap_string_create(oRuntimeRef rt, const char *utf8) {
+	oStringRef str = (oStringRef)o_bootstrap_object_alloc(rt, rt->builtInTypes.string, sizeof(oString));
     str->str = oNativeStringFromUtf8(utf8);
 	str->hashCode = fnv1a((const u8*)utf8, strlen(utf8));
     return str;
@@ -110,10 +110,10 @@ static void CopyHelper(oObject o1, oObject o2) {
 	dest->str = oNativeStringCopy(src->str);
 }
 
-void o_bootstrap_string_init_type(oRuntimeRef rt, oHeapRef heap) {
+void o_bootstrap_string_init_type(oRuntimeRef rt) {
     rt->builtInTypes.string->fields = NULL;
     rt->builtInTypes.string->kind = o_T_OBJECT;
-    rt->builtInTypes.string->name = o_bootstrap_string_create(rt, heap, "String");
+    rt->builtInTypes.string->name = o_bootstrap_string_create(rt, "String");
     rt->builtInTypes.string->size = sizeof(oString);
     rt->builtInTypes.string->finalizer = finalizer;
 	rt->builtInTypes.string->copyInternals = CopyHelper;

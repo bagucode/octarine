@@ -5,8 +5,17 @@
 #include "../../platformProject/src/o_platform.h"
 #include "o_array.h"
 #include "o_utils.h"
+#include "o_namespace.h"
 #include <memory.h>
 #include <stddef.h>
+
+#ifndef NDEBUG
+#include <stdlib.h>
+#include <stdio.h>
+
+void debugPrint() {
+}
+#endif
 
 // Object-embedded object pointer iterator
 
@@ -145,6 +154,7 @@ static void OPArrayDestroy(OPArray op) {
 // for flags.
 #define MARK_FLAG 1 << 0
 #define SHARED_FLAG 1 << 1
+#define FINALIZED 1 << 2
 
 // For clearing and such
 #define ALL_FLAGS 0xF
@@ -203,7 +213,7 @@ static void clearFlag(HeapBlockRef block, u8 flag) {
 }
 
 static o_bool isShared(HeapBlockRef block) {
-    return checkFlag(block, SHARED_FLAG);
+    return checkFlag(block, SHARED_FLAG) > 0;
 }
 
 static void setShared(HeapBlockRef block) {
@@ -220,6 +230,14 @@ static void setMark(HeapBlockRef block) {
 
 static void clearMark(HeapBlockRef block) {
     clearFlag(block, MARK_FLAG);
+}
+
+static o_bool finalized(HeapBlockRef block) {
+	return checkFlag(block, FINALIZED) > 0;
+}
+
+static void setFinalized(HeapBlockRef block) {
+	setFlag(block, FINALIZED);
 }
 
 static oTypeRef getType(HeapBlockRef block) {
@@ -440,7 +458,7 @@ static void markGraph(oRuntimeRef rt, oObject obj, o_bool shared) {
 static void collectGarbage(oRuntimeRef rt, oHeapRef heap) {
     oRootSetRef roots;
     uword i, j, nroots;
-    oObject obj, *objArr;
+    oObject obj;
     HeapRecordRef newRecord;
     HeapRecordRef currentRecord;
     HeapRecordRef tmpRecord;
@@ -448,50 +466,53 @@ static void collectGarbage(oRuntimeRef rt, oHeapRef heap) {
     oTypeRef type;
 	o_bool shared;
 	oThreadContextRef ctx;
+	oNamespaceRef ns;
+	oNSBindingRef binding;
 
-	oThreadContextListRef lst, next;
+	oThreadContextListRef lst;
 
 	shared = rt->globals == heap;
-
-    // types
-    j = sizeof(oRuntimeBuiltInTypes) / sizeof(pointer);
-    objArr = (oObject*)&rt->builtInTypes;
-    for(i = 0; i < j; ++i) {
-		if(objArr[i] != NULL) {
-			markGraph(rt, objArr[i], shared);
-		}
-    }
-    // thread contexts
-	oSpinLockLock(&rt->contextListLock);
-	lst = rt->allContexts;
-    while(lst) {
-		next = lst->next;
-		markGraph(rt, lst->ctx, shared);
-		lst = next;
-	}
-	oSpinLockUnlock(&rt->contextListLock);
-    // constants
-    j = sizeof(oRuntimeBuiltInConstants) / sizeof(pointer);
-    objArr = (oObject*)&rt->builtInConstants;
-    for(i = 0; i < j; ++i) {
-        // TODO: this will break when there are constants other than keywords
-        markGraph(rt, objArr[i], shared);
-    }
-    // errors
-    j = sizeof(oRuntimeBuiltInErrors) / sizeof(pointer);
-    objArr = (oObject*)&rt->builtInErrors;
-    for(i = 0; i < j; ++i) {
-        markGraph(rt, objArr[i], shared);
-    }
-
-	/*
-#error Add marking of namespaces and their bindings here. \
-After that and having an octarine namespace where \
-all the bootstrap stuff gets bound we can remove \
-the crap above here.
-*/
-
 	ctx = oRuntimeGetCurrentContext(rt);
+
+    // Mark thread contexts if the shared heap is being collected
+	if(shared) {
+		oSpinLockLock(&rt->contextListLock);
+		lst = rt->allContexts;
+		while(lst) {
+			markGraph(rt, lst->ctx, shared);
+			lst = lst->next;
+		}
+		oSpinLockUnlock(&rt->contextListLock);
+	}
+
+	// Mark all namespaces and their bindings
+	oSpinLockLock(&rt->namespaceLock);
+	for(i = 0; i < rt->namespaces->capacity; ++i) {
+		ns = (oNamespaceRef)rt->namespaces->table[i].val;
+		if(ns) {
+			markGraph(rt, ns, shared);
+			oSpinLockLock(&ns->bindingsLock);
+			for(j = 0; j < ns->bindings->capacity; ++j) {
+				binding = (oNSBindingRef)ns->bindings->table[j].val;
+				if(binding && binding->isShared == shared) {
+					markGraph(rt, ns->bindings->table[j].key, shared);
+					if(shared) {
+						markGraph(rt, binding->value, shared);
+					}
+					else {
+						obj = (oObject)CuckooGet(binding->threadLocals, ctx);
+						if(obj) {
+							markGraph(rt, obj, shared);
+						}
+					}
+				}
+			}
+			oSpinLockUnlock(&ns->bindingsLock);
+		}
+	}
+	oSpinLockUnlock(&rt->namespaceLock);
+
+	// Mark stack roots
 	if(shared) {
 		oSpinLockLock(&rt->contextListLock);
 		lst = rt->allContexts;
@@ -524,7 +545,7 @@ the crap above here.
 		}
 		oSpinLockUnlock(&rt->contextListLock);
 	}
-	else {
+	else { // not shared
 		roots = ctx->roots;
 		while (roots) {
 			for(i = 0; i < roots->numUsed; ++i) {
@@ -539,24 +560,33 @@ the crap above here.
 			roots = roots->prev;
 		}
 	}
-        
-    /* Phase 2, sweep. */
+
+	/* Phase 2a, run finalizers. Probably still broken (temporally)*/
+    currentRecord = heap->record;
+    while (currentRecord) {
+        for(i = 0; i < currentRecord->numBlocks; ++i) {
+            block = currentRecord->blocks[i];
+			if(!isMarked(block)) {
+				type = getType(block);
+				if(type->finalizer && !finalized(block)) {
+					setFinalized(block);
+					type->finalizer(getObject(block));
+				}
+			}
+        }
+        currentRecord = currentRecord->prev;
+    }
+
+    /* Phase 2b, sweep. */
     newRecord = createRecord();
     currentRecord = heap->record;
     while (currentRecord) {
         for(i = 0; i < currentRecord->numBlocks; ++i) {
             block = currentRecord->blocks[i];
-			if(!isMarked(block) && isShared(block) == shared) {
+			if(!isMarked(block)) {
                 heap->currentSize -= getBlockSize(rt, block);
-                /* Call finalizer if there is one.
-                    TODO: make sure the finalizers don't allocate memory
-                    or resurrect objects */
-                type = getType(block);
-                if(type->finalizer) {
-                    type->finalizer(getObject(block));
-                }
                 oFree(block);
-			} else if(isShared(block) == shared) {
+			} else {
                 clearMark(block);
                 if(recordEntry(newRecord, block) == o_false) {
                     tmpRecord = newRecord;
@@ -576,9 +606,6 @@ the crap above here.
 void oHeapForceGC(oRuntimeRef rt, oHeapRef heap) {
     if(heap->mutex != NULL) {
         oMutexLock(heap->mutex);
-		// TODO: if the heap has a mutex field then we assume that all threads
-		// need to wait for the collection so we have to signal all threads to
-		// wait for a GC here.
     }
 
     collectGarbage(rt, heap);
@@ -619,7 +646,13 @@ static oObject internalAlloc(oRuntimeRef rt,
                              uword size) {
     oObject ret;
     HeapBlockRef block;
-    uword allocSize = calcBlockSize(size);
+    uword allocSize;
+
+	if(heap->mutex) {
+		oMutexLock(heap->mutex);
+	}
+
+	allocSize = calcBlockSize(size);
     
     if(checkHeapSpace(rt, heap, allocSize) == o_false) {
         /* Just expand blindly for now. Should really check if
@@ -633,13 +666,23 @@ static oObject internalAlloc(oRuntimeRef rt,
         if(ctx) {
             ctx->error = rt->builtInErrors.outOfMemory;
         }
+		if(heap->mutex) {
+			oMutexUnlock(heap->mutex);
+		}
         return NULL;
     }
     ret = getObject(block);
     setType(block, (oTypeRef)(type == o_T_SELF ? ret : type));
+	if(heap == rt->globals) {
+		setShared(block);
+	}
     addHeapEntry(heap, block);
     
     heap->currentSize += allocSize;
+
+	if(heap->mutex) {
+		oMutexUnlock(heap->mutex);
+	}
     
     return ret;
 }
@@ -665,14 +708,12 @@ oArrayRef _oHeapAllocArray(oThreadContextRef ctx,
 }
 
 oObject o_bootstrap_object_alloc(oRuntimeRef rt,
-		                         oHeapRef heap,
                                  oTypeRef proto_type,
                                  uword size) {
-    return internalAlloc(rt, NULL, heap, proto_type, size);
+	return internalAlloc(rt, NULL, rt->globals, proto_type, size);
 }
 
 oArrayRef o_bootstrap_array_alloc(oRuntimeRef rt,
-	                              oHeapRef heap,
                                   oTypeRef proto_elem_type,
                                   uword num_elements,
                                   uword elem_size,
@@ -680,7 +721,7 @@ oArrayRef o_bootstrap_array_alloc(oRuntimeRef rt,
     oArrayRef arr;
     uword size = calcArraySize(elem_size, num_elements, alignment);
     
-    arr = (oArrayRef)internalAlloc(rt, NULL, heap, rt->builtInTypes.array, size);
+	arr = (oArrayRef)internalAlloc(rt, NULL, rt->globals, rt->builtInTypes.array, size);
     arr->element_type = proto_elem_type;
     arr->num_elements = num_elements;
     arr->alignment = alignment;
@@ -696,7 +737,8 @@ void oHeapRunFinalizers(oHeapRef heap) {
     while (currentRecord) {
         for(i = 0; i < currentRecord->numBlocks; ++i) {
 			type = getType(currentRecord->blocks[i]);
-			if(type->finalizer != NULL) {
+			if(type->finalizer && !finalized(currentRecord->blocks[i])) {
+				setFinalized(currentRecord->blocks[i]);
 				type->finalizer(getObject(currentRecord->blocks[i]));
 			}
         }

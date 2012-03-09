@@ -9,16 +9,7 @@
 #include "o_symbol.h"
 #include <stddef.h>
 
-typedef struct NSBinding {
-	union {
-		CuckooRef threadLocals;
-		oObject value;
-	};
-	o_bool isShared;
-} NSBinding;
-typedef NSBinding* NSBindingRef;
-
-static void NSBindingDestroy(NSBindingRef binding) {
+static void NSBindingDestroy(oNSBindingRef binding) {
 	if(binding->isShared == o_false) {
 		CuckooDestroy(binding->threadLocals);
 	}
@@ -37,12 +28,18 @@ static uword NSBindingKeyHash(pointer p) {
 }
 
 oNamespaceRef _oNamespaceCreate(oThreadContextRef ctx, oStringRef name) {
-    oROOTS(ctx)
-    oENDROOTS
-	oSETRET(oHeapAlloc(ctx->runtime->builtInTypes.name_space));
-	oGETRETT(oNamespaceRef)->name = name;
-	oGETRETT(oNamespaceRef)->bindings = CuckooCreate(100, NSBindingKeyEquals, NSBindingKeyHash);
-    oENDFN(oNamespaceRef)
+	// Always create namespaces in shared memory
+	oNamespaceRef ns = (oNamespaceRef)o_bootstrap_object_alloc(ctx->runtime, ctx->runtime->builtInTypes.name_space, ctx->runtime->builtInTypes.name_space->size);
+	if(ns == NULL) {
+		ctx->error = ctx->runtime->builtInErrors.outOfMemory;
+		return NULL;
+	}
+	ns->name = (oStringRef)_oHeapCopyObjectShared(ctx, name);
+	if(ns->name == NULL) {
+		return NULL;
+	}
+	ns->bindings = CuckooCreate(100, NSBindingKeyEquals, NSBindingKeyHash);
+	return ns;
 }
 
 oStringRef _oNamespaceGetName(oThreadContextRef ctx, oNamespaceRef ns) {
@@ -50,18 +47,19 @@ oStringRef _oNamespaceGetName(oThreadContextRef ctx, oNamespaceRef ns) {
 }
 
 oObject _oNamespaceBind(oThreadContextRef ctx, oNamespaceRef ns, oSymbolRef key, oObject value) {
-	NSBindingRef binding;
+	oNSBindingRef binding;
+	oSymbolRef keyCopy;
 
 	oSpinLockLock(&ns->bindingsLock);
 
-	binding = (NSBindingRef)CuckooGet(ns->bindings, key);
+	binding = (oNSBindingRef)CuckooGet(ns->bindings, key);
 
 	if(binding == NULL || binding->isShared || oMemoryIsObjectShared(value)) {
 		if(binding != NULL) {
 			// A binding exists but in these cases we can just replace it
 			NSBindingDestroy(binding);
 		}
-		binding = (NSBindingRef)oMalloc(sizeof(NSBinding));
+		binding = (oNSBindingRef)oMalloc(sizeof(oNSBinding));
 		if(oMemoryIsObjectShared(value)) {
 			binding->isShared = o_true;
 			binding->value = value;
@@ -71,7 +69,12 @@ oObject _oNamespaceBind(oThreadContextRef ctx, oNamespaceRef ns, oSymbolRef key,
 			binding->threadLocals = CuckooCreate(2, NULL, NULL);
 			CuckooPut(binding->threadLocals, ctx, value);
 		}
-		CuckooPut(ns->bindings, key, binding);
+		keyCopy = (oSymbolRef)_oHeapCopyObjectShared(ctx, key);
+		if(keyCopy == NULL) {
+			oSpinLockUnlock(&ns->bindingsLock);
+			return NULL;
+		}
+		CuckooPut(ns->bindings, keyCopy, binding);
 	}
 	// Binding exists and is thread local and so is our new value so we add it to the thread local table
 	else {
@@ -79,14 +82,14 @@ oObject _oNamespaceBind(oThreadContextRef ctx, oNamespaceRef ns, oSymbolRef key,
 	}
 
 	oSpinLockUnlock(&ns->bindingsLock);
-    return value;
+	return value;
 }
 
 oObject _oNamespaceLookup(oThreadContextRef ctx, oNamespaceRef ns, oSymbolRef key) {
-	NSBindingRef binding;
+	oNSBindingRef binding;
 	oObject ret = NULL;
 	oSpinLockLock(&ns->bindingsLock);
-	binding = (NSBindingRef)CuckooGet(ns->bindings, key);
+	binding = (oNSBindingRef)CuckooGet(ns->bindings, key);
 	if(binding) {
 		if(binding->isShared) {
 			ret = binding->value;
@@ -102,9 +105,9 @@ oObject _oNamespaceLookup(oThreadContextRef ctx, oNamespaceRef ns, oSymbolRef ke
 static void NamespaceDestroy(oObject ns) {
 	oNamespaceRef nsx = (oNamespaceRef)ns;
 	uword i;
-	NSBindingRef binding;
+	oNSBindingRef binding;
 	for(i = 0; i < nsx->bindings->capacity; ++i) {
-		binding = (NSBindingRef)nsx->bindings->table[i].val;
+		binding = (oNSBindingRef)nsx->bindings->table[i].val;
 		if(binding) {
 			NSBindingDestroy(binding);
 		}
@@ -114,18 +117,15 @@ static void NamespaceDestroy(oObject ns) {
 
 void o_bootstrap_namespace_type_init(oThreadContextRef ctx) {
     oFieldRef *fields;
-    oROOTS(ctx)
-    oENDROOTS
-	ctx->runtime->builtInTypes.name_space->fields = o_bootstrap_type_create_field_array(ctx->runtime, ctx->heap, 1);
+	ctx->runtime->builtInTypes.name_space->fields = o_bootstrap_type_create_field_array(ctx->runtime, 1);
     ctx->runtime->builtInTypes.name_space->kind = o_T_OBJECT;
-	ctx->runtime->builtInTypes.name_space->name = oStringCreate("Namespace");
+	ctx->runtime->builtInTypes.name_space->name = o_bootstrap_string_create(ctx->runtime, "Namespace");
 	ctx->runtime->builtInTypes.name_space->finalizer = NamespaceDestroy;
 	ctx->runtime->builtInTypes.name_space->size = sizeof(oNamespace);
 
     fields = (oFieldRef*)oArrayDataPointer(ctx->runtime->builtInTypes.name_space->fields);
     
-    fields[0]->name = oStringCreate("name");
+	fields[0]->name = o_bootstrap_string_create(ctx->runtime, "name");
 	fields[0]->offset = offsetof(oNamespace, name);
     fields[0]->type = ctx->runtime->builtInTypes.string;
-    oENDVOIDFN
 }

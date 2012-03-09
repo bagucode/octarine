@@ -39,12 +39,8 @@ static oObject readSymbolOrKeyword(oThreadContextRef ctx, oArrayRef src, uword* 
 static oObject readVector(oThreadContextRef ctx, oArrayRef src, uword* idx);
 static oObject mismatch(oThreadContextRef ctx, oArrayRef src, uword* idx);
 
-void o_bootstrap_reader_init_type(oThreadContextRef ctx) {
+void o_bootstrap_reader_init() {
     uword i;
-    ctx->runtime->builtInTypes.reader->fields = NULL;
-    ctx->runtime->builtInTypes.reader->kind = o_T_OBJECT;
-	ctx->runtime->builtInTypes.reader->name = o_bootstrap_string_create(ctx->runtime, ctx->heap, "Reader");
-    ctx->runtime->builtInTypes.reader->size = sizeof(oReader);
 
     // Also init the read table here
     for(i = 0; i < 128; ++i) {
@@ -68,13 +64,6 @@ o_bool isReserved(uword ch) {
         }
     }
     return o_false;
-}
-
-oReaderRef oReaderCreate(oThreadContextRef ctx) {
-    oROOTS(ctx)
-    oENDROOTS
-	oRETURN(oHeapAlloc(ctx->runtime->builtInTypes.reader));
-    oENDFN(oReaderRef)
 }
 
 static u8 getChar(oArrayRef arr, uword i) {
@@ -247,7 +236,7 @@ static oObject read(oThreadContextRef ctx, oArrayRef src, uword* idx) {
     }
 }
 
-oObject oReaderRead(oThreadContextRef ctx, oStringRef source) {
+oObject oRead(oThreadContextRef ctx, oStringRef source) {
     uword idx = 0;
     oROOTS(ctx)
     oObject tmp;

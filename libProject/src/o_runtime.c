@@ -16,7 +16,7 @@
 #include <memory.h>
 
 static oTypeRef alloc_built_in(oRuntimeRef rt, oHeapRef heap) {
-	return (oTypeRef)o_bootstrap_object_alloc(rt, heap, rt->builtInTypes.type, sizeof(oType));
+	return (oTypeRef)o_bootstrap_object_alloc(rt, rt->builtInTypes.type, sizeof(oType));
 }
 
 static void set_shared_primitive_attributes(oTypeRef t) {
@@ -24,8 +24,10 @@ static void set_shared_primitive_attributes(oTypeRef t) {
     t->fields = NULL;
 }
 
-static void alloc_builtInTypes(oRuntimeRef rt, oHeapRef heap) {
-    rt->builtInTypes.type = (oTypeRef)o_bootstrap_object_alloc(rt, heap, o_T_SELF, sizeof(oType));
+static void alloc_builtInTypes(oRuntimeRef rt) {
+	oHeapRef heap = rt->globals;
+
+    rt->builtInTypes.type = (oTypeRef)o_bootstrap_object_alloc(rt, o_T_SELF, sizeof(oType));
 	rt->builtInTypes.o_char = alloc_built_in(rt, heap);
 	rt->builtInTypes.o_bool = alloc_built_in(rt, heap);
 	rt->builtInTypes.f32 = alloc_built_in(rt, heap);
@@ -47,7 +49,6 @@ static void alloc_builtInTypes(oRuntimeRef rt, oHeapRef heap) {
     rt->builtInTypes.list = alloc_built_in(rt, heap);
     rt->builtInTypes.any = alloc_built_in(rt, heap);
     rt->builtInTypes.map = alloc_built_in(rt, heap);
-	rt->builtInTypes.reader = alloc_built_in(rt, heap);
 	rt->builtInTypes.symbol = alloc_built_in(rt, heap);
     rt->builtInTypes.vector = alloc_built_in(rt, heap);
     rt->builtInTypes.keyword = alloc_built_in(rt, heap);
@@ -63,86 +64,84 @@ static void alloc_builtInTypes(oRuntimeRef rt, oHeapRef heap) {
 #endif
 }
 
-static void init_builtInTypes1(oRuntimeRef rt, oHeapRef heap) {
-
+static void init_builtInTypes1(oRuntimeRef rt) {
     /* primitives */
 
 	set_shared_primitive_attributes(rt->builtInTypes.o_char);
-    rt->builtInTypes.o_char->name = o_bootstrap_string_create(rt, heap, "char");
+    rt->builtInTypes.o_char->name = o_bootstrap_string_create(rt, "char");
 	rt->builtInTypes.o_char->size = 4; /* i32 - unicode code point */
 
 	set_shared_primitive_attributes(rt->builtInTypes.o_bool);
-  	rt->builtInTypes.o_bool->name = o_bootstrap_string_create(rt, heap, "bool");
+  	rt->builtInTypes.o_bool->name = o_bootstrap_string_create(rt, "bool");
 	rt->builtInTypes.o_bool->size = 1; /* i8 */
 
 	set_shared_primitive_attributes(rt->builtInTypes.f32);
-  	rt->builtInTypes.f32->name = o_bootstrap_string_create(rt, heap, "f32");
+  	rt->builtInTypes.f32->name = o_bootstrap_string_create(rt, "f32");
 	rt->builtInTypes.f32->size = 4;
 
 	set_shared_primitive_attributes(rt->builtInTypes.f64);
-  	rt->builtInTypes.f64->name = o_bootstrap_string_create(rt, heap, "f64");
+  	rt->builtInTypes.f64->name = o_bootstrap_string_create(rt, "f64");
 	rt->builtInTypes.f64->size = 8;
 
 	set_shared_primitive_attributes(rt->builtInTypes.i16);
-  	rt->builtInTypes.i16->name = o_bootstrap_string_create(rt, heap, "i16");
+  	rt->builtInTypes.i16->name = o_bootstrap_string_create(rt, "i16");
 	rt->builtInTypes.i16->size = 2;
 
 	set_shared_primitive_attributes(rt->builtInTypes.i32);
-  	rt->builtInTypes.i32->name = o_bootstrap_string_create(rt, heap, "i32");
+  	rt->builtInTypes.i32->name = o_bootstrap_string_create(rt, "i32");
 	rt->builtInTypes.i32->size = 4;
 
 	set_shared_primitive_attributes(rt->builtInTypes.i64);
-  	rt->builtInTypes.i64->name = o_bootstrap_string_create(rt, heap, "i64");
+  	rt->builtInTypes.i64->name = o_bootstrap_string_create(rt, "i64");
 	rt->builtInTypes.i64->size = 8;
 
 	set_shared_primitive_attributes(rt->builtInTypes.i8);
-  	rt->builtInTypes.i8->name = o_bootstrap_string_create(rt, heap, "i8");
+  	rt->builtInTypes.i8->name = o_bootstrap_string_create(rt, "i8");
 	rt->builtInTypes.i8->size = 1;
 
 	set_shared_primitive_attributes(rt->builtInTypes.pointer);
-  	rt->builtInTypes.pointer->name = o_bootstrap_string_create(rt, heap, "pointer");
+  	rt->builtInTypes.pointer->name = o_bootstrap_string_create(rt, "pointer");
 	rt->builtInTypes.pointer->size = sizeof(pointer);
 
 	set_shared_primitive_attributes(rt->builtInTypes.u16);
-  	rt->builtInTypes.u16->name = o_bootstrap_string_create(rt, heap, "u16");
+  	rt->builtInTypes.u16->name = o_bootstrap_string_create(rt, "u16");
 	rt->builtInTypes.u16->size = 2;
 
 	set_shared_primitive_attributes(rt->builtInTypes.u32);
-  	rt->builtInTypes.u32->name = o_bootstrap_string_create(rt, heap, "u32");
+  	rt->builtInTypes.u32->name = o_bootstrap_string_create(rt, "u32");
 	rt->builtInTypes.u32->size = 4;
 
 	set_shared_primitive_attributes(rt->builtInTypes.u64);
-  	rt->builtInTypes.u64->name = o_bootstrap_string_create(rt, heap, "u64");
+  	rt->builtInTypes.u64->name = o_bootstrap_string_create(rt, "u64");
 	rt->builtInTypes.u64->size = 8;
 
 	set_shared_primitive_attributes(rt->builtInTypes.u8);
-  	rt->builtInTypes.u8->name = o_bootstrap_string_create(rt, heap, "u8");
+  	rt->builtInTypes.u8->name = o_bootstrap_string_create(rt, "u8");
 	rt->builtInTypes.u8->size = 1;
 
 	set_shared_primitive_attributes(rt->builtInTypes.uword);
-  	rt->builtInTypes.uword->name = o_bootstrap_string_create(rt, heap, "uword");
+  	rt->builtInTypes.uword->name = o_bootstrap_string_create(rt, "uword");
 	rt->builtInTypes.uword->size = sizeof(uword);
 
 	set_shared_primitive_attributes(rt->builtInTypes.word);
-  	rt->builtInTypes.word->name = o_bootstrap_string_create(rt, heap, "word");
+  	rt->builtInTypes.word->name = o_bootstrap_string_create(rt, "word");
 	rt->builtInTypes.word->size = sizeof(word);
 
     /* aggregate structs */
 
     /* objects */
 
-    o_bootstrap_string_init_type(rt, heap);
-    o_bootstrap_type_init_type(rt, heap);
-    o_bootstrap_type_init_field(rt, heap);
-    o_bootstrap_array_init_type(rt, heap);
-	o_bootstrap_thread_context_type_init(rt, heap);
+    o_bootstrap_string_init_type(rt);
+    o_bootstrap_type_init_type(rt);
+    o_bootstrap_type_init_field(rt);
+    o_bootstrap_array_init_type(rt);
+	o_bootstrap_thread_context_type_init(rt);
 }
 
 static void init_builtInTypes2(oThreadContextRef ctx) {
 	o_bootstrap_list_init_type(ctx);
     o_bootstrap_any_type_init(ctx);
     o_bootstrap_map_init_type(ctx);
-	o_bootstrap_reader_init_type(ctx);
 	o_bootstrap_symbol_init_type(ctx);
     o_bootstrap_vector_init_type(ctx);
     o_bootstrap_keyword_type_init(ctx);
@@ -158,11 +157,16 @@ static void init_builtInConstants(oThreadContextRef ctx) {
     oENDROOTS
     
     oSETRET(oStringCreate("need-more-data"));
-    ctx->runtime->builtInConstants.needMoreData = oKeywordCreate(oGETRETT(oStringRef));
+	oSETRET(oKeywordCreate(oGETRETT(oStringRef)));
+	ctx->runtime->builtInConstants.needMoreData = (oKeywordRef)oHeapCopyObjectShared(oGETRET);
+
     oSETRET(oStringCreate("type-mismatch"));
-    ctx->runtime->builtInConstants.typeMismatch = oKeywordCreate(oGETRETT(oStringRef));
+	oSETRET(oKeywordCreate(oGETRETT(oStringRef)));
+	ctx->runtime->builtInConstants.typeMismatch = (oKeywordRef)oHeapCopyObjectShared(oGETRET);
+
     oSETRET(oStringCreate("index-out-of-bounds"));
-    ctx->runtime->builtInConstants.indexOutOfBounds = oKeywordCreate(oGETRETT(oStringRef));
+	oSETRET(oKeywordCreate(oGETRETT(oStringRef)));
+	ctx->runtime->builtInConstants.indexOutOfBounds = (oKeywordRef)oHeapCopyObjectShared(oGETRET);
 
     oENDVOIDFN
 }
@@ -177,6 +181,7 @@ static oErrorRef initError(oThreadContextRef ctx, char* name) {
     oRoots.kw = oKeywordCreate(oRoots.str);
     oSETRET(oHeapAlloc(ctx->runtime->builtInTypes.error));
     oGETRETT(oErrorRef)->data = oRoots.kw;
+	oSETRET(oHeapCopyObjectShared(oGETRET));
 
     oENDFN(oErrorRef)
 }
@@ -262,33 +267,22 @@ oNamespaceRef _oRuntimeFindNamespace(oRuntimeRef rt, oStringRef name) {
 	return ns;
 }
 
-oRuntimeRef oRuntimeCreate(uword sharedHeapInitialSize,
-                           uword threadHeapInitialSize) {
+oRuntimeRef oRuntimeCreate() {
 	oRuntimeRef rt = (oRuntimeRef)oMalloc(sizeof(oRuntime));
-	oHeapRef mtHeap;
 	oThreadContextRef ctx;
 	oNamespaceRef octarineNs;
 
-	if(threadHeapInitialSize < 1024 * 2000) {
-		threadHeapInitialSize = 1024 * 2000;
-	}
-	if(sharedHeapInitialSize < 1024 * 2000) {
-		sharedHeapInitialSize = 1024 * 2000;
-	}
-
-	mtHeap = oHeapCreate(o_false, threadHeapInitialSize);
-    
     memset(rt, 0, sizeof(oRuntime));
 
 	rt->namespaces = CuckooCreate(100, NSMapKeyEquals, NSMapKeyHash);
 
-    rt->globals = oHeapCreate(o_true, sharedHeapInitialSize);
+    rt->globals = oHeapCreate(o_true, 1024 * 2000);
     rt->currentContext = oTLSCreate();
 
-	alloc_builtInTypes(rt, mtHeap);
-	init_builtInTypes1(rt, mtHeap);
+	alloc_builtInTypes(rt);
+	init_builtInTypes1(rt);
 
-	ctx = o_bootstrap_thread_context_create(rt, mtHeap);
+	ctx = oThreadContextCreate(rt);
 	oTLSSet(rt->currentContext, ctx);
     // Add first context manually since allContexts is
     // expected to be non-NULL by AddContext
@@ -301,13 +295,6 @@ oRuntimeRef oRuntimeCreate(uword sharedHeapInitialSize,
     init_builtInFunctions(ctx);
     init_builtInErrors(ctx);
 
-	/*
-	Since ReaderCreate depends upon the types being defined we have to postpone
-	creating the reader for the main thread context to the end of this function.
-	TODO: do we even need a reader object? Should probably just get rid of it.
-	*/
-	ctx->reader = oReaderCreate(ctx);
-
 	// All built in types, functions and constants are now initialized.
 	// Create the octarine namespace and bind them to it so that they can
 	// be found by octarine code and also not be eaten by the GC.
@@ -316,6 +303,16 @@ oRuntimeRef oRuntimeCreate(uword sharedHeapInitialSize,
 	bindBuiltins(ctx, octarineNs);
 
 	oThreadContextSetNS(ctx, octarineNs);
+
+	// Force a GC of the main thread and shared heaps to clean up any mess
+	// we made with temporary objects during init.
+	oHeapForceGC(rt, ctx->heap);
+	oHeapForceGC(rt, rt->globals);
+
+	// The reader init only needs to be done once even if several runtimes
+	// are created in the same process but it won't break if initialized
+	// many times so putting the init call here is the most convenient place.
+	o_bootstrap_reader_init();
 
     return rt;
 }

@@ -15,6 +15,7 @@ typedef uword(*CuckooKeyHashFn)(pointer key);
 
 typedef struct Cuckoo {
 	uword capacity;
+	uword size;
 	CuckooKeyCompareFn compare;
 	CuckooKeyHashFn hash;
 	CuckooEntry* table;

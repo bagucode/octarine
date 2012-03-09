@@ -51,9 +51,6 @@ typedef oNamespace* oNamespaceRef;
 typedef struct oParameter oParameter;
 typedef oParameter* oParameterRef;
 
-typedef struct oReader oReader;
-typedef oReader* oReaderRef;
-
 typedef struct oRootSet oRootSet;
 typedef oRootSet* oRootSetRef;
 

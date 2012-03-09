@@ -7,13 +7,10 @@
 #include "o_error.h"
 
 void o_bootstrap_any_type_init(oThreadContextRef ctx) {
-    oROOTS(ctx)
-    oENDROOTS
     ctx->runtime->builtInTypes.any->fields = NULL;
     ctx->runtime->builtInTypes.any->kind = o_T_OBJECT;
-	ctx->runtime->builtInTypes.any->name =  oStringCreate("Any");
+	ctx->runtime->builtInTypes.any->name = o_bootstrap_string_create(ctx->runtime, "Any");
     ctx->runtime->builtInTypes.any->size = sizeof(pointer);
-    oENDVOIDFN
 }
 
 oTypeRef oObjectGetType(oThreadContextRef ctx, oObject obj) {

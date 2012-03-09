@@ -22,6 +22,7 @@ void oHeapForceGC(oRuntimeRef rt, oHeapRef heap);
 // Copies an object-graph to the shared heap and returns
 // the newly created copy.
 oObject _oHeapCopyObjectShared(oThreadContextRef ctx, oObject obj);
+#define oHeapCopyObjectShared(obj) _oC(_oHeapCopyObjectShared, obj)
 
 oTypeRef oMemoryGetObjectType(oThreadContextRef ctx, oObject obj);
 
@@ -39,12 +40,10 @@ oRootSetRef oMemoryCreateRootSet();
 void oMemoryDeleteRootSet(oRootSetRef roots);
 
 oObject o_bootstrap_object_alloc(oRuntimeRef rt,
-		                         oHeapRef heap,
                                  oTypeRef proto_type,
                                  uword size);
 
 oArrayRef o_bootstrap_array_alloc(oRuntimeRef rt,
-	                              oHeapRef heap,
                                   oTypeRef proto_elem_type,
                                   uword num_elements,
                                   uword elem_size,
