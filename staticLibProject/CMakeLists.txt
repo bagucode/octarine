@@ -3,6 +3,7 @@
 # a statically linked library instead of a shared one.
 project(octarine-static)
 
+include(../incLLVM.cmake)
 set(SOURCE_DIR ../libProject/src)
 include(../globfiles.cmake)
 

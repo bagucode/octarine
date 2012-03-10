@@ -3,20 +3,24 @@
 
 #include "../../platformProject/src/o_platform.h"
 #include "o_typedefs.h"
+#include "o_utils.h"
+#include "llvm-c/Core.h"
 
 struct oParameter {
     oStringRef name;
     oTypeRef type;
 };
 
-oParameterRef oParameterCreate(oStringRef name, oTypeRef type);
+oParameterRef _oParameterCreate(oThreadContextRef ctx, oStringRef name, oTypeRef type);
+#define oParameterCreate(name, type) _oC(_oParameterCreate, name, type)
 
 struct oSignature {
-    oArrayRef returns; /* array of oType */
+    oTypeRef retType;
     oArrayRef parameters; /* array of oParameter */
 };
 
-oSignatureRef oSignatureCreate(oArrayRef returnTypes, oArrayRef parameters);
+oSignatureRef _oSignatureCreate(oThreadContextRef ctx, oTypeRef returnType, oArrayRef parameters);
+#define oSignatureCreate(returnType, parameters) _oC(_oSignatureCreate, returnType, parameters)
 
 o_bool oSignatureEquals(oThreadContextRef ctx,
                         oSignatureRef sig1,
@@ -24,44 +28,51 @@ o_bool oSignatureEquals(oThreadContextRef ctx,
 
 struct oFunctionOverload {
     oSignatureRef signature;
-
-    /* TODO: Change sideEffects to a map? */
-    oArrayRef sideEffects;
-
-    /* instructions is an array of oObjects that define the implementation
-     of the function overload. It is used by eval implementations that do
-     not generate native code. */
-    oArrayRef instructions;
-
-    /* If nativeCode is not NULL then there exists a machine-native
-     implementation for this particular function overload and nativeCode
-     points to the address of that function. */
-    pointer nativeCode;
+    oArrayRef attributes;
+    LLVMTypeRef llvmFunction;
+    pointer code;
 };
+
+// This function will also eagerly compile the code so that the
+// overload is callable when this function returns.
+oFunctionOverloadRef _oFunctionOverloadCreate(oThreadContextRef ctx,
+                                              oSignatureRef sig,
+                                              oArrayRef attributes,
+                                              oListObjRef code);
+#define oFunctionOverloadCreate(sig, attrs, code) _oC(_oFunctionOverloadCreate, sig, attrs, code)
 
 struct oFunction {
-    /* List of oFunctionOverloadRef
-     TODO: change this to a vector? */
-    oListObjRef overloads;
+    oSpinLockRef lock;
+    CuckooRef overloads;
 };
 
-oFunctionRef oFunctionCreate(oFunctionOverloadRef initialImpl);
+oFunctionRef _oFunctionCreate(oThreadContextRef ctx, oFunctionOverloadRef initialImpl);
+#define oFunctionCreate(overload) _oC(_oFunctionCreate, overload)
 
-void oFunctionAddOverload(oFunctionRef fn, oFunctionOverloadRef impl);
+void _oFunctionAddOverload(oThreadContextRef ctx, oFunctionRef fn, oFunctionOverloadRef impl);
+#define oFunctionAddOverload(fn, overload) _oC(_oFunctionAddOverload, fn, overload)
 
-oFunctionOverloadRef oFunctionFindOverload(oFunctionRef fn, oSignatureRef sig);
+oFunctionOverloadRef _oFunctionFindOverload(oThreadContextRef ctx, oFunctionRef fn, oSignatureRef sig);
+#define oFunctionFindOverload(fn, sig) _oC(_oFunctionFindOverload, fn, sig)
 
+pointer _oFunctionOverloadGetFnPointer(oThreadContextRef ctx, oFunctionOverloadRef impl);
+#define oFunctionOverloadGetFnPointer(impl) _oC(_oFunctionOverloadGetFnPointer, impl)
+
+/*
+ Probably don't need this. Public functions should have cdecl calling
+ convention and the signature must be known to the caller anyway so
+ it's both easier and more efficient to just get the function pointer
+ and cast it according to the signature.
+ 
 oObject oFunctionInvoke(oThreadContextRef ctx,
                         oFunctionOverloadRef fnImpl,
                         oArrayRef args);
+ */
 
-struct oClosure {
-    oFunctionOverloadRef function;
-    oArrayRef arguments;
-};
+void o_bootstrap_parameter_type_init(oRuntimeRef rt);
+void o_bootstrap_signature_type_init(oRuntimeRef rt);
+void o_bootstrap_fn_overload_type_init(oRuntimeRef rt);
+void o_bootstrap_function_type_init(oRuntimeRef rt);
 
-oClosureRef oClosureCreate(oThreadContextRef ctx,
-					       oFunctionOverloadRef fnImpl,
-                           oArrayRef args);
 
 #endif
