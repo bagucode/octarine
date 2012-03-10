@@ -13,6 +13,7 @@
 #include "../../libProject/src/o_keyword.h"
 #include "../../libProject/src/o_error.h"
 #include "../../libProject/src/o_namespace.h"
+#include "llvm-c/Analysis.h"
 
 #include <memory.h>
 #include <assert.h>

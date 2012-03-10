@@ -5,6 +5,7 @@
 # project for building this library as statically linked.
 project(octarine)
 
+include(../incLLVM.cmake)
 set(SOURCE_DIR src)
 include(../globfiles.cmake)
 
@@ -19,4 +20,6 @@ set (EXTRA_LIBS ${CF_LIBRARY})
 target_link_libraries(${PROJECT_NAME} ${EXTRA_LIBS})
 endif()
 
-target_link_libraries(${PROJECT_NAME} platform)
+llvm_map_components_to_libraries(REQ_LLVM_LIBRARIES jit native)
+
+target_link_libraries(${PROJECT_NAME} platform ${REQ_LLVM_LIBRARIES})
