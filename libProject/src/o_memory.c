@@ -9,14 +9,6 @@
 #include <memory.h>
 #include <stddef.h>
 
-#ifndef NDEBUG
-#include <stdlib.h>
-#include <stdio.h>
-
-void debugPrint() {
-}
-#endif
-
 // Object-embedded object pointer iterator
 
 typedef struct PointerIteratorEntry {
@@ -414,9 +406,6 @@ static void markGraph(oRuntimeRef rt, oObject obj, o_bool shared) {
 		}
 
 		while(entry.obj != NULL) {
-
-			block = getBlock(entry.obj);
-
 			if(entry.idx < entry.pointers.size) {
 				obj = *entry.pointers.ops[entry.idx++];
 				if(obj != NULL) {
