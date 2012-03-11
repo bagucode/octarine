@@ -473,39 +473,13 @@ static void collectGarbage(oRuntimeRef rt, oHeapRef heap) {
 		oSpinLockUnlock(rt->contextListLock);
 	}
 
-	// Mark all namespaces and their bindings
-	oSpinLockLock(rt->namespaceLock);
-	for(i = 0; i < rt->namespaces->capacity; ++i) {
-		ns = (oNamespaceRef)rt->namespaces->table[i].val;
-		if(ns) {
-			markGraph(rt, ns, shared);
-			oSpinLockLock(ns->bindingsLock);
-			for(j = 0; j < ns->bindings->capacity; ++j) {
-				binding = (oNSBindingRef)ns->bindings->table[j].val;
-				if(binding && binding->isShared == shared) {
-					markGraph(rt, ns->bindings->table[j].key, shared);
-					if(shared) {
-						markGraph(rt, binding->value, shared);
-					}
-					else {
-						obj = (oObject)CuckooGet(binding->threadLocals, ctx);
-						if(obj) {
-							markGraph(rt, obj, shared);
-						}
-					}
-				}
-			}
-			oSpinLockUnlock(ns->bindingsLock);
-		}
-	}
-	oSpinLockUnlock(rt->namespaceLock);
-
 	// Mark stack roots
 	if(shared) {
 		oSpinLockLock(rt->contextListLock);
 		lst = rt->allContexts;
 		while(lst) {
 			if(lst->ctx != ctx) {
+                // Suspend one thread at a time to examine roots.
                 // This code only works if threads are always started automatically
                 // right after the context has been created and added to the list
 				oAtomicSetUword(&lst->ctx->suspendRequested, 1);
@@ -549,7 +523,36 @@ static void collectGarbage(oRuntimeRef rt, oHeapRef heap) {
 		}
 	}
 
-	/* Phase 2a, run finalizers. Probably still broken (temporally)*/
+    // Lock and mark all namespaces and their bindings.
+    // We have to lock the namespaces for modification and lookup
+    // to protect against inconsistency in the stack roots.
+    // Threads will still proceed during the GC as long as they
+    // don't bind or look up any values in namespaces.
+	oSpinLockLock(rt->namespaceLock);
+	for(i = 0; i < rt->namespaces->capacity; ++i) {
+		ns = (oNamespaceRef)rt->namespaces->table[i].val;
+		if(ns) {
+			markGraph(rt, ns, shared);
+			oSpinLockLock(ns->bindingsLock);
+			for(j = 0; j < ns->bindings->capacity; ++j) {
+				binding = (oNSBindingRef)ns->bindings->table[j].val;
+				if(binding && binding->isShared == shared) {
+					markGraph(rt, ns->bindings->table[j].key, shared);
+					if(shared) {
+						markGraph(rt, binding->value, shared);
+					}
+					else {
+						obj = (oObject)CuckooGet(binding->threadLocals, ctx);
+						if(obj) {
+							markGraph(rt, obj, shared);
+						}
+					}
+				}
+			}
+		}
+	}
+
+	/* Phase 2a, run finalizers. Probably still broken (temporally) */
     currentRecord = heap->record;
     while (currentRecord) {
         for(i = 0; i < currentRecord->numBlocks; ++i) {
@@ -564,7 +567,7 @@ static void collectGarbage(oRuntimeRef rt, oHeapRef heap) {
         }
         currentRecord = currentRecord->prev;
     }
-
+    
     /* Phase 2b, sweep. */
     newRecord = createRecord();
     currentRecord = heap->record;
@@ -589,6 +592,15 @@ static void collectGarbage(oRuntimeRef rt, oHeapRef heap) {
         oFree(tmpRecord);
     }
     heap->record = newRecord;
+    
+    // Unlock all namespaces
+	for(i = 0; i < rt->namespaces->capacity; ++i) {
+		ns = (oNamespaceRef)rt->namespaces->table[i].val;
+		if(ns) {
+			oSpinLockUnlock(ns->bindingsLock);
+		}
+	}
+	oSpinLockUnlock(rt->namespaceLock);
 }
 
 void oHeapForceGC(oRuntimeRef rt, oHeapRef heap) {

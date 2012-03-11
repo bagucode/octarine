@@ -269,7 +269,7 @@ oNamespaceRef _oRuntimeFindNamespace(oRuntimeRef rt, oStringRef name) {
 	return ns;
 }
 
-extern void oInitJITTarget();
+void oInitJITTarget();
 oRuntimeRef oRuntimeCreate() {
 	oRuntimeRef rt = (oRuntimeRef)oMalloc(sizeof(oRuntime));
 	oThreadContextRef ctx;
