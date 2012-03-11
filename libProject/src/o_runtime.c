@@ -140,7 +140,14 @@ static void init_builtInTypes1(oRuntimeRef rt) {
 	o_bootstrap_thread_context_type_init(rt);
 }
 
+static void init_llvm_primitives(oRuntimeRef rt) {
+}
+
 static void init_builtInTypes2(oThreadContextRef ctx) {
+	// Do the LLVM init for the first types here since they are now complete
+	init_llvm_primitives(ctx->runtime);
+	o_bootstrap_string_init_llvm_type(ctx->runtime);
+
 	o_bootstrap_list_init_type(ctx);
     o_bootstrap_any_type_init(ctx);
     o_bootstrap_map_init_type(ctx);
@@ -278,6 +285,16 @@ oRuntimeRef oRuntimeCreate() {
 
     memset(rt, 0, sizeof(oRuntime));
 
+    // Start up an LLVM Context for this runtime
+    oInitJITTarget();
+    rt->llvmCtx = LLVMContextCreate();
+    rt->llvmModule = LLVMModuleCreateWithNameInContext("JITModule", rt->llvmCtx);
+    LLVMCreateJITCompilerForModule(&rt->llvmEE, rt->llvmModule, 3, &llvmError);
+    if(rt->llvmEE == NULL) {
+        fprintf(stderr, "%s\n", llvmError);
+        abort();
+    }
+
 	rt->contextListLock = oSpinLockCreate(4000);
 	rt->namespaceLock = oSpinLockCreate(4000);
 	rt->namespaces = CuckooCreate(100, NSMapKeyEquals, NSMapKeyHash);
@@ -299,6 +316,7 @@ oRuntimeRef oRuntimeCreate() {
 	init_builtInTypes2(ctx);
     init_builtInConstants(ctx);
     init_builtInErrors(ctx);
+    init_builtInFunctions(ctx);
 
 	// All built in types, functions and constants are now initialized.
 	// Create the octarine namespace and bind them to it so that they can
@@ -313,18 +331,6 @@ oRuntimeRef oRuntimeCreate() {
 	// are created in the same process but it won't break if initialized
 	// many times so putting the init call here is the most convenient place.
 	o_bootstrap_reader_init();
-    
-    // Start up an LLVM Context for this runtime and register the built
-    // in functions
-    oInitJITTarget();
-    rt->llvmCtx = LLVMContextCreate();
-    rt->llvmModule = LLVMModuleCreateWithNameInContext("JITModule", rt->llvmCtx);
-    LLVMCreateJITCompilerForModule(&rt->llvmEE, rt->llvmModule, 3, &llvmError);
-    if(rt->llvmEE == NULL) {
-        fprintf(stderr, "%s\n", llvmError);
-        abort();
-    }
-    init_builtInFunctions(ctx);
 
 	// Force a GC of the main thread and shared heaps to clean up any mess
 	// we made with temporary objects during init.

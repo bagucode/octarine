@@ -118,3 +118,7 @@ void o_bootstrap_string_init_type(oRuntimeRef rt) {
     rt->builtInTypes.string->finalizer = finalizer;
 	rt->builtInTypes.string->copyInternals = CopyHelper;
 }
+
+void o_bootstrap_string_init_llvm_type(oRuntimeRef rt) {
+
+}

@@ -4,6 +4,7 @@
 
 #include "../../platformProject/src/o_basic_types.h"
 #include "o_typedefs.h"
+#include "llvm-c/Core.h"
 
 extern const u8 o_T_OBJECT;
 extern const u8 o_T_STRUCT;
@@ -27,6 +28,7 @@ struct oType {
     oFinalizer finalizer;
 	oCopyObjectInternals copyInternals;
     uword size;
+	LLVMTypeRef llvmType;
     u8 kind;
     u8 alignment;
 };

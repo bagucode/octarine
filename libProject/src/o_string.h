@@ -34,6 +34,7 @@ uword _oStringHash(oThreadContextRef ctx, oStringRef str);
 
 oStringRef o_bootstrap_string_create(oRuntimeRef rt, const char *utf8);
 void o_bootstrap_string_init_type(oRuntimeRef rt);
+void o_bootstrap_string_init_llvm_type(oRuntimeRef rt);
 
 #endif
 
