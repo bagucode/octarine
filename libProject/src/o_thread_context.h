@@ -8,10 +8,9 @@
 struct oThreadContext {
     oRuntimeRef runtime;
     oHeapRef heap;
-    oRootSetRef roots;
 	oErrorRef error;
 	oNamespaceRef currentNs;
-    volatile uword suspendRequested;
+    volatile oRootSetRef roots;
 };
 
 oThreadContextRef oThreadContextGetCurrent(oRuntimeRef rt);

@@ -303,75 +303,30 @@ oHeapRef oHeapCreate(o_bool synchronized, uword gc_threshold) {
     return heap;
 }
 
-typedef struct oFrameInfo {
+struct oRootSet {
+    oRootSetRef prev;
     oObject* frame;
     uword size;
-} oFrameInfo;
-
-#define MAX_FRAMES 32
-struct oRootSet {
-    uword numUsed;
-    oRootSetRef prev;
-    oFrameInfo frameInfos[MAX_FRAMES];
 };
-
-oRootSetRef oMemoryCreateRootSet() {
-    oRootSetRef rootSet = (oRootSetRef)oMalloc(sizeof(oRootSet));
-    memset(rootSet, 0, sizeof(oRootSet));
-    return rootSet;
-}
-
-void oMemoryDeleteRootSet(oRootSetRef roots) {
-    oRootSetRef tmp;
-    while(roots) {
-        tmp = roots->prev;
-        oFree(roots);
-        roots = tmp;
-    }
-}
 
 void oMemoryPushFrame(oThreadContextRef ctx,
                       pointer frame,
                       uword frameSize) {
     oRootSetRef newRoots;
     
-    if(oAtomicGetUword(&ctx->suspendRequested) == 1) {
-        oAtomicSetUword(&ctx->suspendRequested, 2);
-        while(oAtomicGetUword(&ctx->suspendRequested) != 0) {
-            oSleepMillis(0);
-        }
-    }
-    
     memset(frame, 0, frameSize);
     
-    if(ctx->roots->numUsed < MAX_FRAMES) {
-        ctx->roots->frameInfos[ctx->roots->numUsed].frame = (oObject*)frame;
-        ctx->roots->frameInfos[ctx->roots->numUsed].size = frameSize;
-        ctx->roots->numUsed++;
-   } else {
-       newRoots = oMemoryCreateRootSet();
-       newRoots->prev = ctx->roots;
-       ctx->roots = newRoots;
-       oMemoryPushFrame(ctx, frame, frameSize);
-    }
+    newRoots = (oRootSetRef)oMalloc(sizeof(oRootSet));
+    newRoots->prev = ctx->roots;
+    newRoots->size = frameSize;
+    newRoots->frame = frame;
+    oAtomicSetPointer((pointer*)&ctx->roots, newRoots);
 }
 
 void oMemoryPopFrame(oThreadContextRef ctx) {
-    oRootSetRef prev;
-    
-    if(oAtomicGetUword(&ctx->suspendRequested) == 1) {
-        oAtomicSetUword(&ctx->suspendRequested, 2);
-        while(oAtomicGetUword(&ctx->suspendRequested) != 0) {
-            oSleepMillis(0);
-        }
-    }
-    
-    ctx->roots->numUsed--;
-    if(ctx->roots->numUsed == 0 && ctx->roots->prev != NULL) {
-        prev = ctx->roots->prev;
-        oFree(ctx->roots);
-        ctx->roots = prev;
-    }
+    oRootSetRef pop = ctx->roots;
+    oAtomicSetPointer((pointer*)&ctx->roots, ctx->roots->prev);
+    oFree(pop);
 }
 
 typedef struct MarkEntry {
@@ -462,67 +417,6 @@ static void collectGarbage(oRuntimeRef rt, oHeapRef heap) {
 	shared = rt->globals == heap;
 	ctx = oRuntimeGetCurrentContext(rt);
 
-    // Mark thread contexts if the shared heap is being collected
-	if(shared) {
-		oSpinLockLock(rt->contextListLock);
-		lst = rt->allContexts;
-		while(lst) {
-			markGraph(rt, lst->ctx, shared);
-			lst = lst->next;
-		}
-		oSpinLockUnlock(rt->contextListLock);
-	}
-
-	// Mark stack roots
-	if(shared) {
-		oSpinLockLock(rt->contextListLock);
-		lst = rt->allContexts;
-		while(lst) {
-			if(lst->ctx != ctx) {
-                // Suspend one thread at a time to examine roots.
-                // This code only works if threads are always started automatically
-                // right after the context has been created and added to the list
-				oAtomicSetUword(&lst->ctx->suspendRequested, 1);
-                while(oAtomicGetUword(&lst->ctx->suspendRequested) != 2) {
-                    oSleepMillis(0);
-                }
-			}
-			roots = lst->ctx->roots;
-			while (roots) {
-				for(i = 0; i < roots->numUsed; ++i) {
-					nroots = roots->frameInfos[i].size / sizeof(pointer);
-					for(j = 0; j < nroots; ++j) {
-						obj = roots->frameInfos[i].frame[j];
-						if(obj != NULL) {
-							markGraph(rt, obj, shared);
-						}
-					}
-				}
-				roots = roots->prev;
-			}
-			if(lst->ctx != ctx) {
-                oAtomicSetUword(&lst->ctx->suspendRequested, 0);
-			}
-			lst = lst->next;
-		}
-		oSpinLockUnlock(rt->contextListLock);
-	}
-	else { // not shared
-		roots = ctx->roots;
-		while (roots) {
-			for(i = 0; i < roots->numUsed; ++i) {
-				nroots = roots->frameInfos[i].size / sizeof(pointer);
-				for(j = 0; j < nroots; ++j) {
-					obj = roots->frameInfos[i].frame[j];
-					if(obj != NULL) {
-						markGraph(rt, obj, shared);
-					}
-				}
-			}
-			roots = roots->prev;
-		}
-	}
-
     // Lock and mark all namespaces and their bindings.
     // We have to lock the namespaces for modification
     // to protect against inconsistency during the mark and sweep.
@@ -550,6 +444,51 @@ static void collectGarbage(oRuntimeRef rt, oHeapRef heap) {
 				}
 			}
 		}
+	}
+
+    // Mark thread contexts if the shared heap is being collected
+	if(shared) {
+		oSpinLockLock(rt->contextListLock);
+		lst = rt->allContexts;
+		while(lst) {
+			markGraph(rt, lst->ctx, shared);
+			lst = lst->next;
+		}
+		oSpinLockUnlock(rt->contextListLock);
+	}
+
+	// Mark stack roots
+	if(shared) {
+		oSpinLockLock(rt->contextListLock);
+		lst = rt->allContexts;
+		while(lst) {
+			roots = oAtomicGetPointer((pointer*)&lst->ctx->roots);
+			while (roots) {
+                nroots = roots->size / sizeof(pointer);
+                for(j = 0; j < nroots; ++j) {
+                    obj = roots->frame[j];
+                    if(obj != NULL) {
+                        markGraph(rt, obj, shared);
+                    }
+                }
+				roots = roots->prev;
+			}
+			lst = lst->next;
+		}
+		oSpinLockUnlock(rt->contextListLock);
+	}
+	else { // not shared
+		roots = ctx->roots;
+        while (roots) {
+            nroots = roots->size / sizeof(pointer);
+            for(j = 0; j < nroots; ++j) {
+                obj = roots->frame[j];
+                if(obj != NULL) {
+                    markGraph(rt, obj, shared);
+                }
+            }
+            roots = roots->prev;
+        }
 	}
 
 	/* Phase 2a, run finalizers. Probably still broken (temporally) */
@@ -648,9 +587,9 @@ static oObject internalAlloc(oRuntimeRef rt,
     HeapBlockRef block;
     uword allocSize;
 
-	if(heap->mutex) {
-		oMutexLock(heap->mutex);
-	}
+//	if(heap->mutex) {
+//		oMutexLock(heap->mutex);
+//	}
 
 	allocSize = calcBlockSize(size);
     
@@ -680,9 +619,9 @@ static oObject internalAlloc(oRuntimeRef rt,
     
     heap->currentSize += allocSize;
 
-	if(heap->mutex) {
-		oMutexUnlock(heap->mutex);
-	}
+//	if(heap->mutex) {
+//		oMutexUnlock(heap->mutex);
+//	}
     
     return ret;
 }

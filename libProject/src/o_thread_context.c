@@ -30,13 +30,10 @@ oThreadContextRef oThreadContextCreate(oRuntimeRef runtime) {
 	oThreadContextRef ctx = (oThreadContextRef)o_bootstrap_object_alloc(runtime, runtime->builtInTypes.threadContext, sizeof(oThreadContext));
 	ctx->heap = oHeapCreate(o_false, 1024 * 2000);
     ctx->runtime = runtime;
-    ctx->roots = oMemoryCreateRootSet();
-    ctx->suspendRequested = 0;
     return ctx;
 }
 
 void oThreadContextDestroy(oThreadContextRef ctx) {
-    oMemoryDeleteRootSet(ctx->roots);
     oHeapDestroy(ctx->heap);
 }
 

@@ -35,6 +35,7 @@ typedef oSpinLock* oSpinLockRef;
 oSpinLockRef oSpinLockCreate(uword spinCount);
 void oSpinLockDestroy(oSpinLockRef lock);
 void oSpinLockLock(oSpinLockRef lock);
+o_bool oSpinLockTryLock(oSpinLockRef lock);
 void oSpinLockUnlock(oSpinLockRef lock);
 
 void oSleepMillis(uword millis);

@@ -214,6 +214,13 @@ void oSpinLockLock(oSpinLockRef lock) {
     }
 }
 
+o_bool oSpinLockTryLock(oSpinLockRef lock) {
+    if(oAtomicCompareAndSwapUword(&lock->lock, 0, 1)) {
+        return o_true;
+    }
+    return o_false;
+}
+
 void oSpinLockUnlock(oSpinLockRef lock) {
     oAtomicSetUword(&lock->lock, 0);
 }
