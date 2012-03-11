@@ -524,8 +524,8 @@ static void collectGarbage(oRuntimeRef rt, oHeapRef heap) {
 	}
 
     // Lock and mark all namespaces and their bindings.
-    // We have to lock the namespaces for modification and lookup
-    // to protect against inconsistency in the stack roots.
+    // We have to lock the namespaces for modification
+    // to protect against inconsistency during the mark and sweep.
     // Threads will still proceed during the GC as long as they
     // don't bind or look up any values in namespaces.
 	oSpinLockLock(rt->namespaceLock);
@@ -537,8 +537,8 @@ static void collectGarbage(oRuntimeRef rt, oHeapRef heap) {
 			for(j = 0; j < ns->bindings->capacity; ++j) {
 				binding = (oNSBindingRef)ns->bindings->table[j].val;
 				if(binding && binding->isShared == shared) {
-					markGraph(rt, ns->bindings->table[j].key, shared);
 					if(shared) {
+                        markGraph(rt, ns->bindings->table[j].key, shared);
 						markGraph(rt, binding->value, shared);
 					}
 					else {
