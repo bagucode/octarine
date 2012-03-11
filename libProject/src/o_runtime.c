@@ -14,6 +14,8 @@
 #include "o_namespace.h"
 
 #include <memory.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 static oTypeRef alloc_built_in(oRuntimeRef rt, oHeapRef heap) {
 	return (oTypeRef)o_bootstrap_object_alloc(rt, rt->builtInTypes.type, sizeof(oType));
@@ -267,10 +269,12 @@ oNamespaceRef _oRuntimeFindNamespace(oRuntimeRef rt, oStringRef name) {
 	return ns;
 }
 
+extern void oInitJITTarget();
 oRuntimeRef oRuntimeCreate() {
 	oRuntimeRef rt = (oRuntimeRef)oMalloc(sizeof(oRuntime));
 	oThreadContextRef ctx;
 	oNamespaceRef octarineNs;
+    char* llvmError;
 
     memset(rt, 0, sizeof(oRuntime));
 
@@ -294,7 +298,6 @@ oRuntimeRef oRuntimeCreate() {
 
 	init_builtInTypes2(ctx);
     init_builtInConstants(ctx);
-    init_builtInFunctions(ctx);
     init_builtInErrors(ctx);
 
 	// All built in types, functions and constants are now initialized.
@@ -306,15 +309,27 @@ oRuntimeRef oRuntimeCreate() {
 
 	oThreadContextSetNS(ctx, octarineNs);
 
+    // The reader init only needs to be done once even if several runtimes
+	// are created in the same process but it won't break if initialized
+	// many times so putting the init call here is the most convenient place.
+	o_bootstrap_reader_init();
+    
+    // Start up an LLVM Context for this runtime and register the built
+    // in functions
+    oInitJITTarget();
+    rt->llvmCtx = LLVMContextCreate();
+    rt->llvmModule = LLVMModuleCreateWithNameInContext("JITModule", rt->llvmCtx);
+    LLVMCreateJITCompilerForModule(&rt->llvmEE, rt->llvmModule, 3, &llvmError);
+    if(rt->llvmEE == NULL) {
+        fprintf(stderr, "%s\n", llvmError);
+        abort();
+    }
+    init_builtInFunctions(ctx);
+
 	// Force a GC of the main thread and shared heaps to clean up any mess
 	// we made with temporary objects during init.
 	oHeapForceGC(rt, ctx->heap);
 	oHeapForceGC(rt, rt->globals);
-
-	// The reader init only needs to be done once even if several runtimes
-	// are created in the same process but it won't break if initialized
-	// many times so putting the init call here is the most convenient place.
-	o_bootstrap_reader_init();
 
     return rt;
 }
@@ -348,6 +363,8 @@ void oRuntimeDestroy(oRuntimeRef rt) {
 	CuckooDestroy(rt->namespaces);
 	oSpinLockDestroy(rt->contextListLock);
 	oSpinLockDestroy(rt->namespaceLock);
+    LLVMDisposeModule(rt->llvmModule);
+    LLVMContextDispose(rt->llvmCtx);
 	oFree(rt);
 }
 

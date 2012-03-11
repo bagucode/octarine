@@ -5,7 +5,9 @@
 #include "o_typedefs.h"
 #include "../../platformProject/src/o_platform.h"
 #include "o_utils.h"
-    
+#include "llvm-c/Core.h"
+#include "llvm-c/ExecutionEngine.h"
+
 typedef struct oThreadContextList {
     oThreadContextRef ctx;
     struct oThreadContextList* next;
@@ -72,6 +74,9 @@ struct oRuntime {
     oRuntimeBuiltInErrors builtInErrors;
 	CuckooRef namespaces;
 	oSpinLockRef namespaceLock;
+    LLVMContextRef llvmCtx;
+    LLVMModuleRef llvmModule;
+    LLVMExecutionEngineRef llvmEE;
 };
 
 oRuntimeRef oRuntimeCreate();
