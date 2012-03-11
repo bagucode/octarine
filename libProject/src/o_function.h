@@ -41,7 +41,15 @@ oFunctionOverloadRef _oFunctionOverloadCreate(oThreadContextRef ctx,
                                               oListObjRef code);
 #define oFunctionOverloadCreate(sig, attrs, code) _oC(_oFunctionOverloadCreate, sig, attrs, code)
 
+// Register an existing native function with the octarine runtime
+oFunctionOverloadRef _oFunctionOverloadRegisterNative(oThreadContextRef ctx,
+                                                      oSignatureRef sig,
+                                                      oArrayRef attributes,
+                                                      pointer fn);
+#define oFunctionOverloadRegisterNative(sig, attrs, fn) _oC(_oFunctionOverloadRegisterNative, sig, attrs, fn)
+
 struct oFunction {
+    // Need name?
     oSpinLockRef lock;
     CuckooRef overloads;
 };
