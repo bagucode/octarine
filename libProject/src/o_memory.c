@@ -422,6 +422,11 @@ static void collectGarbage(oRuntimeRef rt, oHeapRef heap) {
     // to protect against inconsistency during the mark and sweep.
     // Threads will still proceed during the GC as long as they
     // don't bind or look up any values in namespaces.
+    // This code must also be before the root marking or
+    // a thread could look up an object in a namespace, bind it
+    // to a local root after the GC checked the roots
+    // and then clear the namespace binding before the GC checked
+    // the namespace bindings, causing the object to not be marked.
 	oSpinLockLock(rt->namespaceLock);
 	for(i = 0; i < rt->namespaces->capacity; ++i) {
 		ns = (oNamespaceRef)rt->namespaces->table[i].val;

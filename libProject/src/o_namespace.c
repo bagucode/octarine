@@ -51,6 +51,14 @@ oObject _oNamespaceBind(oThreadContextRef ctx, oNamespaceRef ns, oSymbolRef key,
 	oNSBindingRef binding;
 	oSymbolRef keyCopy;
 
+    // Even though this copy may not be needed we have to do the
+    // copyShared call before getting the bindingslock or
+    // there can be a deadlock between this function and the GC
+    keyCopy = (oSymbolRef)_oHeapCopyObjectShared(ctx, key);
+    if(keyCopy == NULL) {
+        return NULL;
+    }
+    
 	oSpinLockLock(ns->bindingsLock);
 
 	binding = (oNSBindingRef)CuckooGet(ns->bindings, key);
@@ -69,11 +77,6 @@ oObject _oNamespaceBind(oThreadContextRef ctx, oNamespaceRef ns, oSymbolRef key,
 			binding->isShared = o_false;
 			binding->threadLocals = CuckooCreate(2, NULL, NULL);
 			CuckooPut(binding->threadLocals, ctx, value);
-		}
-		keyCopy = (oSymbolRef)_oHeapCopyObjectShared(ctx, key);
-		if(keyCopy == NULL) {
-			oSpinLockUnlock(ns->bindingsLock);
-			return NULL;
 		}
 		CuckooPut(ns->bindings, keyCopy, binding);
 	}
