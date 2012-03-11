@@ -539,7 +539,7 @@ void testComplicatedCopyShared() {
 void testNamespaceBindAndLookup() {
     oRuntimeRef rt = oRuntimeCreate();
     oThreadContextRef ctx = oRuntimeGetCurrentContext(rt);
-    oROOTS(ctx);
+    oROOTS(ctx)
     oSymbolRef bindName;
     oStringRef text;
     oStringRef lookupResult;

@@ -1,7 +1,7 @@
 #include "llvm/ExecutionEngine/JIT.h"
-#include "llvm-c/Target.h"
+#include "llvm/Support/TargetSelect.h"
 
 extern "C"
 void oInitJITTarget() {
-    LLVMInitializeNativeTarget();
+    llvm::InitializeNativeTarget();
 }
