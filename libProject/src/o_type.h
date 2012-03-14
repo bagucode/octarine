@@ -60,8 +60,13 @@ _oC(_oTypeCreate, kind, alignment, name, fields, finalizer, prototype)
 
 oStringRef oTypeGetName(oTypeRef type);
 
+LLVMTypeRef _oTypeCreateLLVMType(oThreadContextRef ctx, oTypeRef type);
+#define oTypeCreateLLVMType(type) _oC(_oTypeCreateLLVMType, type)
+
 void o_bootstrap_type_init_type(oRuntimeRef rt);
+void o_bootstrap_type_init_llvm_type(oThreadContextRef ctx);
 void o_bootstrap_type_init_field(oRuntimeRef rt);
+void o_bootstrap_field_init_llvm_type(oThreadContextRef ctx);
 oArrayRef o_bootstrap_type_create_field_array(oRuntimeRef rt, uword numFields);
 
 #endif

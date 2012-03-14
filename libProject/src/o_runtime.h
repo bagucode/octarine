@@ -74,6 +74,7 @@ struct oRuntime {
     oRuntimeBuiltInErrors builtInErrors;
 	CuckooRef namespaces;
 	oSpinLockRef namespaceLock;
+    volatile uword uniqueNameIdx;
     LLVMContextRef llvmCtx;
     LLVMModuleRef llvmModule;
     LLVMExecutionEngineRef llvmEE;

@@ -32,9 +32,12 @@ o_bool _oStringEquals(oThreadContextRef ctx, oStringRef str1, oStringRef str2);
 uword _oStringHash(oThreadContextRef ctx, oStringRef str);
 #define oStringHash(str) _oC(_oStringHash, str)
 
+char* oGenUniqueName(oThreadContextRef ctx);
+oStringRef oStringGenUnique(oThreadContextRef ctx);
+
 oStringRef o_bootstrap_string_create(oRuntimeRef rt, const char *utf8);
 void o_bootstrap_string_init_type(oRuntimeRef rt);
-void o_bootstrap_string_init_llvm_type(oRuntimeRef rt);
+void o_bootstrap_string_init_llvm_type(oThreadContextRef ctx);
 
 #endif
 

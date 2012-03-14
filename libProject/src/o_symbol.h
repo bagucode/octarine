@@ -20,6 +20,8 @@ o_bool _oSymbolEquals(oThreadContextRef ctx,
 uword _oSymbolHash(oThreadContextRef ctx, oSymbolRef sym);
 #define oSymbolHash(sym) _oC(_oSymbolHash, sym)
 
+oSymbolRef oSymbolGenUnique(oThreadContextRef ctx);
+
 void o_bootstrap_symbol_init_type(oThreadContextRef ctx);
 
 #endif

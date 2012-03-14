@@ -9,6 +9,7 @@
 #include "o_error.h"
 #include <string.h>
 #include <memory.h>
+#include <stdio.h>
 
 // Move FNV function to utils?
 #ifdef OCTARINE32
@@ -119,6 +120,75 @@ void o_bootstrap_string_init_type(oRuntimeRef rt) {
 	rt->builtInTypes.string->copyInternals = CopyHelper;
 }
 
-void o_bootstrap_string_init_llvm_type(oRuntimeRef rt) {
-
+void o_bootstrap_string_init_llvm_type(oThreadContextRef ctx) {
+    LLVMTypeRef types[2];
+    types[0] = ctx->runtime->builtInTypes.pointer->llvmType;
+    types[1] = ctx->runtime->builtInTypes.uword->llvmType;
+    ctx->runtime->builtInTypes.string->llvmType = LLVMStructTypeInContext(ctx->runtime->llvmCtx, types, 2, o_false);
 }
+
+char* oGenUniqueName(oThreadContextRef ctx) {
+    u64 idx = oAtomicGetThenAddUword(&ctx->runtime->uniqueNameIdx, 1);
+    char* buf = oMalloc(100);
+    if(buf == NULL) {
+        return NULL;
+    }
+    int size = sprintf(buf, "genstr_%llu", idx);
+    if(size < 0) {
+        oFree(buf);
+        return NULL;
+    }
+    return buf;
+}
+
+oStringRef oStringGenUnique(oThreadContextRef ctx) {
+    char* ch;
+    oROOTS(ctx)
+    oENDROOTS
+    ch = oGenUniqueName(ctx);
+    if(ch == NULL) {
+        ctx->error = ctx->runtime->builtInErrors.outOfMemory;
+        oRETURN(NULL);
+    }
+    oSETRET(_oStringCreate(ctx, ch));
+    oFree(ch);
+    if(oGETRET == NULL) {
+        ctx->error = ctx->runtime->builtInErrors.outOfMemory;
+    }
+    oENDFN(oStringRef)
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

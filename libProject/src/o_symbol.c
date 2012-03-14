@@ -40,3 +40,10 @@ o_bool _oSymbolEquals(oThreadContextRef ctx,
 uword _oSymbolHash(oThreadContextRef ctx, oSymbolRef sym) {
 	return _oStringHash(ctx, sym->name) * 17;
 }
+
+oSymbolRef oSymbolGenUnique(oThreadContextRef ctx) {
+    oROOTS(ctx)
+    oENDROOTS
+    oGETRET = oStringGenUnique(ctx);
+    oENDFN(oSymbolRef)
+}

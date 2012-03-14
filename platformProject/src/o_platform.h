@@ -24,6 +24,8 @@ void oMutexUnlock(oMutexRef mutex);
 uword oAtomicGetUword(volatile uword* uw);
 void oAtomicSetUword(volatile uword* uw, uword value);
 o_bool oAtomicCompareAndSwapUword(volatile uword* uw, uword oldVal, uword newVal);
+uword oAtomicGetThenAddUword(volatile uword* uw, uword add);
+uword oAtomicGetThenSubUword(volatile uword* uw, uword sub);
 
 pointer oAtomicGetPointer(volatile pointer* p);
 void oAtomicSetPointer(volatile pointer* p, pointer value);
