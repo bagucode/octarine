@@ -224,6 +224,26 @@ void oAtomicSetUword(volatile uword* uw, uword value) {
     }
 }
 
+uword oAtomicGetThenAddUword(volatile uword* uw, uword add) {
+    uword old;
+    while (1) {
+        old = *uw;
+        if (oAtomicCompareAndSwapUword(uw, old, old + add)) {
+            return old;
+        }
+    }
+}
+
+uword oAtomicGetThenSubUword(volatile uword* uw, uword sub) {
+    uword old;
+    while (1) {
+        old = *uw;
+        if (oAtomicCompareAndSwapUword(uw, old, old - sub)) {
+            return old;
+        }
+    }
+}
+
 // uwords are always pointer size so these functions just wrap the uword ones
 pointer oAtomicGetPointer(volatile pointer* p) {
     return (pointer)oAtomicGetUword((volatile uword*)p);

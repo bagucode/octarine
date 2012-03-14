@@ -283,13 +283,33 @@ LLVMTypeRef _oTypeCreateLLVMType(oThreadContextRef ctx, oTypeRef type) {
 void o_bootstrap_type_init_llvm_type(oThreadContextRef ctx) {
     LLVMTypeRef types[9];
     char* tn;
-    types[0] = ctx->runtime->builtInTypes.string->llvmType;
     // create the array type as an opaque type for now, the
     // array initializer will refine it.
     tn = oGenUniqueName(ctx);
     ctx->runtime->builtInTypes.array->llvmType = LLVMStructCreateNamed(ctx->runtime->llvmCtx, tn);
     oFree(tn);
+
+	// name
+	types[0] = ctx->runtime->builtInTypes.string->llvmType;
+	// fields
     types[1] = ctx->runtime->builtInTypes.array->llvmType;
+	// attributes
+	types[2] = ctx->runtime->builtInTypes.array->llvmType;
+	// register finalizer as an opaque pointer for now,
+	// there are probably no calls to it from llvm code anyway
+	types[3] = ctx->runtime->builtInTypes.pointer->llvmType;
+	// same with copyInternals
+	types[4] = ctx->runtime->builtInTypes.pointer->llvmType;
+	// size
+	types[5] = ctx->runtime->builtInTypes.uword->llvmType;
+	// Probably have to make the llvm type an opaque pointer :)
+	types[6] = ctx->runtime->builtInTypes.pointer->llvmType;
+	// kind
+	types[7] = ctx->runtime->builtInTypes.u8->llvmType;
+	// alignment
+	types[8] = ctx->runtime->builtInTypes.u8->llvmType;
+
+	ctx->runtime->builtInTypes.type->llvmType = LLVMStructTypeInContext(ctx->runtime->llvmCtx, types, 9, o_false);
 }
 
 void o_bootstrap_field_init_llvm_type(oThreadContextRef ctx) {

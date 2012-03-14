@@ -129,11 +129,13 @@ void o_bootstrap_string_init_llvm_type(oThreadContextRef ctx) {
 
 char* oGenUniqueName(oThreadContextRef ctx) {
     u64 idx = oAtomicGetThenAddUword(&ctx->runtime->uniqueNameIdx, 1);
-    char* buf = oMalloc(100);
+	// genstr_ is 7 chars, idx is a max of 20 chars and we need a null = 28
+    char* buf = (char*)oMalloc(28);
+	int size;
     if(buf == NULL) {
         return NULL;
     }
-    int size = sprintf(buf, "genstr_%llu", idx);
+    size = sprintf(buf, "genstr_%llu", idx);
     if(size < 0) {
         oFree(buf);
         return NULL;
