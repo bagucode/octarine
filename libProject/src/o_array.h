@@ -36,5 +36,6 @@ oArrayRef o_bootstrap_array_create(oRuntimeRef rt,
                                    u8 alignment);
 
 void o_bootstrap_array_init_type(oRuntimeRef rt);
+void o_bootstrap_array_init_llvm_type(oThreadContextRef ctx);
 
 #endif

@@ -152,7 +152,11 @@ void o_bootstrap_array_init_type(oRuntimeRef rt) {
     fields[2]->type = rt->builtInTypes.u8;
 }
 
+void o_bootstrap_array_init_llvm_type(oThreadContextRef ctx) {
+	LLVMTypeRef types[4];
 
+	//LLVMStructSetBody(ctx->runtime->builtInTypes.array->llvmType, types, 4, o_false);
+}
 
 
 

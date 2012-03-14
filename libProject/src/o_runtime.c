@@ -169,7 +169,7 @@ static void init_builtInTypes2(oThreadContextRef ctx) {
 	init_llvm_primitives(ctx->runtime);
 	o_bootstrap_string_init_llvm_type(ctx);
     o_bootstrap_type_init_llvm_type(ctx);
-    //o_bootstrap_array_init_llvm_type(ctx);
+    o_bootstrap_array_init_llvm_type(ctx);
     //o_bootstrap_field_init_llvm_type(ctx);
 	//o_bootstrap_thread_context_init_llvm_type(ctx);
 
