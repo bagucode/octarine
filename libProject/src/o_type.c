@@ -62,11 +62,23 @@ static uword nextLargerMultiple(uword of, uword largerThan) {
 }
 
 oTypeRef _oTypeCreateProtoType(oThreadContextRef ctx) {
-//#error Need to have an opaque llvm type for the prototype here
 	oTypeRef proto = (oTypeRef)o_bootstrap_object_alloc(ctx->runtime, ctx->runtime->builtInTypes.type, sizeof(oType));
+    char* un;
 	if(proto == NULL) {
 		ctx->error = ctx->runtime->builtInErrors.outOfMemory;
+        return NULL;
 	}
+    un = oGenUniqueName(ctx);
+    if(un == NULL) {
+		ctx->error = ctx->runtime->builtInErrors.outOfMemory;
+        return NULL;
+    }
+    proto->llvmType = LLVMStructCreateNamed(ctx->runtime->llvmCtx, un);
+    oFree(un);
+    if(proto->llvmType == NULL) {
+		ctx->error = ctx->runtime->builtInErrors.outOfMemory;
+        return NULL;
+    }
 	return proto;
 }
 
@@ -88,8 +100,10 @@ oTypeRef _oTypeCreate(oThreadContextRef ctx,
     
     oSETRET(protoType);
     if(oGETRET == NULL) {
-//#error should not use createprototype here because we don't want any llvm type for our type
-        oRoots.tmp = oTypeCreatePrototype();
+        oRoots.tmp = (oTypeRef)o_bootstrap_object_alloc(ctx->runtime, ctx->runtime->builtInTypes.type, sizeof(oType));
+        if(oRoots.tmp == NULL) {
+            oRETURN(NULL);
+        }
         oSETRET(oRoots.tmp);
     }
     
@@ -240,13 +254,10 @@ LLVMTypeRef _oTypeCreateLLVMType(oThreadContextRef ctx, oTypeRef type) {
     oFieldRef* fields;
     uword i;
     LLVMTypeRef* types;
-    LLVMTypeRef self;
     char* uniqueName;
     oROOTS(ctx)
     oArrayRef typesArr;
     oENDROOTS
-    
-    self = NULL;
     
     if(type->fields == NULL || type->fields->num_elements == 0) {
         oSETRET(LLVMStructTypeInContext(ctx->runtime->llvmCtx, NULL, 0, o_false));
@@ -256,22 +267,22 @@ LLVMTypeRef _oTypeCreateLLVMType(oThreadContextRef ctx, oTypeRef type) {
         types = (LLVMTypeRef*)oArrayDataPointer(oRoots.typesArr);
         fields = (oFieldRef*)oArrayDataPointer(type->fields);
         for(i = 0; i < type->fields->num_elements; ++i) {
-            if(fields[i]->type == type && self == NULL) {
+            if(fields[i]->type == type && type->llvmType == NULL) {
                 uniqueName = oGenUniqueName(ctx);
-                self = LLVMStructCreateNamed(ctx->runtime->llvmCtx, uniqueName);
+                type->llvmType = LLVMStructCreateNamed(ctx->runtime->llvmCtx, uniqueName);
                 oFree(uniqueName);
-                types[i] = self;
+                types[i] = type->llvmType;
             }
             else if(fields[i]->type == type) {
-                types[i] = self;
+                types[i] = type->llvmType;
             }
             else {
                 types[i] = fields[i]->type->llvmType;
             }
         }
-        if(self != NULL) {
-            LLVMStructSetBody(self, types, type->fields->num_elements, o_false);
-            oSETRET(self);
+        if(type->llvmType != NULL) {
+            LLVMStructSetBody(type->llvmType, types, type->fields->num_elements, o_false);
+            oSETRET(type->llvmType);
         }
         else {
             oSETRET(LLVMStructTypeInContext(ctx->runtime->llvmCtx, types, type->fields->num_elements, o_false));
@@ -290,11 +301,11 @@ void o_bootstrap_type_init_llvm_type(oThreadContextRef ctx) {
     oFree(tn);
 
 	// name
-	types[0] = ctx->runtime->builtInTypes.string->llvmType;
+	types[0] = LLVMPointerType(ctx->runtime->builtInTypes.string->llvmType, 0);
 	// fields
-    types[1] = ctx->runtime->builtInTypes.array->llvmType;
+    types[1] = LLVMPointerType(ctx->runtime->builtInTypes.array->llvmType, 0);
 	// attributes
-	types[2] = ctx->runtime->builtInTypes.array->llvmType;
+	types[2] = LLVMPointerType(ctx->runtime->builtInTypes.array->llvmType, 0);
 	// register finalizer as an opaque pointer for now,
 	// there are probably no calls to it from llvm code anyway
 	types[3] = ctx->runtime->builtInTypes.pointer->llvmType;

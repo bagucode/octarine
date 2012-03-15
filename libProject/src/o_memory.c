@@ -240,7 +240,7 @@ static void setType(HeapBlockRef block, oTypeRef type) {
 	block->typeRefAndFlags = ((uword)type) | (block->typeRefAndFlags & ALL_FLAGS);
 }
 
-static uword calcArraySize(uword elemSize, uword numElems, u8 align) {
+static uword calcArraySize(uword elemSize, uword numElems, uword align) {
     return sizeof(oArray) + (elemSize * numElems) + align - 1;
 }
 
@@ -639,8 +639,20 @@ oArrayRef _oHeapAllocArray(oThreadContextRef ctx,
                           oTypeRef elementType,
                           uword numElements) {
     oArrayRef arr;
-    u8 align = (u8)(elementType->alignment != 0 ? elementType->alignment : elementType->size);
-    uword size = calcArraySize(elementType->size, numElements, align);
+    u8 align;
+    uword size;
+    
+    if(elementType->kind == o_T_OBJECT) {
+        align = ctx->runtime->builtInTypes.pointer->alignment;
+        if(align == 0) {
+            align = sizeof(pointer);
+        }
+    }
+    else {
+        align = elementType->alignment != 0 ? elementType->alignment : elementType->size;
+    }
+    
+    size = calcArraySize(elementType->size, numElements, align);
     arr = (oArrayRef)internalAlloc(ctx->runtime, ctx, ctx->heap, ctx->runtime->builtInTypes.array, size);
     if(arr == NULL) {
         return NULL;
