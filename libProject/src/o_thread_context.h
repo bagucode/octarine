@@ -10,7 +10,8 @@ struct oThreadContext {
     oHeapRef heap;
 	oErrorRef error;
 	oNamespaceRef currentNs;
-    volatile oRootSetRef roots;
+    oRootSetRef roots;
+	volatile uword rootsSemaphore;
 };
 
 oThreadContextRef oThreadContextGetCurrent(oRuntimeRef rt);

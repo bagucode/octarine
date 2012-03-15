@@ -309,24 +309,44 @@ struct oRootSet {
     uword size;
 };
 
+// TODO: move the root set stuff to the threadcontext files
 void oMemoryPushFrame(oThreadContextRef ctx,
                       pointer frame,
                       uword frameSize) {
     oRootSetRef newRoots;
+
+	if(oAtomicGetUword(&ctx->rootsSemaphore) == 1) {
+		// GC requested, set semaphore to 2 to allow GC to read roots
+		oAtomicSetUword(&ctx->rootsSemaphore, 2);
+		// wait until GC resets the semaphore to 0
+		while(oAtomicGetUword(&ctx->rootsSemaphore) != 0) {
+			oSleepMillis(0); // Just yield, don't want to spend more time than necessary
+		}
+	}
     
     memset(frame, 0, frameSize);
     
+	// TODO: replace this malloc (and the free in pop), performance hog
     newRoots = (oRootSetRef)oMalloc(sizeof(oRootSet));
     newRoots->prev = ctx->roots;
     newRoots->size = frameSize;
     newRoots->frame = frame;
-    oAtomicSetPointer((pointer*)&ctx->roots, newRoots);
+	ctx->roots = newRoots;
 }
 
 void oMemoryPopFrame(oThreadContextRef ctx) {
     oRootSetRef pop = ctx->roots;
-    oAtomicSetPointer((pointer*)&ctx->roots, ctx->roots->prev);
+	ctx->roots = ctx->roots->prev;
     oFree(pop);
+
+	if(oAtomicGetUword(&ctx->rootsSemaphore) == 1) {
+		// GC requested, set semaphore to 2 to allow GC to read roots
+		oAtomicSetUword(&ctx->rootsSemaphore, 2);
+		// wait until GC resets the semaphore to 0
+		while(oAtomicGetUword(&ctx->rootsSemaphore) != 0) {
+			oSleepMillis(0); // Just yield, don't want to spend more time than necessary
+		}
+	}
 }
 
 typedef struct MarkEntry {
@@ -400,7 +420,7 @@ static void markGraph(oRuntimeRef rt, oObject obj, o_bool shared) {
 
 static void collectGarbage(oRuntimeRef rt, oHeapRef heap) {
     oRootSetRef roots;
-    uword i, j, nroots;
+    uword i, j, nroots, semaphore;
     oObject obj;
     HeapRecordRef newRecord;
     HeapRecordRef currentRecord;
@@ -467,7 +487,25 @@ static void collectGarbage(oRuntimeRef rt, oHeapRef heap) {
 		oSpinLockLock(rt->contextListLock);
 		lst = rt->allContexts;
 		while(lst) {
-			roots = oAtomicGetPointer((pointer*)&lst->ctx->roots);
+			if(ctx != lst->ctx) {
+				// Not this thread. Check if it's ok to look at the roots.
+				// If it is not, signal the thread that we want to look at the roots
+				// and wait for it to let us.
+				// 2 means we can check the roots so we wait here until the value is 2
+				while((semaphore = oAtomicGetUword(&lst->ctx->rootsSemaphore)) != 2) {
+					// Can't just do a set of the semaphore because that might conflict
+					// with the set that is done before a thread takes the GC lock. So
+					// we do a compare and swap until the value is 1 or we detect that
+					// it was set to 2 by the owning thread, then we just continue.
+					if(oAtomicCompareAndSwapUword(&lst->ctx->rootsSemaphore, semaphore, 1)) {
+						// Now wait for the thread to let us check the roots
+						while(oAtomicGetUword(&lst->ctx->rootsSemaphore) != 2) {
+							oSleepMillis(0); // Yield
+						}
+					}
+				}
+			}
+			roots = lst->ctx->roots;
 			while (roots) {
                 nroots = roots->size / sizeof(pointer);
                 for(j = 0; j < nroots; ++j) {
@@ -477,6 +515,12 @@ static void collectGarbage(oRuntimeRef rt, oHeapRef heap) {
                     }
                 }
 				roots = roots->prev;
+			}
+			if(ctx != lst->ctx) {
+				// Reset semaphore regardless of if we changed it or not earlier.
+				// If the semaphore was 2 already that means the thread is stuck
+				// on the GC lock right now so resetting the the semaphore like this is ok.
+				oAtomicSetUword(&lst->ctx->rootsSemaphore, 0);
 			}
 			lst = lst->next;
 		}
@@ -806,7 +850,14 @@ oObject _oHeapCopyObjectShared(oThreadContextRef ctx, oObject obj) {
 	totalSize += blockSize;
 	CuckooPut(seen, obj, current.copy);
 
+	// Set the root semaphore for this thread to 2 to allow GC to read roots now
+	// in case we get stuck on the lock below and have to wait for the GC.
+	// Getting stuck on this lock could cause a deadlock if the semaphore is not 2.
+	oAtomicSetUword(&ctx->rootsSemaphore, 2);
 	oMutexLock(ctx->runtime->globals->mutex);
+	// Now that we have the GC lock there is no way the GC can request to look at
+	// our roots so we can safely reset the semaphore to 0
+	oAtomicSetUword(&ctx->rootsSemaphore, 0);
 
 	while(current.obj != NULL) {
 		if(current.idx < current.pointers.size) {

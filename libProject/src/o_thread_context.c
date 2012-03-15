@@ -26,7 +26,7 @@ void o_bootstrap_thread_context_type_init(oRuntimeRef rt) {
 }
 
 void o_bootstrap_thread_context_init_llvm_type(oThreadContextRef ctx) {
-	LLVMTypeRef types[5];
+	LLVMTypeRef types[6];
 	char* un;
 	// runtime, opaque pointer. The runtime object is not part of the type system
 	types[0] = ctx->runtime->builtInTypes.pointer->llvmType;
@@ -44,8 +44,11 @@ void o_bootstrap_thread_context_init_llvm_type(oThreadContextRef ctx) {
 	types[3] = ctx->runtime->builtInTypes.name_space->llvmType;
 	// root set, opaque
 	types[4] = ctx->runtime->builtInTypes.pointer->llvmType;
+	// root set semaphore. This is volatile in the C code but llvm uses volatile
+	// on instructions rather than data so this is a regular uword here.
+	types[5] = ctx->runtime->builtInTypes.uword->llvmType;
 
-	ctx->runtime->builtInTypes.threadContext->llvmType = LLVMStructTypeInContext(ctx->runtime->llvmCtx, types, 5, o_false);
+	ctx->runtime->builtInTypes.threadContext->llvmType = LLVMStructTypeInContext(ctx->runtime->llvmCtx, types, 6, o_false);
 }
 
 oThreadContextRef oThreadContextCreate(oRuntimeRef runtime) {
