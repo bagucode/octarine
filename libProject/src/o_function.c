@@ -13,3 +13,14 @@ o_bool oSignatureEquals(oThreadContextRef ctx,
     
 }
 
+void o_bootstrap_parameter_type_init(oThreadContextRef ctx) {
+}
+
+void o_bootstrap_signature_type_init(oThreadContextRef ctx) {
+}
+
+void o_bootstrap_fn_overload_type_init(oThreadContextRef ctx) {
+}
+
+void o_bootstrap_function_type_init(oThreadContextRef ctx) {
+}

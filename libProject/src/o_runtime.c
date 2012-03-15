@@ -12,6 +12,7 @@
 #include "o_keyword.h"
 #include "o_error.h"
 #include "o_namespace.h"
+#include "o_function.h"
 
 #include <memory.h>
 #include <stdio.h>
@@ -182,6 +183,10 @@ static void init_builtInTypes2(oThreadContextRef ctx) {
     o_bootstrap_keyword_type_init(ctx);
     o_bootstrap_error_type_init(ctx);
 	o_bootstrap_namespace_type_init(ctx);
+    o_bootstrap_parameter_type_init(ctx);
+    o_bootstrap_signature_type_init(ctx);
+    o_bootstrap_fn_overload_type_init(ctx);
+    o_bootstrap_function_type_init(ctx);
 }
 
 static void init_builtInFunctions(oThreadContextRef ctx) {

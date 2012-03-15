@@ -564,7 +564,12 @@ static void collectGarbage(oRuntimeRef rt, oHeapRef heap) {
             block = currentRecord->blocks[i];
 			if(!isMarked(block)) {
                 heap->currentSize -= getBlockSize(rt, block);
-                oFree(block);
+                // Don't actually delete the object if it is a type or function
+                // overload because we currently can't track where they are used.
+                type = getType(block);
+                if(type != rt->builtInTypes.type && type != rt->builtInTypes.functionOverload) {
+                    oFree(block);
+                }
 			} else {
                 clearMark(block);
                 if(recordEntry(newRecord, block) == o_false) {
