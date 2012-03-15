@@ -324,6 +324,15 @@ void o_bootstrap_type_init_llvm_type(oThreadContextRef ctx) {
 }
 
 void o_bootstrap_field_init_llvm_type(oThreadContextRef ctx) {
+    LLVMTypeRef types[3];
+	// name
+	types[0] = LLVMPointerType(ctx->runtime->builtInTypes.string->llvmType, 0);
+	// type
+	types[1] = LLVMPointerType(ctx->runtime->builtInTypes.type->llvmType, 0);
+	// offset
+	types[2] = ctx->runtime->builtInTypes.u32->llvmType;
+
+	ctx->runtime->builtInTypes.field->llvmType = LLVMStructTypeInContext(ctx->runtime->llvmCtx, types, 3, o_false);
 }
 
 const u8 o_T_OBJECT = 0;
