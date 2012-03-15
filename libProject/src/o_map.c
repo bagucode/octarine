@@ -88,4 +88,5 @@ oObject oMapGet(oMapRef map, oStringRef key) {
 
 void o_bootstrap_map_init_type(oThreadContextRef ctx) {
 	ctx->runtime->builtInTypes.map = NULL;
+	//ctx->runtime->builtInTypes.map->llvmType = _oTypeCreateLLVMType(ctx, ctx->runtime->builtInTypes.map);
 }

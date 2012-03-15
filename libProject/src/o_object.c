@@ -6,11 +6,15 @@
 #include "o_thread_context.h"
 #include "o_error.h"
 
-void o_bootstrap_any_type_init(oThreadContextRef ctx) {
-    ctx->runtime->builtInTypes.any->fields = NULL;
-    ctx->runtime->builtInTypes.any->kind = o_T_OBJECT;
-	ctx->runtime->builtInTypes.any->name = o_bootstrap_string_create(ctx->runtime, "Any");
-    ctx->runtime->builtInTypes.any->size = sizeof(pointer);
+void o_bootstrap_any_type_init(oRuntimeRef rt) {
+    rt->builtInTypes.any->fields = NULL;
+    rt->builtInTypes.any->kind = o_T_OBJECT;
+	rt->builtInTypes.any->name = o_bootstrap_string_create(rt, "Any");
+    rt->builtInTypes.any->size = sizeof(pointer);
+}
+
+void o_bootstrap_any_init_llvm_type(oThreadContextRef ctx) {
+	ctx->runtime->builtInTypes.any->llvmType = LLVMStructTypeInContext(ctx->runtime->llvmCtx, NULL, 0, o_false);
 }
 
 oTypeRef oObjectGetType(oThreadContextRef ctx, oObject obj) {

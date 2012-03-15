@@ -133,6 +133,7 @@ static void init_builtInTypes1(oRuntimeRef rt) {
 
     /* objects */
 
+	o_bootstrap_any_type_init(rt);
     o_bootstrap_string_init_type(rt);
     o_bootstrap_type_init_type(rt);
     o_bootstrap_type_init_field(rt);
@@ -164,17 +165,17 @@ static void init_llvm_primitives(oRuntimeRef rt) {
 }
 
 static void init_builtInTypes2(oThreadContextRef ctx) {
-	// Do the LLVM init for the first types here since they are now complete
-    // The order here is very important since the types depend on each other
+	// Do the LLVM init for the first types here since they are now complete.
+    // The order here is very important since the types depend on each other.
 	init_llvm_primitives(ctx->runtime);
+	o_bootstrap_any_init_llvm_type(ctx);
 	o_bootstrap_string_init_llvm_type(ctx);
     o_bootstrap_type_init_llvm_type(ctx);
     o_bootstrap_array_init_llvm_type(ctx);
     o_bootstrap_field_init_llvm_type(ctx);
-	//o_bootstrap_thread_context_init_llvm_type(ctx);
+	o_bootstrap_thread_context_init_llvm_type(ctx);
 
 	o_bootstrap_list_init_type(ctx);
-    o_bootstrap_any_type_init(ctx);
     o_bootstrap_map_init_type(ctx);
 	o_bootstrap_symbol_init_type(ctx);
     o_bootstrap_vector_init_type(ctx);

@@ -24,5 +24,6 @@ void oThreadContextSetNS(oThreadContextRef ctx, oNamespaceRef ns);
 oNamespaceRef oThreadContextGetNS(oThreadContextRef ctx);
 
 void o_bootstrap_thread_context_type_init(oRuntimeRef rt);
+void o_bootstrap_thread_context_init_llvm_type(oThreadContextRef ctx);
 
 #endif

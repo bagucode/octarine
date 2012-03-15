@@ -42,4 +42,6 @@ void o_bootstrap_error_type_init(oThreadContextRef ctx) {
     fields[0]->name = o_bootstrap_string_create(ctx->runtime, "data");
 	fields[0]->offset = offsetof(oError, data);
 	fields[0]->type = ctx->runtime->builtInTypes.any;
+
+	ctx->runtime->builtInTypes.error->llvmType = _oTypeCreateLLVMType(ctx, ctx->runtime->builtInTypes.error);
 }

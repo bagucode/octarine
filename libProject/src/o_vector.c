@@ -20,6 +20,8 @@ void o_bootstrap_vector_init_type(oThreadContextRef ctx) {
     fields[0]->name = o_bootstrap_string_create(ctx->runtime, "data");
 	fields[0]->offset = offsetof(oVector, data);
     fields[0]->type = ctx->runtime->builtInTypes.array;
+
+	ctx->runtime->builtInTypes.vector->llvmType = _oTypeCreateLLVMType(ctx, ctx->runtime->builtInTypes.vector);
 }
 
 oVectorRef _oVectorCreate(oThreadContextRef ctx,
