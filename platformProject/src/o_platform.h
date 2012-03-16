@@ -44,7 +44,7 @@ void oSleepMillis(uword millis);
 typedef struct oNativeThread oNativeThread;
 typedef oNativeThread* oNativeThreadRef;
 
-oNativeThreadRef oNativeThreadCreate(pointer(*startFn)(pointer), pointer arg);
+oNativeThreadRef oNativeThreadCreate(void(*startFn)(pointer), pointer arg);
 void oNativeThreadDestroy(oNativeThreadRef thread);
 
 /* Memory management */

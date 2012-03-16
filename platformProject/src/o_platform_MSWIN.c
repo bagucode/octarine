@@ -282,3 +282,32 @@ void oSpinLockUnlock(oSpinLockRef lock) {
 	LeaveCriticalSection(&lock->cs);
 }
 
+struct oNativeThread {
+	HANDLE thread;
+};
+
+typedef struct threadArgWrapper {
+	void(*startFn)(pointer);
+	pointer arg;
+} threadArgWrapper;
+
+static DWORD WINAPI threadProcWrapper(LPVOID p) {
+	threadArgWrapper* argw = (threadArgWrapper*)p;
+	argw->startFn(argw->arg);
+	oFree(argw);
+	return 0;
+}
+
+oNativeThreadRef oNativeThreadCreate(void(*startFn)(pointer), pointer arg) {
+	oNativeThreadRef native = (oNativeThreadRef)oMalloc(sizeof(oNativeThread));
+	threadArgWrapper* argw = (threadArgWrapper*)oMalloc(sizeof(threadArgWrapper));
+	argw->arg = arg;
+	argw->startFn = startFn;
+	native->thread = CreateThread(NULL, 0, threadProcWrapper, argw, 0, 0);
+	return native;
+}
+
+void oNativeThreadDestroy(oNativeThreadRef thread) {
+	CloseHandle(thread->thread);
+	oFree(thread);
+}
