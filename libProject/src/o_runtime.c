@@ -430,6 +430,7 @@ static void threadStartWrapper(void* p) {
 oThreadContextRef oRuntimeCreateThread(oRuntimeRef rt, oFunctionOverloadRef threadFn, oObject threadArg) {
     oThreadContextRef newCtx = oThreadContextCreate(rt);
     threadArgsWrapper* argw = (threadArgsWrapper*)oMalloc(sizeof(threadArgsWrapper));
+
 	argw->arg = threadArg;
 	argw->startFn = (oThreadFn)threadFn->code;
     argw->ctx = newCtx;
