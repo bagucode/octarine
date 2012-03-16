@@ -69,6 +69,8 @@ typedef oSymbol* oSymbolRef;
 typedef struct oThreadContext oThreadContext;
 typedef oThreadContext* oThreadContextRef;
 
+typedef void(*oThreadFn)(oThreadContextRef, oObject);
+
 typedef struct oType oType;
 typedef oType* oTypeRef;
 

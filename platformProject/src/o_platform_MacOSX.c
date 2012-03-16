@@ -249,9 +249,24 @@ struct oNativeThread {
     pthread_t pthread;
 };
 
-oNativeThreadRef oNativeThreadCreate(pointer(*startFn)(pointer), pointer arg) {
+typedef struct threadArgWrapper {
+    void(*startFn)(pointer);
+    pointer arg;
+} threadArgWrapper;
+
+void* threadFnWrapper(pointer arg) {
+    threadArgWrapper* taw = (threadArgWrapper*)arg;
+    taw->startFn(taw->arg);
+    oFree(taw);
+    return NULL;
+}
+
+oNativeThreadRef oNativeThreadCreate(void(*startFn)(pointer), pointer arg) {
     oNativeThreadRef native = (oNativeThreadRef)oMalloc(sizeof(oNativeThread));
-    pthread_create(&native->pthread, NULL, startFn, arg);
+    threadArgWrapper* argw = (threadArgWrapper*)oMalloc(sizeof(threadArgWrapper));
+    argw->arg = arg;
+    argw->startFn = startFn;
+    pthread_create(&native->pthread, NULL, threadFnWrapper, argw);
     return native;
 }
 

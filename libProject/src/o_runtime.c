@@ -411,9 +411,8 @@ oThreadContextRef oRuntimeGetCurrentContext(oRuntimeRef rt) {
 
 typedef struct threadArgsWrapper {
 	volatile uword startLatch;
-	void(*startFn)(oRuntimeRef, oObject);
-	void* arg;
-	BROKEN
+	oThreadFn startFn;
+	oObject arg;
 	oRuntimeRef rt;
 	oThreadContextRef ctx;
 } threadArgsWrapper;
@@ -423,7 +422,8 @@ static void threadStartWrapper(void* p) {
 	while(oAtomicGetUword(&arg->startLatch) != 1) {
 		oSleepMillis(1);
 	}
-	arg->startFn(arg->arg);
+    oTLSSet(arg->rt->currentContext, arg->ctx);
+	arg->startFn(arg->ctx, arg->arg);
 	oFree(arg);
 }
 
@@ -431,9 +431,14 @@ oThreadContextRef oRuntimeCreateThread(oRuntimeRef rt, oFunctionOverloadRef thre
     oThreadContextRef newCtx = oThreadContextCreate(rt);
     threadArgsWrapper* argw = (threadArgsWrapper*)oMalloc(sizeof(threadArgsWrapper));
 	argw->arg = threadArg;
-	argw->startFn = (void(*)(oRuntimeRef, oObject))threadFn->code;
-	oAtomicSetUword(&argw->startLatch, 0);
+	argw->startFn = (oThreadFn)threadFn->code;
+    argw->ctx = newCtx;
+    argw->rt = rt;
+	argw->startLatch = 0;
+    
+    newCtx->currentNs = oRuntimeGetCurrentContext(rt)->currentNs;
 	newCtx->thread = oNativeThreadCreate(threadStartWrapper, argw);
 	oAtomicSetUword(&argw->startLatch, 1);
-	return newCtx;
+	
+    return newCtx;
 }
