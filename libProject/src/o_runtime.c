@@ -438,6 +438,7 @@ oThreadContextRef oRuntimeCreateThread(oRuntimeRef rt, oFunctionOverloadRef thre
     
     newCtx->currentNs = oRuntimeGetCurrentContext(rt)->currentNs;
 	newCtx->thread = oNativeThreadCreate(threadStartWrapper, argw);
+    _oRuntimeAddContext(rt, newCtx);
 	oAtomicSetUword(&argw->startLatch, 1);
 	
     return newCtx;
