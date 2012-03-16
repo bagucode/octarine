@@ -408,3 +408,8 @@ void oRuntimeDestroy(oRuntimeRef rt) {
 oThreadContextRef oRuntimeGetCurrentContext(oRuntimeRef rt) {
     return (oThreadContextRef)oTLSGet(rt->currentContext);
 }
+
+oThreadContextRef oRuntimeCreateThread(oRuntimeRef rt, oFunctionOverloadRef threadFn, oObject threadArg) {
+    oThreadContextRef newCtx = oThreadContextCreate(rt);
+    
+}

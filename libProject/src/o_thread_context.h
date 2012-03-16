@@ -12,6 +12,7 @@ struct oThreadContext {
 	oNamespaceRef currentNs;
     oRootSetRef roots;
 	volatile uword rootsSemaphore;
+    oNativeThreadRef thread;
 };
 
 oThreadContextRef oThreadContextGetCurrent(oRuntimeRef rt);

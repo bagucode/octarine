@@ -3,7 +3,7 @@
 
 #include "o_basic_types.h"
 
-/* Thread local storage */
+/* Threading stuff */
 typedef struct oTLS oTLS;
 typedef oTLS* oTLSRef;
 
@@ -12,7 +12,6 @@ void oTLSDestroy(oTLSRef tls);
 pointer oTLSGet(oTLSRef tls);
 void oTLSSet(oTLSRef tls, pointer value);
 
-/* Other threading stuff */
 typedef struct oMutex oMutex;
 typedef oMutex* oMutexRef;
 
@@ -41,6 +40,12 @@ o_bool oSpinLockTryLock(oSpinLockRef lock);
 void oSpinLockUnlock(oSpinLockRef lock);
 
 void oSleepMillis(uword millis);
+
+typedef struct oNativeThread oNativeThread;
+typedef oNativeThread* oNativeThreadRef;
+
+oNativeThreadRef oNativeThreadCreate(pointer(*startFn)(pointer), pointer arg);
+void oNativeThreadDestroy(oNativeThreadRef thread);
 
 /* Memory management */
 pointer oMalloc(uword size);

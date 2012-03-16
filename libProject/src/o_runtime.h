@@ -88,6 +88,8 @@ oRuntimeRef oRuntimeCreate();
 void oRuntimeDestroy(oRuntimeRef rt);
 oThreadContextRef oRuntimeGetCurrentContext(oRuntimeRef rt);
 
+oThreadContextRef oRuntimeCreateThread(oRuntimeRef rt, oFunctionOverloadRef threadFn, oObject threadArg);
+
 void _oRuntimeAddContext(oRuntimeRef rt, oThreadContextRef ctx);
 
 void _oRuntimeAddNamespace(oRuntimeRef rt, oNamespaceRef ns);

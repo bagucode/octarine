@@ -245,3 +245,17 @@ void oSpinLockUnlock(oSpinLockRef lock) {
     oAtomicSetUword(&lock->lock, 0);
 }
 
+struct oNativeThread {
+    pthread_t pthread;
+};
+
+oNativeThreadRef oNativeThreadCreate(pointer(*startFn)(pointer), pointer arg) {
+    oNativeThreadRef native = (oNativeThreadRef)oMalloc(sizeof(oNativeThread));
+    pthread_create(&native->pthread, NULL, startFn, arg);
+    return native;
+}
+
+void oNativeThreadDestroy(oNativeThreadRef thread) {
+    pthread_detach(thread->pthread);
+    oFree(thread);
+}
