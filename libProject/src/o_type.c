@@ -271,10 +271,13 @@ LLVMTypeRef _oTypeCreateLLVMType(oThreadContextRef ctx, oTypeRef type) {
                 uniqueName = oGenUniqueName(ctx);
                 type->llvmType = LLVMStructCreateNamed(ctx->runtime->llvmCtx, uniqueName);
                 oFree(uniqueName);
-                types[i] = type->llvmType;
+                types[i] = LLVMPointerType(type->llvmType, 0);
             }
             else if(fields[i]->type == type) {
-                types[i] = type->llvmType;
+                types[i] = LLVMPointerType(type->llvmType, 0);
+            }
+            else if(fields[i]->type->kind == o_T_OBJECT) {
+                types[i] = LLVMPointerType(fields[i]->type->llvmType, 0);
             }
             else {
                 types[i] = fields[i]->type->llvmType;
