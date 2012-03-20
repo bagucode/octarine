@@ -13,6 +13,7 @@
 #include "../../libProject/src/o_keyword.h"
 #include "../../libProject/src/o_error.h"
 #include "../../libProject/src/o_namespace.h"
+#include "../../libProject/src/o_function.h"
 
 #include <memory.h>
 #include <assert.h>
@@ -558,13 +559,39 @@ void testNamespaceBindAndLookup() {
     oRuntimeDestroy(rt);
 }
 
+void threadFnNoop(void* arg) {
+}
+
+void testCreateThreadDoesNotCrash() {
+    oRuntimeRef rt = oRuntimeCreate();
+    oThreadContextRef ctx = oRuntimeGetCurrentContext(rt);
+    oFunctionOverload fn;
+    oROOTS(ctx)
+    oENDROOTS
+
+    memset(&fn, 0, sizeof(oFunctionOverload));
+    // No sanity checks are currently made, fn.code is just assumed
+    // to be a native function with the correct signature.
+    // This test needs to be changed if checks are added to createthread.
+    fn.code = threadFnNoop;
+    oRuntimeCreateThread(rt, &fn, NULL);
+    
+    oENDVOIDFN
+}
+
 int main(int argc, char** argv) {
 
     testCreateRuntime();
 	testGCWithoutGarbage();
     testGCAllGarbage();
     testGCAllRetained();
+#ifdef WIN32
+    // Below test is commented out because it takes
+    // a long time to run from the visual studio debugger.
 	//testGCAllRetainedShouldNotBlowStack();
+#else
+    testGCAllRetainedShouldNotBlowStack();
+#endif
 	testGCFinalizer();
     testReaderEmptyList();
 	testSymbolEquals();
@@ -578,6 +605,7 @@ int main(int argc, char** argv) {
     testOutOfMemory();
     testSimpleCopySharedDoesNotCrash();
 	testComplicatedCopyShared();
+    testCreateThreadDoesNotCrash();
     
 	return 0;
 }
