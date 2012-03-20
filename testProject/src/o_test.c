@@ -559,7 +559,7 @@ void testNamespaceBindAndLookup() {
     oRuntimeDestroy(rt);
 }
 
-void threadFnNoop(void* arg) {
+void threadFnNoop(oThreadContextRef ctx, void* arg) {
 }
 
 void testCreateThreadDoesNotCrash() {
@@ -575,6 +575,91 @@ void testCreateThreadDoesNotCrash() {
     // This test needs to be changed if checks are added to createthread.
     fn.code = threadFnNoop;
     oRuntimeCreateThread(rt, &fn, NULL);
+    
+    oENDVOIDFN
+}
+
+volatile uword threadTestLatch;
+void threadFnThrashNamespace(oThreadContextRef ctx, void* arg) {
+    o_bool check;
+    uword count;
+    oROOTS(ctx)
+    oStringRef val;
+    oStringRef compare;
+    oSymbolRef waitForIt;
+    oSymbolRef bindMe;
+    oObject tmp;
+    oNamespaceRef ns;
+    oENDROOTS
+    
+    oRoots.ns = oThreadContextGetNS(ctx);
+    oRoots.tmp = oStringCreate("sym");
+    oRoots.waitForIt = oSymbolCreate(oRoots.tmp);
+    oRoots.tmp = oStringCreate("bindme");
+    oRoots.bindMe = oSymbolCreate(oRoots.tmp);
+    oRoots.compare = oStringCreate("must equal");
+    
+    check = o_false;
+    count = 0;
+    
+    while(check == o_false) {
+        oRoots.tmp = oStringCreate("random data (4)");
+        oRoots.tmp = oListObjCreate(oRoots.tmp);
+        oHeapCopyObjectShared(oRoots.tmp);
+        oNamespaceBind(oRoots.ns, oRoots.bindMe, oRoots.tmp);
+        oRoots.val = oNamespaceLookup(oRoots.ns, oRoots.waitForIt);
+        check = oStringEquals(oRoots.compare, oRoots.val);
+        ++count;
+        if(count == 100) {
+            oAtomicSetUword(&threadTestLatch, 1);
+        }
+    }
+    oAtomicSetUword(&threadTestLatch, 2);
+    
+    oENDVOIDFN
+}
+
+// say this 6 times fast
+void testThreadsThrashingNamespace() {
+    oRuntimeRef rt = oRuntimeCreate();
+    oThreadContextRef ctx = oRuntimeGetCurrentContext(rt);
+    oThreadContextRef other;
+    oFunctionOverload fn;
+    oROOTS(ctx)
+    oStringRef sharedStr;
+    oNamespaceRef ns;
+    oSymbolRef sym;
+    oStringRef tmp;
+    oENDROOTS
+
+    memset(&fn, 0, sizeof(oFunctionOverload));
+    // No sanity checks are currently made, fn.code is just assumed
+    // to be a native function with the correct signature.
+    // This test needs to be changed if checks are added to createthread.
+    fn.code = threadFnThrashNamespace;
+    oAtomicSetUword(&threadTestLatch, 0);
+    other = oRuntimeCreateThread(rt, &fn, NULL);
+
+    oRoots.sharedStr = oStringCreate("one");
+    oHeapCopyObjectShared(oRoots.sharedStr);
+    oRoots.sharedStr = oStringCreate("two");
+    oHeapCopyObjectShared(oRoots.sharedStr);
+    oRoots.sharedStr = oStringCreate("three");
+    oHeapCopyObjectShared(oRoots.sharedStr);
+    oRoots.sharedStr = oStringCreate("four");
+    oHeapCopyObjectShared(oRoots.sharedStr);
+    oRoots.sharedStr = oStringCreate("must equal");
+    oHeapCopyObjectShared(oRoots.sharedStr);
+    while (oAtomicGetUword(&threadTestLatch) == 0) {
+        oHeapForceGC(rt, rt->globals);
+    }
+    oRoots.ns = oThreadContextGetNS(other);
+    oRoots.tmp = oStringCreate("sym");
+    oRoots.sym = oSymbolCreate(oRoots.tmp);
+    oNamespaceBind(oRoots.ns, oRoots.sym, oRoots.sharedStr);
+    while (oAtomicGetUword(&threadTestLatch) != 2) {
+        oSleepMillis(0);
+    }
     
     oENDVOIDFN
 }
@@ -606,6 +691,7 @@ int main(int argc, char** argv) {
     testSimpleCopySharedDoesNotCrash();
 	testComplicatedCopyShared();
     testCreateThreadDoesNotCrash();
+    testThreadsThrashingNamespace();
     
 	return 0;
 }

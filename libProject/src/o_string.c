@@ -50,7 +50,16 @@ static void finalizer(oObject obj) {
 }
 
 int oStringCompare(oStringRef x, oStringRef y) {
-    return x == y ? 0 : oNativeStringCompare(x->str, y->str);
+    if(x == y) {
+        return 0;
+    }
+    if(x == NULL && y != NULL) {
+        return -1;
+    }
+    if(y == NULL && x != NULL) {
+        return 1;
+    }
+    return oNativeStringCompare(x->str, y->str);
 }
 
 o_bool _oStringEquals(oThreadContextRef ctx, oStringRef str1, oStringRef str2) {

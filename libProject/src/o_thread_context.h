@@ -9,7 +9,7 @@ struct oThreadContext {
     oRuntimeRef runtime;
     oHeapRef heap;
 	oErrorRef error;
-	oNamespaceRef currentNs;
+	volatile oNamespaceRef currentNs;
     oRootSetRef roots;
 	volatile uword rootsSemaphore;
     oNativeThreadRef thread;

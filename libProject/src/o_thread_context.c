@@ -64,10 +64,10 @@ void oThreadContextDestroy(oThreadContextRef ctx) {
 }
 
 void oThreadContextSetNS(oThreadContextRef ctx, oNamespaceRef ns) {
-	ctx->currentNs = ns;
+    oAtomicSetPointer((volatile pointer*)&ctx->currentNs, ns);
 }
 
 oNamespaceRef oThreadContextGetNS(oThreadContextRef ctx) {
-	return ctx->currentNs;
+    return oAtomicGetPointer((volatile pointer*)&ctx->currentNs);
 }
 
