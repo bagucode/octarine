@@ -457,7 +457,7 @@ static void collectGarbage(oRuntimeRef rt, oHeapRef heap) {
 				binding = (oNSBindingRef)ns->bindings->table[j].val;
 				if(binding && binding->isShared == shared) {
 					if(shared) {
-                        markGraph(rt, ns->bindings->table[j].key, shared);
+	                    markGraph(rt, ns->bindings->table[j].key, shared);
 						markGraph(rt, binding->value, shared);
 					}
 					else {
@@ -502,6 +502,8 @@ static void collectGarbage(oRuntimeRef rt, oHeapRef heap) {
 						while(oAtomicGetUword(&lst->ctx->rootsSemaphore) != 2) {
 							oSleepMillis(0); // Yield
 						}
+						// Explicit break to avoid another atomic get
+						break;
 					}
 				}
 			}

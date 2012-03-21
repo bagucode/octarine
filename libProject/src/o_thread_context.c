@@ -68,6 +68,5 @@ void oThreadContextSetNS(oThreadContextRef ctx, oNamespaceRef ns) {
 }
 
 oNamespaceRef oThreadContextGetNS(oThreadContextRef ctx) {
-    return oAtomicGetPointer((volatile pointer*)&ctx->currentNs);
+    return (oNamespaceRef)oAtomicGetPointer((volatile pointer*)&ctx->currentNs);
 }
-

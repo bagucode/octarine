@@ -49,17 +49,21 @@ oStringRef _oNamespaceGetName(oThreadContextRef ctx, oNamespaceRef ns) {
 
 oObject _oNamespaceBind(oThreadContextRef ctx, oNamespaceRef ns, oSymbolRef key, oObject value) {
 	oNSBindingRef binding;
+	oROOTS(ctx)
 	oSymbolRef keyCopy;
+	oENDROOTS
 
     // Even though this copy may not be needed we have to do the
     // copyShared call before getting the bindingslock or
     // there can be a deadlock between this function and the GC
-    keyCopy = (oSymbolRef)_oHeapCopyObjectShared(ctx, key);
-    if(keyCopy == NULL) {
+    oRoots.keyCopy = (oSymbolRef)_oHeapCopyObjectShared(ctx, key);
+    if(oRoots.keyCopy == NULL) {
         return NULL;
     }
     
+	oAtomicSetUword(&ctx->rootsSemaphore, 2);
 	oSpinLockLock(ns->bindingsLock);
+	oAtomicSetUword(&ctx->rootsSemaphore, 0);
 
 	binding = (oNSBindingRef)CuckooGet(ns->bindings, key);
 
@@ -78,13 +82,14 @@ oObject _oNamespaceBind(oThreadContextRef ctx, oNamespaceRef ns, oSymbolRef key,
 			binding->threadLocals = CuckooCreate(2, NULL, NULL);
 			CuckooPut(binding->threadLocals, ctx, value);
 		}
-		CuckooPut(ns->bindings, keyCopy, binding);
+		CuckooPut(ns->bindings, oRoots.keyCopy, binding);
 	}
 	// Binding exists and is thread local and so is our new value so we add it to the thread local table
 	else {
 		CuckooPut(binding->threadLocals, ctx, value);
 	}
 
+	oENDVOIDFN
 	oSpinLockUnlock(ns->bindingsLock);
 	return value;
 }
@@ -93,7 +98,9 @@ oObject _oNamespaceLookup(oThreadContextRef ctx, oNamespaceRef ns, oSymbolRef ke
 	oNSBindingRef binding;
 	oObject ret = NULL;
 
+	oAtomicSetUword(&ctx->rootsSemaphore, 2);
 	oSpinLockLock(ns->bindingsLock);
+	oAtomicSetUword(&ctx->rootsSemaphore, 0);
 
 	binding = (oNSBindingRef)CuckooGet(ns->bindings, key);
 	if(binding) {
