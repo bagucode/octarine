@@ -454,16 +454,18 @@ static void collectGarbage(oRuntimeRef rt, oHeapRef heap) {
 			markGraph(rt, ns, shared);
 			oSpinLockLock(ns->bindingsLock);
 			for(j = 0; j < ns->bindings->capacity; ++j) {
-				binding = (oNSBindingRef)ns->bindings->table[j].val;
-				if(binding && binding->isShared == shared) {
-					if(shared) {
-	                    markGraph(rt, ns->bindings->table[j].key, shared);
-						markGraph(rt, binding->value, shared);
-					}
-					else {
-						obj = (oObject)CuckooGet(binding->threadLocals, ctx);
-						if(obj) {
-							markGraph(rt, obj, shared);
+				if(ns->bindings->table[j].key != NULL) {
+					markGraph(rt, ns->bindings->table[j].key, shared);
+					binding = (oNSBindingRef)ns->bindings->table[j].val;
+					if(binding && binding->isShared == shared) {
+						if(shared) {
+							markGraph(rt, binding->value, shared);
+						}
+						else {
+							obj = (oObject)CuckooGet(binding->threadLocals, ctx);
+							if(obj) {
+								markGraph(rt, obj, shared);
+							}
 						}
 					}
 				}
