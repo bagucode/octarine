@@ -605,7 +605,7 @@ void threadFnThrashNamespace(oThreadContextRef ctx, void* arg) {
     while(check == o_false) {
         oRoots.tmp = oStringCreate("random data (4)");
         oRoots.tmp = oListObjCreate(oRoots.tmp);
-        oHeapCopyObjectShared(oRoots.tmp);
+        oRoots.tmp = oHeapCopyObjectShared(oRoots.tmp);
         oNamespaceBind(oRoots.ns, oRoots.bindMe, oRoots.tmp);
         oRoots.val = oNamespaceLookup(oRoots.ns, oRoots.waitForIt);
         check = oStringEquals(oRoots.compare, oRoots.val);
@@ -648,14 +648,14 @@ void testThreadsThrashingNamespace() {
     oHeapCopyObjectShared(oRoots.sharedStr);
     oRoots.sharedStr = oStringCreate("four");
     oHeapCopyObjectShared(oRoots.sharedStr);
-    oRoots.sharedStr = oStringCreate("must equal");
-    oHeapCopyObjectShared(oRoots.sharedStr);
     while (oAtomicGetUword(&threadTestLatch) == 0) {
         oHeapForceGC(rt, rt->globals);
     }
     oRoots.ns = oThreadContextGetNS(other);
     oRoots.tmp = oStringCreate("sym");
     oRoots.sym = oSymbolCreate(oRoots.tmp);
+    oRoots.sharedStr = oStringCreate("must equal");
+    oRoots.sharedStr = (oStringRef)oHeapCopyObjectShared(oRoots.sharedStr);
     oNamespaceBind(oRoots.ns, oRoots.sym, oRoots.sharedStr);
     while (oAtomicGetUword(&threadTestLatch) != 2) {
         oSleepMillis(0);
