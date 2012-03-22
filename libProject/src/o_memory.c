@@ -315,9 +315,9 @@ void oMemoryPushFrame(oThreadContextRef ctx,
                       uword frameSize) {
     oRootSetRef newRoots;
 
-	if(oAtomicGetUword(&ctx->gcRequestedFlag) == 1) {
+	if(ctx->gcRequestedFlag == 1) {
 		oAtomicSetUword(&ctx->gcProceedFlag, 1);
-		while(oAtomicGetUword(&ctx->gcRequestedFlag) != 0) {
+		while(ctx->gcRequestedFlag != 0) {
 			oSleepMillis(1); // Yield
 		}
 	}
@@ -337,9 +337,9 @@ void oMemoryPopFrame(oThreadContextRef ctx) {
 	ctx->roots = ctx->roots->prev;
     oFree(pop);
 
-	if(oAtomicGetUword(&ctx->gcRequestedFlag) == 1) {
+	if(ctx->gcRequestedFlag == 1) {
 		oAtomicSetUword(&ctx->gcProceedFlag, 1);
-		while(oAtomicGetUword(&ctx->gcRequestedFlag) != 0) {
+		while(ctx->gcRequestedFlag != 0) {
 			oSleepMillis(1); // Yield
 		}
 	}
@@ -487,7 +487,7 @@ static void collectGarbage(oRuntimeRef rt, oHeapRef heap) {
 		while(lst) {
 			if(ctx != lst->ctx) {
                 oAtomicSetUword(&lst->ctx->gcRequestedFlag, 1);
-				while(oAtomicGetUword(&lst->ctx->gcProceedFlag) != 1) {
+				while(lst->ctx->gcProceedFlag != 1) {
                     oSleepMillis(1); // Yield
 				}
 			}
