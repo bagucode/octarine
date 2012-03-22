@@ -610,7 +610,7 @@ void threadFnThrashNamespace(oThreadContextRef ctx, void* arg) {
         oRoots.val = oNamespaceLookup(oRoots.ns, oRoots.waitForIt);
         check = oStringEquals(oRoots.compare, oRoots.val);
         ++count;
-        if(count == 10000) {
+        if(count == 100) {
             oAtomicSetUword(&threadTestLatch, 1);
         }
     }
