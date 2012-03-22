@@ -14,7 +14,7 @@ typedef signed __int64 int64_t;
 typedef unsigned __int64 uint64_t;
 #endif
 
-#if defined(_WIN64) || defined(__LP64__)
+#if defined(_WIN64) || defined(__LP64__) || defined(_M_AMD64) || defined(_M_X64)
 # define OCTARINE64
 #else
 # define OCTARINE32

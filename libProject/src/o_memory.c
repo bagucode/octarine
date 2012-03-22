@@ -504,7 +504,6 @@ static void collectGarbage(oRuntimeRef rt, oHeapRef heap) {
 			}
 			if(ctx != lst->ctx) {
                 oAtomicSetUword(&lst->ctx->gcRequestedFlag, 0);
-				//oAtomicSetUword(&lst->ctx->gcProceedFlag, 0);
 			}
 			lst = lst->next;
 		}
