@@ -610,7 +610,7 @@ void threadFnThrashNamespace(oThreadContextRef ctx, void* arg) {
         oRoots.val = oNamespaceLookup(oRoots.ns, oRoots.waitForIt);
         check = oStringEquals(oRoots.compare, oRoots.val);
         ++count;
-        if(count == 100) {
+        if(count == 10000) {
             oAtomicSetUword(&threadTestLatch, 1);
         }
     }
@@ -658,7 +658,7 @@ void testThreadsThrashingNamespace() {
     oRoots.sharedStr = (oStringRef)oHeapCopyObjectShared(oRoots.sharedStr);
     oNamespaceBind(oRoots.ns, oRoots.sym, oRoots.sharedStr);
     while (oAtomicGetUword(&threadTestLatch) != 2) {
-        oSleepMillis(0);
+        oSleepMillis(1);
     }
     
     oENDVOIDFN

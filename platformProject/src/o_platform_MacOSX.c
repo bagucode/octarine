@@ -229,7 +229,7 @@ void oSpinLockLock(oSpinLockRef lock) {
             ++spins;
         }
         else {
-            oSleepMillis(0); // Yield
+            oSleepMillis(1); // Yield
         }
     }
 }

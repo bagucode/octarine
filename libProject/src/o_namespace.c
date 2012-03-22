@@ -61,9 +61,9 @@ oObject _oNamespaceBind(oThreadContextRef ctx, oNamespaceRef ns, oSymbolRef key,
         return NULL;
     }
     
-	oAtomicSetUword(&ctx->rootsSemaphore, 2);
+	oAtomicSetUword(&ctx->gcProceedFlag, 1);
 	oSpinLockLock(ns->bindingsLock);
-	oAtomicSetUword(&ctx->rootsSemaphore, 0);
+	oAtomicSetUword(&ctx->gcProceedFlag, 0);
 
 	binding = (oNSBindingRef)CuckooGet(ns->bindings, key);
 
@@ -98,9 +98,9 @@ oObject _oNamespaceLookup(oThreadContextRef ctx, oNamespaceRef ns, oSymbolRef ke
 	oNSBindingRef binding;
 	oObject ret = NULL;
 
-	oAtomicSetUword(&ctx->rootsSemaphore, 2);
+	oAtomicSetUword(&ctx->gcProceedFlag, 1);
 	oSpinLockLock(ns->bindingsLock);
-	oAtomicSetUword(&ctx->rootsSemaphore, 0);
+	oAtomicSetUword(&ctx->gcProceedFlag, 0);
 
 	binding = (oNSBindingRef)CuckooGet(ns->bindings, key);
 	if(binding) {

@@ -11,7 +11,8 @@ struct oThreadContext {
 	oErrorRef error;
 	volatile oNamespaceRef currentNs;
     oRootSetRef roots;
-	volatile uword rootsSemaphore;
+    volatile uword gcRequestedFlag;
+    volatile uword gcProceedFlag;
     oNativeThreadRef thread;
 };
 
