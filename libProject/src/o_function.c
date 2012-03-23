@@ -2,6 +2,7 @@
 #include "o_memory.h"
 #include "o_thread_context.h"
 #include "o_runtime.h"
+#include "o_error.h"
 
 oParameterRef _oParameterCreate(oThreadContextRef ctx, oStringRef name, oTypeRef type) {
 }
@@ -13,7 +14,7 @@ oSignatureRef _oSignatureCreate(oThreadContextRef ctx, oTypeRef returnType, oArr
     
     oRoots.sig = (oSignatureRef)oHeapAlloc(ctx->runtime->builtInTypes.signature);
     oRoots.sig->retType = returnType;
-    oRoots.sig->parameters = oHeapCopyObjectShared(parameters);
+    oRoots.sig->parameters = (oArrayRef)oHeapCopyObjectShared(parameters);
     oRETURN(oRoots.sig);
 
     oENDFN(oSignatureRef)
