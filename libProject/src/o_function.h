@@ -14,6 +14,8 @@ struct oParameter {
 oParameterRef _oParameterCreate(oThreadContextRef ctx, oStringRef name, oTypeRef type);
 #define oParameterCreate(name, type) _oC(_oParameterCreate, name, type)
 
+o_bool oParameterEquals(oThreadContextRef ctx, oParameterRef p1, oParameterRef p2);
+
 struct oSignature {
     oTypeRef retType;
     oArrayRef parameters; /* array of oParameter */
