@@ -8,13 +8,13 @@
 #include "o_array.h"
 #include <stddef.h>
 
-oParameterRef _oParameterCreate(oThreadContextRef ctx, oStringRef name, oTypeRef type) {
+oParameterRef _oParameterCreate(oThreadContextRef ctx, oTypeRef type) {
 	oROOTS(ctx)
 	oParameterRef par;
 	oENDROOTS;
 
 	oRoots.par = (oParameterRef)oHeapAlloc(ctx->runtime->builtInTypes.parameter);
-	oRoots.par->name = name;
+	//oRoots.par->name = name;
 	oRoots.par->type = type;
 	oRETURN(oRoots.par);
 
@@ -22,21 +22,10 @@ oParameterRef _oParameterCreate(oThreadContextRef ctx, oStringRef name, oTypeRef
 }
 
 o_bool oParameterEquals(oThreadContextRef ctx, oParameterRef p1, oParameterRef p2) {
-	o_bool result;
-	oROOTS(ctx)
-	oENDROOTS;
 	if(p1 == p2) {
-		result = o_true;
-		oRETURNVOID;
+		return o_true;
 	}
-	result = oTypeEquals(p1->type, p2->type);
-	if(!result) {
-		oRETURNVOID;
-	}
-	result = oStringEquals(p1->name, p1->name);
-
-	oENDVOIDFN;
-	return result;
+    return _oTypeEquals(NULL, p1->type, p2->type);
 }
 
 oSignatureRef _oSignatureCreate(oThreadContextRef ctx, oTypeRef returnType, oArrayRef parameters) {
@@ -55,54 +44,126 @@ oSignatureRef _oSignatureCreate(oThreadContextRef ctx, oTypeRef returnType, oArr
 o_bool oSignatureEquals(oThreadContextRef ctx,
                         oSignatureRef sig1,
                         oSignatureRef sig2) {
-	o_bool result;
 	oParameterRef* params1;
 	oParameterRef* params2;
 	uword i;
-    oROOTS(ctx)
-	oENDROOTS;
 
 	if(sig1 == sig2) {
-		result = o_true;
-		oRETURNVOID;
+        return o_true;
 	}
-	result = oTypeEquals(sig1->retType, sig2->retType);
-	if(!result) {
-		oRETURNVOID;
+	if(!_oTypeEquals(NULL, sig1->retType, sig2->retType)) {
+		return o_false;
 	}
-	result = sig1->parameters->num_elements == sig2->parameters->num_elements;
-	if(!result) {
-		oRETURNVOID;
+	if(sig1->parameters->num_elements != sig2->parameters->num_elements) {
+		return o_false;
 	}
 	params1 = (oParameterRef*)oArrayDataPointer(sig1->parameters);
 	params2 = (oParameterRef*)oArrayDataPointer(sig2->parameters);
 	for(i = 0; i < sig1->parameters->num_elements; ++i) {
-		result = oParameterEquals(ctx, params1[i], params2[i]);
-		if(!result) {
-			oRETURNVOID;
+		if(!oParameterEquals(NULL, params1[i], params2[i])) {
+			return o_false;
 		}
 	}
 
-	oENDVOIDFN;
-	return result;
+	return o_true;
+}
+
+oFunctionOverloadRef _oFunctionOverloadRegisterNative(oThreadContextRef ctx,
+                                                      oSignatureRef sig,
+                                                      oArrayRef attributes,
+                                                      pointer fn) {
+    oFunctionOverloadRef overload;
+    oROOTS(ctx)
+    oENDROOTS;
+    
+    overload = oHeapAlloc(ctx->runtime->builtInTypes.functionOverload);
+    overload->attributes = attributes;
+    overload->code = fn;
+    overload->llvmFunction = NULL;
+    overload->signature = sig;
+    oRETURN(overload);
+    
+    oENDFN(oFunctionOverloadRef);
+}
+
+static o_bool CuckooSignatureCompare(pointer key1, pointer key2) {
+    return oSignatureEquals(NULL, (oSignatureRef)key1, (oSignatureRef)key2);
+}
+
+static uword CuckooSignatureHash(pointer key) {
+    oSignatureRef sig = (oSignatureRef)key;
+	oParameterRef* params;
+    uword i;
+    uword hash = (uword)sig->retType;
+
+    params = oArrayDataPointer(sig->parameters);
+	for(i = 0; i < sig->parameters->num_elements; ++i) {
+        hash += (uword)params[i]->type * 31;
+	}
+    
+    return hash;
+}
+
+oFunctionRef _oFunctionCreate(oThreadContextRef ctx, oFunctionOverloadRef initialImpl) {
+    oFunctionRef fn;
+    oROOTS(ctx)
+    oENDROOTS;
+    
+    fn = oHeapAlloc(ctx->runtime->builtInTypes.function);
+    fn->lock = oSpinLockCreate(4000);
+    if(fn->lock == NULL) {
+        ctx->error = ctx->runtime->builtInErrors.outOfMemory;
+        oRETURN(NULL);
+    }
+    fn->overloads = CuckooCreate(2, CuckooSignatureCompare, CuckooSignatureHash);
+    if(fn->overloads == NULL) {
+        ctx->error = ctx->runtime->builtInErrors.outOfMemory;
+        oRETURN(NULL);
+    }
+    
+    CuckooPut(fn->overloads, initialImpl->signature, initialImpl);
+    
+    oRETURN(fn);
+    
+    oENDFN(oFunctionRef);
+}
+
+void _oFunctionAddOverload(oThreadContextRef ctx, oFunctionRef fn, oFunctionOverloadRef impl) {
+    oSpinLockLock(fn->lock);
+    CuckooPut(fn->overloads, impl->signature, impl);
+    oSpinLockUnlock(fn->lock);
+}
+
+oFunctionOverloadRef _oFunctionFindOverload(oThreadContextRef ctx, oFunctionRef fn, oSignatureRef sig) {
+    oFunctionOverloadRef overload;
+    oSpinLockLock(fn->lock);
+    overload = CuckooGet(fn->overloads, sig);
+    oSpinLockUnlock(fn->lock);
+    return overload;
+}
+
+pointer _oFunctionOverloadGetFnPointer(oThreadContextRef ctx, oFunctionOverloadRef impl) {
+    return impl->code;
+}
+
+static void functionFinalizer(oObject obj) {
+    oFunctionRef fn = (oFunctionRef)obj;
+    oSpinLockDestroy(fn->lock);
+    CuckooDestroy(fn->overloads);
 }
 
 void o_bootstrap_parameter_type_init(oThreadContextRef ctx) {
     oFieldRef *fields;
-	ctx->runtime->builtInTypes.parameter->fields = o_bootstrap_type_create_field_array(ctx->runtime, 2);
+	ctx->runtime->builtInTypes.parameter->fields = o_bootstrap_type_create_field_array(ctx->runtime, 1);
     ctx->runtime->builtInTypes.parameter->kind = o_T_OBJECT;
 	ctx->runtime->builtInTypes.parameter->name = o_bootstrap_string_create(ctx->runtime, "Parameter");
 	ctx->runtime->builtInTypes.parameter->size = sizeof(oParameter);
 
     fields = (oFieldRef*)oArrayDataPointer(ctx->runtime->builtInTypes.parameter->fields);
     
-    fields[0]->name = o_bootstrap_string_create(ctx->runtime, "name");
-	fields[0]->offset = offsetof(oParameter, name);
-    fields[0]->type = ctx->runtime->builtInTypes.string;
-
-    fields[1]->name = o_bootstrap_string_create(ctx->runtime, "type");
-	fields[1]->offset = offsetof(oParameter, type);
-    fields[1]->type = ctx->runtime->builtInTypes.type;
+    fields[0]->name = o_bootstrap_string_create(ctx->runtime, "type");
+	fields[0]->offset = offsetof(oParameter, type);
+    fields[0]->type = ctx->runtime->builtInTypes.type;
 
 	ctx->runtime->builtInTypes.parameter->llvmType = _oTypeCreateLLVMType(ctx, ctx->runtime->builtInTypes.parameter);
 }
@@ -168,6 +229,7 @@ void o_bootstrap_function_type_init(oThreadContextRef ctx) {
     ctx->runtime->builtInTypes.function->kind = o_T_OBJECT;
 	ctx->runtime->builtInTypes.function->name = o_bootstrap_string_create(ctx->runtime, "Function");
 	ctx->runtime->builtInTypes.function->size = sizeof(oFunction);
+    ctx->runtime->builtInTypes.function->finalizer = functionFinalizer;
     
     // Have to do the llvm type manually because of the "secret" fields
     

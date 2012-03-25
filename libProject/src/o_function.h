@@ -7,12 +7,12 @@
 #include "llvm-c/Core.h"
 
 struct oParameter {
-    oStringRef name;
+    //oStringRef name;
     oTypeRef type;
 };
 
-oParameterRef _oParameterCreate(oThreadContextRef ctx, oStringRef name, oTypeRef type);
-#define oParameterCreate(name, type) _oC(_oParameterCreate, name, type)
+oParameterRef _oParameterCreate(oThreadContextRef ctx, oTypeRef type);
+#define oParameterCreate(name, type) _oC(_oParameterCreate, type)
 
 o_bool oParameterEquals(oThreadContextRef ctx, oParameterRef p1, oParameterRef p2);
 
