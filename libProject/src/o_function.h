@@ -51,7 +51,6 @@ oFunctionOverloadRef _oFunctionOverloadRegisterNative(oThreadContextRef ctx,
 #define oFunctionOverloadRegisterNative(sig, attrs, fn) _oC(_oFunctionOverloadRegisterNative, sig, attrs, fn)
 
 struct oFunction {
-    // Need name?
     oSpinLockRef lock;
     CuckooRef overloads;
 };

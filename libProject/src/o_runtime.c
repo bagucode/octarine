@@ -60,8 +60,8 @@ static void alloc_builtInTypes(oRuntimeRef rt) {
 	rt->builtInTypes.name_space = alloc_built_in(rt, heap);
 	rt->builtInTypes.parameter = alloc_built_in(rt, heap);
 	rt->builtInTypes.signature = alloc_built_in(rt, heap);
-	//rt->builtInTypes.function = alloc_built_in(rt, heap);
-	//rt->builtInTypes.functionOverload = alloc_built_in(rt, heap);
+	rt->builtInTypes.functionOverload = alloc_built_in(rt, heap);
+	rt->builtInTypes.function = alloc_built_in(rt, heap);
 #ifdef __GNUC__
 #ifdef OCTARINE32
 	rt->builtInTypes.i64->alignment = 4;
