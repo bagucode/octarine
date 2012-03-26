@@ -19,6 +19,7 @@ o_bool oParameterEquals(oThreadContextRef ctx, oParameterRef p1, oParameterRef p
 struct oSignature {
     oTypeRef retType;
     oArrayRef parameters; /* array of oParameter */
+	uword hashCode;
 };
 
 oSignatureRef _oSignatureCreate(oThreadContextRef ctx, oTypeRef returnType, oArrayRef parameters);

@@ -29,6 +29,8 @@ o_bool oParameterEquals(oThreadContextRef ctx, oParameterRef p1, oParameterRef p
 }
 
 oSignatureRef _oSignatureCreate(oThreadContextRef ctx, oTypeRef returnType, oArrayRef parameters) {
+	oParameterRef* params;
+    uword i;
     oROOTS(ctx)
     oSignatureRef sig;
     oENDROOTS
@@ -36,6 +38,13 @@ oSignatureRef _oSignatureCreate(oThreadContextRef ctx, oTypeRef returnType, oArr
     oRoots.sig = (oSignatureRef)oHeapAlloc(ctx->runtime->builtInTypes.signature);
     oRoots.sig->retType = returnType;
     oRoots.sig->parameters = parameters;
+	oRoots.sig->hashCode = (uword)oRoots.sig->retType;
+
+    params = (oParameterRef*)oArrayDataPointer(oRoots.sig->parameters);
+	for(i = 0; i < oRoots.sig->parameters->num_elements; ++i) {
+		oRoots.sig->hashCode += (uword)params[i]->type * 31;
+	}
+    
     oRETURN(oRoots.sig);
 
     oENDFN(oSignatureRef)
@@ -101,19 +110,8 @@ static o_bool CuckooSignatureCompare(pointer key1, pointer key2) {
 }
 
 static uword CuckooSignatureHash(pointer key) {
-    Flytta det har till konstruktorn for signature.
-    De ar immutable sa det finns ingen anledning att gora det mer an en gang
     oSignatureRef sig = (oSignatureRef)key;
-	oParameterRef* params;
-    uword i;
-    uword hash = (uword)sig->retType;
-
-    params = oArrayDataPointer(sig->parameters);
-	for(i = 0; i < sig->parameters->num_elements; ++i) {
-        hash += (uword)params[i]->type * 31;
-	}
-    
-    return hash;
+	return sig->hashCode;
 }
 
 oFunctionRef _oFunctionCreate(oThreadContextRef ctx, oFunctionOverloadRef initialImpl) {
@@ -185,7 +183,7 @@ void o_bootstrap_parameter_type_init(oThreadContextRef ctx) {
 
 void o_bootstrap_signature_type_init(oThreadContextRef ctx) {
     oFieldRef *fields;
-	ctx->runtime->builtInTypes.signature->fields = o_bootstrap_type_create_field_array(ctx->runtime, 2);
+	ctx->runtime->builtInTypes.signature->fields = o_bootstrap_type_create_field_array(ctx->runtime, 3);
     ctx->runtime->builtInTypes.signature->kind = o_T_OBJECT;
 	ctx->runtime->builtInTypes.signature->name = o_bootstrap_string_create(ctx->runtime, "Signature");
 	ctx->runtime->builtInTypes.signature->size = sizeof(oSignature);
@@ -199,6 +197,10 @@ void o_bootstrap_signature_type_init(oThreadContextRef ctx) {
     fields[1]->name = o_bootstrap_string_create(ctx->runtime, "parameters");
 	fields[1]->offset = offsetof(oSignature, parameters);
     fields[1]->type = ctx->runtime->builtInTypes.array;
+
+    fields[2]->name = o_bootstrap_string_create(ctx->runtime, "hash-code");
+	fields[2]->offset = offsetof(oSignature, parameters);
+    fields[2]->type = ctx->runtime->builtInTypes.uword;
 
 	ctx->runtime->builtInTypes.signature->llvmType = _oTypeCreateLLVMType(ctx, ctx->runtime->builtInTypes.signature);
 }
