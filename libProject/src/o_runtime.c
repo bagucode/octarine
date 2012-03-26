@@ -194,6 +194,13 @@ static void init_builtInTypes2(oThreadContextRef ctx) {
 }
 
 static void init_builtInFunctions(oThreadContextRef ctx) {
+    oFunctionOverloadRef overload;
+    oSignature sig;
+    
+    sig = oSigna
+    
+    overload = _oFunctionOverloadRegisterNative(ctx, <#oSignatureRef sig#>, <#oArrayRef attributes#>, <#pointer fn#>)
+    ctx->runtime->builtInFunctions.equals = _oFunctionCreate(<#overload#>)
 }
 
 static void init_builtInConstants(oThreadContextRef ctx) {
@@ -351,7 +358,6 @@ oRuntimeRef oRuntimeCreate() {
 	init_builtInTypes2(ctx);
     init_builtInConstants(ctx);
     init_builtInErrors(ctx);
-    init_builtInFunctions(ctx);
 
 	// All built in types, functions and constants are now initialized.
 	// Create the octarine namespace and bind them to it so that they can
@@ -366,6 +372,9 @@ oRuntimeRef oRuntimeCreate() {
 	// are created in the same process but it won't break if initialized
 	// many times so putting the init call here is the most convenient place.
 	o_bootstrap_reader_init();
+
+    // Right place for this?
+    init_builtInFunctions(ctx);
 
 	// Force a GC of the main thread and shared heaps to clean up any mess
 	// we made with temporary objects during init.

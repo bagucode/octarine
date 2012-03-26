@@ -73,17 +73,27 @@ oFunctionOverloadRef _oFunctionOverloadRegisterNative(oThreadContextRef ctx,
                                                       oArrayRef attributes,
                                                       pointer fn) {
     oFunctionOverloadRef overload;
-    oROOTS(ctx)
-    oENDROOTS;
     
-    overload = oHeapAlloc(ctx->runtime->builtInTypes.functionOverload);
-    overload->attributes = attributes;
+    // Allocate in shared heap
+    overload = (oFunctionOverloadRef)o_bootstrap_object_alloc(ctx->runtime, ctx->runtime->builtInTypes.functionOverload, sizeof(oFunctionOverload));
+    if(overload == NULL) {
+        ctx->error = ctx->runtime->builtInErrors.outOfMemory;
+        return NULL;
+    }
+
+    overload->attributes = _oHeapCopyObjectShared(ctx, attributes);
+    if(overload->attributes == NULL) {
+        return NULL;
+    }
+
+    overload->signature = _oHeapCopyObjectShared(ctx, sig);
+    if(overload->signature == NULL) {
+        return NULL;
+    }
+
     overload->code = fn;
     overload->llvmFunction = NULL;
-    overload->signature = sig;
-    oRETURN(overload);
-    
-    oENDFN(oFunctionOverloadRef);
+    return overload;
 }
 
 static o_bool CuckooSignatureCompare(pointer key1, pointer key2) {
@@ -91,6 +101,8 @@ static o_bool CuckooSignatureCompare(pointer key1, pointer key2) {
 }
 
 static uword CuckooSignatureHash(pointer key) {
+    Flytta det har till konstruktorn for signature.
+    De ar immutable sa det finns ingen anledning att gora det mer an en gang
     oSignatureRef sig = (oSignatureRef)key;
 	oParameterRef* params;
     uword i;
@@ -106,26 +118,29 @@ static uword CuckooSignatureHash(pointer key) {
 
 oFunctionRef _oFunctionCreate(oThreadContextRef ctx, oFunctionOverloadRef initialImpl) {
     oFunctionRef fn;
-    oROOTS(ctx)
-    oENDROOTS;
-    
-    fn = oHeapAlloc(ctx->runtime->builtInTypes.function);
+
+    // Allocate in shared heap
+    fn = (oFunctionRef)o_bootstrap_object_alloc(ctx->runtime, ctx->runtime->builtInTypes.function, sizeof(oFunction));
+    if(fn == NULL) {
+        ctx->error = ctx->runtime->builtInErrors.outOfMemory;
+        return NULL;
+    }
+
     fn->lock = oSpinLockCreate(4000);
     if(fn->lock == NULL) {
         ctx->error = ctx->runtime->builtInErrors.outOfMemory;
-        oRETURN(NULL);
+        return NULL;
     }
+
     fn->overloads = CuckooCreate(2, CuckooSignatureCompare, CuckooSignatureHash);
     if(fn->overloads == NULL) {
         ctx->error = ctx->runtime->builtInErrors.outOfMemory;
-        oRETURN(NULL);
+        return NULL;
     }
     
     CuckooPut(fn->overloads, initialImpl->signature, initialImpl);
-    
-    oRETURN(fn);
-    
-    oENDFN(oFunctionRef);
+
+    return fn;
 }
 
 void _oFunctionAddOverload(oThreadContextRef ctx, oFunctionRef fn, oFunctionOverloadRef impl) {
