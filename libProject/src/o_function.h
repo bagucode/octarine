@@ -33,7 +33,7 @@ o_bool oSignatureEquals(oThreadContextRef ctx,
 struct oFunctionOverload {
     oSignatureRef signature;
     oArrayRef attributes;
-    LLVMTypeRef llvmFunction;
+    LLVMValueRef llvmFunction;
     pointer code;
 };
 
@@ -66,7 +66,8 @@ void _oFunctionAddOverload(oThreadContextRef ctx, oFunctionRef fn, oFunctionOver
 oFunctionOverloadRef _oFunctionFindOverload(oThreadContextRef ctx, oFunctionRef fn, oSignatureRef sig);
 #define oFunctionFindOverload(fn, sig) _oC(_oFunctionFindOverload, fn, sig)
 
-oFunctionOverloadRef _oFunctionFindOverloadConst(oThreadContextRef ctx, oFunctionRef fn, oTypeRef* types, uword ntypes);
+// types must be null-terminated
+oFunctionOverloadRef _oFunctionFindOverloadConst(oThreadContextRef ctx, oFunctionRef fn, oTypeRef* types);
 
 pointer _oFunctionOverloadGetFnPointer(oThreadContextRef ctx, oFunctionOverloadRef impl);
 #define oFunctionOverloadGetFnPointer(impl) _oC(_oFunctionOverloadGetFnPointer, impl)

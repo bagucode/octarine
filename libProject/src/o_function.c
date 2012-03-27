@@ -50,6 +50,29 @@ oSignatureRef _oSignatureCreate(oThreadContextRef ctx, oTypeRef returnType, oArr
     oENDFN(oSignatureRef)
 }
 
+static LLVMTypeRef llvmTypeForSignature(oThreadContextRef ctx, oSignatureRef sig) {
+	uword i;
+	LLVMTypeRef fnType, retType;
+	oParameterRef* params = (oParameterRef*)oArrayDataPointer(sig->parameters);
+	LLVMTypeRef* paramTypes = (LLVMTypeRef*)oMalloc(sizeof(LLVMTypeRef) * sig->parameters->num_elements);
+
+	if(sig->retType->kind == o_T_OBJECT) {
+		retType = LLVMPointerType(sig->retType->llvmType, 0);
+	} else {
+		retType = sig->retType->llvmType;
+	}
+	for(i = 0; i < sig->parameters->num_elements; ++i) {
+		if(params[i]->type->kind == o_T_OBJECT) {
+			paramTypes[i] = LLVMPointerType(params[i]->type->llvmType, 0);
+		} else {
+			paramTypes[i] = params[i]->type->llvmType;
+		}
+	}
+	fnType = LLVMFunctionType(retType, paramTypes, sig->parameters->num_elements, o_false);
+	oFree(paramTypes);
+	return fnType;
+}
+
 o_bool oSignatureEquals(oThreadContextRef ctx,
                         oSignatureRef sig1,
                         oSignatureRef sig2) {
@@ -82,6 +105,7 @@ oFunctionOverloadRef _oFunctionOverloadRegisterNative(oThreadContextRef ctx,
                                                       oArrayRef attributes,
                                                       pointer fn) {
     oFunctionOverloadRef overload;
+	char* un;
     
     // Allocate in shared heap
     overload = (oFunctionOverloadRef)o_bootstrap_object_alloc(ctx->runtime, ctx->runtime->builtInTypes.functionOverload, sizeof(oFunctionOverload));
@@ -101,7 +125,14 @@ oFunctionOverloadRef _oFunctionOverloadRegisterNative(oThreadContextRef ctx,
     }
 
     overload->code = fn;
-    overload->llvmFunction = NULL;
+	un = oGenUniqueName(ctx);
+    if(un == NULL) {
+        ctx->error = ctx->runtime->builtInErrors.outOfMemory;
+        return NULL;
+    }
+	overload->llvmFunction = LLVMAddFunction(ctx->runtime->llvmModule, un, llvmTypeForSignature(ctx, sig));
+	oFree(un);
+	LLVMAddGlobalMapping(ctx->runtime->llvmEE, overload->llvmFunction, fn);
     return overload;
 }
 
@@ -155,12 +186,8 @@ oFunctionOverloadRef _oFunctionFindOverload(oThreadContextRef ctx, oFunctionRef 
     return overload;
 }
 
-typedef struct internalSig {
-    uword ntypes;
-    oTypeRef* types;
-} internalSig;
-
-oFunctionOverloadRef _oFunctionFindOverloadConst(oThreadContextRef ctx, oFunctionRef fn, oTypeRef* types, uword ntypes) {
+// types must be null-terminated
+oFunctionOverloadRef _oFunctionFindOverloadConst(oThreadContextRef ctx, oFunctionRef fn, oTypeRef* types) {
     // TODO!
     Maste implementera denna pa nagot vis. Far andra vad som ar vardet i Cuckoo-tabellen till internalSig
     och anvanda en internalSig vid create och vanliga find med
