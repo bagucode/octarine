@@ -12,7 +12,7 @@ struct oParameter {
 };
 
 oParameterRef _oParameterCreate(oThreadContextRef ctx, oTypeRef type);
-#define oParameterCreate(name, type) _oC(_oParameterCreate, type)
+#define oParameterCreate(type) _oC(_oParameterCreate, type)
 
 o_bool oParameterEquals(oThreadContextRef ctx, oParameterRef p1, oParameterRef p2);
 
@@ -65,9 +65,6 @@ void _oFunctionAddOverload(oThreadContextRef ctx, oFunctionRef fn, oFunctionOver
 
 oFunctionOverloadRef _oFunctionFindOverload(oThreadContextRef ctx, oFunctionRef fn, oSignatureRef sig);
 #define oFunctionFindOverload(fn, sig) _oC(_oFunctionFindOverload, fn, sig)
-
-// types must be null-terminated
-oFunctionOverloadRef _oFunctionFindOverloadConst(oThreadContextRef ctx, oFunctionRef fn, oTypeRef* types);
 
 pointer _oFunctionOverloadGetFnPointer(oThreadContextRef ctx, oFunctionOverloadRef impl);
 #define oFunctionOverloadGetFnPointer(impl) _oC(_oFunctionOverloadGetFnPointer, impl)

@@ -17,12 +17,19 @@ static uword alignOffset(uword offset, uword on) {
 oArrayRef _oArrayCreate(oThreadContextRef ctx,
                        oTypeRef elemType,
                        uword num_elements) {
-    oFunctionOverloadRef eq;
+	oParameterRef* eqParams;
     oROOTS(ctx)
+	oArrayRef eqParamsArr;
+	oSignatureRef eqSig;
     oENDROOTS
     if(ctx->error) return NULL;
 	oSETRET(oHeapAllocArray(elemType, num_elements));
-    eq = oFunctionFindOverload(<#fn#>, <#sig#>)
+	oRoots.eqParamsArr = oHeapAllocArray(ctx->runtime->builtInTypes.parameter, 2);
+	eqParams = (oParameterRef*)oArrayDataPointer(oRoots.eqParamsArr);
+	eqParams[0] = oParameterCreate(elemType);
+	eqParams[1] = oParameterCreate(elemType);
+	oRoots.eqSig = oSignatureCreate(ctx->runtime->builtInTypes.o_bool, oRoots.eqParamsArr);
+	oGETRETT(oArrayRef)->elementEquals = oFunctionFindOverload(ctx->runtime->builtInFunctions.equals, oRoots.eqSig);
     oENDFN(oArrayRef)
 }
 
@@ -136,7 +143,7 @@ void _oArrayGet(oThreadContextRef ctx, oArrayRef arr, uword idx, pointer dest, o
 o_bool _oArrayEquals(oThreadContextRef ctx, oArrayRef a1, oArrayRef a2) {
     uword i;
     oObject *o1, *o2, e1, e2;
-    //o_bool(*eq)(oObject,oObject) = (o_bool(*)(oObject,oObject))a1->elementEquals->code;
+	o_bool(*eq)(oObject,oObject) = (o_bool(*)(oObject,oObject))a1->elementEquals->code;
 
     // Primitives are a pain in the rear...
     u8 *e1_8, *e2_8;
@@ -284,7 +291,7 @@ o_bool _oArrayEquals(oThreadContextRef ctx, oArrayRef a1, oArrayRef a2) {
 
 void o_bootstrap_array_init_type(oRuntimeRef rt) {
     oFieldRef *fields;
-    rt->builtInTypes.array->fields = o_bootstrap_type_create_field_array(rt, 3);
+    rt->builtInTypes.array->fields = o_bootstrap_type_create_field_array(rt, 4);
     rt->builtInTypes.array->kind = o_T_OBJECT;
     rt->builtInTypes.array->name = o_bootstrap_string_create(rt, "Array");
     rt->builtInTypes.array->size = sizeof(oArray);
@@ -302,20 +309,26 @@ void o_bootstrap_array_init_type(oRuntimeRef rt) {
     fields[2]->name = o_bootstrap_string_create(rt, "alignment");
     fields[2]->offset = offsetof(oArray, alignment);
     fields[2]->type = rt->builtInTypes.uword;
+
+    fields[3]->name = o_bootstrap_string_create(rt, "element-equals");
+    fields[3]->offset = offsetof(oArray, elementEquals);
+    fields[3]->type = rt->builtInTypes.functionOverload;
 }
 
 void o_bootstrap_array_init_llvm_type(oThreadContextRef ctx) {
-	LLVMTypeRef types[4];
+	LLVMTypeRef types[5];
     // element type
     types[0] = LLVMPointerType(ctx->runtime->builtInTypes.type->llvmType, 0);
     // num elements
     types[1] = ctx->runtime->builtInTypes.uword->llvmType;
     // alignment
     types[2] = ctx->runtime->builtInTypes.uword->llvmType;
+    // equals function
+    types[3] = ctx->runtime->builtInTypes.pointer->llvmType;
     // data
-    types[3] = LLVMArrayType(ctx->runtime->builtInTypes.u8->llvmType, 0);
+    types[4] = LLVMArrayType(ctx->runtime->builtInTypes.u8->llvmType, 0);
     
-	LLVMStructSetBody(ctx->runtime->builtInTypes.array->llvmType, types, 4, o_false);
+	LLVMStructSetBody(ctx->runtime->builtInTypes.array->llvmType, types, 5, o_false);
 }
 
 
