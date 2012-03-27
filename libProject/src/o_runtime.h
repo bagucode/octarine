@@ -96,4 +96,8 @@ void _oRuntimeAddNamespace(oRuntimeRef rt, oNamespaceRef ns);
 
 oNamespaceRef _oRuntimeFindNamespace(oRuntimeRef rt, oStringRef name);
 
+oSignatureRef o_bootstrap_create_equals_sig(oThreadContextRef ctx, oTypeRef type);
+
+oSignatureRef o_bootstrap_create_hashcode_sig(oThreadContextRef ctx, oTypeRef type);
+
 #endif

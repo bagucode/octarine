@@ -155,6 +155,17 @@ oFunctionOverloadRef _oFunctionFindOverload(oThreadContextRef ctx, oFunctionRef 
     return overload;
 }
 
+typedef struct internalSig {
+    uword ntypes;
+    oTypeRef* types;
+} internalSig;
+
+oFunctionOverloadRef _oFunctionFindOverloadConst(oThreadContextRef ctx, oFunctionRef fn, oTypeRef* types, uword ntypes) {
+    // TODO!
+    Maste implementera denna pa nagot vis. Far andra vad som ar vardet i Cuckoo-tabellen till internalSig
+    och anvanda en internalSig vid create och vanliga find med
+}
+
 pointer _oFunctionOverloadGetFnPointer(oThreadContextRef ctx, oFunctionOverloadRef impl) {
     return impl->code;
 }

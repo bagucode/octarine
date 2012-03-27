@@ -6,6 +6,7 @@
 #include "o_runtime.h"
 #include "o_string.h"
 #include "o_error.h"
+#include "o_function.h"
 #include <memory.h>
 #include <stddef.h>
 
@@ -16,10 +17,12 @@ static uword alignOffset(uword offset, uword on) {
 oArrayRef _oArrayCreate(oThreadContextRef ctx,
                        oTypeRef elemType,
                        uword num_elements) {
+    oFunctionOverloadRef eq;
     oROOTS(ctx)
     oENDROOTS
     if(ctx->error) return NULL;
-	oRETURN(oHeapAllocArray(elemType, num_elements));
+	oSETRET(oHeapAllocArray(elemType, num_elements));
+    eq = oFunctionFindOverload(<#fn#>, <#sig#>)
     oENDFN(oArrayRef)
 }
 
@@ -128,6 +131,155 @@ void _oArrayGet(oThreadContextRef ctx, oArrayRef arr, uword idx, pointer dest, o
         data = data + destType->size * (idx + 1);
         memcpy(dest, data, destType->size);
     }
+}
+
+o_bool _oArrayEquals(oThreadContextRef ctx, oArrayRef a1, oArrayRef a2) {
+    uword i;
+    oObject *o1, *o2, e1, e2;
+    //o_bool(*eq)(oObject,oObject) = (o_bool(*)(oObject,oObject))a1->elementEquals->code;
+
+    // Primitives are a pain in the rear...
+    u8 *e1_8, *e2_8;
+    u16 *e1_16, *e2_16;
+    u32 *e1_32, *e2_32;
+    u64 *e1_64, *e2_64;
+    f32 *e1_f32, *e2_f32;
+    f64 *e1_f64, *e2_f64;
+    uword *e1_word, *e2_word;
+    pointer *e1_pointer, *e2_pointer;
+    o_bool *e1_bool, *e2_bool;
+    o_char *e1_char, *e2_char;
+
+    if(a1 == a2) {
+        return o_true;
+    }
+    if(a1 == NULL && a2 != NULL) {
+        return o_false;
+    }
+    if(a2 == NULL && a1 != NULL) {
+        return o_false;
+    }
+    if(a1->element_type != a2->element_type) {
+        return o_false;
+    }
+    if(a1->num_elements != a2->num_elements) {
+        return o_false;
+    }
+
+    if(a1->element_type == ctx->runtime->builtInTypes.i8 || a1->element_type == ctx->runtime->builtInTypes.u8) {
+        e1_8 = oArrayDataPointer(a1);
+        e2_8 = oArrayDataPointer(a2);
+        for(i = 0; i < a1->num_elements; ++i) {
+            if(e1_8[i] != e2_8[i]) {
+                return o_false;
+            }
+        }
+    }
+    else if(a1->element_type == ctx->runtime->builtInTypes.i16 || a1->element_type == ctx->runtime->builtInTypes.u16) {
+        e1_16 = oArrayDataPointer(a1);
+        e2_16 = oArrayDataPointer(a2);
+        for(i = 0; i < a1->num_elements; ++i) {
+            if(e1_16[i] != e2_16[i]) {
+                return o_false;
+            }
+        }
+    }
+    else if(a1->element_type == ctx->runtime->builtInTypes.i32 || a1->element_type == ctx->runtime->builtInTypes.u32) {
+        e1_32 = oArrayDataPointer(a1);
+        e2_32 = oArrayDataPointer(a2);
+        for(i = 0; i < a1->num_elements; ++i) {
+            if(e1_32[i] != e2_32[i]) {
+                return o_false;
+            }
+        }
+    }
+    else if(a1->element_type == ctx->runtime->builtInTypes.i64 || a1->element_type == ctx->runtime->builtInTypes.u64) {
+        e1_64 = oArrayDataPointer(a1);
+        e2_64 = oArrayDataPointer(a2);
+        for(i = 0; i < a1->num_elements; ++i) {
+            if(e1_64[i] != e2_64[i]) {
+                return o_false;
+            }
+        }
+    }
+    else if(a1->element_type == ctx->runtime->builtInTypes.f32) {
+        e1_f32 = oArrayDataPointer(a1);
+        e2_f32 = oArrayDataPointer(a2);
+        for(i = 0; i < a1->num_elements; ++i) {
+            if(e1_f32[i] != e2_f32[i]) {
+                return o_false;
+            }
+        }
+    }
+    else if(a1->element_type == ctx->runtime->builtInTypes.f64) {
+        e1_f64 = oArrayDataPointer(a1);
+        e2_f64 = oArrayDataPointer(a2);
+        for(i = 0; i < a1->num_elements; ++i) {
+            if(e1_f64[i] != e2_f64[i]) {
+                return o_false;
+            }
+        }
+    }
+    else if(a1->element_type == ctx->runtime->builtInTypes.word || a1->element_type == ctx->runtime->builtInTypes.uword) {
+        e1_word = oArrayDataPointer(a1);
+        e2_word = oArrayDataPointer(a2);
+        for(i = 0; i < a1->num_elements; ++i) {
+            if(e1_word[i] != e2_word[i]) {
+                return o_false;
+            }
+        }
+    }
+    else if(a1->element_type == ctx->runtime->builtInTypes.pointer) {
+        e1_pointer = oArrayDataPointer(a1);
+        e2_pointer = oArrayDataPointer(a2);
+        for(i = 0; i < a1->num_elements; ++i) {
+            if(e1_pointer[i] != e2_pointer[i]) {
+                return o_false;
+            }
+        }
+    }
+    else if(a1->element_type == ctx->runtime->builtInTypes.o_bool) {
+        e1_bool = oArrayDataPointer(a1);
+        e2_bool = oArrayDataPointer(a2);
+        for(i = 0; i < a1->num_elements; ++i) {
+            if(e1_bool[i] != e2_bool[i]) {
+                return o_false;
+            }
+        }
+    }
+    else if(a1->element_type == ctx->runtime->builtInTypes.o_char) {
+        e1_char = oArrayDataPointer(a1);
+        e2_char = oArrayDataPointer(a2);
+        for(i = 0; i < a1->num_elements; ++i) {
+            if(e1_char[i] != e2_char[i]) {
+                return o_false;
+            }
+        }
+    }
+    else if(eq == NULL) {
+        return o_false; // no equals function found
+    }
+    else if(a1->element_type->kind == o_T_OBJECT) {
+        o1 = (oObject*)oArrayDataPointer(a1);
+        o2 = (oObject*)oArrayDataPointer(a2);
+        for(i = 0; i < a1->num_elements; ++i) {
+            if(eq(o1[i], o2[i]) == o_false) {
+                return o_false;
+            }
+        }
+    }
+    else {
+        e1 = (oObject)oArrayDataPointer(a1);
+        e2 = (oObject)oArrayDataPointer(a2);
+        for(i = 0; i < a1->num_elements; ++i) {
+            e1 = (oObject)(((char*)e1) + (a1->element_type->size * i));
+            e2 = (oObject)(((char*)e2) + (a1->element_type->size * i));
+            if(eq(e1, e2) == o_false) {
+                return o_false;
+            }
+        }
+    }
+    return o_true;
 }
 
 void o_bootstrap_array_init_type(oRuntimeRef rt) {

@@ -22,6 +22,7 @@ struct oSignature {
 	uword hashCode;
 };
 
+// No need to include the context parameter in the signature, it is implied for all functions.
 oSignatureRef _oSignatureCreate(oThreadContextRef ctx, oTypeRef returnType, oArrayRef parameters);
 #define oSignatureCreate(returnType, parameters) _oC(_oSignatureCreate, returnType, parameters)
 
@@ -64,6 +65,8 @@ void _oFunctionAddOverload(oThreadContextRef ctx, oFunctionRef fn, oFunctionOver
 
 oFunctionOverloadRef _oFunctionFindOverload(oThreadContextRef ctx, oFunctionRef fn, oSignatureRef sig);
 #define oFunctionFindOverload(fn, sig) _oC(_oFunctionFindOverload, fn, sig)
+
+oFunctionOverloadRef _oFunctionFindOverloadConst(oThreadContextRef ctx, oFunctionRef fn, oTypeRef* types, uword ntypes);
 
 pointer _oFunctionOverloadGetFnPointer(oThreadContextRef ctx, oFunctionOverloadRef impl);
 #define oFunctionOverloadGetFnPointer(impl) _oC(_oFunctionOverloadGetFnPointer, impl)

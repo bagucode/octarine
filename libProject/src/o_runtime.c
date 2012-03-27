@@ -193,14 +193,34 @@ static void init_builtInTypes2(oThreadContextRef ctx) {
     o_bootstrap_function_type_init(ctx);
 }
 
+oSignatureRef o_bootstrap_create_equals_sig(oThreadContextRef ctx, oTypeRef type) {
+    oArrayRef paramArr = (oArrayRef)o_bootstrap_array_alloc(ctx->runtime, ctx->runtime->builtInTypes.parameter, 2, sizeof(oParameter), 0);
+    oParameterRef* params = (oParameterRef*)oArrayDataPointer(paramArr);
+    params[0]->type = type;
+    params[1]->type = type;
+    return _oSignatureCreate(ctx, ctx->runtime->builtInTypes.o_bool, paramArr);
+}
+
+oSignatureRef o_bootstrap_create_hashcode_sig(oThreadContextRef ctx, oTypeRef type) {
+    oArrayRef paramArr = (oArrayRef)o_bootstrap_array_alloc(ctx->runtime, ctx->runtime->builtInTypes.parameter, 1, sizeof(oParameter), 0);
+    oParameterRef* params = (oParameterRef*)oArrayDataPointer(paramArr);
+    params[0]->type = type;
+    return _oSignatureCreate(ctx, ctx->runtime->builtInTypes.uword, paramArr);
+}
+
 static void init_builtInFunctions(oThreadContextRef ctx) {
+    oFunctionRef fn;
     oFunctionOverloadRef overload;
-    oSignature sig;
+    oSignatureRef sig;
     
-    sig = oSigna
-    
-    overload = _oFunctionOverloadRegisterNative(ctx, <#oSignatureRef sig#>, <#oArrayRef attributes#>, <#pointer fn#>)
-    ctx->runtime->builtInFunctions.equals = _oFunctionCreate(<#overload#>)
+    // ** Equals function **
+    // String
+    sig = o_bootstrap_create_equals_sig(ctx, ctx->runtime->builtInTypes.string);
+    overload = _oFunctionOverloadRegisterNative(ctx, sig, NULL, _oStringEquals);
+    fn = _oFunctionCreate(ctx, overload);
+    // Array
+    sig = o_bootstrap_create_equals_sig(ctx, ctx->runtime->builtInTypes.array);
+    overload = _oFunctionOverloadRegisterNative(ctx, sig, NULL, _oArrayEquals);
 }
 
 static void init_builtInConstants(oThreadContextRef ctx) {
