@@ -219,8 +219,8 @@ static void init_builtInFunctions(oThreadContextRef ctx) {
     overload = _oFunctionOverloadRegisterNative(ctx, sig, NULL, _oStringEquals);
     fn = _oFunctionCreate(ctx, overload);
     // Array
-    sig = o_bootstrap_create_equals_sig(ctx, ctx->runtime->builtInTypes.array);
-    overload = _oFunctionOverloadRegisterNative(ctx, sig, NULL, _oArrayEquals);
+	// Currently no equals for array - problem with not knowing element sizes at compile time.
+
 }
 
 static void init_builtInConstants(oThreadContextRef ctx) {

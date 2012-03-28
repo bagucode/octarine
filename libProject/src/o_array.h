@@ -8,7 +8,6 @@ struct oArray {
     oTypeRef element_type;
     uword num_elements;
     uword alignment;
-	oFunctionOverloadRef elementEquals;
     /* Data is allocated at the end of this struct, after
      any padding needed for the alignment. */
 };
@@ -29,9 +28,6 @@ void _oArrayPut(oThreadContextRef ctx, oArrayRef arr, uword idx, pointer src, oT
 #define oArrayPut(arr, idx, src, srcType) _oC(_oArrayPut, arr, idx, src, srcType)
 void _oArrayGet(oThreadContextRef ctx, oArrayRef arr, uword idx, pointer dest, oTypeRef destType);
 #define oArrayGet(arr, idx, dest, destType) _oC(_oArrayGet, arr, idx, dest, destType)
-
-o_bool _oArrayEquals(oThreadContextRef ctx, oArrayRef a1, oArrayRef a2);
-#define oArrayEquals(a1, a2) _oC(_oArrayEquals, a1, a2)
 
 oArrayRef o_bootstrap_array_create(oRuntimeRef rt,
                                    oTypeRef type,

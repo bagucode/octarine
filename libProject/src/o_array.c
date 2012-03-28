@@ -17,19 +17,10 @@ static uword alignOffset(uword offset, uword on) {
 oArrayRef _oArrayCreate(oThreadContextRef ctx,
                        oTypeRef elemType,
                        uword num_elements) {
-	oParameterRef* eqParams;
     oROOTS(ctx)
-	oArrayRef eqParamsArr;
-	oSignatureRef eqSig;
     oENDROOTS
     if(ctx->error) return NULL;
-	oSETRET(oHeapAllocArray(elemType, num_elements));
-	oRoots.eqParamsArr = oHeapAllocArray(ctx->runtime->builtInTypes.parameter, 2);
-	eqParams = (oParameterRef*)oArrayDataPointer(oRoots.eqParamsArr);
-	eqParams[0] = oParameterCreate(elemType);
-	eqParams[1] = oParameterCreate(elemType);
-	oRoots.eqSig = oSignatureCreate(ctx->runtime->builtInTypes.o_bool, oRoots.eqParamsArr);
-	oGETRETT(oArrayRef)->elementEquals = oFunctionFindOverload(ctx->runtime->builtInFunctions.equals, oRoots.eqSig);
+	oRETURN(oHeapAllocArray(elemType, num_elements));
     oENDFN(oArrayRef)
 }
 
@@ -140,162 +131,9 @@ void _oArrayGet(oThreadContextRef ctx, oArrayRef arr, uword idx, pointer dest, o
     }
 }
 
-o_bool _oArrayEquals(oThreadContextRef ctx, oArrayRef a1, oArrayRef a2) {
-    uword i;
-    oObject *o1, *o2, e1, e2;
-	o_bool(*objEq)(oObject,oObject);
-
-    // Primitives are a pain in the rear...
-    u8 *e1_8, *e2_8;
-    u16 *e1_16, *e2_16;
-    u32 *e1_32, *e2_32;
-    u64 *e1_64, *e2_64;
-    f32 *e1_f32, *e2_f32;
-    f64 *e1_f64, *e2_f64;
-    uword *e1_word, *e2_word;
-    pointer *e1_pointer, *e2_pointer;
-    o_bool *e1_bool, *e2_bool;
-    o_char *e1_char, *e2_char;
-
-    if(a1 == a2) {
-        return o_true;
-    }
-    if(a1 == NULL && a2 != NULL) {
-        return o_false;
-    }
-    if(a2 == NULL && a1 != NULL) {
-        return o_false;
-    }
-    if(a1->element_type != a2->element_type) {
-        return o_false;
-    }
-    if(a1->num_elements != a2->num_elements) {
-        return o_false;
-    }
-
-    if(a1->element_type == ctx->runtime->builtInTypes.i8 || a1->element_type == ctx->runtime->builtInTypes.u8) {
-        e1_8 = oArrayDataPointer(a1);
-        e2_8 = oArrayDataPointer(a2);
-        for(i = 0; i < a1->num_elements; ++i) {
-            if(e1_8[i] != e2_8[i]) {
-                return o_false;
-            }
-        }
-    }
-    else if(a1->element_type == ctx->runtime->builtInTypes.i16 || a1->element_type == ctx->runtime->builtInTypes.u16) {
-        e1_16 = oArrayDataPointer(a1);
-        e2_16 = oArrayDataPointer(a2);
-        for(i = 0; i < a1->num_elements; ++i) {
-            if(e1_16[i] != e2_16[i]) {
-                return o_false;
-            }
-        }
-    }
-    else if(a1->element_type == ctx->runtime->builtInTypes.i32 || a1->element_type == ctx->runtime->builtInTypes.u32) {
-        e1_32 = oArrayDataPointer(a1);
-        e2_32 = oArrayDataPointer(a2);
-        for(i = 0; i < a1->num_elements; ++i) {
-            if(e1_32[i] != e2_32[i]) {
-                return o_false;
-            }
-        }
-    }
-    else if(a1->element_type == ctx->runtime->builtInTypes.i64 || a1->element_type == ctx->runtime->builtInTypes.u64) {
-        e1_64 = oArrayDataPointer(a1);
-        e2_64 = oArrayDataPointer(a2);
-        for(i = 0; i < a1->num_elements; ++i) {
-            if(e1_64[i] != e2_64[i]) {
-                return o_false;
-            }
-        }
-    }
-    else if(a1->element_type == ctx->runtime->builtInTypes.f32) {
-        e1_f32 = oArrayDataPointer(a1);
-        e2_f32 = oArrayDataPointer(a2);
-        for(i = 0; i < a1->num_elements; ++i) {
-            if(e1_f32[i] != e2_f32[i]) {
-                return o_false;
-            }
-        }
-    }
-    else if(a1->element_type == ctx->runtime->builtInTypes.f64) {
-        e1_f64 = oArrayDataPointer(a1);
-        e2_f64 = oArrayDataPointer(a2);
-        for(i = 0; i < a1->num_elements; ++i) {
-            if(e1_f64[i] != e2_f64[i]) {
-                return o_false;
-            }
-        }
-    }
-    else if(a1->element_type == ctx->runtime->builtInTypes.word || a1->element_type == ctx->runtime->builtInTypes.uword) {
-        e1_word = oArrayDataPointer(a1);
-        e2_word = oArrayDataPointer(a2);
-        for(i = 0; i < a1->num_elements; ++i) {
-            if(e1_word[i] != e2_word[i]) {
-                return o_false;
-            }
-        }
-    }
-    else if(a1->element_type == ctx->runtime->builtInTypes.pointer) {
-        e1_pointer = oArrayDataPointer(a1);
-        e2_pointer = oArrayDataPointer(a2);
-        for(i = 0; i < a1->num_elements; ++i) {
-            if(e1_pointer[i] != e2_pointer[i]) {
-                return o_false;
-            }
-        }
-    }
-    else if(a1->element_type == ctx->runtime->builtInTypes.o_bool) {
-        e1_bool = oArrayDataPointer(a1);
-        e2_bool = oArrayDataPointer(a2);
-        for(i = 0; i < a1->num_elements; ++i) {
-            if(e1_bool[i] != e2_bool[i]) {
-                return o_false;
-            }
-        }
-    }
-    else if(a1->element_type == ctx->runtime->builtInTypes.o_char) {
-        e1_char = oArrayDataPointer(a1);
-        e2_char = oArrayDataPointer(a2);
-        for(i = 0; i < a1->num_elements; ++i) {
-            if(e1_char[i] != e2_char[i]) {
-                return o_false;
-            }
-        }
-    }
-    else if(a1->element_type->kind == o_T_OBJECT) {
-        objEq = (o_bool(*)(oObject,oObject))a1->elementEquals->code;
-        if(objEq == NULL) {
-            return o_false;
-        }
-        o1 = (oObject*)oArrayDataPointer(a1);
-        o2 = (oObject*)oArrayDataPointer(a2);
-        for(i = 0; i < a1->num_elements; ++i) {
-            if(objEq(o1[i], o2[i]) == o_false) {
-                return o_false;
-            }
-        }
-    }
-    else {
-        // Leverage llvm to do the call  since we can't know the exact
-        // signature at compile time.
-        
-        Need util function for converting values into llvm constants?
-        
-        e1 = (oObject)oArrayDataPointer(a1);
-        e2 = (oObject)oArrayDataPointer(a2);
-        for(i = 0; i < a1->num_elements; ++i) {
-            e1 = (oObject)(((char*)e1) + (a1->element_type->size * i));
-            e2 = (oObject)(((char*)e2) + (a1->element_type->size * i));
-            
-        }
-    }
-    return o_true;
-}
-
 void o_bootstrap_array_init_type(oRuntimeRef rt) {
     oFieldRef *fields;
-    rt->builtInTypes.array->fields = o_bootstrap_type_create_field_array(rt, 4);
+    rt->builtInTypes.array->fields = o_bootstrap_type_create_field_array(rt, 3);
     rt->builtInTypes.array->kind = o_T_OBJECT;
     rt->builtInTypes.array->name = o_bootstrap_string_create(rt, "Array");
     rt->builtInTypes.array->size = sizeof(oArray);
@@ -313,26 +151,20 @@ void o_bootstrap_array_init_type(oRuntimeRef rt) {
     fields[2]->name = o_bootstrap_string_create(rt, "alignment");
     fields[2]->offset = offsetof(oArray, alignment);
     fields[2]->type = rt->builtInTypes.uword;
-
-    fields[3]->name = o_bootstrap_string_create(rt, "element-equals");
-    fields[3]->offset = offsetof(oArray, elementEquals);
-    fields[3]->type = rt->builtInTypes.functionOverload;
 }
 
 void o_bootstrap_array_init_llvm_type(oThreadContextRef ctx) {
-	LLVMTypeRef types[5];
+	LLVMTypeRef types[4];
     // element type
     types[0] = LLVMPointerType(ctx->runtime->builtInTypes.type->llvmType, 0);
     // num elements
     types[1] = ctx->runtime->builtInTypes.uword->llvmType;
     // alignment
     types[2] = ctx->runtime->builtInTypes.uword->llvmType;
-    // equals function
-    types[3] = ctx->runtime->builtInTypes.pointer->llvmType;
     // data
-    types[4] = LLVMArrayType(ctx->runtime->builtInTypes.u8->llvmType, 0);
+    types[3] = LLVMArrayType(ctx->runtime->builtInTypes.u8->llvmType, 0);
     
-	LLVMStructSetBody(ctx->runtime->builtInTypes.array->llvmType, types, 5, o_false);
+	LLVMStructSetBody(ctx->runtime->builtInTypes.array->llvmType, types, 4, o_false);
 }
 
 
