@@ -143,7 +143,7 @@ void _oArrayGet(oThreadContextRef ctx, oArrayRef arr, uword idx, pointer dest, o
 o_bool _oArrayEquals(oThreadContextRef ctx, oArrayRef a1, oArrayRef a2) {
     uword i;
     oObject *o1, *o2, e1, e2;
-	o_bool(*eq)(oObject,oObject) = (o_bool(*)(oObject,oObject))a1->elementEquals->code;
+	o_bool(*objEq)(oObject,oObject);
 
     // Primitives are a pain in the rear...
     u8 *e1_8, *e2_8;
@@ -263,27 +263,31 @@ o_bool _oArrayEquals(oThreadContextRef ctx, oArrayRef a1, oArrayRef a2) {
             }
         }
     }
-    else if(eq == NULL) {
-        return o_false; // no equals function found
-    }
     else if(a1->element_type->kind == o_T_OBJECT) {
+        objEq = (o_bool(*)(oObject,oObject))a1->elementEquals->code;
+        if(objEq == NULL) {
+            return o_false;
+        }
         o1 = (oObject*)oArrayDataPointer(a1);
         o2 = (oObject*)oArrayDataPointer(a2);
         for(i = 0; i < a1->num_elements; ++i) {
-            if(eq(o1[i], o2[i]) == o_false) {
+            if(objEq(o1[i], o2[i]) == o_false) {
                 return o_false;
             }
         }
     }
     else {
+        // Leverage llvm to do the call  since we can't know the exact
+        // signature at compile time.
+        
+        Need util function for converting values into llvm constants?
+        
         e1 = (oObject)oArrayDataPointer(a1);
         e2 = (oObject)oArrayDataPointer(a2);
         for(i = 0; i < a1->num_elements; ++i) {
             e1 = (oObject)(((char*)e1) + (a1->element_type->size * i));
             e2 = (oObject)(((char*)e2) + (a1->element_type->size * i));
-            if(eq(e1, e2) == o_false) {
-                return o_false;
-            }
+            
         }
     }
     return o_true;
