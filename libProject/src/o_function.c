@@ -114,10 +114,12 @@ oFunctionOverloadRef _oFunctionOverloadRegisterNative(oThreadContextRef ctx,
         return NULL;
     }
 
-    overload->attributes = _oHeapCopyObjectShared(ctx, attributes);
-    if(overload->attributes == NULL) {
-        return NULL;
-    }
+	if(attributes) {
+		overload->attributes = _oHeapCopyObjectShared(ctx, attributes);
+		if(overload->attributes == NULL) {
+			return NULL;
+		}
+	}
 
     overload->signature = _oHeapCopyObjectShared(ctx, sig);
     if(overload->signature == NULL) {

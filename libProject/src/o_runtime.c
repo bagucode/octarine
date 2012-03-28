@@ -194,16 +194,19 @@ static void init_builtInTypes2(oThreadContextRef ctx) {
 }
 
 oSignatureRef o_bootstrap_create_equals_sig(oThreadContextRef ctx, oTypeRef type) {
-    oArrayRef paramArr = (oArrayRef)o_bootstrap_array_alloc(ctx->runtime, ctx->runtime->builtInTypes.parameter, 2, sizeof(oParameter), 0);
+    oArrayRef paramArr = (oArrayRef)o_bootstrap_array_create(ctx->runtime, ctx->runtime->builtInTypes.parameter, 2, sizeof(oParameter), sizeof(pointer));
     oParameterRef* params = (oParameterRef*)oArrayDataPointer(paramArr);
+	params[0] = (oParameterRef)o_bootstrap_object_alloc(ctx->runtime, ctx->runtime->builtInTypes.parameter, sizeof(oParameter));
     params[0]->type = type;
+	params[1] = (oParameterRef)o_bootstrap_object_alloc(ctx->runtime, ctx->runtime->builtInTypes.parameter, sizeof(oParameter));
     params[1]->type = type;
     return _oSignatureCreate(ctx, ctx->runtime->builtInTypes.o_bool, paramArr);
 }
 
 oSignatureRef o_bootstrap_create_hashcode_sig(oThreadContextRef ctx, oTypeRef type) {
-    oArrayRef paramArr = (oArrayRef)o_bootstrap_array_alloc(ctx->runtime, ctx->runtime->builtInTypes.parameter, 1, sizeof(oParameter), 0);
+    oArrayRef paramArr = (oArrayRef)o_bootstrap_array_create(ctx->runtime, ctx->runtime->builtInTypes.parameter, 1, sizeof(oParameter), sizeof(pointer));
     oParameterRef* params = (oParameterRef*)oArrayDataPointer(paramArr);
+	params[0] = (oParameterRef)o_bootstrap_object_alloc(ctx->runtime, ctx->runtime->builtInTypes.parameter, sizeof(oParameter));
     params[0]->type = type;
     return _oSignatureCreate(ctx, ctx->runtime->builtInTypes.uword, paramArr);
 }
@@ -214,13 +217,18 @@ static void init_builtInFunctions(oThreadContextRef ctx) {
     oSignatureRef sig;
     
     // ** Equals function **
+
     // String
     sig = o_bootstrap_create_equals_sig(ctx, ctx->runtime->builtInTypes.string);
     overload = _oFunctionOverloadRegisterNative(ctx, sig, NULL, _oStringEquals);
     fn = _oFunctionCreate(ctx, overload);
-    // Array
+
+	// Array
 	// Currently no equals for array - problem with not knowing element sizes at compile time.
 
+	// Symbol
+	sig = o_bootstrap_create_equals_sig(ctx, ctx->runtime->builtInTypes.symbol);
+	overload = _oFunctionOverloadRegisterNative(ctx, sig, NULL, _oSymbolEquals);
 }
 
 static void init_builtInConstants(oThreadContextRef ctx) {
