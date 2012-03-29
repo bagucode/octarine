@@ -21,6 +21,9 @@ pointer oArrayDataPointer(oArrayRef arr);
 
 uword oArraySize(oArrayRef arr);
 
+o_bool _oArrayEquals(oThreadContextRef ctx, oArrayRef arr1, oArrayRef arr2);
+#define oArrayEquals(arr1, arr2) _oC(_oArrayEquals, arr1, arr2)
+
 void _oArrayCopy(oThreadContextRef ctx, oArrayRef from, oArrayRef to);
 #define oArrayCopy(from, to) _oC(_oArrayCopy, from, to)
 

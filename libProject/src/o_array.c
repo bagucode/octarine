@@ -131,6 +131,13 @@ void _oArrayGet(oThreadContextRef ctx, oArrayRef arr, uword idx, pointer dest, o
     }
 }
 
+o_bool _oArrayEquals(oThreadContextRef ctx, oArrayRef arr1, oArrayRef arr2) {
+    // Can't do a proper equals in the C code because there is no way
+    // to know the size of the elements (and thus no way to know the
+    // signature of the equals function to use).
+    return arr1 == arr2;
+}
+
 void o_bootstrap_array_init_type(oRuntimeRef rt) {
     oFieldRef *fields;
     rt->builtInTypes.array->fields = o_bootstrap_type_create_field_array(rt, 3);
