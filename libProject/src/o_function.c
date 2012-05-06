@@ -50,29 +50,6 @@ oSignatureRef _oSignatureCreate(oThreadContextRef ctx, oTypeRef returnType, oArr
     oENDFN(oSignatureRef)
 }
 
-static LLVMTypeRef llvmTypeForSignature(oThreadContextRef ctx, oSignatureRef sig) {
-	uword i;
-	LLVMTypeRef fnType, retType;
-	oParameterRef* params = (oParameterRef*)oArrayDataPointer(sig->parameters);
-	LLVMTypeRef* paramTypes = (LLVMTypeRef*)oMalloc(sizeof(LLVMTypeRef) * sig->parameters->num_elements);
-
-	if(sig->retType->kind == o_T_OBJECT) {
-		retType = LLVMPointerType(sig->retType->llvmType, 0);
-	} else {
-		retType = sig->retType->llvmType;
-	}
-	for(i = 0; i < sig->parameters->num_elements; ++i) {
-		if(params[i]->type->kind == o_T_OBJECT) {
-			paramTypes[i] = LLVMPointerType(params[i]->type->llvmType, 0);
-		} else {
-			paramTypes[i] = params[i]->type->llvmType;
-		}
-	}
-	fnType = LLVMFunctionType(retType, paramTypes, sig->parameters->num_elements, o_false);
-	oFree(paramTypes);
-	return fnType;
-}
-
 o_bool oSignatureEquals(oThreadContextRef ctx,
                         oSignatureRef sig1,
                         oSignatureRef sig2) {
@@ -126,15 +103,12 @@ oFunctionOverloadRef _oFunctionOverloadRegisterNative(oThreadContextRef ctx,
         return NULL;
     }
 
-    overload->code = fn;
 	un = oGenUniqueName(ctx);
     if(un == NULL) {
         ctx->error = ctx->runtime->builtInErrors.outOfMemory;
         return NULL;
     }
-	overload->llvmFunction = LLVMAddFunction(ctx->runtime->llvmModule, un, llvmTypeForSignature(ctx, sig));
 	oFree(un);
-	LLVMAddGlobalMapping(ctx->runtime->llvmEE, overload->llvmFunction, fn);
     return overload;
 }
 
@@ -210,8 +184,6 @@ void o_bootstrap_parameter_type_init(oThreadContextRef ctx) {
     fields[0]->name = o_bootstrap_string_create(ctx->runtime, "type");
 	fields[0]->offset = offsetof(oParameter, type);
     fields[0]->type = ctx->runtime->builtInTypes.type;
-
-	ctx->runtime->builtInTypes.parameter->llvmType = _oTypeCreateLLVMType(ctx, ctx->runtime->builtInTypes.parameter);
 }
 
 void o_bootstrap_signature_type_init(oThreadContextRef ctx) {
@@ -234,12 +206,9 @@ void o_bootstrap_signature_type_init(oThreadContextRef ctx) {
     fields[2]->name = o_bootstrap_string_create(ctx->runtime, "hash-code");
 	fields[2]->offset = offsetof(oSignature, parameters);
     fields[2]->type = ctx->runtime->builtInTypes.uword;
-
-	ctx->runtime->builtInTypes.signature->llvmType = _oTypeCreateLLVMType(ctx, ctx->runtime->builtInTypes.signature);
 }
 
 void o_bootstrap_fn_overload_type_init(oThreadContextRef ctx) {
-    LLVMTypeRef llvmTypes[4];
     oFieldRef *fields;
 	
     ctx->runtime->builtInTypes.functionOverload->fields = o_bootstrap_type_create_field_array(ctx->runtime, 2);
@@ -256,37 +225,12 @@ void o_bootstrap_fn_overload_type_init(oThreadContextRef ctx) {
     fields[1]->name = o_bootstrap_string_create(ctx->runtime, "attributes");
 	fields[1]->offset = offsetof(oFunctionOverload, attributes);
     fields[1]->type = ctx->runtime->builtInTypes.array;
-    
-    // Have to do the llvm type manually because of the "secret" llvm function
-    // type and code pointer fields
-    
-    // signature
-    llvmTypes[0] = LLVMPointerType(ctx->runtime->builtInTypes.signature->llvmType, 0);
-    // attributes
-    llvmTypes[1] = LLVMPointerType(ctx->runtime->builtInTypes.array->llvmType, 0);
-    // function type
-    llvmTypes[2] = ctx->runtime->builtInTypes.pointer->llvmType;
-    // code
-    llvmTypes[3] = ctx->runtime->builtInTypes.pointer->llvmType;
-    
-    ctx->runtime->builtInTypes.functionOverload->llvmType = LLVMStructTypeInContext(ctx->runtime->llvmCtx, llvmTypes, 4, o_false);
 }
 
 void o_bootstrap_function_type_init(oThreadContextRef ctx) {
-    LLVMTypeRef llvmTypes[2];
-
     ctx->runtime->builtInTypes.function->fields = NULL;
     ctx->runtime->builtInTypes.function->kind = o_T_OBJECT;
 	ctx->runtime->builtInTypes.function->name = o_bootstrap_string_create(ctx->runtime, "Function");
 	ctx->runtime->builtInTypes.function->size = sizeof(oFunction);
     ctx->runtime->builtInTypes.function->finalizer = functionFinalizer;
-    
-    // Have to do the llvm type manually because of the "secret" fields
-    
-    // lock
-    llvmTypes[0] = ctx->runtime->builtInTypes.pointer->llvmType;
-    // overloads table
-    llvmTypes[1] = ctx->runtime->builtInTypes.pointer->llvmType;
-    
-    ctx->runtime->builtInTypes.function->llvmType = LLVMStructTypeInContext(ctx->runtime->llvmCtx, llvmTypes, 2, o_false);
 }

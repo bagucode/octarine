@@ -1,7 +1,7 @@
 #ifndef octarine_typedefs_h
 #define octarine_typedefs_h
 
-#include "../../platformProject/src/o_basic_types.h"
+#include "o_basic_types.h"
 
 /* Please put in alphabetical order.
    (Unless it is impossible due to dependencies) */

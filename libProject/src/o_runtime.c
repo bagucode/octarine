@@ -146,40 +146,7 @@ static void init_builtInTypes1(oRuntimeRef rt) {
 	o_bootstrap_thread_context_type_init(rt);
 }
 
-static void init_llvm_primitives(oRuntimeRef rt) {
-    rt->builtInTypes.o_char->llvmType = LLVMInt32TypeInContext(rt->llvmCtx);
-  	rt->builtInTypes.o_bool->llvmType = LLVMInt8TypeInContext(rt->llvmCtx);
-  	rt->builtInTypes.f32->llvmType = LLVMFloatTypeInContext(rt->llvmCtx);
-  	rt->builtInTypes.f64->llvmType = LLVMDoubleTypeInContext(rt->llvmCtx);
-  	rt->builtInTypes.i16->llvmType = LLVMInt16TypeInContext(rt->llvmCtx);
-  	rt->builtInTypes.i32->llvmType = LLVMInt32TypeInContext(rt->llvmCtx);
-  	rt->builtInTypes.i64->llvmType = LLVMInt64TypeInContext(rt->llvmCtx);
-  	rt->builtInTypes.i8->llvmType = LLVMInt8TypeInContext(rt->llvmCtx);
-  	rt->builtInTypes.pointer->llvmType = LLVMPointerType(LLVMInt8TypeInContext(rt->llvmCtx), 0);
-  	rt->builtInTypes.u16->llvmType = LLVMInt16TypeInContext(rt->llvmCtx);
-  	rt->builtInTypes.u32->llvmType = LLVMInt32TypeInContext(rt->llvmCtx);
-  	rt->builtInTypes.u64->llvmType = LLVMInt64TypeInContext(rt->llvmCtx);
-  	rt->builtInTypes.u8->llvmType = LLVMInt8TypeInContext(rt->llvmCtx);
-#ifdef OCTARINE64
-  	rt->builtInTypes.uword->llvmType = LLVMInt64TypeInContext(rt->llvmCtx);
-  	rt->builtInTypes.word->llvmType = LLVMInt64TypeInContext(rt->llvmCtx);
-#else
-  	rt->builtInTypes.uword->llvmType = LLVMInt32TypeInContext(rt->llvmCtx);
-  	rt->builtInTypes.word->llvmType = LLVMInt32TypeInContext(rt->llvmCtx);
-#endif
-}
-
 static void init_builtInTypes2(oThreadContextRef ctx) {
-	// Do the LLVM init for the first types here since they are now complete.
-    // The order here is very important since the types depend on each other.
-	init_llvm_primitives(ctx->runtime);
-	o_bootstrap_any_init_llvm_type(ctx);
-	o_bootstrap_string_init_llvm_type(ctx);
-    o_bootstrap_type_init_llvm_type(ctx);
-    o_bootstrap_array_init_llvm_type(ctx);
-    o_bootstrap_field_init_llvm_type(ctx);
-	o_bootstrap_thread_context_init_llvm_type(ctx);
-
 	o_bootstrap_list_init_type(ctx);
     o_bootstrap_map_init_type(ctx);
 	o_bootstrap_symbol_init_type(ctx);
@@ -351,24 +318,12 @@ oNamespaceRef _oRuntimeFindNamespace(oRuntimeRef rt, oStringRef name) {
 	return ns;
 }
 
-void oInitJITTarget();
 oRuntimeRef oRuntimeCreate() {
 	oRuntimeRef rt = (oRuntimeRef)oMalloc(sizeof(oRuntime));
 	oThreadContextRef ctx;
 	oNamespaceRef octarineNs;
-    char* llvmError;
 
     memset(rt, 0, sizeof(oRuntime));
-
-    // Start up an LLVM Context for this runtime
-    oInitJITTarget();
-    rt->llvmCtx = LLVMContextCreate();
-    rt->llvmModule = LLVMModuleCreateWithNameInContext("JITModule", rt->llvmCtx);
-    LLVMCreateJITCompilerForModule(&rt->llvmEE, rt->llvmModule, 3, &llvmError);
-    if(rt->llvmEE == NULL) {
-        fprintf(stderr, "%s\n", llvmError);
-        abort();
-    }
 
 	rt->contextListLock = oSpinLockCreate(4000);
 	rt->namespaceLock = oSpinLockCreate(4000);
@@ -446,8 +401,6 @@ void oRuntimeDestroy(oRuntimeRef rt) {
 	CuckooDestroy(rt->namespaces);
 	oSpinLockDestroy(rt->contextListLock);
 	oSpinLockDestroy(rt->namespaceLock);
-    LLVMDisposeModule(rt->llvmModule);
-    LLVMContextDispose(rt->llvmCtx);
 	oFree(rt);
 }
 

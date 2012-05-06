@@ -2,9 +2,8 @@
 #ifndef octarine_type_h
 #define octarine_type_h
 
-#include "../../platformProject/src/o_basic_types.h"
+#include "o_basic_types.h"
 #include "o_typedefs.h"
-#include "llvm-c/Core.h"
 
 extern const u8 o_T_OBJECT;
 extern const u8 o_T_STRUCT;
@@ -28,7 +27,6 @@ struct oType {
     oFinalizer finalizer;
 	oCopyObjectInternals copyInternals;
     uword size;
-	LLVMTypeRef llvmType;
     u8 kind;
     u8 alignment;
 };
@@ -59,9 +57,6 @@ oTypeRef _oTypeCreate(oThreadContextRef ctx,
 _oC(_oTypeCreate, kind, alignment, name, fields, finalizer, prototype)
 
 oStringRef oTypeGetName(oTypeRef type);
-
-LLVMTypeRef _oTypeCreateLLVMType(oThreadContextRef ctx, oTypeRef type);
-#define oTypeCreateLLVMType(type) _oC(_oTypeCreateLLVMType, type)
 
 void o_bootstrap_type_init_type(oRuntimeRef rt);
 void o_bootstrap_type_init_llvm_type(oThreadContextRef ctx);

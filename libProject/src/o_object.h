@@ -1,7 +1,7 @@
 #ifndef octarine_object_h
 #define octarine_object_h
 
-#include "../../platformProject/src/o_basic_types.h"
+#include "o_basic_types.h"
 #include "o_typedefs.h"
 
 struct oAny {

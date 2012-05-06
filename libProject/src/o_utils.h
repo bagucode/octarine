@@ -1,7 +1,7 @@
 #ifndef octarine_utils_h
 #define octarine_utils_h
 
-#include "../../platformProject/src/o_platform.h"
+#include "o_platform.h"
 
 // Cuckoo hash table
 

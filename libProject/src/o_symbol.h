@@ -3,7 +3,7 @@
 #define octarine_symbol_h
 
 #include "o_typedefs.h"
-#include "../../platformProject/src/o_basic_types.h"
+#include "o_basic_types.h"
 
 struct oSymbol {
     oStringRef name;

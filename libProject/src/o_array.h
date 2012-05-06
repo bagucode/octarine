@@ -1,7 +1,7 @@
 #ifndef octarine_array_h
 #define octarine_array_h
 
-#include "../../platformProject/src/o_platform.h"
+#include "o_platform.h"
 #include "o_typedefs.h"
 
 struct oArray {

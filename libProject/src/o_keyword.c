@@ -20,8 +20,6 @@ void o_bootstrap_keyword_type_init(oThreadContextRef ctx) {
     fields[0]->name = o_bootstrap_string_create(ctx->runtime, "name");
 	fields[0]->offset = offsetof(oKeyword, name);
     fields[0]->type = ctx->runtime->builtInTypes.string;
-
-	ctx->runtime->builtInTypes.keyword->llvmType = _oTypeCreateLLVMType(ctx, ctx->runtime->builtInTypes.keyword);
 }
 
 oKeywordRef _oKeywordCreate(oThreadContextRef ctx, oStringRef name) {

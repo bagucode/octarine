@@ -25,32 +25,6 @@ void o_bootstrap_thread_context_type_init(oRuntimeRef rt) {
 	fields[1]->type = rt->builtInTypes.name_space;
 }
 
-void o_bootstrap_thread_context_init_llvm_type(oThreadContextRef ctx) {
-	LLVMTypeRef types[6];
-	char* un;
-	// runtime, opaque pointer. The runtime object is not part of the type system
-	types[0] = ctx->runtime->builtInTypes.pointer->llvmType;
-	// heap, also opaque
-	types[1] = ctx->runtime->builtInTypes.pointer->llvmType;
-	// error type, not initialized yet so we create a prototype for it
-	un = oGenUniqueName(ctx);
-	ctx->runtime->builtInTypes.error->llvmType = LLVMStructCreateNamed(ctx->runtime->llvmCtx, un);
-	oFree(un);
-	types[2] = ctx->runtime->builtInTypes.error->llvmType;
-	// namespace, also needs a prototype
-	un = oGenUniqueName(ctx);
-	ctx->runtime->builtInTypes.name_space->llvmType = LLVMStructCreateNamed(ctx->runtime->llvmCtx, un);
-	oFree(un);
-	types[3] = ctx->runtime->builtInTypes.name_space->llvmType;
-	// root set, opaque
-	types[4] = ctx->runtime->builtInTypes.pointer->llvmType;
-	// root set semaphore. This is volatile in the C code but llvm uses volatile
-	// on instructions rather than data so this is a regular uword here.
-	types[5] = ctx->runtime->builtInTypes.uword->llvmType;
-
-	ctx->runtime->builtInTypes.threadContext->llvmType = LLVMStructTypeInContext(ctx->runtime->llvmCtx, types, 6, o_false);
-}
-
 oThreadContextRef oThreadContextCreate(oRuntimeRef runtime) {
     // Have to use the bootstrap alloc here always because there is no context yet for this heap
 	oThreadContextRef ctx = (oThreadContextRef)o_bootstrap_object_alloc(runtime, runtime->builtInTypes.threadContext, sizeof(oThreadContext));

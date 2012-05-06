@@ -3,7 +3,7 @@
 #define octarine_thread_context_h
 
 #include "o_typedefs.h"
-#include "../../platformProject/src/o_platform.h"
+#include "o_platform.h"
 
 struct oThreadContext {
     oRuntimeRef runtime;

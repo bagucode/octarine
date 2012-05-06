@@ -2,7 +2,7 @@
 #include "o_type.h"
 #include "o_thread_context.h"
 #include "o_runtime.h"
-#include "../../platformProject/src/o_platform.h"
+#include "o_platform.h"
 #include "o_array.h"
 #include "o_utils.h"
 #include "o_namespace.h"

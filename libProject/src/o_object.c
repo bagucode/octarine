@@ -13,10 +13,6 @@ void o_bootstrap_any_type_init(oRuntimeRef rt) {
     rt->builtInTypes.any->size = sizeof(pointer);
 }
 
-void o_bootstrap_any_init_llvm_type(oThreadContextRef ctx) {
-	ctx->runtime->builtInTypes.any->llvmType = LLVMStructTypeInContext(ctx->runtime->llvmCtx, NULL, 0, o_false);
-}
-
 oTypeRef oObjectGetType(oThreadContextRef ctx, oObject obj) {
     return oMemoryGetObjectType(ctx, obj);
 }

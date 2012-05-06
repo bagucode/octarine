@@ -73,12 +73,7 @@ oTypeRef _oTypeCreateProtoType(oThreadContextRef ctx) {
 		ctx->error = ctx->runtime->builtInErrors.outOfMemory;
         return NULL;
     }
-    proto->llvmType = LLVMStructCreateNamed(ctx->runtime->llvmCtx, un);
     oFree(un);
-    if(proto->llvmType == NULL) {
-		ctx->error = ctx->runtime->builtInErrors.outOfMemory;
-        return NULL;
-    }
 	return proto;
 }
 
@@ -150,7 +145,6 @@ oTypeRef _oTypeCreate(oThreadContextRef ctx,
     }
     
     oGETRETT(oTypeRef)->size = nextLargerMultiple(largest, oGETRETT(oTypeRef)->size);
-    oGETRETT(oTypeRef)->llvmType = oTypeCreateLLVMType(oGETRETT(oTypeRef));
     
 	// Bind type in current namespace
 	oRoots.tmp = oSymbolCreate(oGETRETT(oTypeRef)->name);
@@ -248,94 +242,6 @@ oFieldRef _oFieldCreate(oThreadContextRef ctx,
 
 oStringRef oTypeGetName(oTypeRef type) {
     return type->name;
-}
-
-LLVMTypeRef _oTypeCreateLLVMType(oThreadContextRef ctx, oTypeRef type) {
-    oFieldRef* fields;
-    uword i;
-    LLVMTypeRef* types;
-    char* uniqueName;
-    oROOTS(ctx)
-    oArrayRef typesArr;
-    oENDROOTS
-    
-    if(type->fields == NULL || type->fields->num_elements == 0) {
-        oSETRET(LLVMStructTypeInContext(ctx->runtime->llvmCtx, NULL, 0, o_false));
-    }
-    else {
-        oRoots.typesArr = oArrayCreate(ctx->runtime->builtInTypes.any, type->fields->num_elements);
-        types = (LLVMTypeRef*)oArrayDataPointer(oRoots.typesArr);
-        fields = (oFieldRef*)oArrayDataPointer(type->fields);
-        for(i = 0; i < type->fields->num_elements; ++i) {
-            if(fields[i]->type == type && type->llvmType == NULL) {
-                uniqueName = oGenUniqueName(ctx);
-                type->llvmType = LLVMStructCreateNamed(ctx->runtime->llvmCtx, uniqueName);
-                oFree(uniqueName);
-                types[i] = LLVMPointerType(type->llvmType, 0);
-            }
-            else if(fields[i]->type == type) {
-                types[i] = LLVMPointerType(type->llvmType, 0);
-            }
-            else if(fields[i]->type->kind == o_T_OBJECT) {
-                types[i] = LLVMPointerType(fields[i]->type->llvmType, 0);
-            }
-            else {
-                types[i] = fields[i]->type->llvmType;
-            }
-        }
-        if(type->llvmType != NULL) {
-            LLVMStructSetBody(type->llvmType, types, type->fields->num_elements, o_false);
-            oSETRET(type->llvmType);
-        }
-        else {
-            oSETRET(LLVMStructTypeInContext(ctx->runtime->llvmCtx, types, type->fields->num_elements, o_false));
-        }
-    }
-    oENDFN(LLVMTypeRef)
-}
-
-void o_bootstrap_type_init_llvm_type(oThreadContextRef ctx) {
-    LLVMTypeRef types[9];
-    char* tn;
-    // create the array type as an opaque type for now, the
-    // array initializer will refine it.
-    tn = oGenUniqueName(ctx);
-    ctx->runtime->builtInTypes.array->llvmType = LLVMStructCreateNamed(ctx->runtime->llvmCtx, tn);
-    oFree(tn);
-
-	// name
-	types[0] = LLVMPointerType(ctx->runtime->builtInTypes.string->llvmType, 0);
-	// fields
-    types[1] = LLVMPointerType(ctx->runtime->builtInTypes.array->llvmType, 0);
-	// attributes
-	types[2] = LLVMPointerType(ctx->runtime->builtInTypes.array->llvmType, 0);
-	// register finalizer as an opaque pointer for now,
-	// there are probably no calls to it from llvm code anyway
-	types[3] = ctx->runtime->builtInTypes.pointer->llvmType;
-	// same with copyInternals
-	types[4] = ctx->runtime->builtInTypes.pointer->llvmType;
-	// size
-	types[5] = ctx->runtime->builtInTypes.uword->llvmType;
-	// Probably have to make the llvm type an opaque pointer :)
-	types[6] = ctx->runtime->builtInTypes.pointer->llvmType;
-	// kind
-	types[7] = ctx->runtime->builtInTypes.u8->llvmType;
-	// alignment
-	types[8] = ctx->runtime->builtInTypes.u8->llvmType;
-
-	ctx->runtime->builtInTypes.type->llvmType = LLVMStructTypeInContext(ctx->runtime->llvmCtx, types, 9, o_false);
-}
-
-void o_bootstrap_field_init_llvm_type(oThreadContextRef ctx) {
-    LLVMTypeRef types[3];
-	// name
-	types[0] = LLVMPointerType(ctx->runtime->builtInTypes.string->llvmType, 0);
-	// type
-	types[1] = LLVMPointerType(ctx->runtime->builtInTypes.type->llvmType, 0);
-	// offset
-	types[2] = ctx->runtime->builtInTypes.u32->llvmType;
-
-	ctx->runtime->builtInTypes.field->llvmType = LLVMStructTypeInContext(ctx->runtime->llvmCtx, types, 3, o_false);
 }
 
 const u8 o_T_OBJECT = 0;

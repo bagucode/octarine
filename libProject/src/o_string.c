@@ -129,13 +129,6 @@ void o_bootstrap_string_init_type(oRuntimeRef rt) {
 	rt->builtInTypes.string->copyInternals = CopyHelper;
 }
 
-void o_bootstrap_string_init_llvm_type(oThreadContextRef ctx) {
-    LLVMTypeRef types[2];
-    types[0] = ctx->runtime->builtInTypes.pointer->llvmType;
-    types[1] = ctx->runtime->builtInTypes.uword->llvmType;
-    ctx->runtime->builtInTypes.string->llvmType = LLVMStructTypeInContext(ctx->runtime->llvmCtx, types, 2, o_false);
-}
-
 char* oGenUniqueName(oThreadContextRef ctx) {
     u64 idx = oAtomicGetThenAddUword(&ctx->runtime->uniqueNameIdx, 1);
 	// genstr_ is 7 chars, idx is a max of 20 chars and we need a null = 28

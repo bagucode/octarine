@@ -160,24 +160,6 @@ void o_bootstrap_array_init_type(oRuntimeRef rt) {
     fields[2]->type = rt->builtInTypes.uword;
 }
 
-void o_bootstrap_array_init_llvm_type(oThreadContextRef ctx) {
-	LLVMTypeRef types[4];
-    // element type
-    types[0] = LLVMPointerType(ctx->runtime->builtInTypes.type->llvmType, 0);
-    // num elements
-    types[1] = ctx->runtime->builtInTypes.uword->llvmType;
-    // alignment
-    types[2] = ctx->runtime->builtInTypes.uword->llvmType;
-    // data
-    types[3] = LLVMArrayType(ctx->runtime->builtInTypes.u8->llvmType, 0);
-    
-	LLVMStructSetBody(ctx->runtime->builtInTypes.array->llvmType, types, 4, o_false);
-}
-
-
-
-
-
 
 
 

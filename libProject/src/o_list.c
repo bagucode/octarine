@@ -24,8 +24,6 @@ void o_bootstrap_list_init_type(oThreadContextRef ctx) {
     fields[1]->name = o_bootstrap_string_create(ctx->runtime, "next");
     fields[1]->offset = offsetof(oListObj, next);
     fields[1]->type = ctx->runtime->builtInTypes.list;
-
-	ctx->runtime->builtInTypes.list->llvmType = _oTypeCreateLLVMType(ctx, ctx->runtime->builtInTypes.list);
 }
 
 oListObjRef _oListObjCreate(oThreadContextRef ctx, oObject data) {

@@ -5,7 +5,7 @@
 #include "o_runtime.h"
 #include "o_array.h"
 #include "o_list.h"
-
+#include "o_error.h"
 
 
 oMapRef oMapCreate(oThreadContextRef ctx) {

@@ -1,7 +1,7 @@
 #ifndef octarine_error_h
 #define octarine_error_h
 
-#include "../../platformProject/src/o_platform.h"
+#include "o_platform.h"
 #include "o_typedefs.h"
 
 struct oError {

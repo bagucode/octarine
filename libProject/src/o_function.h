@@ -1,10 +1,9 @@
 #ifndef octarine_function_h
 #define octarine_function_h
 
-#include "../../platformProject/src/o_platform.h"
+#include "o_platform.h"
 #include "o_typedefs.h"
 #include "o_utils.h"
-#include "llvm-c/Core.h"
 
 struct oParameter {
     //oStringRef name;
@@ -33,7 +32,6 @@ o_bool oSignatureEquals(oThreadContextRef ctx,
 struct oFunctionOverload {
     oSignatureRef signature;
     oArrayRef attributes;
-    LLVMValueRef llvmFunction;
     pointer code;
 };
 

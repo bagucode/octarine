@@ -3,10 +3,8 @@
 #define octarine_runtime_h
 
 #include "o_typedefs.h"
-#include "../../platformProject/src/o_platform.h"
+#include "o_platform.h"
 #include "o_utils.h"
-#include "llvm-c/Core.h"
-#include "llvm-c/ExecutionEngine.h"
 
 typedef struct oThreadContextList {
     oThreadContextRef ctx;
@@ -79,9 +77,6 @@ struct oRuntime {
 	CuckooRef namespaces;
 	oSpinLockRef namespaceLock;
     volatile uword uniqueNameIdx;
-    LLVMContextRef llvmCtx;
-    LLVMModuleRef llvmModule;
-    LLVMExecutionEngineRef llvmEE;
 };
 
 oRuntimeRef oRuntimeCreate();

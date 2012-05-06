@@ -142,6 +142,4 @@ void o_bootstrap_namespace_type_init(oThreadContextRef ctx) {
 	fields[0]->name = o_bootstrap_string_create(ctx->runtime, "name");
 	fields[0]->offset = offsetof(oNamespace, name);
     fields[0]->type = ctx->runtime->builtInTypes.string;
-
-	ctx->runtime->builtInTypes.name_space->llvmType = _oTypeCreateLLVMType(ctx, ctx->runtime->builtInTypes.name_space);
 }
