@@ -45,3 +45,7 @@ void o_bootstrap_error_type_init(oThreadContextRef ctx) {
 
 	ctx->runtime->builtInTypes.error->llvmType = _oTypeCreateLLVMType(ctx, ctx->runtime->builtInTypes.error);
 }
+
+o_bool _oErrorEquals(oThreadContextRef ctx, oErrorRef e1, oErrorRef e2) {
+    return e1 == e2;
+}

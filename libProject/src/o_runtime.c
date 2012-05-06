@@ -230,6 +230,10 @@ static void init_builtInFunctions(oThreadContextRef ctx) {
 	// Symbol
 	sig = o_bootstrap_create_equals_sig(ctx, ctx->runtime->builtInTypes.symbol);
 	overload = _oFunctionOverloadRegisterNative(ctx, sig, NULL, _oSymbolEquals);
+    
+    // Error
+    sig = o_bootstrap_create_equals_sig(ctx, ctx->runtime->builtInTypes.error);
+    overload = _oFunctionOverloadRegisterNative(ctx, sig, NULL, _oErrorEquals);
 }
 
 static void init_builtInConstants(oThreadContextRef ctx) {

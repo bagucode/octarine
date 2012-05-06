@@ -20,6 +20,8 @@ void oErrorClear(oThreadContextRef ctx);
 // Get the error "message"
 oObject oErrorGetData(oErrorRef err);
 
+o_bool _oErrorEquals(oThreadContextRef ctx, oErrorRef e1, oErrorRef e2);
+
 void o_bootstrap_error_type_init(oThreadContextRef ctx);
 
 #endif
