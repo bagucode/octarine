@@ -31,6 +31,9 @@ static o_bool HeapShared(Heap* heap);
 struct Type;
 struct Box;
 
+// Having the result pointers as out-parameters may look weird since the return value
+// is available but it is necessary to do it this way to be able to fully control
+// when the pointer is written to (needed for shared heap sync).
 static void HeapAlloc(Heap* heap, struct Type* type, pointer* dest);
 static void _HeapAlloc(Heap* heap, uword type_size, struct Box** dest);
 
