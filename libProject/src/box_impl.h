@@ -22,7 +22,7 @@
  +------------+ Box
  |type+flags  | 8 16-aligned
  +------------+
- |DATA        | N
+ |DATA        | word-aligned
  +------------+
 
  32 bits
@@ -34,7 +34,7 @@
  +------------+ Box
  |type+flags  | 4 16-aligned
  +------------+
- |DATA        | N
+ |DATA        | word-aligned
  +------------+
  */
 
@@ -114,9 +114,59 @@ static uword BoxCalcArrayBoxSize(uword type_size, uword alignment, uword num_ele
 }
 
 static Box* BoxGetBox(pointer object) {
-    return 
+    // This is a little tricky if the object is an array that is not word-aligned.
+    // 1. Make sure the pointer is word-aligned
+    uword ptr = alignOffset((uword)object, sizeof(uword));
+    // 2. Get alignment offset from wordsize by subtracting difference from original from wordsize
+    uword alignment = sizeof(uword) - (ptr - ((uword)object));
+    // 3. Backtrack by alignment offset
+    ptr = ((uword)object) - alignment;
+    // 4. We are now either in the box or in alignment padding space.
+    // The padding is always initialized to NULL and the data field of a valid
+    // box instance can never be NULL so now we just back up one word at a time
+    // until we hit something that is not NULL and that should be the box.
+    do {
+        object = (pointer)ptr;
+        ptr -= sizeof(uword);
+    } while (object == NULL);
+
+    return (Box*)object;
 }
 
 
 
 #endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
