@@ -2,8 +2,8 @@
 #ifndef octarine_vector_h
 #define octarine_vector_h
 
-#include "o_basic_types.h"
-#include "o_typedefs.h"
+#include "basic_types.h"
+#include "typedefs.h"
 
 struct oVector {
     oArrayRef data;
@@ -32,6 +32,6 @@ void _oVectorGet(oThreadContextRef ctx, oVectorRef vec, uword idx, pointer dest,
 uword _oVectorSize(oThreadContextRef ctx, oVectorRef vec);
 #define oVectorSize(vec) _oC(_oVectorSize, vec)
 
-void o_bootstrap_vector_init_type(oThreadContextRef ctx);
+void bootstrap_vector_init_type(oThreadContextRef ctx);
 
 #endif

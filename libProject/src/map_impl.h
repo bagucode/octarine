@@ -1,11 +1,11 @@
-#include "o_map.h"
-#include "o_memory.h"
-#include "o_string.h"
-#include "o_thread_context.h"
-#include "o_runtime.h"
-#include "o_array.h"
-#include "o_list.h"
-#include "o_error.h"
+#include "map.h"
+#include "memory.h"
+#include "string.h"
+#include "thread_context.h"
+#include "runtime.h"
+#include "array.h"
+#include "list.h"
+#include "error.h"
 
 
 oMapRef oMapCreate(oThreadContextRef ctx) {
@@ -21,7 +21,7 @@ void oMapPut(oMapRef map, oStringRef key, oObject value) {
 
 void _oMapPut(oThreadContextRef ctx, oMapRef map, uword hashcode, 
               oObject key,
-              o_bool (*equals)(oThreadContextRef, oObject, oObject),
+              bool (*equals)(oThreadContextRef, oObject, oObject),
               oMapEntryRef value) {
     oListObjRef* buckets;
     oListObjRef currentBucket;
@@ -58,7 +58,7 @@ void _oMapPut(oThreadContextRef ctx, oMapRef map, uword hashcode,
 }
 
 oMapEntryRef _oMapGet(oThreadContextRef ctx, oMapRef map, uword hashcode, 
-                      oObject key, o_bool (*equals)(oThreadContextRef, oObject, oObject)) {
+                      oObject key, bool (*equals)(oThreadContextRef, oObject, oObject)) {
     uword bucketIdx;
     oListObjRef* buckets;
     oListObjRef bucket;
@@ -86,7 +86,7 @@ oObject oMapGet(oMapRef map, oStringRef key) {
 
 
 
-void o_bootstrap_map_init_type(oThreadContextRef ctx) {
+void bootstrap_map_init_type(oThreadContextRef ctx) {
 	ctx->runtime->builtInTypes.map = NULL;
 	//ctx->runtime->builtInTypes.map->llvmType = _oTypeCreateLLVMType(ctx, ctx->runtime->builtInTypes.map);
 }

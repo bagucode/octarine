@@ -1,11 +1,11 @@
 #ifndef octarine_memory_h
 #define octarine_memory_h
 
-#include "o_basic_types.h"
-#include "o_object.h"
-#include "o_typedefs.h"
+#include "basic_types.h"
+#include "object.h"
+#include "typedefs.h"
 
-oHeapRef oHeapCreate(o_bool synchronized, uword gc_threshold);
+oHeapRef oHeapCreate(bool synchronized, uword gc_threshold);
 void oHeapRunFinalizers(oHeapRef heap);
 void oHeapDestroy(oHeapRef heap);
 
@@ -26,7 +26,7 @@ oObject _oHeapCopyObjectShared(oThreadContextRef ctx, oObject obj);
 
 oTypeRef oMemoryGetObjectType(oThreadContextRef ctx, oObject obj);
 
-o_bool oMemoryIsObjectShared(oObject obj);
+bool oMemoryIsObjectShared(oObject obj);
 
 void oMemoryPushFrame(oThreadContextRef ctx,
                       pointer frame,
@@ -34,12 +34,12 @@ void oMemoryPushFrame(oThreadContextRef ctx,
 
 void oMemoryPopFrame(oThreadContextRef ctx);
 
-oObject o_bootstrap_object_alloc(oRuntimeRef rt,
-                                 oTypeRef proto_type,
+oObject bootstrap_object_alloc(oRuntimeRef rt,
+                                 oTypeRef prottype,
                                  uword size);
 
-oArrayRef o_bootstrap_array_alloc(oRuntimeRef rt,
-                                  oTypeRef proto_elem_type,
+oArrayRef bootstrap_array_alloc(oRuntimeRef rt,
+                                  oTypeRef protelem_type,
                                   uword num_elements,
                                   uword elem_size,
                                   u8 alignment);

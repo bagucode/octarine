@@ -2,12 +2,12 @@
 #ifndef octarine_type_h
 #define octarine_type_h
 
-#include "o_basic_types.h"
-#include "o_typedefs.h"
+#include "basic_types.h"
+#include "typedefs.h"
 
-extern const u8 o_T_OBJECT;
-extern const u8 o_T_STRUCT;
-extern const oTypeRef o_T_SELF;
+extern const u8 T_OBJECT;
+extern const u8 T_STRUCT;
+extern const oTypeRef T_SELF;
 
 struct oField {
     oStringRef name;
@@ -36,11 +36,11 @@ oFieldRef _oFieldCreate(oThreadContextRef ctx,
                         oTypeRef type);
 #define oFieldCreate(name, type) _oC(_oFieldCreate, name, type)
 
-o_bool oTypeIsPrimitive(oTypeRef t);
-o_bool oTypeIsStruct(oTypeRef t);
-o_bool oTypeIsObject(oTypeRef t);
+bool oTypeIsPrimitive(oTypeRef t);
+bool oTypeIsStruct(oTypeRef t);
+bool oTypeIsObject(oTypeRef t);
 
-o_bool _oTypeEquals(oThreadContextRef ctx, oTypeRef t, oObject other);
+bool _oTypeEquals(oThreadContextRef ctx, oTypeRef t, oObject other);
 #define oTypeEquals(type, other) _oC(_oTypeEquals, type, other)
 
 oTypeRef _oTypeCreatePrototype(oThreadContextRef ctx);
@@ -58,10 +58,10 @@ _oC(_oTypeCreate, kind, alignment, name, fields, finalizer, prototype)
 
 oStringRef oTypeGetName(oTypeRef type);
 
-void o_bootstrap_type_init_type(oRuntimeRef rt);
-void o_bootstrap_type_init_llvm_type(oThreadContextRef ctx);
-void o_bootstrap_type_init_field(oRuntimeRef rt);
-void o_bootstrap_field_init_llvm_type(oThreadContextRef ctx);
-oArrayRef o_bootstrap_type_create_field_array(oRuntimeRef rt, uword numFields);
+void bootstrap_type_init_type(oRuntimeRef rt);
+void bootstrap_type_init_llvm_type(oThreadContextRef ctx);
+void bootstrap_type_init_field(oRuntimeRef rt);
+void bootstrap_field_init_llvm_type(oThreadContextRef ctx);
+oArrayRef bootstrap_type_create_field_array(oRuntimeRef rt, uword numFields);
 
 #endif

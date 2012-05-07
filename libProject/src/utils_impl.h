@@ -1,4 +1,4 @@
-#include "o_utils.h"
+#include "utils.h"
 #include <memory.h>
 
 // Cuckoo hash table
@@ -11,7 +11,7 @@ static uword nextp2(uword n) {
 	return p2;
 }
 
-static o_bool CuckooDefaultCompare(pointer key1, pointer key2) {
+static bool CuckooDefaultCompare(pointer key1, pointer key2) {
 	return key1 == key2;
 }
 
@@ -52,7 +52,7 @@ static uword CuckooHash3(uword h) {
 	return h * 31;
 }
 
-static o_bool CuckooTryPut(CuckooRef ck, CuckooEntry* entry) {
+static bool CuckooTryPut(CuckooRef ck, CuckooEntry* entry) {
 	uword i, mask;
     CuckooEntry tmp;
     
@@ -63,7 +63,7 @@ static o_bool CuckooTryPut(CuckooRef ck, CuckooEntry* entry) {
 	ck->table[i] = *entry;
 	if(tmp.key == NULL || ck->compare(tmp.key, entry->key)) {
 		++ck->size;
-		return o_true;
+		return true;
 	}
 	*entry = tmp;
 
@@ -72,7 +72,7 @@ static o_bool CuckooTryPut(CuckooRef ck, CuckooEntry* entry) {
 	ck->table[i] = *entry;
 	if(tmp.key == NULL || ck->compare(tmp.key, entry->key)) {
 		++ck->size;
-		return o_true;
+		return true;
 	}
 	*entry = tmp;
 
@@ -81,11 +81,11 @@ static o_bool CuckooTryPut(CuckooRef ck, CuckooEntry* entry) {
 	ck->table[i] = *entry;
 	if(tmp.key == NULL || ck->compare(tmp.key, entry->key)) {
 		++ck->size;
-		return o_true;
+		return true;
 	}
 	*entry = tmp;
 
-	return o_false;
+	return false;
 }
 
 static void CuckooGrow(CuckooRef ck) {
@@ -94,7 +94,7 @@ static void CuckooGrow(CuckooRef ck) {
 	
 	for(i = 0; i < ck->capacity; ++i) {
 		if(ck->table[i].key != NULL) {
-			if(CuckooTryPut(bigger, &ck->table[i]) == o_false) {
+			if(CuckooTryPut(bigger, &ck->table[i]) == false) {
 				cap = bigger->capacity + 1;
 				CuckooDestroy(bigger);
 				bigger = CuckooCreate(cap, ck->compare, ck->hash);
@@ -113,7 +113,7 @@ void CuckooPut(CuckooRef ck, pointer key, pointer val) {
     
     entry.key = key;
     entry.val = val;
-	while(o_true) {
+	while(true) {
 		for(i = 0; i < 5; ++i) {
 			if(CuckooTryPut(ck, &entry)) {
 				return;
@@ -172,14 +172,14 @@ void StackPush(StackRef stack, pointer entry) {
     ++stack->top;
 }
 
-o_bool StackPop(StackRef stack, pointer out) {
+bool StackPop(StackRef stack, pointer out) {
     uword index;
     
     if(stack->top == 0) {
-        return o_false;
+        return false;
     }
     --stack->top;
     index = stack->entrySize * stack->top;
     memcpy(out, stack->stack + index, stack->entrySize);
-    return o_true;
+    return true;
 }

@@ -1,8 +1,8 @@
 #ifndef octarine_error_h
 #define octarine_error_h
 
-#include "o_platform.h"
-#include "o_typedefs.h"
+#include "platform.h"
+#include "typedefs.h"
 
 struct oError {
     oObject data;
@@ -20,8 +20,8 @@ void oErrorClear(oThreadContextRef ctx);
 // Get the error "message"
 oObject oErrorGetData(oErrorRef err);
 
-o_bool _oErrorEquals(oThreadContextRef ctx, oErrorRef e1, oErrorRef e2);
+bool _oErrorEquals(oThreadContextRef ctx, oErrorRef e1, oErrorRef e2);
 
-void o_bootstrap_error_type_init(oThreadContextRef ctx);
+void bootstrap_error_type_init(oThreadContextRef ctx);
 
 #endif

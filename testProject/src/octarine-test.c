@@ -1,19 +1,19 @@
-#include "o_test.h"
-#include "../../libProject/src/o_thread_context.h"
-#include "../../libProject/src/o_runtime.h"
-#include "../../libProject/src/o_list.h"
-#include "../../libProject/src/o_string.h"
-#include "../../libProject/src/o_memory.h"
-#include "../../libProject/src/o_reader.h"
-#include "../../libProject/src/o_object.h"
-#include "../../libProject/src/o_symbol.h"
-#include "../../libProject/src/o_array.h"
-#include "../../libProject/src/o_type.h"
-#include "../../libProject/src/o_vector.h"
-#include "../../libProject/src/o_keyword.h"
-#include "../../libProject/src/o_error.h"
-#include "../../libProject/src/o_namespace.h"
-#include "../../libProject/src/o_function.h"
+#include "test.h"
+#include "../../libProject/src/thread_context.h"
+#include "../../libProject/src/runtime.h"
+#include "../../libProject/src/list.h"
+#include "../../libProject/src/string.h"
+#include "../../libProject/src/memory.h"
+#include "../../libProject/src/reader.h"
+#include "../../libProject/src/object.h"
+#include "../../libProject/src/symbol.h"
+#include "../../libProject/src/array.h"
+#include "../../libProject/src/type.h"
+#include "../../libProject/src/vector.h"
+#include "../../libProject/src/keyword.h"
+#include "../../libProject/src/error.h"
+#include "../../libProject/src/namespace.h"
+#include "../../libProject/src/function.h"
 
 #include <memory.h>
 #include <assert.h>
@@ -122,7 +122,7 @@ void testReaderEmptyList() {
 void testSymbolEquals() {
     oRuntimeRef runtime = oRuntimeCreate();
     oThreadContextRef ctx = runtime->allContexts->ctx;
-    o_bool eqResult;
+    bool eqResult;
     oROOTS(ctx)
     oSymbolRef sym1;
     oSymbolRef sym2;
@@ -146,7 +146,7 @@ void testSymbolEquals() {
 	oRoots.sym2 = oSymbolCreate(oRoots.name);
 
     eqResult = oSymbolEquals(oRoots.sym1, oRoots.sym2);
-	assert(eqResult == o_false);
+	assert(eqResult == false);
 
     oENDVOIDFN
     oRuntimeDestroy(runtime);
@@ -156,7 +156,7 @@ void testReadSymbol() {
     oRuntimeRef runtime = oRuntimeCreate();
     oThreadContextRef ctx = runtime->allContexts->ctx;
     oSymbolRef bob;
-    o_bool eqResult;
+    bool eqResult;
     oROOTS(ctx)
     oObject readResult;
     oSymbolRef otherBob;
@@ -185,7 +185,7 @@ void testReadOneListAndOneSymbol() {
     oSymbolRef other;
     oListObjRef lst;
     oListObjRef bobLst;
-    o_bool eqResult;
+    bool eqResult;
     oROOTS(ctx)
     oObject readResult;
     oStringRef src;
@@ -256,14 +256,14 @@ oTypeRef createTestStructType(oThreadContextRef ctx) {
     fields[2]->name = oStringCreate("three");
     fields[2]->type = ctx->runtime->builtInTypes.i64;
     fields[3]->name = oStringCreate("self");
-    fields[3]->type = o_T_SELF;
+    fields[3]->type = T_SELF;
     fields[4]->name = oStringCreate("list");
 	fields[4]->type = ctx->runtime->builtInTypes.list;
     fields[5]->name = oStringCreate("five");
     fields[5]->type = ctx->runtime->builtInTypes.f64;
     
     oRoots.typeName = oStringCreate("MyHappyTestType");
-    oRoots.myType = oTypeCreate(o_T_OBJECT, 0, oRoots.typeName, oRoots.fields, NULL, NULL);
+    oRoots.myType = oTypeCreate(T_OBJECT, 0, oRoots.typeName, oRoots.fields, NULL, NULL);
 	oRETURN(oRoots.myType);
 	oENDFN(oTypeRef)
 }
@@ -401,7 +401,7 @@ void testReadVector() {
     oListObjRef lst;
     oSymbolRef sym;
     oVectorRef vec;
-    o_bool eqResult;
+    bool eqResult;
     uword size;
     oROOTS(ctx)
     oObject readResult;
@@ -469,7 +469,7 @@ void testOutOfMemory() {
     
     ctx->error = rt->builtInErrors.outOfMemory;
     oArrayCreate(rt->builtInTypes.i64, 10000);
-    assert(o_false); // should never get here
+    assert(false); // should never get here
     
     oENDVOIDFN
     assert(oErrorGet(ctx) == rt->builtInErrors.outOfMemory);
@@ -581,7 +581,7 @@ void testCreateThreadDoesNotCrash() {
 
 volatile uword threadTestLatch;
 void threadFnThrashNamespace(oThreadContextRef ctx, void* arg) {
-    o_bool check;
+    bool check;
     uword count;
     oROOTS(ctx)
     oStringRef val;
@@ -599,10 +599,10 @@ void threadFnThrashNamespace(oThreadContextRef ctx, void* arg) {
     oRoots.bindMe = oSymbolCreate(oRoots.tmp);
     oRoots.compare = oStringCreate("must equal");
     
-    check = o_false;
+    check = false;
     count = 0;
     
-    while(check == o_false) {
+    while(check == false) {
         oRoots.tmp = oStringCreate("random data (4)");
         oRoots.tmp = oListObjCreate(oRoots.tmp);
         oRoots.tmp = oHeapCopyObjectShared(oRoots.tmp);

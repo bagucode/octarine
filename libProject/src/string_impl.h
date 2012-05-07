@@ -1,12 +1,12 @@
-#include "o_string.h"
-#include "o_memory.h"
-#include "o_thread_context.h"
-#include "o_runtime.h"
-#include "o_object.h"
-#include "o_runtime.h"
-#include "o_type.h"
-#include "o_array.h"
-#include "o_error.h"
+#include "string.h"
+#include "memory.h"
+#include "thread_context.h"
+#include "runtime.h"
+#include "object.h"
+#include "runtime.h"
+#include "type.h"
+#include "array.h"
+#include "error.h"
 #include <string.h>
 #include <memory.h>
 #include <stdio.h>
@@ -62,7 +62,7 @@ int oStringCompare(oStringRef x, oStringRef y) {
     return oNativeStringCompare(x->str, y->str);
 }
 
-o_bool _oStringEquals(oThreadContextRef ctx, oStringRef str1, oStringRef str2) {
+bool _oStringEquals(oThreadContextRef ctx, oStringRef str1, oStringRef str2) {
 	return oStringCompare(str1, str2) == 0;
 }
 
@@ -79,7 +79,7 @@ oArrayRef _oStringUtf8Copy(oThreadContextRef ctx, oStringRef str) {
 	oENDFN(oArrayRef)
 }
 
-o_char _oStringCharAt(oThreadContextRef ctx, oStringRef str, uword idx) {
+char _oStringCharAt(oThreadContextRef ctx, oStringRef str, uword idx) {
     return oNativeStringCharAt(str->str, idx);
 }
 
@@ -99,8 +99,8 @@ oStringRef _oStringSubString(oThreadContextRef ctx, oStringRef str, uword start,
     oENDFN(oStringRef)
 }
 
-oStringRef o_bootstrap_string_create(oRuntimeRef rt, const char *utf8) {
-	oStringRef str = (oStringRef)o_bootstrap_object_alloc(rt, rt->builtInTypes.string, sizeof(oString));
+oStringRef bootstrap_string_create(oRuntimeRef rt, const char *utf8) {
+	oStringRef str = (oStringRef)bootstrap_object_alloc(rt, rt->builtInTypes.string, sizeof(oString));
     str->str = oNativeStringFromUtf8(utf8);
 	str->hashCode = fnv1a((const u8*)utf8, strlen(utf8));
     return str;
@@ -120,10 +120,10 @@ static void CopyHelper(oObject o1, oObject o2) {
 	dest->str = oNativeStringCopy(src->str);
 }
 
-void o_bootstrap_string_init_type(oRuntimeRef rt) {
+void bootstrap_string_init_type(oRuntimeRef rt) {
     rt->builtInTypes.string->fields = NULL;
-    rt->builtInTypes.string->kind = o_T_OBJECT;
-    rt->builtInTypes.string->name = o_bootstrap_string_create(rt, "String");
+    rt->builtInTypes.string->kind = T_OBJECT;
+    rt->builtInTypes.string->name = bootstrap_string_create(rt, "String");
     rt->builtInTypes.string->size = sizeof(oString);
     rt->builtInTypes.string->finalizer = finalizer;
 	rt->builtInTypes.string->copyInternals = CopyHelper;

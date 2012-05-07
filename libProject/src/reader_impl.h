@@ -1,16 +1,16 @@
 
-#include "o_reader.h"
-#include "o_memory.h"
-#include "o_thread_context.h"
-#include "o_type.h"
-#include "o_string.h"
-#include "o_runtime.h"
-#include "o_array.h"
-#include "o_list.h"
-#include "o_symbol.h"
-#include "o_vector.h"
-#include "o_keyword.h"
-#include "o_error.h"
+#include "reader.h"
+#include "memory.h"
+#include "thread_context.h"
+#include "type.h"
+#include "string.h"
+#include "runtime.h"
+#include "array.h"
+#include "list.h"
+#include "symbol.h"
+#include "vector.h"
+#include "keyword.h"
+#include "error.h"
 #include <stddef.h>
 #include <ctype.h>
 #include <memory.h>
@@ -39,7 +39,7 @@ static oObject readSymbolOrKeyword(oThreadContextRef ctx, oArrayRef src, uword* 
 static oObject readVector(oThreadContextRef ctx, oArrayRef src, uword* idx);
 static oObject mismatch(oThreadContextRef ctx, oArrayRef src, uword* idx);
 
-void o_bootstrap_reader_init() {
+void bootstrap_reader_init() {
     uword i;
 
     // Also init the read table here
@@ -56,21 +56,21 @@ void o_bootstrap_reader_init() {
     readTable[RCBRACKET] = mismatch;
 }
 
-o_bool isReserved(uword ch) {
+bool isReserved(uword ch) {
     uword i;
     for(i = 0; i < sizeof(reservedChars); ++i) {
         if(reservedChars[i] == ch) {
-            return o_true;
+            return true;
         }
     }
-    return o_false;
+    return false;
 }
 
 static u8 getChar(oArrayRef arr, uword i) {
     return ((u8*)(oArrayDataPointer(arr)))[i];
 }
 
-static o_bool isSpace(uword ch) {
+static bool isSpace(uword ch) {
     return isspace((int)ch) || ch == ',';
 }
 
@@ -81,7 +81,7 @@ static void skipSpace(oArrayRef src, uword *idx) {
     }
 }
 
-static o_bool eos(oArrayRef src, uword* idx) {
+static bool eos(oArrayRef src, uword* idx) {
     return src->num_elements == (*idx);
 }
 
@@ -129,7 +129,7 @@ static oObject readString(oThreadContextRef ctx, oArrayRef src, uword* idx) {
 }
 
 static oObject readSymbolOrKeyword(oThreadContextRef ctx, oArrayRef src, uword* idx) {
-    o_char c;
+    char c;
     uword len;
     oROOTS(ctx)
     oObject theString;
@@ -161,10 +161,10 @@ static oObject readList(oThreadContextRef ctx, oArrayRef src, uword* idx) {
     oENDROOTS
     
     ++(*idx); // eat (
-    if(eos(src, idx) == o_false) {
+    if(eos(src, idx) == false) {
         oSETRET(oListObjCreate(NULL));
         while(getChar(src, *idx) != RPAREN
-              && eos(src, idx) == o_false) {
+              && eos(src, idx) == false) {
             oRoots.tmp = read(ctx, src, idx);
             if(oRoots.tmp != NULL)
 				oSETRET(oListObjAddFront((oListObjRef)oGETRET, oRoots.tmp));
@@ -190,10 +190,10 @@ static oObject readVector(oThreadContextRef ctx, oArrayRef src, uword* idx) {
     oENDROOTS
     
     ++(*idx); // eat [
-    if(eos(src, idx) == o_false) {
+    if(eos(src, idx) == false) {
         oSETRET(oVectorCreate(ctx->runtime->builtInTypes.any));
         while(getChar(src, *idx) != RSBRACKET
-              && eos(src, idx) == o_false) {
+              && eos(src, idx) == false) {
             oRoots.tmp = read(ctx, src, idx);
             if(oRoots.tmp != NULL)
 				oSETRET(oVectorAddBack(oGETRET, oRoots.tmp, oObjectGetType(ctx, oRoots.tmp)));

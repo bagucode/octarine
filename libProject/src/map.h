@@ -1,8 +1,8 @@
 #ifndef octarine_map_h
 #define octarine_map_h
 
-#include "o_object.h"
-#include "o_typedefs.h"
+#include "object.h"
+#include "typedefs.h"
 
 /* A hash map where the keys are strings and the values objects of any type */
 
@@ -23,6 +23,6 @@ void oMapPut(oMapRef map, oStringRef key, oObject value);
 oObject oMapGet(oMapRef map, oStringRef key);
 
 
-void o_bootstrap_map_init_type(oThreadContextRef ctx);
+void bootstrap_map_init_type(oThreadContextRef ctx);
 
 #endif

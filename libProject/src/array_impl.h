@@ -1,12 +1,12 @@
-#include "o_array.h"
-#include "o_thread_context.h"
-#include "o_type.h"
-#include "o_memory.h"
-#include "o_object.h"
-#include "o_runtime.h"
-#include "o_string.h"
-#include "o_error.h"
-#include "o_function.h"
+#include "array.h"
+#include "thread_context.h"
+#include "type.h"
+#include "memory.h"
+#include "object.h"
+#include "runtime.h"
+#include "string.h"
+#include "error.h"
+#include "function.h"
 #include <memory.h>
 #include <stddef.h>
 
@@ -32,12 +32,12 @@ uword oArraySize(oArrayRef arr) {
     return arr->num_elements;
 }
 
-oArrayRef o_bootstrap_array_create(oRuntimeRef rt,
+oArrayRef bootstrap_array_create(oRuntimeRef rt,
                                    oTypeRef type,
                                    uword num_elements,
                                    uword elem_size,
                                    u8 alignment) {
-    return o_bootstrap_array_alloc(rt, type, num_elements, elem_size, alignment);
+    return bootstrap_array_alloc(rt, type, num_elements, elem_size, alignment);
 }
 
 void _oArrayCopy(oThreadContextRef ctx, oArrayRef from, oArrayRef to) {
@@ -131,31 +131,31 @@ void _oArrayGet(oThreadContextRef ctx, oArrayRef arr, uword idx, pointer dest, o
     }
 }
 
-o_bool _oArrayEquals(oThreadContextRef ctx, oArrayRef arr1, oArrayRef arr2) {
+bool _oArrayEquals(oThreadContextRef ctx, oArrayRef arr1, oArrayRef arr2) {
     // Can't do a proper equals in the C code because there is no way
     // to know the size of the elements (and thus no way to know the
     // signature of the equals function to use).
     return arr1 == arr2;
 }
 
-void o_bootstrap_array_init_type(oRuntimeRef rt) {
+void bootstrap_array_init_type(oRuntimeRef rt) {
     oFieldRef *fields;
-    rt->builtInTypes.array->fields = o_bootstrap_type_create_field_array(rt, 3);
-    rt->builtInTypes.array->kind = o_T_OBJECT;
-    rt->builtInTypes.array->name = o_bootstrap_string_create(rt, "Array");
+    rt->builtInTypes.array->fields = bootstrap_type_create_field_array(rt, 3);
+    rt->builtInTypes.array->kind = T_OBJECT;
+    rt->builtInTypes.array->name = bootstrap_string_create(rt, "Array");
     rt->builtInTypes.array->size = sizeof(oArray);
     
     fields = (oFieldRef*)oArrayDataPointer(rt->builtInTypes.array->fields);
     
-    fields[0]->name = o_bootstrap_string_create(rt, "element-type");
+    fields[0]->name = bootstrap_string_create(rt, "element-type");
     fields[0]->offset = offsetof(oArray, element_type);
     fields[0]->type = rt->builtInTypes.type;
     
-    fields[1]->name = o_bootstrap_string_create(rt, "length");
+    fields[1]->name = bootstrap_string_create(rt, "length");
     fields[1]->offset = offsetof(oArray, num_elements);
     fields[1]->type = rt->builtInTypes.uword;
     
-    fields[2]->name = o_bootstrap_string_create(rt, "alignment");
+    fields[2]->name = bootstrap_string_create(rt, "alignment");
     fields[2]->offset = offsetof(oArray, alignment);
     fields[2]->type = rt->builtInTypes.uword;
 }

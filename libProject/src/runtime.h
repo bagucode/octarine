@@ -2,9 +2,9 @@
 #ifndef octarine_runtime_h
 #define octarine_runtime_h
 
-#include "o_typedefs.h"
-#include "o_platform.h"
-#include "o_utils.h"
+#include "typedefs.h"
+#include "platform.h"
+#include "utils.h"
 
 typedef struct oThreadContextList {
     oThreadContextRef ctx;
@@ -27,8 +27,8 @@ typedef struct oRuntimeBuiltInTypes {
     oTypeRef word;
     oTypeRef uword;
     oTypeRef pointer;
-    oTypeRef o_bool;
-    oTypeRef o_char;
+    oTypeRef bool;
+    oTypeRef char;
     /* aggregate value types */
     /* object types */
     oTypeRef string;
@@ -67,15 +67,15 @@ typedef struct oRuntimeBuiltInErrors {
 
 struct oRuntime {
     oHeapRef globals;
-    oTLSRef currentContext;
+    Mutex* currentContext;
     oThreadContextListRef allContexts;
-    oSpinLockRef contextListLock;
+    SpinLock* contextListLock;
     oRuntimeBuiltInTypes builtInTypes;
     oRuntimeBuiltInFunctions builtInFunctions;
     oRuntimeBuiltInConstants builtInConstants;
     oRuntimeBuiltInErrors builtInErrors;
 	CuckooRef namespaces;
-	oSpinLockRef namespaceLock;
+	SpinLock* namespaceLock;
     volatile uword uniqueNameIdx;
 };
 
@@ -91,8 +91,8 @@ void _oRuntimeAddNamespace(oRuntimeRef rt, oNamespaceRef ns);
 
 oNamespaceRef _oRuntimeFindNamespace(oRuntimeRef rt, oStringRef name);
 
-oSignatureRef o_bootstrap_create_equals_sig(oThreadContextRef ctx, oTypeRef type);
+oSignatureRef bootstrap_create_equals_sig(oThreadContextRef ctx, oTypeRef type);
 
-oSignatureRef o_bootstrap_create_hashcode_sig(oThreadContextRef ctx, oTypeRef type);
+oSignatureRef bootstrap_create_hashcode_sig(oThreadContextRef ctx, oTypeRef type);
 
 #endif

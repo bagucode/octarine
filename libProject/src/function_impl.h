@@ -1,11 +1,11 @@
-#include "o_function.h"
-#include "o_memory.h"
-#include "o_thread_context.h"
-#include "o_runtime.h"
-#include "o_error.h"
-#include "o_type.h"
-#include "o_string.h"
-#include "o_array.h"
+#include "function.h"
+#include "memory.h"
+#include "thread_context.h"
+#include "runtime.h"
+#include "error.h"
+#include "type.h"
+#include "string.h"
+#include "array.h"
 #include <stddef.h>
 
 oParameterRef _oParameterCreate(oThreadContextRef ctx, oTypeRef type) {
@@ -21,9 +21,9 @@ oParameterRef _oParameterCreate(oThreadContextRef ctx, oTypeRef type) {
 	oENDFN(oParameterRef)
 }
 
-o_bool oParameterEquals(oThreadContextRef ctx, oParameterRef p1, oParameterRef p2) {
+bool oParameterEquals(oThreadContextRef ctx, oParameterRef p1, oParameterRef p2) {
 	if(p1 == p2) {
-		return o_true;
+		return true;
 	}
     return _oTypeEquals(NULL, p1->type, p2->type);
 }
@@ -50,7 +50,7 @@ oSignatureRef _oSignatureCreate(oThreadContextRef ctx, oTypeRef returnType, oArr
     oENDFN(oSignatureRef)
 }
 
-o_bool oSignatureEquals(oThreadContextRef ctx,
+bool oSignatureEquals(oThreadContextRef ctx,
                         oSignatureRef sig1,
                         oSignatureRef sig2) {
 	oParameterRef* params1;
@@ -58,23 +58,23 @@ o_bool oSignatureEquals(oThreadContextRef ctx,
 	uword i;
 
 	if(sig1 == sig2) {
-        return o_true;
+        return true;
 	}
 	if(!_oTypeEquals(NULL, sig1->retType, sig2->retType)) {
-		return o_false;
+		return false;
 	}
 	if(sig1->parameters->num_elements != sig2->parameters->num_elements) {
-		return o_false;
+		return false;
 	}
 	params1 = (oParameterRef*)oArrayDataPointer(sig1->parameters);
 	params2 = (oParameterRef*)oArrayDataPointer(sig2->parameters);
 	for(i = 0; i < sig1->parameters->num_elements; ++i) {
 		if(!oParameterEquals(NULL, params1[i], params2[i])) {
-			return o_false;
+			return false;
 		}
 	}
 
-	return o_true;
+	return true;
 }
 
 oFunctionOverloadRef _oFunctionOverloadRegisterNative(oThreadContextRef ctx,
@@ -85,7 +85,7 @@ oFunctionOverloadRef _oFunctionOverloadRegisterNative(oThreadContextRef ctx,
 	char* un;
     
     // Allocate in shared heap
-    overload = (oFunctionOverloadRef)o_bootstrap_object_alloc(ctx->runtime, ctx->runtime->builtInTypes.functionOverload, sizeof(oFunctionOverload));
+    overload = (oFunctionOverloadRef)bootstrap_object_alloc(ctx->runtime, ctx->runtime->builtInTypes.functionOverload, sizeof(oFunctionOverload));
     if(overload == NULL) {
         ctx->error = ctx->runtime->builtInErrors.outOfMemory;
         return NULL;
@@ -112,7 +112,7 @@ oFunctionOverloadRef _oFunctionOverloadRegisterNative(oThreadContextRef ctx,
     return overload;
 }
 
-static o_bool CuckooSignatureCompare(pointer key1, pointer key2) {
+static bool CuckooSignatureCompare(pointer key1, pointer key2) {
     return oSignatureEquals(NULL, (oSignatureRef)key1, (oSignatureRef)key2);
 }
 
@@ -125,7 +125,7 @@ oFunctionRef _oFunctionCreate(oThreadContextRef ctx, oFunctionOverloadRef initia
     oFunctionRef fn;
 
     // Allocate in shared heap
-    fn = (oFunctionRef)o_bootstrap_object_alloc(ctx->runtime, ctx->runtime->builtInTypes.function, sizeof(oFunction));
+    fn = (oFunctionRef)bootstrap_object_alloc(ctx->runtime, ctx->runtime->builtInTypes.function, sizeof(oFunction));
     if(fn == NULL) {
         ctx->error = ctx->runtime->builtInErrors.outOfMemory;
         return NULL;
@@ -172,65 +172,65 @@ static void functionFinalizer(oObject obj) {
     CuckooDestroy(fn->overloads);
 }
 
-void o_bootstrap_parameter_type_init(oThreadContextRef ctx) {
+void bootstrap_parameter_type_init(oThreadContextRef ctx) {
     oFieldRef *fields;
-	ctx->runtime->builtInTypes.parameter->fields = o_bootstrap_type_create_field_array(ctx->runtime, 1);
-    ctx->runtime->builtInTypes.parameter->kind = o_T_OBJECT;
-	ctx->runtime->builtInTypes.parameter->name = o_bootstrap_string_create(ctx->runtime, "Parameter");
+	ctx->runtime->builtInTypes.parameter->fields = bootstrap_type_create_field_array(ctx->runtime, 1);
+    ctx->runtime->builtInTypes.parameter->kind = T_OBJECT;
+	ctx->runtime->builtInTypes.parameter->name = bootstrap_string_create(ctx->runtime, "Parameter");
 	ctx->runtime->builtInTypes.parameter->size = sizeof(oParameter);
 
     fields = (oFieldRef*)oArrayDataPointer(ctx->runtime->builtInTypes.parameter->fields);
     
-    fields[0]->name = o_bootstrap_string_create(ctx->runtime, "type");
+    fields[0]->name = bootstrap_string_create(ctx->runtime, "type");
 	fields[0]->offset = offsetof(oParameter, type);
     fields[0]->type = ctx->runtime->builtInTypes.type;
 }
 
-void o_bootstrap_signature_type_init(oThreadContextRef ctx) {
+void bootstrap_signature_type_init(oThreadContextRef ctx) {
     oFieldRef *fields;
-	ctx->runtime->builtInTypes.signature->fields = o_bootstrap_type_create_field_array(ctx->runtime, 3);
-    ctx->runtime->builtInTypes.signature->kind = o_T_OBJECT;
-	ctx->runtime->builtInTypes.signature->name = o_bootstrap_string_create(ctx->runtime, "Signature");
+	ctx->runtime->builtInTypes.signature->fields = bootstrap_type_create_field_array(ctx->runtime, 3);
+    ctx->runtime->builtInTypes.signature->kind = T_OBJECT;
+	ctx->runtime->builtInTypes.signature->name = bootstrap_string_create(ctx->runtime, "Signature");
 	ctx->runtime->builtInTypes.signature->size = sizeof(oSignature);
 
     fields = (oFieldRef*)oArrayDataPointer(ctx->runtime->builtInTypes.signature->fields);
     
-    fields[0]->name = o_bootstrap_string_create(ctx->runtime, "return-type");
+    fields[0]->name = bootstrap_string_create(ctx->runtime, "return-type");
 	fields[0]->offset = offsetof(oSignature, retType);
     fields[0]->type = ctx->runtime->builtInTypes.type;
 
-    fields[1]->name = o_bootstrap_string_create(ctx->runtime, "parameters");
+    fields[1]->name = bootstrap_string_create(ctx->runtime, "parameters");
 	fields[1]->offset = offsetof(oSignature, parameters);
     fields[1]->type = ctx->runtime->builtInTypes.array;
 
-    fields[2]->name = o_bootstrap_string_create(ctx->runtime, "hash-code");
+    fields[2]->name = bootstrap_string_create(ctx->runtime, "hash-code");
 	fields[2]->offset = offsetof(oSignature, parameters);
     fields[2]->type = ctx->runtime->builtInTypes.uword;
 }
 
-void o_bootstrap_fn_overload_type_init(oThreadContextRef ctx) {
+void bootstrap_fn_overload_type_init(oThreadContextRef ctx) {
     oFieldRef *fields;
 	
-    ctx->runtime->builtInTypes.functionOverload->fields = o_bootstrap_type_create_field_array(ctx->runtime, 2);
-    ctx->runtime->builtInTypes.functionOverload->kind = o_T_OBJECT;
-	ctx->runtime->builtInTypes.functionOverload->name = o_bootstrap_string_create(ctx->runtime, "FunctionOverload");
+    ctx->runtime->builtInTypes.functionOverload->fields = bootstrap_type_create_field_array(ctx->runtime, 2);
+    ctx->runtime->builtInTypes.functionOverload->kind = T_OBJECT;
+	ctx->runtime->builtInTypes.functionOverload->name = bootstrap_string_create(ctx->runtime, "FunctionOverload");
 	ctx->runtime->builtInTypes.functionOverload->size = sizeof(oFunctionOverload);
     
     fields = (oFieldRef*)oArrayDataPointer(ctx->runtime->builtInTypes.functionOverload->fields);
     
-    fields[0]->name = o_bootstrap_string_create(ctx->runtime, "signature");
+    fields[0]->name = bootstrap_string_create(ctx->runtime, "signature");
 	fields[0]->offset = offsetof(oFunctionOverload, signature);
     fields[0]->type = ctx->runtime->builtInTypes.signature;
     
-    fields[1]->name = o_bootstrap_string_create(ctx->runtime, "attributes");
+    fields[1]->name = bootstrap_string_create(ctx->runtime, "attributes");
 	fields[1]->offset = offsetof(oFunctionOverload, attributes);
     fields[1]->type = ctx->runtime->builtInTypes.array;
 }
 
-void o_bootstrap_function_type_init(oThreadContextRef ctx) {
+void bootstrap_function_type_init(oThreadContextRef ctx) {
     ctx->runtime->builtInTypes.function->fields = NULL;
-    ctx->runtime->builtInTypes.function->kind = o_T_OBJECT;
-	ctx->runtime->builtInTypes.function->name = o_bootstrap_string_create(ctx->runtime, "Function");
+    ctx->runtime->builtInTypes.function->kind = T_OBJECT;
+	ctx->runtime->builtInTypes.function->name = bootstrap_string_create(ctx->runtime, "Function");
 	ctx->runtime->builtInTypes.function->size = sizeof(oFunction);
     ctx->runtime->builtInTypes.function->finalizer = functionFinalizer;
 }

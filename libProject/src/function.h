@@ -1,9 +1,9 @@
 #ifndef octarine_function_h
 #define octarine_function_h
 
-#include "o_platform.h"
-#include "o_typedefs.h"
-#include "o_utils.h"
+#include "platform.h"
+#include "typedefs.h"
+#include "utils.h"
 
 struct oParameter {
     //oStringRef name;
@@ -13,7 +13,7 @@ struct oParameter {
 oParameterRef _oParameterCreate(oThreadContextRef ctx, oTypeRef type);
 #define oParameterCreate(type) _oC(_oParameterCreate, type)
 
-o_bool oParameterEquals(oThreadContextRef ctx, oParameterRef p1, oParameterRef p2);
+bool oParameterEquals(oThreadContextRef ctx, oParameterRef p1, oParameterRef p2);
 
 struct oSignature {
     oTypeRef retType;
@@ -25,7 +25,7 @@ struct oSignature {
 oSignatureRef _oSignatureCreate(oThreadContextRef ctx, oTypeRef returnType, oArrayRef parameters);
 #define oSignatureCreate(returnType, parameters) _oC(_oSignatureCreate, returnType, parameters)
 
-o_bool oSignatureEquals(oThreadContextRef ctx,
+bool oSignatureEquals(oThreadContextRef ctx,
                         oSignatureRef sig1,
                         oSignatureRef sig2);
 
@@ -51,7 +51,7 @@ oFunctionOverloadRef _oFunctionOverloadRegisterNative(oThreadContextRef ctx,
 #define oFunctionOverloadRegisterNative(sig, attrs, fn) _oC(_oFunctionOverloadRegisterNative, sig, attrs, fn)
 
 struct oFunction {
-    oSpinLockRef lock;
+    SpinLock* lock;
     CuckooRef overloads;
 };
 
@@ -78,10 +78,10 @@ oObject oFunctionInvoke(oThreadContextRef ctx,
                         oArrayRef args);
  */
 
-void o_bootstrap_parameter_type_init(oThreadContextRef ctx);
-void o_bootstrap_signature_type_init(oThreadContextRef ctx);
-void o_bootstrap_fn_overload_type_init(oThreadContextRef ctx);
-void o_bootstrap_function_type_init(oThreadContextRef ctx);
+void bootstrap_parameter_type_init(oThreadContextRef ctx);
+void bootstrap_signature_type_init(oThreadContextRef ctx);
+void bootstrap_fn_overload_type_init(oThreadContextRef ctx);
+void bootstrap_function_type_init(oThreadContextRef ctx);
 
 
 #endif

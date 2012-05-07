@@ -1,8 +1,8 @@
 #ifndef octarine_list_h
 #define octarine_list_h
 
-#include "o_object.h"
-#include "o_typedefs.h"
+#include "object.h"
+#include "typedefs.h"
 
 /* List of objects of any type */
 struct oListObj {
@@ -30,7 +30,7 @@ oListObjRef _oListObjRemoveNth(oThreadContextRef ctx,
                                uword idx);
 #define oListObjRemoveNth(lst, idx) _oC(_oListObjRemoveNth, lst idx)
 
-o_bool oListObjIsEmpty(oThreadContextRef ctx, oListObjRef lst);
+bool oListObjIsEmpty(oThreadContextRef ctx, oListObjRef lst);
 
 oListObjRef _oListObjReverse(oThreadContextRef ctx, oListObjRef lst);
 #define oListObjReverse(lst) _oC(_oListObjReverse, lst)
@@ -42,6 +42,6 @@ oObject oListObjFirst(oThreadContextRef ctx, oListObjRef lst);
 oListObjRef _oListObjRest(oThreadContextRef ctx, oListObjRef lst);
 #define oListObjRest(lst) _oC(_oListObjRest, lst)
 
-void o_bootstrap_list_init_type(oThreadContextRef ctx);
+void bootstrap_list_init_type(oThreadContextRef ctx);
 
 #endif

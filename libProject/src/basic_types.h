@@ -16,8 +16,10 @@ typedef unsigned __int64 uint64_t;
 
 #if defined(_WIN64) || defined(__LP64__) || defined(_M_AMD64) || defined(_M_X64)
 # define OCTARINE64
+# define OCTARINE_BITS 64
 #else
 # define OCTARINE32
+# define OCTARINE_BITS 32
 #endif
 
 typedef int8_t   i8;
@@ -42,8 +44,8 @@ typedef uint32_t uword;
 typedef void* pointer;
 
 typedef i8 o_bool;
-#define o_true 1
-#define o_false 0
+#define true 1
+#define false 0
 
 typedef int32_t o_char;
 

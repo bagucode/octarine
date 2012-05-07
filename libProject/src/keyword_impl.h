@@ -1,23 +1,23 @@
-#include "o_keyword.h"
-#include "o_thread_context.h"
-#include "o_runtime.h"
-#include "o_type.h"
-#include "o_memory.h"
-#include "o_array.h"
-#include "o_string.h"
-#include "o_error.h"
+#include "keyword.h"
+#include "thread_context.h"
+#include "runtime.h"
+#include "type.h"
+#include "memory.h"
+#include "array.h"
+#include "string.h"
+#include "error.h"
 #include <stddef.h>
 
-void o_bootstrap_keyword_type_init(oThreadContextRef ctx) {
+void bootstrap_keyword_type_init(oThreadContextRef ctx) {
     oFieldRef *fields;
-	ctx->runtime->builtInTypes.keyword->fields = o_bootstrap_type_create_field_array(ctx->runtime, 1);
-    ctx->runtime->builtInTypes.keyword->kind = o_T_OBJECT;
-	ctx->runtime->builtInTypes.keyword->name = o_bootstrap_string_create(ctx->runtime, "Keyword");
+	ctx->runtime->builtInTypes.keyword->fields = bootstrap_type_create_field_array(ctx->runtime, 1);
+    ctx->runtime->builtInTypes.keyword->kind = T_OBJECT;
+	ctx->runtime->builtInTypes.keyword->name = bootstrap_string_create(ctx->runtime, "Keyword");
 	ctx->runtime->builtInTypes.keyword->size = sizeof(oKeyword);
 
     fields = (oFieldRef*)oArrayDataPointer(ctx->runtime->builtInTypes.keyword->fields);
     
-    fields[0]->name = o_bootstrap_string_create(ctx->runtime, "name");
+    fields[0]->name = bootstrap_string_create(ctx->runtime, "name");
 	fields[0]->offset = offsetof(oKeyword, name);
     fields[0]->type = ctx->runtime->builtInTypes.string;
 }

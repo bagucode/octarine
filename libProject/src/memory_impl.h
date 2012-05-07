@@ -1,11 +1,11 @@
-#include "o_memory.h"
-#include "o_type.h"
-#include "o_thread_context.h"
-#include "o_runtime.h"
-#include "o_platform.h"
-#include "o_array.h"
-#include "o_utils.h"
-#include "o_namespace.h"
+#include "memory.h"
+#include "type.h"
+#include "thread_context.h"
+#include "runtime.h"
+#include "platform.h"
+#include "array.h"
+#include "utils.h"
+#include "namespace.h"
 #include <memory.h>
 #include <stddef.h>
 
@@ -52,7 +52,7 @@ static oObject* PointerIteratorNext(oRuntimeRef rt, PointerIteratorRef pi) {
                && pi->current.type != rt->builtInTypes.array) {
                 fieldArr = (oFieldRef*)oArrayDataPointer(pi->current.type->fields);
                 field = fieldArr[pi->current.idx++];
-                if(field->type->kind == o_T_OBJECT) {
+                if(field->type->kind == T_OBJECT) {
                     return (oObject*)(((char*)pi->current.obj) + field->offset);
                 }
                 else {
@@ -68,7 +68,7 @@ static oObject* PointerIteratorNext(oRuntimeRef rt, PointerIteratorRef pi) {
 
             else if(pi->current.type == rt->builtInTypes.array) {
                 arr = (oArrayRef)pi->current.obj;
-				if(arr->element_type->kind == o_T_OBJECT || arr->element_type->fields != NULL) {
+				if(arr->element_type->kind == T_OBJECT || arr->element_type->fields != NULL) {
                     if(pi->current.idx == 0) {
 						++pi->current.idx;
                         return (oObject*)(((char*)arr) + offsetof(oArray, element_type));
@@ -77,7 +77,7 @@ static oObject* PointerIteratorNext(oRuntimeRef rt, PointerIteratorRef pi) {
 					++pi->current.idx;
 					if(arrIdx < arr->num_elements) {
                         arrayData = (char*)oArrayDataPointer(arr);
-                        if(arr->element_type->kind == o_T_OBJECT) {
+                        if(arr->element_type->kind == T_OBJECT) {
 						    return (oObject*)(arrayData + (sizeof(pointer) * arrIdx));
                         }
                         else {
@@ -92,7 +92,7 @@ static oObject* PointerIteratorNext(oRuntimeRef rt, PointerIteratorRef pi) {
             }
             
         }
-        if(StackPop(pi->stack, &pi->current) == o_false) {
+        if(StackPop(pi->stack, &pi->current) == false) {
             // All done if there are no pushed fields left on the stack
             pi->current.obj = NULL;
         }
@@ -192,7 +192,7 @@ static HeapBlockRef getBlock(oObject obj) {
     return (HeapBlockRef)(*((void **)obj - 1));
 }
 
-static o_bool checkFlag(HeapBlockRef block, u8 flag) {
+static bool checkFlag(HeapBlockRef block, u8 flag) {
     return block->typeRefAndFlags & flag;
 }
 
@@ -204,7 +204,7 @@ static void clearFlag(HeapBlockRef block, u8 flag) {
     block->typeRefAndFlags &= (~((uword)flag));
 }
 
-static o_bool isShared(HeapBlockRef block) {
+static bool isShared(HeapBlockRef block) {
     return checkFlag(block, SHARED_FLAG) > 0;
 }
 
@@ -212,7 +212,7 @@ static void setShared(HeapBlockRef block) {
     setFlag(block, SHARED_FLAG);
 }
 
-static o_bool isMarked(HeapBlockRef block) {
+static bool isMarked(HeapBlockRef block) {
     return checkFlag(block, MARK_FLAG);
 }
 
@@ -224,7 +224,7 @@ static void clearMark(HeapBlockRef block) {
     clearFlag(block, MARK_FLAG);
 }
 
-static o_bool finalized(HeapBlockRef block) {
+static bool finalized(HeapBlockRef block) {
 	return checkFlag(block, FINALIZED) > 0;
 }
 
@@ -252,7 +252,7 @@ static uword getBlockSize(oRuntimeRef rt, HeapBlockRef block) {
     
     if(type == rt->builtInTypes.array) {
         arr = (oArrayRef)getObject(block);
-        elemSize = arr->element_type->kind == o_T_OBJECT ? sizeof(pointer) : arr->element_type->size;
+        elemSize = arr->element_type->kind == T_OBJECT ? sizeof(pointer) : arr->element_type->size;
         totalSize = calcArraySize(elemSize, arr->num_elements, arr->alignment);
         totalSize = calcBlockSize(totalSize);
     }
@@ -274,7 +274,7 @@ typedef struct HeapRecord {
 typedef HeapRecord* HeapRecordRef;
 
 struct oHeap {
-    oMutexRef mutex;
+    Mutex* mutex;
     uword gcThreshold;
     uword currentSize;
     HeapRecordRef record;
@@ -286,15 +286,15 @@ static HeapRecordRef createRecord() {
     return rec;
 }
 
-static o_bool recordEntry(HeapRecordRef record, HeapBlockRef block) {
+static bool recordEntry(HeapRecordRef record, HeapBlockRef block) {
     if(record->numBlocks == MAX_BLOCKS) {
-        return o_false;
+        return false;
     }
     record->blocks[record->numBlocks++] = block;
-    return o_true;
+    return true;
 }
 
-oHeapRef oHeapCreate(o_bool synchronized, uword gc_threshold) {
+oHeapRef oHeapCreate(bool synchronized, uword gc_threshold) {
     oHeapRef heap = (oHeapRef)oMalloc(sizeof(oHeap));
 	heap->mutex = synchronized ? oMutexCreate() : NULL;
     heap->gcThreshold = gc_threshold;
@@ -351,7 +351,7 @@ typedef struct MarkEntry {
 	OPArray pointers;
 } MarkEntry;
 
-static void markGraph(oRuntimeRef rt, oObject obj, o_bool shared) {
+static void markGraph(oRuntimeRef rt, oObject obj, bool shared) {
 	StackRef stack;
 	HeapBlockRef block;
 	oTypeRef type;
@@ -404,7 +404,7 @@ static void markGraph(oRuntimeRef rt, oObject obj, o_bool shared) {
 			else {
 				// Pop next off stack
 				OPArrayDestroy(entry.pointers);
-				if(StackPop(stack, &entry) == o_false) {
+				if(StackPop(stack, &entry) == false) {
 					// All done!
 					entry.obj = NULL;
 				}
@@ -423,7 +423,7 @@ static void collectGarbage(oRuntimeRef rt, oHeapRef heap) {
     HeapRecordRef tmpRecord;
     HeapBlockRef block;
     oTypeRef type;
-	o_bool shared;
+	bool shared;
 	oThreadContextRef ctx;
 	oNamespaceRef ns;
 	oNSBindingRef binding;
@@ -555,7 +555,7 @@ static void collectGarbage(oRuntimeRef rt, oHeapRef heap) {
                 }
 			} else {
                 clearMark(block);
-                if(recordEntry(newRecord, block) == o_false) {
+                if(recordEntry(newRecord, block) == false) {
                     tmpRecord = newRecord;
                     newRecord = createRecord();
                     newRecord->prev = tmpRecord;
@@ -591,23 +591,23 @@ void oHeapForceGC(oRuntimeRef rt, oHeapRef heap) {
     }
 }
 
-static o_bool checkHeapSpace(oRuntimeRef rt,
+static bool checkHeapSpace(oRuntimeRef rt,
 							 oHeapRef heap,
                              uword size) {
     if((heap->gcThreshold - heap->currentSize) < size) {
         collectGarbage(rt, heap);
 
         if((heap->gcThreshold - heap->currentSize) < size) {
-            return o_false;
+            return false;
         }
     }
-    return o_true;
+    return true;
 }
 
 static void addHeapEntry(oHeapRef heap, HeapBlockRef block) {
     HeapRecordRef tmp;
     
-    if(recordEntry(heap->record, block) == o_false) {
+    if(recordEntry(heap->record, block) == false) {
         tmp = createRecord();
         tmp->prev = heap->record;
         heap->record = tmp;
@@ -630,7 +630,7 @@ static oObject internalAlloc(oRuntimeRef rt,
 
 	allocSize = calcBlockSize(size);
     
-    if(checkHeapSpace(rt, heap, allocSize) == o_false) {
+    if(checkHeapSpace(rt, heap, allocSize) == false) {
         /* Just expand blindly for now. Should really check if
          the system is out of memory and report some error if
          that is the case. */
@@ -648,7 +648,7 @@ static oObject internalAlloc(oRuntimeRef rt,
         return NULL;
     }
     ret = getObject(block);
-    setType(block, (oTypeRef)(type == o_T_SELF ? ret : type));
+    setType(block, (oTypeRef)(type == T_SELF ? ret : type));
 	if(heap == rt->globals) {
 		setShared(block);
 	}
@@ -674,7 +674,7 @@ oArrayRef _oHeapAllocArray(oThreadContextRef ctx,
     u8 align;
     uword size;
     
-    if(elementType->kind == o_T_OBJECT) {
+    if(elementType->kind == T_OBJECT) {
         align = ctx->runtime->builtInTypes.pointer->alignment;
         if(align == 0) {
             align = sizeof(pointer);
@@ -695,14 +695,14 @@ oArrayRef _oHeapAllocArray(oThreadContextRef ctx,
     return arr;
 }
 
-oObject o_bootstrap_object_alloc(oRuntimeRef rt,
-                                 oTypeRef proto_type,
+oObject bootstrap_object_alloc(oRuntimeRef rt,
+                                 oTypeRef prottype,
                                  uword size) {
-	return internalAlloc(rt, NULL, rt->globals, proto_type, size);
+	return internalAlloc(rt, NULL, rt->globals, prottype, size);
 }
 
-oArrayRef o_bootstrap_array_alloc(oRuntimeRef rt,
-                                  oTypeRef proto_elem_type,
+oArrayRef bootstrap_array_alloc(oRuntimeRef rt,
+                                  oTypeRef protelem_type,
                                   uword num_elements,
                                   uword elem_size,
                                   u8 alignment) {
@@ -710,7 +710,7 @@ oArrayRef o_bootstrap_array_alloc(oRuntimeRef rt,
     uword size = calcArraySize(elem_size, num_elements, alignment);
     
 	arr = (oArrayRef)internalAlloc(rt, NULL, rt->globals, rt->builtInTypes.array, size);
-    arr->element_type = proto_elem_type;
+    arr->element_type = protelem_type;
     arr->num_elements = num_elements;
     arr->alignment = alignment;
     return arr;
@@ -758,7 +758,7 @@ oTypeRef oMemoryGetObjectType(oThreadContextRef ctx, oObject obj) {
     return getType(getBlock(obj));
 }
 
-o_bool oMemoryIsObjectShared(oObject obj) {
+bool oMemoryIsObjectShared(oObject obj) {
     return isShared(getBlock(obj));
 }
 
@@ -879,7 +879,7 @@ oObject _oHeapCopyObjectShared(oThreadContextRef ctx, oObject obj) {
 
 			// Pop next off stack
 			OPArrayDestroy(current.pointers);
-			if(StackPop(stack, &current) == o_false) {
+			if(StackPop(stack, &current) == false) {
 				// All done!
 				current.obj = NULL;
 			}

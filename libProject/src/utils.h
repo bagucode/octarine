@@ -1,7 +1,11 @@
 #ifndef octarine_utils_h
 #define octarine_utils_h
 
-#include "o_platform.h"
+#include "platform.h"
+
+static uword alignOffset(uword offset, uword on) {
+    return (offset + (on - 1)) & (~(on - 1));
+}
 
 // Cuckoo hash table
 
@@ -10,7 +14,7 @@ typedef struct CuckooEntry {
     pointer val;
 } CuckooEntry;
 
-typedef o_bool(*CuckooKeyCompareFn)(pointer key1, pointer key2);
+typedef bool(*CuckooKeyCompareFn)(pointer key1, pointer key2);
 typedef uword(*CuckooKeyHashFn)(pointer key);
 
 typedef struct Cuckoo {
@@ -43,7 +47,7 @@ typedef Stack* StackRef;
 StackRef StackCreate(uword entrySize, uword initialCap);
 void StackDestroy(StackRef stack);
 void StackPush(StackRef stack, pointer entry);
-o_bool StackPop(StackRef stack, pointer out);
+bool StackPop(StackRef stack, pointer out);
 
 #endif
 
