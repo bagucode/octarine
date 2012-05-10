@@ -102,7 +102,7 @@ static void BoxSetType(Box* box, Type* type) {
 }
 
 static ArrayInfo* BoxGetArrayInfo(Box* box) {
-    return (Box*)(((uword)box) - (sizeof(ArrayInfo) + ARRAY_PAD_BYTES));
+    return (ArrayInfo*)(((uword)box) - (sizeof(ArrayInfo) + ARRAY_PAD_BYTES));
 }
 
 static uword BoxCalcObjectBoxSize(uword type_size) {

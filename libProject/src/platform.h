@@ -20,7 +20,7 @@ void MutexUnlock(Mutex* mutex);
 
 uword AtomicGetUword(volatile uword* uw);
 void AtomicSetUword(volatile uword* uw, uword value);
-bool AtomicCompareAndSwapUword(volatile uword* uw, uword oldVal, uword newVal);
+o_bool AtomicCompareAndSwapUword(volatile uword* uw, uword oldVal, uword newVal);
 uword AtomicGetThenAddUword(volatile uword* uw, uword add);
 uword AtomicGetThenSubUword(volatile uword* uw, uword sub);
 
