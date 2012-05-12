@@ -3,14 +3,21 @@
 
 #include "basic_types.h"
 
-typedef struct HeapBlock16 {
+typedef struct HeapBlocks {
+    struct HeapBlocks *next; // next of same size
     uword freebits;
-    
-} HeapBlock16;
+    u8 blocks[0];
+} HeapBlocks;
 
 typedef struct HeapNode {
     pointer start;
     pointer end;
+    HeapBlocks b16;
+    HeapBlocks b32;
+    HeapBlocks b64;
+    HeapBlocks b128;
+    HeapBlocks b256;
+    HeapBlocks b512;
     struct HeapNode* next;
 } HeapNode;
 
