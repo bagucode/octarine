@@ -2,32 +2,39 @@
 #define octarine_heap
 
 #include "basic_types.h"
+#include "platform.h"
 
+// 
 typedef struct HeapBlocks {
     struct HeapBlocks *next; // next of same size
     uword freebits;
     u8 blocks[0];
 } HeapBlocks;
 
+typedef struct FreeCell {
+    pointer start;
+    pointer end;
+    struct FreeCell* next;
+} FreeCell;
+
 typedef struct HeapNode {
     pointer start;
     pointer end;
-    HeapBlocks b16;
-    HeapBlocks b32;
-    HeapBlocks b64;
-    HeapBlocks b128;
-    HeapBlocks b256;
-    HeapBlocks b512;
+    HeapBlocks* b16;
+    HeapBlocks* b32;
+    HeapBlocks* b64;
+    HeapBlocks* b128;
+    HeapBlocks* b256;
+    HeapBlocks* b512;
+    FreeCell* free_list;
     struct HeapNode* next;
 } HeapNode;
-
-struct SpinLock;
 
 typedef struct Heap {
     uword size;
     uword granularity;
+    Mutex lock;
     HeapNode* node_list;
-    struct SpinLock* lock;
 } Heap;
 
 static Heap* HeapCreate(uword initial_size, uword expand_granularity, o_bool shared);

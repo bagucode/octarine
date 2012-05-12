@@ -1,140 +1,49 @@
 #include "platform.h"
 #include <stdlib.h>
 #include <CoreFoundation/CoreFoundation.h>
-#include <pthread.h>
 #include <libkern/OSAtomic.h>
 #include <unistd.h>
 
-/* malloc & free */
-
-pointer oMalloc(uword size) {
-    return malloc(size);
-}
-
-pointer oReAlloc(pointer loc, uword size) {
-    return realloc(loc, size);
-}
-
-void oFree(pointer location) {
-    free(location);
-}
-
-/* String */
-
-struct oNativeString {
-    CFStringRef str;
-};
-
-oNativeStringRef oNativeStringCopy(oNativeStringRef str) {
-    oNativeStringRef copy = (oNativeStringRef)oMalloc(sizeof(oNativeString));
-    copy->str = CFStringCreateCopy(NULL, str->str);
-    return copy;
-}
-
-oNativeStringRef oNativeStringFromUtf8(const char *utf8) {
-    uword len = strlen(utf8);
-    oNativeString *str = oMalloc(sizeof(oNativeString));
-    str->str = CFStringCreateWithBytes(NULL, (const UInt8*)utf8, len, kCFStringEncodingUTF8, false);
-    return str;
-}
-
-char* oNativeStringToUtf8(oNativeStringRef str, uword* out_length) {
-    CFIndex numChars = CFStringGetLength(str->str);
-    CFIndex bufSize = (numChars + 1) * 4; // 4 is the maximum number of bytes for a utf8 char
-    char *tmpBuffer = oMalloc(bufSize);
-    char *cString;
-    
-    CFStringGetCString(str->str, tmpBuffer, bufSize, kCFStringEncodingUTF8);
-    (*out_length) = strlen(tmpBuffer);
-    cString = oMalloc((*out_length) + 1);
-    memcpy(cString, tmpBuffer, *out_length);
-    oFree(tmpBuffer);
-    cString[*out_length] = 0;
-    
-    return cString;
-}
-
-int oNativeStringCompare(oNativeStringRef str1, oNativeStringRef str2) {
-    return CFStringCompare(str1->str, str2->str, 0);
-}
-
-void oNativeStringDestroy(oNativeStringRef str) {
-    CFRelease(str->str);
-    oFree(str);
-}
-
-char oNativeStringCharAt(oNativeStringRef str, uword idx) {
-    // TODO: THIS IS BROKEN! Unichar is 16 bits but codepoints are 32 bits...
-    return CFStringGetCharacterAtIndex(str->str, idx);
-}
-
-oNativeStringRef oNativeStringSubstring(oNativeStringRef str, uword start, uword end) {
-    oNativeStringRef subStr = oMalloc(sizeof(oNativeString));
-    CFRange range;
-    range.location = start;
-    range.length = end - start;
-    subStr->str = CFStringCreateWithSubstring(NULL, str->str, range);
-    return subStr;
-}
-
-uword oNativeStringLength(oNativeStringRef str) {
-    return CFStringGetLength(str->str);
-}
-
-
 /* Thread Locals */
 
-struct oTLS {
-    pthread_key_t key;
-};
-
-Mutex* oTLSCreate() {
-    Mutex* tls = (Mutex*)oMalloc(sizeof(oTLS));
+static void TLSCreate(TLS* tls) {
     pthread_key_create(&tls->key, NULL);
-    return tls;
 }
 
-void oTLSDestroy(Mutex* tls) {
+static void TLSDestroy(TLS* tls) {
     pthread_key_delete(tls->key);
-    oFree(tls);
 }
 
-pointer oTLSGet(Mutex* tls) {
+static pointer TLSGet(TLS* tls) {
     return pthread_getspecific(tls->key);
 }
 
-void oTLSSet(Mutex* tls, pointer value) {
+static void TLSSet(TLS* tls, pointer value) {
     pthread_setspecific(tls->key, value);
 }
 
 
-/* Threading */
+/* Mutex */
 
-struct oMutex {
-    pthread_mutex_t mutex;
-};
-
-Mutex* oMutexCreate() {
-    Mutex* ret = oMalloc(sizeof(oMutex));
-    pthread_mutex_init(&ret->mutex, NULL);
-    return ret;
+static void MutexCreate(Mutex* mutex) {
+    pthread_mutex_init(&mutex->mutex, NULL);
 }
 
-void oMutexDestroy(Mutex* mutex) {
+static void MutexDestroy(Mutex* mutex) {
     pthread_mutex_destroy(&mutex->mutex);
-    oFree(mutex);
 }
 
-void oMutexLock(Mutex* mutex) {
+static void MutexLock(Mutex* mutex) {
     pthread_mutex_lock(&mutex->mutex);
 }
 
-void oMutexUnlock(Mutex* mutex) {
+static void MutexUnlock(Mutex* mutex) {
     pthread_mutex_unlock(&mutex->mutex);
 }
 
-void oSleepMillis(uword millis) {
+static void SleepMillis(uword millis) {
     if(millis == 0) {
+        // change this to a 1ms sleep?
         pthread_yield_np();
     }
     else {
@@ -142,7 +51,7 @@ void oSleepMillis(uword millis) {
     }
 }
 
-bool oAtomicCompareAndSwapUword(volatile uword* uw, uword oldVal, uword newVal) {
+static o_bool AtomicCompareAndSwapUword(volatile uword* uw, uword oldVal, uword newVal) {
 #ifdef OCTARINE64
     return OSAtomicCompareAndSwap64Barrier(oldVal, newVal, (volatile int64_t*)uw);
 #else
@@ -150,127 +59,110 @@ bool oAtomicCompareAndSwapUword(volatile uword* uw, uword oldVal, uword newVal) 
 #endif
 }
 
-uword oAtomicGetUword(volatile uword* uw) {
+static uword AtomicGetUword(volatile uword* uw) {
     uword result;
     while(1) {
         result = *uw;
-        if(oAtomicCompareAndSwapUword(uw, result, result)) {
+        if(AtomicCompareAndSwapUword(uw, result, result)) {
             return result;
         }
     }
 }
 
-void oAtomicSetUword(volatile uword* uw, uword value) {
+static void AtomicSetUword(volatile uword* uw, uword value) {
     uword old;
     while (1) {
         old = *uw;
-        if (oAtomicCompareAndSwapUword(uw, old, value)) {
+        if (AtomicCompareAndSwapUword(uw, old, value)) {
             return;
         }
     }
 }
 
-uword oAtomicGetThenAddUword(volatile uword* uw, uword add) {
-    uword old;
-    while(1) {
-        old = *uw;
-        if(oAtomicCompareAndSwapUword(uw, old, old + add)) {
-            return old;
-        }
-    }
-}
+//static uword AtomicGetThenAddUword(volatile uword* uw, uword add) {
+//    uword old;
+//    while(1) {
+//        old = *uw;
+//        if(AtomicCompareAndSwapUword(uw, old, old + add)) {
+//            return old;
+//        }
+//    }
+//}
 
-uword oAtomicGetThenSubUword(volatile uword* uw, uword sub) {
-    uword old;
-    while(1) {
-        old = *uw;
-        if(oAtomicCompareAndSwapUword(uw, old, old - sub)) {
-            return old;
-        }
-    }
-}
+//static uword AtomicGetThenSubUword(volatile uword* uw, uword sub) {
+//    uword old;
+//    while(1) {
+//        old = *uw;
+//        if(AtomicCompareAndSwapUword(uw, old, old - sub)) {
+//            return old;
+//        }
+//    }
+//}
 
 // uwords are always pointer size so these functions just wrap the uword ones
-pointer oAtomicGetPointer(volatile pointer* p) {
-    return (pointer)oAtomicGetUword((volatile uword*)p);
+static pointer AtomicGetPointer(volatile pointer* p) {
+    return (pointer)AtomicGetUword((volatile uword*)p);
 }
 
-void oAtomicSetPointer(volatile pointer* p, pointer value) {
-    oAtomicSetUword((volatile uword*)p, (uword)value);
+static void AtomicSetPointer(volatile pointer* p, pointer value) {
+    AtomicSetUword((volatile uword*)p, (uword)value);
 }
 
-bool oAtomicCompareAndSwapPointer(volatile pointer* p, pointer oldVal, pointer newVal) {
-    return oAtomicCompareAndSwapUword((volatile uword*)p, (uword)oldVal, (uword)newVal);
+static bool AtomicCompareAndSwapPointer(volatile pointer* p, pointer oldVal, pointer newVal) {
+    return AtomicCompareAndSwapUword((volatile uword*)p, (uword)oldVal, (uword)newVal);
 }
 
-struct oSpinLock {
-    uword spincount;
-    volatile uword lock;
-};
+/* Spinlock */
 
-SpinLock* oSpinLockCreate(uword spinCount) {
-    SpinLock* sl = (SpinLock*)oMalloc(sizeof(oSpinLock));
-    sl->spincount = spinCount;
-    sl->lock = 0;
-    return sl;
+static void SpinLockCreate(SpinLock* lock, uword spinCount) {
+    lock->spincount = spinCount;
+    lock->lock = 0;
 }
 
-void oSpinLockDestroy(SpinLock* lock) {
-    oFree(lock);
-}
-
-void oSpinLockLock(SpinLock* lock) {
+static void SpinLockLock(SpinLock* lock) {
     uword spins = 0;
     while(true) {
-        if(oAtomicCompareAndSwapUword(&lock->lock, 0, 1)) {
+        if(AtomicCompareAndSwapUword(&lock->lock, 0, 1)) {
             return;
         }
         if(spins < lock->spincount) {
             ++spins;
         }
         else {
-            oSleepMillis(1); // Yield
+            SleepMillis(1); // Yield
         }
     }
 }
 
-bool oSpinLockTryLock(SpinLock* lock) {
-    if(oAtomicCompareAndSwapUword(&lock->lock, 0, 1)) {
-        return true;
-    }
-    return false;
+static o_bool SpinLockTryLock(SpinLock* lock) {
+    return AtomicCompareAndSwapUword(&lock->lock, 0, 1);
 }
 
-void oSpinLockUnlock(SpinLock* lock) {
-    oAtomicSetUword(&lock->lock, 0);
+static void SpinLockUnlock(SpinLock* lock) {
+    AtomicSetUword(&lock->lock, 0);
 }
 
-struct oNativeThread {
-    pthread_t pthread;
-};
+/* Thread */
 
 typedef struct threadArgWrapper {
-    void(*startFn)(pointer);
+    ThreadStartFn fn;
     pointer arg;
 } threadArgWrapper;
 
-void* threadFnWrapper(pointer arg) {
+static void* threadFnWrapper(pointer arg) {
     threadArgWrapper* taw = (threadArgWrapper*)arg;
     taw->startFn(taw->arg);
-    oFree(taw);
+    free(taw);
     return NULL;
 }
 
-NativeThread* oNativeThreadCreate(void(*startFn)(pointer), pointer arg) {
-    NativeThread* native = (NativeThread*)oMalloc(sizeof(oNativeThread));
-    threadArgWrapper* argw = (threadArgWrapper*)oMalloc(sizeof(threadArgWrapper));
+static void ThreadCreate(Thread* thread, ThreadStartFn fn, pointer arg) {
+    threadArgWrapper* argw = (threadArgWrapper*)malloc(sizeof(threadArgWrapper));
     argw->arg = arg;
-    argw->startFn = startFn;
-    pthread_create(&native->pthread, NULL, threadFnWrapper, argw);
-    return native;
+    argw->fn = fn;
+    pthread_create(&thread->pthread, NULL, threadFnWrapper, argw);
 }
 
-void oNativeThreadDestroy(NativeThread* thread) {
+static void ThreadDestroy(Thread* thread) {
     pthread_detach(thread->pthread);
-    oFree(thread);
 }
