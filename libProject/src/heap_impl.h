@@ -19,7 +19,7 @@ static HeapNode* allocNode(uword node_size) {
     node->start = (pointer)((uword)node + sizeof(HeapNode));
     node->end = (pointer)((uword)node + node_size);
 
-    node->free_list = (pointer)alignOffset((uword)node->start, sizeof(pointer));
+    node->free_list = (FreeCell*)alignOffset((uword)node->start, sizeof(pointer));
     node->free_list->start = (pointer)((uword)node->free_list + sizeof(FreeCell));
     node->free_list->end = node->end;
     node->free_list->next = NULL;

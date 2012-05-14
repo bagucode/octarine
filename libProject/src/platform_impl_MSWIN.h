@@ -1,67 +1,46 @@
-#include "platform.h"
+#include "platform_MSWIN.h"
 
-/* TODO: Use something else than malloc/free for windows?
-         Or just make sure to link statically to the runtime?
-		 We don't want to introduce any dependencies on stuff
-		 that does not come installed with the OS. Not even
-		 a C/C++ runtime library. */
 #include <stdlib.h>
-
-#include <Windows.h>
 
 /* Thread local storage */
 
-struct TLS {
-	DWORD key;
-};
-
-TLS* TLSCreate() {
-	TLS* tls = (TLS*)malloc(sizeof(TLS));
-	tls->key = TlsAlloc();
-	return tls;
+static void TLSCreate(TLS* tls) {
+    tls->key = TlsAlloc();
 }
 
-void TLSDestroy(TLS* tls) {
-	TlsFree(tls->key);
-	free(tls);
+static void TLSDestroy(TLS* tls) {
+    TlsFree(tls->key);
 }
 
-pointer TLSGet(TLS* tls) {
-	return TlsGetValue(tls->key);
+static pointer TLSGet(TLS* tls) {
+    return TlsGetValue(tls->key);
 }
 
-void TLSSet(TLS* tls, pointer value) {
-	TlsSetValue(tls->key, value);
+static void TLSSet(TLS* tls, pointer value) {
+    TlsSetValue(tls->key, value);
 }
 
-struct Mutex {
-	HANDLE mutex;
-};
+/* Mutex */
 
-Mutex* oMutexCreate() {
-	Mutex* mx = (Mutex*)malloc(sizeof(Mutex));
-	mx->mutex = CreateMutexW(NULL, FALSE, NULL);
-	return mx;
+static void MutexCreate(Mutex* mutex) {
+    mutex->mutex = CreateMutexW(NULL, FALSE, NULL);
 }
 
-void MutexDestroy(Mutex* mutex) {
-	CloseHandle(mutex->mutex);
-	free(mutex);
+static void MutexDestroy(Mutex* mutex) {
+    CloseHandle(mutex->mutex);
 }
 
-void MutexLock(Mutex* mutex) {
-	WaitForSingleObject(mutex->mutex, INFINITE);
+static void MutexLock(Mutex* mutex) {
+    WaitForSingleObject(mutex->mutex, INFINITE);
 }
 
-void MutexUnlock(Mutex* mutex) {
+static void MutexUnlock(Mutex* mutex) {
 	ReleaseMutex(mutex->mutex);
 }
 
-void SleepMillis(uword millis) {
-	Sleep((DWORD)millis);
-}
+/* Atomic operations */
 
-o_bool AtomicCompareAndSwapUword(volatile uword* uw, uword oldVal, uword newVal) {
+static o_bool AtomicCompareAndSwapUword(volatile uword* uw, uword oldVal, uword newVal) {
 #ifdef OCTARINE64
 	return InterlockedCompareExchange64((volatile LONG64*)uw, newVal, oldVal) == oldVal;
 #else
@@ -69,7 +48,7 @@ o_bool AtomicCompareAndSwapUword(volatile uword* uw, uword oldVal, uword newVal)
 #endif
 }
 
-uword AtomicGetUword(volatile uword* uw) {
+static uword AtomicGetUword(volatile uword* uw) {
     uword result;
     while(1) {
         result = *uw;
@@ -79,7 +58,7 @@ uword AtomicGetUword(volatile uword* uw) {
     }
 }
 
-void AtomicSetUword(volatile uword* uw, uword value) {
+static void AtomicSetUword(volatile uword* uw, uword value) {
     uword old;
     while (1) {
         old = *uw;
@@ -89,7 +68,7 @@ void AtomicSetUword(volatile uword* uw, uword value) {
     }
 }
 
-uword AtomicGetThenAddUword(volatile uword* uw, uword add) {
+static uword AtomicGetThenAddUword(volatile uword* uw, uword add) {
     uword old;
     while (1) {
         old = *uw;
@@ -99,7 +78,7 @@ uword AtomicGetThenAddUword(volatile uword* uw, uword add) {
     }
 }
 
-uword AtomicGetThenSubUword(volatile uword* uw, uword sub) {
+static uword AtomicGetThenSubUword(volatile uword* uw, uword sub) {
     uword old;
     while (1) {
         old = *uw;
@@ -110,69 +89,67 @@ uword AtomicGetThenSubUword(volatile uword* uw, uword sub) {
 }
 
 // uwords are always pointer size so these functions just wrap the uword ones
-pointer AtomicGetPointer(volatile pointer* p) {
+static pointer AtomicGetPointer(volatile pointer* p) {
     return (pointer)AtomicGetUword((volatile uword*)p);
 }
 
-void AtomicSetPointer(volatile pointer* p, pointer value) {
+static void AtomicSetPointer(volatile pointer* p, pointer value) {
     AtomicSetUword((volatile uword*)p, (uword)value);
 }
 
-bool AtomicCompareAndSwapPointer(volatile pointer* p, pointer oldVal, pointer newVal) {
+static o_bool AtomicCompareAndSwapPointer(volatile pointer* p, pointer oldVal, pointer newVal) {
     return AtomicCompareAndSwapUword((volatile uword*)p, (uword)oldVal, (uword)newVal);
 }
 
 // Spinlocks
 
-struct SpinLock {
-	CRITICAL_SECTION cs;
-};
-
-SpinLock* SpinLockCreate(uword spinCount) {
-	SpinLock* sl = (SpinLock*)malloc(sizeof(SpinLock));
-	InitializeCriticalSectionAndSpinCount(&sl->cs, (DWORD)spinCount);
-	return sl;
+static void SpinLockCreate(SpinLock* lock, uword spinCount) {
+    InitializeCriticalSectionAndSpinCount(&lock->cs, (DWORD)spinCount);
 }
 
-void SpinLockDestroy(SpinLock* lock) {
+static void SpinLockDestroy(SpinLock* lock) {
 	DeleteCriticalSection(&lock->cs);
-	free(lock);
 }
 
-void SpinLockLock(SpinLock* lock) {
+static void SpinLockLock(SpinLock* lock) {
 	EnterCriticalSection(&lock->cs);
 }
 
-void SpinLockUnlock(SpinLock* lock) {
+static o_bool SpinLockTryLock(SpinLock* lock) {
+    return TryEnterCriticalSection(&lock->cs) != 0;
+}
+
+static void SpinLockUnlock(SpinLock* lock) {
 	LeaveCriticalSection(&lock->cs);
 }
 
-struct oNativeThread {
-	HANDLE thread;
-};
+/* Thread */
 
 typedef struct threadArgWrapper {
-	void(*startFn)(pointer);
+	ThreadStartFn fn;
 	pointer arg;
 } threadArgWrapper;
 
 static DWORD WINAPI threadProcWrapper(LPVOID p) {
 	threadArgWrapper* argw = (threadArgWrapper*)p;
-	argw->startFn(argw->arg);
-	oFree(argw);
+	argw->fn(argw->arg);
+	free(argw);
 	return 0;
 }
 
-NativeThread* oNativeThreadCreate(void(*startFn)(pointer), pointer arg) {
-	NativeThread* native = (NativeThread*)oMalloc(sizeof(oNativeThread));
-	threadArgWrapper* argw = (threadArgWrapper*)oMalloc(sizeof(threadArgWrapper));
+static void ThreadCreate(Thread* thread, ThreadStartFn fn, pointer arg) {
+	threadArgWrapper* argw = (threadArgWrapper*)malloc(sizeof(threadArgWrapper));
 	argw->arg = arg;
-	argw->startFn = startFn;
-	native->thread = CreateThread(NULL, 0, threadProcWrapper, argw, 0, 0);
-	return native;
+	argw->fn = fn;
+	thread->thread = CreateThread(NULL, 0, threadProcWrapper, argw, 0, 0);
 }
 
-void oNativeThreadDestroy(NativeThread* thread) {
+static void ThreadDestroy(Thread* thread) {
 	CloseHandle(thread->thread);
-	oFree(thread);
+}
+
+/* Util */
+
+static void SleepMillis(uword millis) {
+	Sleep((DWORD)millis);
 }
