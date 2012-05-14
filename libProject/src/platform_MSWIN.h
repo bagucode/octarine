@@ -65,6 +65,5 @@ static void ThreadDestroy(Thread* thread);
 
 static void SleepMillis(uword millis);
 
-
 #endif
 
