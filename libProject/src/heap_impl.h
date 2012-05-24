@@ -3,6 +3,8 @@
 
 #include "heap.h"
 #include "utils.h"
+#include "box.h"
+#include "type.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -206,16 +208,18 @@ function void free(void *ap) {
 
 */
 
-static void HeapAlloc(Heap* heap, struct Type* type, pointer* dest) {
+static void HeapAlloc(Heap* heap, Type* type, pointer* dest) {
+    Box* box;
+    _HeapAlloc(heap, type->size, &box);
 }
 
-static void _HeapAlloc(Heap* heap, uword type_size, struct Box** dest) {
+static void _HeapAlloc(Heap* heap, uword type_size, Box** dest) {
 }
 
 static void HeapAllocArray(Heap* heap, struct Type* type, uword n_elements, pointer* dest) {
 }
 
-static void _HeapAllocArray(Heap* heap, uword type_size, uword n_elements, struct Box** dest) {
+static void _HeapAllocArray(Heap* heap, uword type_size, uword n_elements, Box** dest) {
 }
 
 static o_bool HeapObjectInHeap(Heap* heap, pointer object) {
