@@ -3,65 +3,35 @@
 #define octarine_type_h
 
 #include "basic_types.h"
-#include "typedefs.h"
 
-extern const u8 T_OBJECT;
-extern const u8 T_STRUCT;
-extern const oTypeRef T_SELF;
+struct String;
+struct Type;
 
-struct oField {
-    oStringRef name;
-    oTypeRef type;
+typedef struct Field {
+    struct String* name;
+    struct Type* type;
     u32 offset;
-};
+} Field;
 
-struct oType {
-    oStringRef name;
-    oArrayRef fields;
-    oArrayRef attributes; // TODO: use this for things like 'this is immutable'
-    /* TODO: how to use this from the language?
-     It should probably be changed to a oFunction
-     but ... we can't allow overloads? There has to 
-     be a single signature that has no return value
-     and takes only an Any as parameter. */
-    oFinalizer finalizer;
-	oCopyObjectInternals copyInternals;
+typedef struct Type {
+    struct String* name;
+    struct Field* fields;
     uword size;
-    u8 kind;
-    u8 alignment;
-};
+    uword alignment;
+} Type;
 
-oFieldRef _oFieldCreate(oThreadContextRef ctx,
-                        oStringRef name,
-                        oTypeRef type);
-#define oFieldCreate(name, type) _oC(_oFieldCreate, name, type)
+static void FieldCreate(Field* field,
+                        struct String* name,
+                        struct Type* type);
 
-bool oTypeIsPrimitive(oTypeRef t);
-bool oTypeIsStruct(oTypeRef t);
-bool oTypeIsObject(oTypeRef t);
+static o_bool TypeIsPrimitive(Type* t);
 
-bool _oTypeEquals(oThreadContextRef ctx, oTypeRef t, oObject other);
-#define oTypeEquals(type, other) _oC(_oTypeEquals, type, other)
-
-oTypeRef _oTypeCreatePrototype(oThreadContextRef ctx);
-#define oTypeCreatePrototype() _oTypeCreateProtoType(_oCTX); if(oErrorGet(_oCTX)) { oRoots._oRET = NULL; goto _oENDFNL; }
-
-oTypeRef _oTypeCreate(oThreadContextRef ctx,
-                      u8 kind,
-                      u8 alignment,
-                      oStringRef name,
-                      oArrayRef fields,
-                      oFinalizer finalizer,
-                      oTypeRef protoType);
-#define oTypeCreate(kind, alignment, name, fields, finalizer, prototype) \
-_oC(_oTypeCreate, kind, alignment, name, fields, finalizer, prototype)
-
-oStringRef oTypeGetName(oTypeRef type);
-
-void bootstrap_type_init_type(oRuntimeRef rt);
-void bootstrap_type_init_llvm_type(oThreadContextRef ctx);
-void bootstrap_type_init_field(oRuntimeRef rt);
-void bootstrap_field_init_llvm_type(oThreadContextRef ctx);
-oArrayRef bootstrap_type_create_field_array(oRuntimeRef rt, uword numFields);
+// WARNING: This function changes the supplied field instances.
+// Do not re-use fields from another type instance, or any publicly
+// available field instances!
+static void TypeCreate(Type* type,
+                       uword alignment,
+                       struct String* name,
+                       struct Field* fields);
 
 #endif

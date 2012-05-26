@@ -210,7 +210,16 @@ function void free(void *ap) {
 
 static void HeapAlloc(Heap* heap, Type* type, pointer* dest) {
     Box* box;
+    
     _HeapAlloc(heap, type->size, &box);
+
+    if(box == NULL) {
+        (*dest) = NULL;
+    }
+    else {
+        BoxSetType(box, type);
+        (*dest) = BoxGetObject(box);
+    }
 }
 
 static void _HeapAlloc(Heap* heap, uword type_size, Box** dest) {
