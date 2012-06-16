@@ -7,6 +7,22 @@ static uword alignOffset(uword offset, uword on) {
     return (offset + (on - 1)) & (~(on - 1));
 }
 
+static uword nextp2(uword n) {
+	uword p2 = 2;
+	while(p2 < n) {
+		p2 <<= 1;
+	}
+	return p2;
+}
+
+static uword nextLargerMultiple(uword of, uword largerThan) {
+    uword result = of;
+    while(result < largerThan) {
+        result += of;
+    }
+    return result;
+}
+
 // Cuckoo hash table
 
 typedef struct CuckooEntry {

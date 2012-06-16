@@ -1,37 +1,16 @@
 #include "type.h"
-#include "thread_context.h"
-#include "runtime.h"
-#include "string.h"
-#include "array.h"
-#include "memory.h"
-#include "error.h"
-#include "namespace.h"
-#include "symbol.h"
-#include <stddef.h>
 
-bool oTypeIsPrimitive(oTypeRef t) {
-	return oTypeIsStruct(t) && t->fields == NULL;
+static o_bool TypeIsPrimitive(Type* t) {
+	return t->fields == NULL;
 }
 
-bool oTypeIsStruct(oTypeRef t) {
-    return t->kind == T_STRUCT;
-}
-
-bool oTypeIsObject(oTypeRef t) {
-    return t->kind == T_OBJECT;
-}
-
-static uword alignOffset(uword offset, uword on) {
-    return (offset + (on - 1)) & (~(on - 1));
-}
-
-static uword findLargestAlignment(oThreadContextRef ctx,
-					              uword largest,
-                                  oFieldRef field) {
-    oFieldRef* members;
+static uword findLargestAlignment(uword largest,
+                                  Field* field) {
+    ArrayInfo* aInfo;
+    Box* box;
     uword i, align;
 
-    if(oTypeIsPrimitive(field->type)) {
+    if(TypeIsPrimitive(field->type)) {
 		align = field->type->alignment != 0 ? field->type->alignment : field->type->size;
 		if(align > largest)
 			largest = align;
@@ -43,22 +22,17 @@ static uword findLargestAlignment(oThreadContextRef ctx,
 			}
 		}
 		else {
-			members = (oFieldRef*)oArrayDataPointer(field->type->fields);
-			for(i = 0; i < field->type->fields->num_elements; ++i) {
-				largest = findLargestAlignment(ctx, largest, members[i]);
+            // box and aInfo should always be valid because if there are no fields
+            // then type->fields is set to NULL and IsPrimitive is true
+            box = BoxGetBox(field->type->fields);
+            aInfo = BoxGetArrayInfo(box);
+			for(i = 0; i < aInfo->num_elements; ++i) {
+				largest = findLargestAlignment(largest, &field->type->fields[i]);
 			}
 		}
 	}
     
     return largest;
-}
-
-static uword nextLargerMultiple(uword of, uword largerThan) {
-    uword result = of;
-    while(result < largerThan) {
-        result += of;
-    }
-    return result;
 }
 
 oTypeRef _oTypeCreateProtoType(oThreadContextRef ctx) {

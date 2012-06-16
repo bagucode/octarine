@@ -4,14 +4,6 @@
 
 // Cuckoo hash table
 
-static uword nextp2(uword n) {
-	uword p2 = 2;
-	while(p2 < n) {
-		p2 <<= 1;
-	}
-	return p2;
-}
-
 static o_bool CuckooDefaultCompare(pointer key1, pointer key2) {
 	return key1 == key2;
 }
