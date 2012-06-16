@@ -35,7 +35,7 @@ static o_bool AtomicCompareAndSwapUword(volatile uword* uw, uword oldVal, uword 
 
 static pointer AtomicGetPointer(volatile pointer* p);
 static void AtomicSetPointer(volatile pointer* p, pointer value);
-static bool AtomicCompareAndSwapPointer(volatile pointer* p, pointer oldVal, pointer newVal);
+static o_bool AtomicCompareAndSwapPointer(volatile pointer* p, pointer oldVal, pointer newVal);
 
 /* Spinlock */
 

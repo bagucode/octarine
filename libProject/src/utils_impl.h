@@ -1,5 +1,6 @@
 #include "utils.h"
 #include <memory.h>
+#include <stdlib.h>
 
 // Cuckoo hash table
 
@@ -11,7 +12,7 @@ static uword nextp2(uword n) {
 	return p2;
 }
 
-static bool CuckooDefaultCompare(pointer key1, pointer key2) {
+static o_bool CuckooDefaultCompare(pointer key1, pointer key2) {
 	return key1 == key2;
 }
 
@@ -19,25 +20,25 @@ static uword CuckooDefaultHash(pointer key) {
 	return (uword)key;
 }
 
-CuckooRef CuckooCreate(uword initialCap, CuckooKeyCompareFn compare, CuckooKeyHashFn hash) {
-	CuckooRef ck;
+Cuckoo* CuckooCreate(uword initialCap, CuckooKeyCompareFn compare, CuckooKeyHashFn hash) {
+	Cuckoo* ck;
 	uword byteSize;
     
-	ck = (CuckooRef)oMalloc(sizeof(Cuckoo));
+	ck = (Cuckoo*)malloc(sizeof(Cuckoo));
 	ck->capacity = nextp2(initialCap);
 	ck->size = 0;
 	ck->compare = compare != NULL ? compare : CuckooDefaultCompare;
 	ck->hash = hash != NULL ? hash : CuckooDefaultHash;
 	byteSize = ck->capacity * sizeof(CuckooEntry);
-	ck->table = (CuckooEntry*)oMalloc(byteSize);
+	ck->table = (CuckooEntry*)malloc(byteSize);
 	memset(ck->table, 0, byteSize);
     
 	return ck;
 }
 
-void CuckooDestroy(CuckooRef ck) {
-	oFree(ck->table);
-	oFree(ck);
+void CuckooDestroy(Cuckoo* ck) {
+	free(ck->table);
+	free(ck);
 }
 
 static uword CuckooHash1(uword h) {
@@ -52,7 +53,7 @@ static uword CuckooHash3(uword h) {
 	return h * 31;
 }
 
-static bool CuckooTryPut(CuckooRef ck, CuckooEntry* entry) {
+static o_bool CuckooTryPut(Cuckoo* ck, CuckooEntry* entry) {
 	uword i, mask;
     CuckooEntry tmp;
     
@@ -63,7 +64,7 @@ static bool CuckooTryPut(CuckooRef ck, CuckooEntry* entry) {
 	ck->table[i] = *entry;
 	if(tmp.key == NULL || ck->compare(tmp.key, entry->key)) {
 		++ck->size;
-		return true;
+		return o_true;
 	}
 	*entry = tmp;
 
@@ -72,7 +73,7 @@ static bool CuckooTryPut(CuckooRef ck, CuckooEntry* entry) {
 	ck->table[i] = *entry;
 	if(tmp.key == NULL || ck->compare(tmp.key, entry->key)) {
 		++ck->size;
-		return true;
+		return o_true;
 	}
 	*entry = tmp;
 
@@ -81,20 +82,20 @@ static bool CuckooTryPut(CuckooRef ck, CuckooEntry* entry) {
 	ck->table[i] = *entry;
 	if(tmp.key == NULL || ck->compare(tmp.key, entry->key)) {
 		++ck->size;
-		return true;
+		return o_true;
 	}
 	*entry = tmp;
 
-	return false;
+	return o_false;
 }
 
-static void CuckooGrow(CuckooRef ck) {
-	CuckooRef bigger = CuckooCreate(ck->capacity + 1, ck->compare, ck->hash);
+static void CuckooGrow(Cuckoo* ck) {
+	Cuckoo* bigger = CuckooCreate(ck->capacity + 1, ck->compare, ck->hash);
 	uword i, cap;
 	
 	for(i = 0; i < ck->capacity; ++i) {
 		if(ck->table[i].key != NULL) {
-			if(CuckooTryPut(bigger, &ck->table[i]) == false) {
+			if(CuckooTryPut(bigger, &ck->table[i]) == o_false) {
 				cap = bigger->capacity + 1;
 				CuckooDestroy(bigger);
 				bigger = CuckooCreate(cap, ck->compare, ck->hash);
@@ -102,18 +103,18 @@ static void CuckooGrow(CuckooRef ck) {
 			}
 		}
 	}
-	oFree(ck->table);
+	free(ck->table);
 	memcpy(ck, bigger, sizeof(Cuckoo));
-	oFree(bigger);
+	free(bigger);
 }
 
-void CuckooPut(CuckooRef ck, pointer key, pointer val) {
+void CuckooPut(Cuckoo* ck, pointer key, pointer val) {
 	uword i;
     CuckooEntry entry;
     
     entry.key = key;
     entry.val = val;
-	while(true) {
+	while(o_true) {
 		for(i = 0; i < 5; ++i) {
 			if(CuckooTryPut(ck, &entry)) {
 				return;
@@ -123,7 +124,7 @@ void CuckooPut(CuckooRef ck, pointer key, pointer val) {
 	}
 }
 
-pointer CuckooGet(CuckooRef ck, pointer key) {
+pointer CuckooGet(Cuckoo* ck, pointer key) {
 	uword i, mask, keyHash;
     
 	mask = ck->capacity - 1;
@@ -146,40 +147,40 @@ pointer CuckooGet(CuckooRef ck, pointer key) {
 
 // Stack
 
-StackRef StackCreate(uword entrySize, uword initialCap) {
-    StackRef stack = (StackRef)oMalloc(sizeof(Stack));
+Stack* StackCreate(uword entrySize, uword initialCap) {
+    Stack* stack = (Stack*)malloc(sizeof(Stack));
     stack->capacity = initialCap;
     stack->top = 0;
     stack->entrySize = entrySize;
-    stack->stack = (char*)oMalloc(entrySize * initialCap);
+    stack->stack = (char*)malloc(entrySize * initialCap);
     return stack;
 }
 
-void StackDestroy(StackRef stack) {
-    oFree(stack->stack);
-    oFree(stack);
+void StackDestroy(Stack* stack) {
+    free(stack->stack);
+    free(stack);
 }
 
-void StackPush(StackRef stack, pointer entry) {
+void StackPush(Stack* stack, pointer entry) {
     uword index;
     
     if(stack->capacity == stack->top) {
         stack->capacity *= 2;
-        stack->stack = (char*)oReAlloc(stack->stack, stack->entrySize * stack->capacity);
+        stack->stack = (char*)realloc(stack->stack, stack->entrySize * stack->capacity);
     }
     index = stack->entrySize * stack->top;
     memcpy(stack->stack + index, entry, stack->entrySize);
     ++stack->top;
 }
 
-bool StackPop(StackRef stack, pointer out) {
+o_bool StackPop(Stack* stack, pointer out) {
     uword index;
     
     if(stack->top == 0) {
-        return false;
+        return o_false;
     }
     --stack->top;
     index = stack->entrySize * stack->top;
     memcpy(out, stack->stack + index, stack->entrySize);
-    return true;
+    return o_true;
 }

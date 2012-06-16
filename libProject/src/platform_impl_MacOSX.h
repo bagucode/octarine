@@ -108,7 +108,7 @@ static void AtomicSetPointer(volatile pointer* p, pointer value) {
     AtomicSetUword((volatile uword*)p, (uword)value);
 }
 
-static bool AtomicCompareAndSwapPointer(volatile pointer* p, pointer oldVal, pointer newVal) {
+static o_bool AtomicCompareAndSwapPointer(volatile pointer* p, pointer oldVal, pointer newVal) {
     return AtomicCompareAndSwapUword((volatile uword*)p, (uword)oldVal, (uword)newVal);
 }
 

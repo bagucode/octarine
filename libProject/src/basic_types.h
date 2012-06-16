@@ -44,8 +44,8 @@ typedef uint32_t uword;
 typedef void* pointer;
 
 typedef i8 o_bool;
-#define true 1
-#define false 0
+#define o_true 1
+#define o_false 0
 
 typedef int32_t o_char;
 
