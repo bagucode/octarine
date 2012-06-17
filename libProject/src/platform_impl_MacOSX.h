@@ -151,7 +151,7 @@ typedef struct threadArgWrapper {
 
 static void* threadFnWrapper(pointer arg) {
     threadArgWrapper* taw = (threadArgWrapper*)arg;
-    taw->startFn(taw->arg);
+    taw->fn(taw->arg);
     free(taw);
     return NULL;
 }

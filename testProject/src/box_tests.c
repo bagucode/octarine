@@ -1,6 +1,6 @@
 
 #include "box_tests.h"
-#include "../../libProject/src/octarine.h"
+#include "../../libProject/src/liboctarine.h"
 
 #include <assert.h>
 
@@ -33,16 +33,16 @@
 static void correct_size() {
     uword objSize = 80;
     uword arrSize = 100;
-    uword boxExpected = 100;
-    uword arrayExpected = 100*100;
+    uword boxExpected = 80 + sizeof(Box);
+    uword arrayExpected = 100 * objSize + sizeof(Box) + ARRAY_PAD_BYTES;
     uword boxActual = BoxCalcObjectBoxSize(objSize);
-    uword arrayActual = BoxCalcArrayBoxSize(objSize, arrSize);
+    uword arrayActual = BoxCalcArrayBoxSize(objSize, 0, arrSize);
     
     assert(boxExpected == boxActual);
     assert(arrayExpected == arrayActual);
 }
 
-void box_tests() {
+void boxTests() {
 
     correct_size();
 }
