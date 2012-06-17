@@ -10,7 +10,8 @@ struct Type;
 typedef struct Field {
     struct String* name;
     struct Type* type;
-    u32 offset;
+    o_bool ptr;
+    uword offset;
 } Field;
 
 typedef struct Type {
@@ -22,7 +23,8 @@ typedef struct Type {
 
 static void FieldCreate(Field* field,
                         struct String* name,
-                        struct Type* type);
+                        struct Type* type,
+                        o_bool ptr);
 
 static o_bool TypeIsPrimitive(Type* t);
 
