@@ -1,3 +1,5 @@
+#ifndef octarine_liboctarine
+#define octarine_liboctarine
 
 // Header files
 #include "platform.h"
@@ -12,3 +14,5 @@
 #include "heap_impl.h"
 #include "box_impl.h"
 #include "type_impl.h"
+
+#endif
