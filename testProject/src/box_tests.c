@@ -4,12 +4,13 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#include <string.h>
 
 static void correct_size() {
     uword objSize = 80;
     uword arrSize = 100;
     uword boxExpected = 80 + sizeof(Box);
-    uword arrayExpected = 100 * objSize + sizeof(Box) + ARRAY_PAD_BYTES;
+    uword arrayExpected = 100 * objSize + sizeof(Box) + ARRAY_PAD_BYTES + sizeof(ArrayInfo);
     uword boxActual = BoxCalcObjectBoxSize(objSize);
     uword arrayActual = BoxCalcArrayBoxSize(objSize, 0, arrSize);
     
@@ -73,6 +74,7 @@ typedef struct testStruct {
 
 static void storeObject() {
     testStruct ts;
+    uword boxSize;
     Box* box;
     Box* box2;
     testStruct* tsp;
@@ -82,7 +84,11 @@ static void storeObject() {
     ts.two = 2;
     ts.p = &ts;
     
-    box = malloc(BoxCalcObjectBoxSize(sizeof(testStruct)));
+    boxSize = BoxCalcObjectBoxSize(sizeof(testStruct));
+    box = malloc(boxSize);
+    // boxes must be cleared before use because some functions
+    // depend on the padding space in boxes being zeroed
+    memset(box, 0, boxSize);
     
     tsp = BoxGetObject(box);
     BoxSetType(box, (Type*)box);
@@ -107,6 +113,7 @@ static void storeObject() {
 
 static void storeArray() {
     testStruct ts;
+    uword boxSize;
     Box* box;
     testStruct* tsp;
     ArrayInfo* aInfo;
@@ -117,15 +124,23 @@ static void storeArray() {
     ts.two = 2;
     ts.p = &ts;
     
-    box = malloc(BoxCalcArrayBoxSize(sizeof(testStruct), 0, 57));
-    tsp = BoxGetObject(box);
-    aInfo = BoxGetArrayInfo(box);
+    boxSize = BoxCalcArrayBoxSize(sizeof(testStruct), 0, 57);
+    aInfo = malloc(boxSize);
+    // boxes must be cleared before use because some functions
+    // depend on the padding space in boxes being zeroed
+    memset(aInfo, 0, boxSize);
+
     aInfo->alignment = 0;
     aInfo->num_elements = 57;
+
+    box = (Box*)(((uword)aInfo) + sizeof(ArrayInfo) + ARRAY_PAD_BYTES);
+
+    BoxSetArrayBit(box);
+    tsp = BoxGetObject(box);
     
     for(i = 0; i < aInfo->num_elements; ++i) {
         tsp[i] = ts;
-        tsp[i].byte = i;
+        tsp[i].byte = (u8)i;
     }
     
     assert(tsp[56].byte = 55);
@@ -137,7 +152,7 @@ static void storeArray() {
     assert(aInfo->num_elements == 57);
     assert(aInfo->alignment == 0);
     
-    free(box);
+    free(aInfo);
 }
 
 void boxTests() {

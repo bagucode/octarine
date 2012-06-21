@@ -10,15 +10,15 @@
 #include <stdlib.h>
 #include <assert.h>
 
-//static HeapNode* createNode(uword node_size) {
-//    HeapNode* node;
+//static OctHeapNode* createNode(uword node_size) {
+//    OctHeapNode* node;
 //
-//    assert(node_size > (sizeof(HeapNode) + sizeof(FreeCell) + sizeof(pointer)));
+//    assert(node_size > (sizeof(OctHeapNode) + sizeof(FreeCell) + sizeof(pointer)));
 //    
-//    node = (HeapNode*)malloc(node_size);
-//    memset(node, 0, sizeof(HeapNode));
+//    node = (OctHeapNode*)malloc(node_size);
+//    memset(node, 0, sizeof(OctHeapNode));
 //    
-//    node->start = (pointer)((uword)node + sizeof(HeapNode));
+//    node->start = (pointer)((uword)node + sizeof(OctHeapNode));
 //    node->end = (pointer)((uword)node + node_size);
 //
 //    node->free_list = (FreeCell*)alignOffset((uword)node->start, sizeof(pointer));
@@ -29,8 +29,8 @@
 //    return node;
 //}
 
-static Heap* HeapCreate(o_bool shared) {
-    Heap* heap = (Heap*)malloc(sizeof(Heap));
+static OctHeap* OctHeapCreate(o_bool shared) {
+    OctHeap* heap = (OctHeap*)malloc(sizeof(OctHeap));
     
     if(shared) {
         heap->lock = (Mutex*)malloc(sizeof(Mutex));
@@ -45,8 +45,8 @@ static Heap* HeapCreate(o_bool shared) {
     return heap;
 }
 
-static void HeapDestroy(Heap* heap) {
-    HeapBlock* tmp;
+static void OctHeapDestroy(OctHeap* heap) {
+    OctHeapBlock* tmp;
     
     while(heap->blocks) {
         tmp = heap->blocks->next;
@@ -61,14 +61,14 @@ static void HeapDestroy(Heap* heap) {
     free(heap);
 }
 
-static o_bool HeapShared(Heap* heap) {
+static o_bool OctHeapShared(OctHeap* heap) {
     return heap->lock != NULL;
 }
 
-static void HeapAlloc(Heap* heap, Type* type, pointer* dest) {
+static void OctHeapAlloc(OctHeap* heap, Type* type, pointer* dest) {
     Box* box;
     
-    _HeapAlloc(heap, type->size, &box);
+    _OctHeapAlloc(heap, type->size, &box);
 
     if(box == NULL) {
         (*dest) = NULL;
@@ -79,7 +79,7 @@ static void HeapAlloc(Heap* heap, Type* type, pointer* dest) {
     }
 }
 
-//static pointer nodeAlloc(HeapNode* node, uword size) {
+//static pointer nodeAlloc(OctHeapNode* node, uword size) {
 //    if(size <= 16) {
 //    } else if(size <= 32) {
 //    } else if(size <= 64) {
@@ -90,17 +90,17 @@ static void HeapAlloc(Heap* heap, Type* type, pointer* dest) {
 //    }
 //}
 
-static void _HeapAlloc(Heap* heap, uword type_size, Box** dest) {
+static void _OctHeapAlloc(OctHeap* heap, uword type_size, Box** dest) {
     uword size = BoxCalcObjectBoxSize(type_size);
     pointer space = malloc(size);
-    HeapBlock* block;
+    OctHeapBlock* block;
 
     if(space == NULL) {
         (*dest) = NULL;
         return;
     }
 
-    block = malloc(sizeof(HeapBlock));
+    block = malloc(sizeof(OctHeapBlock));
     if(block == NULL) {
         free(space);
         (*dest) = NULL;
@@ -109,7 +109,7 @@ static void _HeapAlloc(Heap* heap, uword type_size, Box** dest) {
 
     (*dest) = (Box*)space;
     
-    if(HeapShared(heap)) {
+    if(OctHeapShared(heap)) {
         BoxSetSharedBit(*dest);
     }
 
@@ -121,10 +121,10 @@ static void _HeapAlloc(Heap* heap, uword type_size, Box** dest) {
     heap->size += size;
 }
 
-static void HeapAllocArray(Heap* heap, struct Type* type, uword n_elements, pointer* dest) {
+static void OctHeapAllocArray(OctHeap* heap, struct Type* type, uword n_elements, pointer* dest) {
     Box* box;
     
-    _HeapAllocArray(heap, type->size, n_elements, &box);
+    _OctHeapAllocArray(heap, type->size, n_elements, &box);
     
     if(box == NULL) {
         (*dest) = NULL;
@@ -134,25 +134,26 @@ static void HeapAllocArray(Heap* heap, struct Type* type, uword n_elements, poin
     }
 }
 
-static void _HeapAllocArray(Heap* heap, uword type_size, uword n_elements, Box** dest) {
+static void _OctHeapAllocArray(OctHeap* heap, uword type_size, uword n_elements, Box** dest) {
     uword size = BoxCalcArrayBoxSize(type_size, 0, n_elements);
     pointer space = malloc(size);
     ArrayInfo* aInfo;
-    HeapBlock* block;
+    OctHeapBlock* block;
     
     if(space == NULL) {
         (*dest) = NULL;
         return;
     }
     
-    block = malloc(sizeof(HeapBlock));
+    block = malloc(sizeof(OctHeapBlock));
     if(block == NULL) {
         free(space);
         (*dest) = NULL;
         return;
     }
     
-    (*dest) = (Box*)space;
+    aInfo = (ArrayInfo*)space;
+    (*dest) = (Box*)(((uword)space) + sizeof(ArrayInfo) + ARRAY_PAD_BYTES);
 
     BoxSetArrayBit(*dest);
     
@@ -160,7 +161,7 @@ static void _HeapAllocArray(Heap* heap, uword type_size, uword n_elements, Box**
     aInfo->alignment = 0;
     aInfo->num_elements = n_elements;
     
-    if(HeapShared(heap)) {
+    if(OctHeapShared(heap)) {
         BoxSetSharedBit(*dest);
     }
 
@@ -172,7 +173,7 @@ static void _HeapAllocArray(Heap* heap, uword type_size, uword n_elements, Box**
     heap->size += size;
 }
 
-static o_bool inBlock(HeapBlock* block, pointer addr) {
+static o_bool inBlock(OctHeapBlock* block, pointer addr) {
     uword uwordAddr = (uword)addr;
     uword uwordBlockStart = (uword)block->addr;
     
@@ -180,8 +181,8 @@ static o_bool inBlock(HeapBlock* block, pointer addr) {
     && uwordAddr >= uwordBlockStart;
 }
 
-static o_bool HeapObjectInHeap(Heap* heap, pointer object) {
-    HeapBlock* block = heap->blocks;
+static o_bool OctHeapObjectInOctHeap(OctHeap* heap, pointer object) {
+    OctHeapBlock* block = heap->blocks;
     
     while(block) {
         if(inBlock(block, object))
@@ -192,9 +193,9 @@ static o_bool HeapObjectInHeap(Heap* heap, pointer object) {
     return o_false;
 }
 
-static void HeapFree(Heap* heap, pointer object) {
-    HeapBlock* block = heap->blocks;
-    HeapBlock* prev = NULL;
+static void OctHeapFree(OctHeap* heap, pointer object) {
+    OctHeapBlock* block = heap->blocks;
+    OctHeapBlock* prev = NULL;
     
     while(block) {
         if(inBlock(block, object)) {

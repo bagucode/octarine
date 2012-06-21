@@ -7,7 +7,7 @@ include(../globfiles.cmake)
 add_executable(${PROJECT_NAME} ${${PROJECT_NAME}_h} ${${PROJECT_NAME}_c})
 
 if(WIN32)
-  target_link_libraries(${PROJECT_NAME} liboctarine platform)
+  target_link_libraries(${PROJECT_NAME} liboctarine)
 elseif(APPLE)
   find_library (CF_LIBRARY CoreFoundation)
   #find_library (CS_LIBRARY CoreServices)

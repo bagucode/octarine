@@ -6,11 +6,11 @@
 //
 //// Chunk of same-sized blocks with a bitmap to indicate which ones are free
 //// Used to both increase speed and reduce memory footprint of small allocations
-//typedef struct HeapBlocks {
-//    struct HeapBlocks *next; // next of same size
+//typedef struct OctHeapBlocks {
+//    struct OctHeapBlocks *next; // next of same size
 //    uword freebits;
 //    u8 blocks[0];
-//} HeapBlocks;
+//} OctHeapBlocks;
 //
 //// List of free blocks in the large object part of the heap.
 //typedef struct FreeCell {
@@ -24,39 +24,39 @@
 //typedef struct HeapNode {
 //    pointer start;
 //    pointer end;
-//    HeapBlocks* b16;
-//    HeapBlocks* b32;
-//    HeapBlocks* b64;
-//    HeapBlocks* b128;
-//    HeapBlocks* b256;
-//    HeapBlocks* b512;
+//    OctHeapBlocks* b16;
+//    OctHeapBlocks* b32;
+//    OctHeapBlocks* b64;
+//    OctHeapBlocks* b128;
+//    OctHeapBlocks* b256;
+//    OctHeapBlocks* b512;
 //    FreeCell* free_list;
 //    struct HeapNode* next;
 //} HeapNode;
 //
-//typedef struct Heap {
+//typedef struct OctHeap {
 //    uword size;
 //    uword granularity;
 //    Mutex* lock;
 //    HeapNode* node_list;
-//} Heap;
+//} OctHeap;
 
-typedef struct HeapBlock {
+typedef struct OctHeapBlock {
     pointer addr;
     uword size;
-    struct HeapBlock* next;
-} HeapBlock;
+    struct OctHeapBlock* next;
+} OctHeapBlock;
 
-typedef struct Heap {
+typedef struct OctHeap {
     uword size;
     Mutex* lock;
-    HeapBlock* blocks;
-} Heap;
+    OctHeapBlock* blocks;
+} OctHeap;
 
-static Heap* HeapCreate(o_bool shared);
-static void HeapDestroy(Heap* heap);
+static OctHeap* OctHeapCreate(o_bool shared);
+static void OctHeapDestroy(OctHeap* heap);
 
-static o_bool HeapShared(Heap* heap);
+static o_bool OctHeapShared(OctHeap* heap);
 
 struct Type;
 struct Box;
@@ -64,14 +64,14 @@ struct Box;
 // Having the result pointers as out-parameters may look weird since the return value
 // is available but it is necessary to do it this way to be able to fully control
 // when the pointer is written to (needed for shared heap sync).
-static void HeapAlloc(Heap* heap, struct Type* type, pointer* dest);
-static void _HeapAlloc(Heap* heap, uword type_size, struct Box** dest);
+static void OctHeapAlloc(OctHeap* heap, struct Type* type, pointer* dest);
+static void _OctHeapAlloc(OctHeap* heap, uword type_size, struct Box** dest);
 
-static void HeapAllocArray(Heap* heap, struct Type* type, uword n_elements, pointer* dest);
-static void _HeapAllocArray(Heap* heap, uword type_size, uword n_elements, struct Box** dest);
+static void OctHeapAllocArray(OctHeap* heap, struct Type* type, uword n_elements, pointer* dest);
+static void _OctHeapAllocArray(OctHeap* heap, uword type_size, uword n_elements, struct Box** dest);
 
-static void HeapFree(Heap* heap, pointer object);
+static void OctHeapFree(OctHeap* heap, pointer object);
 
-static o_bool HeapObjectInHeap(Heap* heap, pointer object);
+static o_bool OctHeapObjectInHeap(OctHeap* heap, pointer object);
 
 #endif

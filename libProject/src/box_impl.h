@@ -88,7 +88,9 @@ static pointer BoxGetObject(Box* box) {
     
     if(BoxCheckArrayBit(box)) {
         info = BoxGetArrayInfo(box);
-        dataAddr = alignOffset(dataAddr, info->alignment);
+        if(info->alignment != 0) {
+            dataAddr = alignOffset(dataAddr, info->alignment);
+        }
     }
     return (pointer)dataAddr;
 }
@@ -110,7 +112,7 @@ static uword BoxCalcObjectBoxSize(uword type_size) {
 }
 
 static uword BoxCalcArrayBoxSize(uword type_size, uword alignment, uword num_elements) {
-    return sizeof(Box) + ARRAY_PAD_BYTES + alignment + (type_size * num_elements);
+    return sizeof(ArrayInfo) + ARRAY_PAD_BYTES + sizeof(Box) + alignment + (type_size * num_elements);
 }
 
 static Box* BoxGetBox(pointer object) {
