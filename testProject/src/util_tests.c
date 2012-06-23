@@ -12,7 +12,7 @@ typedef struct testStruct {
     pointer p;
 } testStruct;
 
-static o_bool compareTestStructs(pointer a, pointer b) {
+static o_bool compareTestStructs(Cuckoo* ck, pointer a, pointer b) {
     testStruct* ts1 = (testStruct*)a;
     testStruct* ts2 = (testStruct*)b;
     
@@ -29,7 +29,7 @@ static o_bool compareTestStructs(pointer a, pointer b) {
     && ts1->two == ts2->two;
 }
 
-static uword hashTestStruct(pointer p) {
+static uword hashTestStruct(Cuckoo* ck, pointer p) {
     testStruct* ts = (testStruct*)p;
     
     if(ts == NULL)
@@ -38,10 +38,15 @@ static uword hashTestStruct(pointer p) {
     return 31 * (ts->byte + ts->one + (uword)ts->p + ts->two);
 }
 
+static o_bool testStructEmptyCheck(Cuckoo* ck, pointer p) {
+    testStruct* ts = (testStruct*)p;
+    return ts->byte == 0 && ts->one == 0 && ts->p == NULL && ts->two == 0;
+}
+
 static void cuckooTests() {
-    Cuckoo* table = CuckooCreate(10, NULL, NULL);
+    Cuckoo* table = CuckooCreate(10, sizeof(uword), sizeof(uword), NULL, NULL, NULL);
     testStruct ts;
-    uword* check;
+    uword check;
     uword val;
     
     assert(table->capacity == 16);
@@ -52,7 +57,7 @@ static void cuckooTests() {
     
     CuckooDestroy(table);
     
-    table = CuckooCreate(10, compareTestStructs, hashTestStruct);
+    table = CuckooCreate(10, sizeof(testStruct), sizeof(uword), compareTestStructs, hashTestStruct, testStructEmptyCheck);
     
     ts.byte = 1;
     ts.one = 65535;
@@ -63,9 +68,28 @@ static void cuckooTests() {
     
     CuckooPut(table, &ts, &val);
     
-    check = CuckooGet(table, &ts);
+    assert(CuckooGet(table, &ts, &check) == o_true);
     
-    assert(check == &val);
+    assert(check == val);
+    
+    CuckooDestroy(table);
+
+    // The same test should also work with the default functions, yay! :)
+    
+    table = CuckooCreate(10, sizeof(testStruct), sizeof(uword), NULL, NULL, NULL);
+
+    ts.byte = 1;
+    ts.one = 65535;
+    ts.two = 2;
+    ts.p = &ts;
+    
+    val = 100;
+    
+    CuckooPut(table, &ts, &val);
+    
+    assert(CuckooGet(table, &ts, &check) == o_true);
+    
+    assert(check == val);
     
     CuckooDestroy(table);
 }

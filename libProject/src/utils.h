@@ -23,31 +23,60 @@ static uword nextLargerMultiple(uword of, uword largerThan) {
     return result;
 }
 
+#ifdef OCTARINE32
+static uword intHash(uword key)
+{
+    key = ~key + (key << 15);
+    key = key ^ (key >> 12);
+    key = key + (key << 2);
+    key = key ^ (key >> 4);
+    key = key * 2057;
+    key = key ^ (key >> 16);
+    return key;
+}
+#else
+static uword intHash(uword key)
+{
+    key = (~key) + (key << 21);
+    key = key ^ (key >> 24);
+    key = (key + (key << 3)) + (key << 8);
+    key = key ^ (key >> 14);
+    key = (key + (key << 2)) + (key << 4);
+    key = key ^ (key >> 28);
+    key = key + (key << 31);
+    return key;
+}
+#endif
+
 // Cuckoo hash table
 
-typedef struct CuckooEntry {
-    pointer key;
-    pointer val; // TODO: make val a char[0] and have an entrySize like in the Stack
-} CuckooEntry;
+struct Cuckoo;
 
-typedef o_bool(*CuckooKeyCompareFn)(pointer key1, pointer key2);
-typedef uword(*CuckooKeyHashFn)(pointer key);
+typedef o_bool(*CuckooKeyCompareFn)(struct Cuckoo* ck, pointer key1, pointer key2);
+typedef uword(*CuckooKeyHashFn)(struct Cuckoo* ck, pointer key);
+typedef o_bool(*CuckooEmptyKeyFn)(struct Cuckoo* ck, pointer key);
 
 typedef struct Cuckoo {
 	uword capacity;
 	uword size;
+    uword keySize;
+    uword valSize;
 	CuckooKeyCompareFn compare;
 	CuckooKeyHashFn hash;
-	CuckooEntry* table;
+    CuckooEmptyKeyFn keyCheck;
+    pointer tmpKey;
+    pointer tmpVal;
+	u8* table;
 } Cuckoo;
 
-// Compare fn may be NULL, in which case addresses are compared
-// Hash fn may be NULL, in which case the address of the key is used
-// Keys may not be NULL.
-static Cuckoo* CuckooCreate(uword initialCap, CuckooKeyCompareFn compare, CuckooKeyHashFn hash);
+// Compare fn may be NULL, in which case memcmp is used
+// Hash fn may be NULL, in which case intHash is mapped over the memory of the object
+// keyCheck function is used to tell if the value of a key means the table slot is empty,
+// if the keyCheck function is NULL then a key will be considered empty if its memory is zeroed
+static Cuckoo* CuckooCreate(uword initialCap, uword keySize, uword valSize, CuckooKeyCompareFn compare, CuckooKeyHashFn hash, CuckooEmptyKeyFn keyCheck);
 static void CuckooDestroy(Cuckoo* ck);
 static void CuckooPut(Cuckoo* ck, pointer key, pointer val);
-static pointer CuckooGet(Cuckoo* ck, pointer key);
+static o_bool CuckooGet(Cuckoo* ck, pointer key, pointer val);
 
 // Stack
 
