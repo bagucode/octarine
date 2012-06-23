@@ -44,10 +44,10 @@ typedef struct Cuckoo {
 // Compare fn may be NULL, in which case addresses are compared
 // Hash fn may be NULL, in which case the address of the key is used
 // Keys may not be NULL.
-Cuckoo* CuckooCreate(uword initialCap, CuckooKeyCompareFn compare, CuckooKeyHashFn hash);
-void CuckooDestroy(Cuckoo* ck);
-void CuckooPut(Cuckoo* ck, pointer key, pointer val);
-pointer CuckooGet(Cuckoo* ck, pointer key);
+static Cuckoo* CuckooCreate(uword initialCap, CuckooKeyCompareFn compare, CuckooKeyHashFn hash);
+static void CuckooDestroy(Cuckoo* ck);
+static void CuckooPut(Cuckoo* ck, pointer key, pointer val);
+static pointer CuckooGet(Cuckoo* ck, pointer key);
 
 // Stack
 
@@ -58,10 +58,10 @@ typedef struct Stack {
     char* stack;
 } Stack;
 
-Stack* StackCreate(uword entrySize, uword initialCap);
-void StackDestroy(Stack* stack);
-void StackPush(Stack* stack, pointer entry);
-o_bool StackPop(Stack* stack, pointer out);
+static Stack* StackCreate(uword entrySize, uword initialCap);
+static void StackDestroy(Stack* stack);
+static void StackPush(Stack* stack, pointer entry);
+static o_bool StackPop(Stack* stack, pointer out);
 
 #endif
 

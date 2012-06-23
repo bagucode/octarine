@@ -1,3 +1,6 @@
+#ifndef octarine_utils_impl
+#define octarine_utils_impl
+
 #include "utils.h"
 #include <memory.h>
 #include <stdlib.h>
@@ -12,7 +15,7 @@ static uword CuckooDefaultHash(pointer key) {
 	return (uword)key;
 }
 
-Cuckoo* CuckooCreate(uword initialCap, CuckooKeyCompareFn compare, CuckooKeyHashFn hash) {
+static Cuckoo* CuckooCreate(uword initialCap, CuckooKeyCompareFn compare, CuckooKeyHashFn hash) {
 	Cuckoo* ck;
 	uword byteSize;
     
@@ -28,7 +31,7 @@ Cuckoo* CuckooCreate(uword initialCap, CuckooKeyCompareFn compare, CuckooKeyHash
 	return ck;
 }
 
-void CuckooDestroy(Cuckoo* ck) {
+static void CuckooDestroy(Cuckoo* ck) {
 	free(ck->table);
 	free(ck);
 }
@@ -100,7 +103,7 @@ static void CuckooGrow(Cuckoo* ck) {
 	free(bigger);
 }
 
-void CuckooPut(Cuckoo* ck, pointer key, pointer val) {
+static void CuckooPut(Cuckoo* ck, pointer key, pointer val) {
 	uword i;
     CuckooEntry entry;
     
@@ -116,7 +119,7 @@ void CuckooPut(Cuckoo* ck, pointer key, pointer val) {
 	}
 }
 
-pointer CuckooGet(Cuckoo* ck, pointer key) {
+static pointer CuckooGet(Cuckoo* ck, pointer key) {
 	uword i, mask, keyHash;
     
 	mask = ck->capacity - 1;
@@ -139,7 +142,7 @@ pointer CuckooGet(Cuckoo* ck, pointer key) {
 
 // Stack
 
-Stack* StackCreate(uword entrySize, uword initialCap) {
+static Stack* StackCreate(uword entrySize, uword initialCap) {
     Stack* stack = (Stack*)malloc(sizeof(Stack));
     stack->capacity = initialCap;
     stack->top = 0;
@@ -148,12 +151,12 @@ Stack* StackCreate(uword entrySize, uword initialCap) {
     return stack;
 }
 
-void StackDestroy(Stack* stack) {
+static void StackDestroy(Stack* stack) {
     free(stack->stack);
     free(stack);
 }
 
-void StackPush(Stack* stack, pointer entry) {
+static void StackPush(Stack* stack, pointer entry) {
     uword index;
     
     if(stack->capacity == stack->top) {
@@ -165,7 +168,7 @@ void StackPush(Stack* stack, pointer entry) {
     ++stack->top;
 }
 
-o_bool StackPop(Stack* stack, pointer out) {
+static o_bool StackPop(Stack* stack, pointer out) {
     uword index;
     
     if(stack->top == 0) {
@@ -176,3 +179,5 @@ o_bool StackPop(Stack* stack, pointer out) {
     memcpy(out, stack->stack + index, stack->entrySize);
     return o_true;
 }
+
+#endif
