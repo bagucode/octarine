@@ -27,7 +27,7 @@ static uword nextLargerMultiple(uword of, uword largerThan) {
 
 typedef struct CuckooEntry {
     pointer key;
-    pointer val;
+    pointer val; // TODO: make val a char[0] and have an entrySize like in the Stack
 } CuckooEntry;
 
 typedef o_bool(*CuckooKeyCompareFn)(pointer key1, pointer key2);
