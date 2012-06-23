@@ -52,6 +52,7 @@ static void cuckooTests() {
     assert(table->capacity == 16);
     assert(table->compare == CuckooDefaultCompare);
     assert(table->hash == CuckooDefaultHash);
+    assert(table->keyCheck == CuckooDefaultKeyCheck);
     assert(table->size == 0);
     assert(table->table != NULL);
     
