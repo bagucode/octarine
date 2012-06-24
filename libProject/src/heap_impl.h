@@ -31,6 +31,10 @@
 
 static OctHeap* OctHeapCreate(o_bool shared) {
     OctHeap* heap = (OctHeap*)malloc(sizeof(OctHeap));
+
+	if(heap == NULL) {
+		return NULL;
+	}
     
     if(shared) {
         heap->lock = (Mutex*)malloc(sizeof(Mutex));

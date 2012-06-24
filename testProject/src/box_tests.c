@@ -103,7 +103,7 @@ static void storeObject() {
     assert(BoxGetObject(box) == BoxGetObject(box2));
     assert(ts.byte == tsp->byte);
     assert(ts.one == tsp->one);
-    assert(ts.two = tsp->two);
+    assert(ts.two == tsp->two);
     assert(ts.p == tsp->p);
     assert(tsp->p == &ts);
     assert(BoxGetType(box2) == (Type*)box);
@@ -143,9 +143,9 @@ static void storeArray() {
         tsp[i].byte = (u8)i;
     }
     
-    assert(tsp[56].byte = 55);
+    assert(tsp[56].byte == 56);
     assert(ts.one == tsp[56].one);
-    assert(ts.two = tsp[56].two);
+    assert(ts.two == tsp[56].two);
     assert(ts.p == tsp[56].p);
     assert(tsp[56].p == &ts);
     
