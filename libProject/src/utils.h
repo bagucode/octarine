@@ -23,6 +23,7 @@ static uword nextLargerMultiple(uword of, uword largerThan) {
     return result;
 }
 
+// Integer hashing algorithm
 #ifdef OCTARINE32
 static uword intHash(uword key)
 {
@@ -48,6 +49,25 @@ static uword intHash(uword key)
 }
 #endif
 
+// FNV 1a string hashing algorithm
+#ifdef OCTARINE32
+#define FNV_PRIME 16777619U
+#define FNV_OFFSET_BASIS 2166136261U
+#else
+#define FNV_PRIME 1099511628211U
+#define FNV_OFFSET_BASIS 14695981039346656037U
+#endif
+
+static uword fnv1a(const u8* data, uword datasize) {
+	uword hash = FNV_OFFSET_BASIS;
+	uword i;
+	for(i = 0; i < datasize; ++i) {
+		hash = hash ^ data[i];
+		hash = hash * FNV_PRIME;
+	}
+	return hash;
+}
+
 // Cuckoo hash table
 
 struct Cuckoo;
@@ -70,7 +90,7 @@ typedef struct Cuckoo {
 } Cuckoo;
 
 // Compare fn may be NULL, in which case memcmp is used
-// Hash fn may be NULL, in which case intHash is mapped over the memory of the object
+// Hash fn may be NULL, in which case a standard string hashing algorithm is mapped over the memory of the object
 // keyCheck function is used to tell if the value of a key means the table slot is empty,
 // if the keyCheck function is NULL then a key will be considered empty if its memory is zeroed
 static Cuckoo* CuckooCreate(uword initialCap, uword keySize, uword valSize, CuckooKeyCompareFn compare, CuckooKeyHashFn hash, CuckooEmptyKeyFn keyCheck);

@@ -12,28 +12,7 @@ static o_bool CuckooDefaultCompare(Cuckoo* ck, pointer key1, pointer key2) {
 }
 
 static uword CuckooDefaultHash(Cuckoo* ck, pointer key) {
-    uword result = 0;
-    uword whole = ck->keySize / sizeof(uword);
-    uword parts = ck->keySize % sizeof(uword);
-    uword i;
-    uword* keyAsUwords = (uword*)key;
-    u8* partsPtr;
-    uword partsHash;
-    
-    for(i = 0; i < whole; ++i) {
-        result += intHash(keyAsUwords[i]);
-    }
-    
-    partsPtr = ((u8*)key) + (sizeof(uword) * whole);
-    partsHash = 0;
-    
-    for(i = 0; i < parts; ++i) {
-        partsHash |= (partsPtr[i] << i);
-    }
-    
-    result += intHash(partsHash);
-    
-	return result;
+	return fnv1a((u8*)key, ck->keySize);
 }
 
 static o_bool CuckooDefaultKeyCheck(Cuckoo* ck, pointer key) {
