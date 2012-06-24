@@ -25,8 +25,7 @@ static uword nextLargerMultiple(uword of, uword largerThan) {
 
 // Integer hashing algorithm
 #ifdef OCTARINE32
-static uword intHash(uword key)
-{
+static uword intHash(uword key) {
     key = ~key + (key << 15);
     key = key ^ (key >> 12);
     key = key + (key << 2);
@@ -36,8 +35,7 @@ static uword intHash(uword key)
     return key;
 }
 #else
-static uword intHash(uword key)
-{
+static uword intHash(uword key) {
     key = (~key) + (key << 21);
     key = key ^ (key >> 24);
     key = (key + (key << 3)) + (key << 8);
