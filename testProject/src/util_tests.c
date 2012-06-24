@@ -48,6 +48,8 @@ static void cuckooTests() {
     testStruct ts;
     uword check;
     uword val;
+	uword i;
+	testStruct tsArray[17];
     
     assert(table->capacity == 16);
     assert(table->compare == CuckooDefaultCompare);
@@ -92,6 +94,21 @@ static void cuckooTests() {
     
     assert(check == val);
     
+
+	// Check that growing works
+
+	// Make and insert more keys than there are slots in the table
+	//for(i = 0; i < 17; ++i) {
+	//	tsArray[i] = ts;
+	//	tsArray[i].byte = i + 2; // to make it unique
+
+	//	val = 100 + i;
+
+	//	CuckooPut(table, &tsArray[i]
+	//}
+
+
+
     CuckooDestroy(table);
 }
 
