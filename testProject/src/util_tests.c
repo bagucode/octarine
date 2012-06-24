@@ -49,7 +49,6 @@ static void cuckooTests() {
     uword check;
     uword val;
 	uword i;
-	testStruct tsArray[17];
     
     assert(table->capacity == 16);
     assert(table->compare == CuckooDefaultCompare);
@@ -72,7 +71,6 @@ static void cuckooTests() {
     CuckooPut(table, &ts, &val);
     
     assert(CuckooGet(table, &ts, &check) == o_true);
-    
     assert(check == val);
     
     CuckooDestroy(table);
@@ -91,23 +89,29 @@ static void cuckooTests() {
     CuckooPut(table, &ts, &val);
     
     assert(CuckooGet(table, &ts, &check) == o_true);
-    
     assert(check == val);
     
-
 	// Check that growing works
 
 	// Make and insert more keys than there are slots in the table
-	//for(i = 0; i < 17; ++i) {
-	//	tsArray[i] = ts;
-	//	tsArray[i].byte = i + 2; // to make it unique
+	for(i = 0; i < 17; ++i) {
+		ts.byte = (u8)i; // to make it unique
+		val = 100 + i;
 
-	//	val = 100 + i;
+		CuckooPut(table, &ts, &val);
+	}
 
-	//	CuckooPut(table, &tsArray[i]
-	//}
+	// Make sure it grew
+	assert(table->capacity == 32);
 
+	// now check that we can get all the values back
+	for(i = 0; i < 17; ++i) {
+		ts.byte = (u8)i;
+		val = 100 + i;
 
+		assert(CuckooGet(table, &ts, &check) == o_true);
+		assert(check == val);
+	}
 
     CuckooDestroy(table);
 }

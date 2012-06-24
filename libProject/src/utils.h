@@ -84,8 +84,10 @@ typedef struct Cuckoo {
 	CuckooKeyCompareFn compare;
 	CuckooKeyHashFn hash;
     CuckooEmptyKeyFn keyCheck;
-    pointer tmpKey;
-    pointer tmpVal;
+    pointer keyCopy;
+    pointer valCopy;
+    pointer evictedKey;
+    pointer evictedVal;
 	u8* table;
 } Cuckoo;
 
