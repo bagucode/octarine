@@ -8,7 +8,8 @@
 #define ARRAY_BIT     (1 << 0)
 #define MARKED_BIT    (1 << 1)
 #define SHARED_BIT    (1 << 2)
-#define ALL_BIT_FLAGS 0xF
+//#define ALL_BIT_FLAGS 0xF
+#define ALL_BIT_FLAGS 0x7
 
 /*
  Array layout
