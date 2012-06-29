@@ -43,11 +43,11 @@ static o_bool testStructEmptyCheck(Cuckoo* ck, pointer p) {
     return ts->byte == 0 && ts->one == 0 && ts->p == NULL && ts->two == 0;
 }
 
+static u8 allocTimes;
 static pointer twiceAlloc(Cuckoo* ck, uword size) {
-    static u8 times = 0;
-    if(times >= 2)
+    if(allocTimes >= 2)
         return NULL;
-    ++times;
+    ++allocTimes;
     return malloc(size);
 }
 
@@ -129,6 +129,7 @@ static void cuckooTests() {
     CuckooDestroy(&table);
 
     // Check that the table does not get messed up when growing fails
+    allocTimes = 0;
     CuckooCreate(&table, 10, sizeof(testStruct), sizeof(uword), compareTestStructs, hashTestStruct, testStructEmptyCheck, twiceAlloc, NULL, NULL);
 
     // Same as above, but this time we expect the last put to fail
