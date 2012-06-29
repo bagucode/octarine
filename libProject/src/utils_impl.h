@@ -3,7 +3,6 @@
 
 #include "utils.h"
 #include <memory.h>
-#include <stdlib.h>
 
 // Cuckoo hash table
 
@@ -26,21 +25,48 @@ static o_bool CuckooDefaultKeyCheck(Cuckoo* ck, pointer key) {
     return o_true;
 }
 
-static Cuckoo* CuckooCreate(uword initialCap, uword keySize, uword valSize, CuckooKeyCompareFn compare, CuckooKeyHashFn hash, CuckooEmptyKeyFn keyCheck) {
-	Cuckoo* ck;
+static pointer CuckooDefaultAlloc(Cuckoo* ck, uword size) {
+    return malloc(size);
+}
+
+static void CuckooDefaultFree(Cuckoo* ck, pointer location) {
+    free(location);
+}
+
+static void CuckooDefaultEraseKey(Cuckoo* ck, pointer key) {
+    memset(key, 0, ck->keySize);
+}
+
+static o_bool CuckooCreate(Cuckoo* ck,
+                           uword initialCap,
+                           uword keySize,
+                           uword valSize,
+                           CuckooKeyCompareFn compareFn,
+                           CuckooKeyHashFn hashFn,
+                           CuckooEmptyKeyFn keyCheckFn,
+                           CuckooAllocateFn allocateFn,
+                           CuckooFreeFn freeFn,
+                           CuckooEraseKeyFn eraseKeyFn) {
 	uword byteSize;
     pointer scratchSpace;
     
-	ck = (Cuckoo*)malloc(sizeof(Cuckoo));
 	ck->capacity = nextp2(initialCap);
 	ck->size = 0;
-	ck->compare = compare != NULL ? compare : CuckooDefaultCompare;
-	ck->hash = hash != NULL ? hash : CuckooDefaultHash;
-    ck->keyCheck = keyCheck != NULL ? keyCheck : CuckooDefaultKeyCheck;
+	ck->compareFn = compareFn != NULL ? compareFn : CuckooDefaultCompare;
+	ck->hashFn = hashFn != NULL ? hashFn : CuckooDefaultHash;
+    ck->keyCheckFn = keyCheckFn != NULL ? keyCheckFn : CuckooDefaultKeyCheck;
+    ck->allocateFn = allocateFn != NULL ? allocateFn : CuckooDefaultAlloc;
+    ck->freeFn = freeFn != NULL ? freeFn : CuckooDefaultFree;
+    ck->eraseKeyFn = eraseKeyFn != NULL ? eraseKeyFn : CuckooDefaultEraseKey;
     ck->keySize = keySize;
     ck->valSize = valSize;
 
-    scratchSpace = (u8*)malloc((keySize + valSize) * 2);
+    scratchSpace = (u8*)ck->allocateFn(ck, (keySize + valSize) * 2);
+
+    if(scratchSpace == NULL) {
+        return o_false;
+    }
+
     ck->keyCopy = scratchSpace;
 	// TODO: consider alignment here?
 	ck->valCopy = ((u8*)ck->keyCopy) + keySize;
@@ -48,16 +74,21 @@ static Cuckoo* CuckooCreate(uword initialCap, uword keySize, uword valSize, Cuck
 	ck->evictedVal = ((u8*)ck->evictedKey) + keySize;
 
 	byteSize = ck->capacity * (keySize + valSize);
-	ck->table = (u8*)malloc(byteSize);
+    ck->table = (u8*)ck->allocateFn(ck, byteSize);
+
+    if(ck->table == NULL) {
+        ck->freeFn(ck, scratchSpace);
+        return o_false;
+    }
+
 	memset(ck->table, 0, byteSize);
-    
-	return ck;
+
+    return o_true;
 }
 
 static void CuckooDestroy(Cuckoo* ck) {
-	free(ck->keyCopy);
-	free(ck->table);
-	free(ck);
+	ck->freeFn(ck, ck->keyCopy);
+	ck->freeFn(ck, ck->table);
 }
 
 static uword CuckooHash1(uword h) {
@@ -79,12 +110,12 @@ static uword CuckooGetSlot(Cuckoo* ck, pointer key, uword step, uword* slot1, uw
     switch(step) {
         case 0:
 			{
-				(*slot1) = CuckooHash1(ck->hash(ck, key)) & mask;
+				(*slot1) = CuckooHash1(ck->hashFn(ck, key)) & mask;
 				result = (*slot1);
 			} break;
         case 1:
 			{
-				(*slot2) = CuckooHash2(ck->hash(ck, key)) & mask;
+				(*slot2) = CuckooHash2(ck->hashFn(ck, key)) & mask;
 				// slots must never be same or data will be lost
 				if((*slot2) == (*slot1)) {
 					++(*slot2);
@@ -95,7 +126,7 @@ static uword CuckooGetSlot(Cuckoo* ck, pointer key, uword step, uword* slot1, uw
 			} break;
         case 2:
 			{
-				result = CuckooHash3(ck->hash(ck, key)) & mask;
+				result = CuckooHash3(ck->hashFn(ck, key)) & mask;
 				if(result == (*slot1)) {
 					++result;
 					if(result > ck->capacity - 1)
@@ -134,14 +165,14 @@ static o_bool CuckooTryPut(Cuckoo* ck, pointer key, pointer val) {
 		iVal = ((u8*)iKey) + ck->keySize;
 
 		// Check if the slot is empty
-		if(ck->keyCheck(ck, iKey)) {
+		if(ck->keyCheckFn(ck, iKey)) {
 			// Slot is empty, put key and value in and report success
 			++ck->size;
 			memcpy(iKey, ck->keyCopy, entrySize);
 			return o_true;
 		}
 		// Check if key is equal to the key in the slot
-		if(ck->compare(ck, ck->keyCopy, iKey)) {
+		if(ck->compareFn(ck, ck->keyCopy, iKey)) {
 			// Keys match, just replace the value
 			memcpy(iVal, ck->valCopy, ck->valSize);
 			return o_true;
@@ -161,55 +192,109 @@ static o_bool CuckooTryPut(Cuckoo* ck, pointer key, pointer val) {
     return o_false;
 }
 
-static void CuckooGrow(Cuckoo* ck) {
-	Cuckoo* bigger = CuckooCreate(ck->capacity + 1, ck->keySize, ck->valSize, ck->compare, ck->hash, ck->keyCheck);
+static o_bool CuckooGrow(Cuckoo* ck) {
+	Cuckoo bigger;
 	uword i, cap;
     u8* entryPtr;
     pointer key;
     pointer val;
 	
+    if(!CuckooCreate(
+        &bigger,
+        ck->capacity + 1,
+        ck->keySize,
+        ck->valSize,
+        ck->compareFn,
+        ck->hashFn,
+        ck->keyCheckFn,
+        ck->allocateFn,
+        ck->freeFn,
+        ck->eraseKeyFn)) {
+        return o_false;
+    }
+
 	for(i = 0; i < ck->capacity; ++i) {
         entryPtr = ck->table + ((ck->keySize + ck->valSize) * i);
         key = entryPtr;
         val = entryPtr + ck->keySize;
         
-		if(ck->keyCheck(ck, key) == o_false) {
-			if(CuckooTryPut(bigger, key, val) == o_false) {
-				cap = bigger->capacity + 1;
-				CuckooDestroy(bigger);
-				bigger = CuckooCreate(cap, ck->keySize, ck->valSize, ck->compare, ck->hash, ck->keyCheck);
+		if(ck->keyCheckFn(ck, key) == o_false) {
+			if(CuckooTryPut(&bigger, key, val) == o_false) {
+				cap = bigger.capacity + 1;
+				CuckooDestroy(&bigger);
+                if(!CuckooCreate(
+                    &bigger,
+                    cap,
+                    ck->keySize,
+                    ck->valSize,
+                    ck->compareFn,
+                    ck->hashFn,
+                    ck->keyCheckFn,
+                    ck->allocateFn,
+                    ck->freeFn,
+                    ck->eraseKeyFn)) {
+                    return o_false;
+                }
 				i = 0;
 			}
 		}
 	}
 	// Make sure to preserve the key/val copies in the scratch space since if we
 	// are in this function that means we have values in there that didn't fit in the old table.
-	memcpy(bigger->keyCopy, ck->keyCopy, ck->keySize + ck->valSize);
-	free(ck->keyCopy);
-	free(ck->table);
-    (*ck) = (*bigger);
-	free(bigger);
+	memcpy(bigger.keyCopy, ck->keyCopy, ck->keySize + ck->valSize);
+	ck->freeFn(ck, ck->keyCopy);
+	ck->freeFn(ck, ck->table);
+    (*ck) = bigger;
+
+    return o_true;
 }
 
-static void CuckooPut(Cuckoo* ck, pointer key, pointer val) {
+static void CuckooRevert(Cuckoo* ck, pointer key) {
+    // If the entry we failed to insert is currently in the table:
+    // Find it and remove it and then insert whatever we have in
+    // keyCopy and valCopy
+    uword entrySize = ck->keySize + ck->valSize;
+    u8* entryPtr = ck->table;
+
+    if(ck->compareFn(ck, key, ck->keyCopy)) {
+        // No need to do anything, the one we failed to insert is the evicted one
+        return;
+    }
+
+    while(ck->compareFn(ck, key, entryPtr) == o_false) {
+        entryPtr += entrySize;
+    }
+
+    ck->eraseKeyFn(ck, entryPtr);
+
+    CuckooPut(ck, ck->keyCopy, ck->valCopy);
+}
+
+static o_bool CuckooPut(Cuckoo* ck, pointer key, pointer val) {
 	uword i;
+    pointer tmpKey = key;
 
 	while(o_true) {
 		for(i = 0; i < 5; ++i) {
-			if(CuckooTryPut(ck, key, val)) {
-				return;
+			if(CuckooTryPut(ck, tmpKey, val)) {
+				return o_true;
 			}
 			// If CuckooTryPut failed it means that we have an evicted key-value pair
 			// stored in the scratch space. We have to try to insert that pair next time
 			// in the loop or the values will be lost.
-			key = ck->keyCopy;
+			tmpKey = ck->keyCopy;
 			val = ck->valCopy;
 		}
-		CuckooGrow(ck);
+		if(!CuckooGrow(ck)) {
+            CuckooRevert(ck, key);
+            return o_false;
+        }
 		// After a grow, the addresses of keyCopy and valCopy will have changed
-		key = ck->keyCopy;
+		tmpKey = ck->keyCopy;
 		val = ck->valCopy;
 	}
+
+    return o_true;
 }
 
 static o_bool CuckooGet(Cuckoo* ck, pointer key, pointer val) {
@@ -218,7 +303,7 @@ static o_bool CuckooGet(Cuckoo* ck, pointer key, pointer val) {
     pointer iKey;
     pointer iVal;
     
-	keyHash = ck->hash(ck, key);
+	keyHash = ck->hashFn(ck, key);
 
     for(step = 0; step < 3; ++step) {
     
@@ -228,7 +313,7 @@ static o_bool CuckooGet(Cuckoo* ck, pointer key, pointer val) {
         iKey = iPtr;
         iVal = iPtr + ck->keySize;
 
-        if(ck->keyCheck(ck, iKey) == o_false && ck->compare(ck, iKey, key)) {
+        if(ck->keyCheckFn(ck, iKey) == o_false && ck->compareFn(ck, iKey, key)) {
             memcpy(val, iVal, ck->valSize);
             return o_true;
         }

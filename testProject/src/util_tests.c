@@ -43,23 +43,36 @@ static o_bool testStructEmptyCheck(Cuckoo* ck, pointer p) {
     return ts->byte == 0 && ts->one == 0 && ts->p == NULL && ts->two == 0;
 }
 
+static pointer twiceAlloc(Cuckoo* ck, uword size) {
+    static u8 times = 0;
+    if(times >= 2)
+        return NULL;
+    ++times;
+    return malloc(size);
+}
+
 static void cuckooTests() {
-    Cuckoo* table = CuckooCreate(10, sizeof(uword), sizeof(uword), NULL, NULL, NULL);
+    Cuckoo table;
     testStruct ts;
     uword check;
     uword val;
 	uword i;
     
-    assert(table->capacity == 16);
-    assert(table->compare == CuckooDefaultCompare);
-    assert(table->hash == CuckooDefaultHash);
-    assert(table->keyCheck == CuckooDefaultKeyCheck);
-    assert(table->size == 0);
-    assert(table->table != NULL);
+    CuckooCreate(&table, 10, sizeof(uword), sizeof(uword), NULL, NULL, NULL, NULL, NULL, NULL);
+
+    assert(table.capacity == 16);
+    assert(table.compareFn == CuckooDefaultCompare);
+    assert(table.hashFn == CuckooDefaultHash);
+    assert(table.keyCheckFn == CuckooDefaultKeyCheck);
+    assert(table.allocateFn == CuckooDefaultAlloc);
+    assert(table.freeFn == CuckooDefaultFree);
+    assert(table.eraseKeyFn == CuckooDefaultEraseKey);
+    assert(table.size == 0);
+    assert(table.table != NULL);
     
-    CuckooDestroy(table);
+    CuckooDestroy(&table);
     
-    table = CuckooCreate(10, sizeof(testStruct), sizeof(uword), compareTestStructs, hashTestStruct, testStructEmptyCheck);
+    CuckooCreate(&table, 10, sizeof(testStruct), sizeof(uword), compareTestStructs, hashTestStruct, testStructEmptyCheck, NULL, NULL, NULL);
     
     ts.byte = 1;
     ts.one = 65535;
@@ -68,16 +81,16 @@ static void cuckooTests() {
 
     val = 100;
     
-    CuckooPut(table, &ts, &val);
+    CuckooPut(&table, &ts, &val);
     
-    assert(CuckooGet(table, &ts, &check) == o_true);
+    assert(CuckooGet(&table, &ts, &check) == o_true);
     assert(check == val);
     
-    CuckooDestroy(table);
+    CuckooDestroy(&table);
 
     // The same test should also work with the default functions, yay! :)
     
-    table = CuckooCreate(10, sizeof(testStruct), sizeof(uword), NULL, NULL, NULL);
+    CuckooCreate(&table, 10, sizeof(testStruct), sizeof(uword), NULL, NULL, NULL, NULL, NULL, NULL);
 
     ts.byte = 1;
     ts.one = 65535;
@@ -86,9 +99,9 @@ static void cuckooTests() {
     
     val = 100;
     
-    CuckooPut(table, &ts, &val);
+    CuckooPut(&table, &ts, &val);
     
-    assert(CuckooGet(table, &ts, &check) == o_true);
+    assert(CuckooGet(&table, &ts, &check) == o_true);
     assert(check == val);
     
 	// Check that growing works
@@ -98,22 +111,53 @@ static void cuckooTests() {
 		ts.byte = (u8)i; // to make it unique
 		val = 100 + i;
 
-		CuckooPut(table, &ts, &val);
+		CuckooPut(&table, &ts, &val);
 	}
 
 	// Make sure it grew
-	assert(table->capacity == 32);
+	assert(table.capacity == 32);
 
 	// now check that we can get all the values back
 	for(i = 0; i < 17; ++i) {
 		ts.byte = (u8)i;
 		val = 100 + i;
 
-		assert(CuckooGet(table, &ts, &check) == o_true);
+		assert(CuckooGet(&table, &ts, &check) == o_true);
 		assert(check == val);
 	}
 
-    CuckooDestroy(table);
+    CuckooDestroy(&table);
+
+    // Check that the table does not get messed up when growing fails
+    CuckooCreate(&table, 10, sizeof(testStruct), sizeof(uword), compareTestStructs, hashTestStruct, testStructEmptyCheck, twiceAlloc, NULL, NULL);
+
+    // Same as above, but this time we expect the last put to fail
+	for(i = 0; i < 17; ++i) {
+		ts.byte = (u8)i;
+		val = 100 + i;
+
+        if(i < 16) {
+		    assert(CuckooPut(&table, &ts, &val) == o_true);
+        }
+        else {
+            assert(CuckooPut(&table, &ts, &val) == o_false);
+        }
+	}
+
+	assert(table.capacity == 16);
+
+	// Check that the first 16 values are there, if any are missing
+    // that means the table failed to revert to the state it had
+    // before the put
+	for(i = 0; i < 16; ++i) {
+		ts.byte = (u8)i;
+		val = 100 + i;
+
+		assert(CuckooGet(&table, &ts, &check) == o_true);
+		assert(check == val);
+	}
+
+    CuckooDestroy(&table);
 }
 
 void utilTests() {

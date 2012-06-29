@@ -73,15 +73,21 @@ struct Cuckoo;
 typedef o_bool(*CuckooKeyCompareFn)(struct Cuckoo* ck, pointer key1, pointer key2);
 typedef uword(*CuckooKeyHashFn)(struct Cuckoo* ck, pointer key);
 typedef o_bool(*CuckooEmptyKeyFn)(struct Cuckoo* ck, pointer key);
+typedef pointer(*CuckooAllocateFn)(struct Cuckoo* ck, uword neededSize);
+typedef void(*CuckooFreeFn)(struct Cuckoo* ck, pointer location);
+typedef void(*CuckooEraseKeyFn)(struct Cuckoo* ck, pointer key);
 
 typedef struct Cuckoo {
 	uword capacity;
 	uword size;
     uword keySize;
     uword valSize;
-	CuckooKeyCompareFn compare;
-	CuckooKeyHashFn hash;
-    CuckooEmptyKeyFn keyCheck;
+	CuckooKeyCompareFn compareFn;
+	CuckooKeyHashFn hashFn;
+    CuckooEmptyKeyFn keyCheckFn;
+    CuckooAllocateFn allocateFn;
+    CuckooFreeFn freeFn;
+    CuckooEraseKeyFn eraseKeyFn;
     pointer keyCopy;
     pointer valCopy;
     pointer evictedKey;
@@ -93,9 +99,25 @@ typedef struct Cuckoo {
 // Hash fn may be NULL, in which case a standard string hashing algorithm is mapped over the memory of the object
 // keyCheck function is used to tell if the value of a key means the table slot is empty,
 // if the keyCheck function is NULL then a key will be considered empty if its memory is zeroed
-static Cuckoo* CuckooCreate(uword initialCap, uword keySize, uword valSize, CuckooKeyCompareFn compare, CuckooKeyHashFn hash, CuckooEmptyKeyFn keyCheck);
+// allocate is a function that gets called when the table needs more memory.
+// The neededSize parameter tells the callback how much memory the table needs. A pointer to the new
+// memory for the table should be returned, or NULL if the memory can't be given, in which case any
+// operation that caused the table to need more memory is aborted.
+// freeFn is called by the table functions to free no longer needed memory allocated by the
+// supplied allocate function.
+// If allocate or freeFn are not supplied, malloc and free will be used.
+static o_bool CuckooCreate(Cuckoo* ck,
+                           uword initialCap,
+                           uword keySize,
+                           uword valSize,
+                           CuckooKeyCompareFn compareFn,
+                           CuckooKeyHashFn hashFn,
+                           CuckooEmptyKeyFn keyCheckFn,
+                           CuckooAllocateFn allocateFn,
+                           CuckooFreeFn freeFn,
+                           CuckooEraseKeyFn eraseKeyFn);
 static void CuckooDestroy(Cuckoo* ck);
-static void CuckooPut(Cuckoo* ck, pointer key, pointer val);
+static o_bool CuckooPut(Cuckoo* ck, pointer key, pointer val);
 static o_bool CuckooGet(Cuckoo* ck, pointer key, pointer val);
 
 // Stack
