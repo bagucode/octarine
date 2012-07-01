@@ -119,6 +119,7 @@ static o_bool CuckooCreate(Cuckoo* ck,
 static void CuckooDestroy(Cuckoo* ck);
 static o_bool CuckooPut(Cuckoo* ck, pointer key, pointer val);
 static o_bool CuckooGet(Cuckoo* ck, pointer key, pointer val);
+static o_bool CuckooRemove(Cuckoo* ck, pointer key);
 
 // Stack
 

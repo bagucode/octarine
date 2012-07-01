@@ -313,7 +313,7 @@ static o_bool CuckooGet(Cuckoo* ck, pointer key, pointer val) {
         iKey = iPtr;
         iVal = iPtr + ck->keySize;
 
-        if(ck->keyCheckFn(ck, iKey) == o_false && ck->compareFn(ck, iKey, key)) {
+        if(ck->compareFn(ck, iKey, key)) {
             memcpy(val, iVal, ck->valSize);
             return o_true;
         }
@@ -321,6 +321,32 @@ static o_bool CuckooGet(Cuckoo* ck, pointer key, pointer val) {
 
 	return o_false;
 }
+
+static o_bool CuckooRemove(Cuckoo* ck, pointer key) {
+	uword i, keyHash, step, slot1, slot2;
+    u8* iPtr;
+    pointer iKey;
+    pointer iVal;
+    
+	keyHash = ck->hashFn(ck, key);
+    
+    for(step = 0; step < 3; ++step) {
+        
+		i = CuckooGetSlot(ck, key, step, &slot1, &slot2);
+        
+        iPtr = ck->table + ((ck->keySize + ck->valSize) * i);
+        iKey = iPtr;
+        iVal = iPtr + ck->keySize;
+        
+        if(ck->compareFn(ck, iKey, key)) {
+            ck->eraseKeyFn(ck, iKey);
+            return o_true;
+        }
+    }
+    
+	return o_false;
+}
+
 
 // Stack
 

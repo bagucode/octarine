@@ -157,6 +157,16 @@ static void cuckooTests() {
 		assert(CuckooGet(&table, &ts, &check) == o_true);
 		assert(check == val);
 	}
+    
+    // Remove a couple of entries and check that they are gone
+    
+    ts.byte = 10;
+    assert(CuckooRemove(&table, &ts));
+    assert(CuckooGet(&table, &ts, &check) == o_false);
+
+    ts.byte = 6;
+    assert(CuckooRemove(&table, &ts));
+    assert(CuckooGet(&table, &ts, &check) == o_false);
 
     CuckooDestroy(&table);
 }
