@@ -171,7 +171,54 @@ static void cuckooTests() {
     CuckooDestroy(&table);
 }
 
+static void stackTests() {
+    uword i;
+    testStruct ts;
+    i32 n;
+    
+    Stack stack;
+    
+    // Try ints
+    assert(StackCreate(&stack, sizeof(int), 25, NULL, NULL) == o_true);
+    
+    for(i = 0; i < 101; ++i) {
+        n = (i32)i;
+        assert(StackPush(&stack, &n) == o_true);
+    }
+    
+    for(i = 101; i > 0; --i) {
+        assert(StackPop(&stack, &n) == o_true);
+        assert(n == (i - 1));
+    }
+    
+    assert(StackPop(&stack, &n) == o_false);
+
+    StackDestroy(&stack);
+
+    // And structs
+    assert(StackCreate(&stack, sizeof(testStruct), 25, NULL, NULL) == o_true);
+    
+    ts.one = 65535;
+    ts.two = 2;
+    ts.p = &ts;
+
+    for(i = 0; i < 101; ++i) {
+        ts.byte = (u8)i;
+        assert(StackPush(&stack, &ts) == o_true);
+    }
+    
+    for(i = 101; i > 0; --i) {
+        assert(StackPop(&stack, &ts) == o_true);
+        assert(ts.byte == (i - 1));
+    }
+    
+    assert(StackPop(&stack, &ts) == o_false);
+    
+    StackDestroy(&stack);
+}
+
 void utilTests() {
     cuckooTests();
+    stackTests();
 }
 

@@ -350,33 +350,63 @@ static o_bool CuckooRemove(Cuckoo* ck, pointer key) {
 
 // Stack
 
-static Stack* StackCreate(uword entrySize, uword initialCap) {
-    Stack* stack = (Stack*)malloc(sizeof(Stack));
+static pointer StackDefaultAlloc(Stack* stack, uword size) {
+    return malloc(size);
+}
+
+static void StackDefaultFree(Stack* stack, pointer location) {
+    free(location);
+}
+
+static o_bool StackCreate(Stack* stack,
+                          uword entrySize,
+                          uword initialCap,
+                          StackAllocateFn allocFn,
+                          StackFreeFn freeFn) {
     stack->capacity = initialCap;
     stack->top = 0;
     stack->entrySize = entrySize;
-    stack->stack = (char*)malloc(entrySize * initialCap);
-    return stack;
+    stack->allocateFn = allocFn != NULL ? allocFn : StackDefaultAlloc;
+    stack->freeFn = freeFn != NULL ? freeFn : StackDefaultFree;
+    stack->stack = (u8*)stack->allocateFn(stack, entrySize * initialCap);
+    
+    if(stack->stack == NULL) {
+        return o_false;
+    }
+    
+    return o_true;
 }
 
 static void StackDestroy(Stack* stack) {
-    free(stack->stack);
-    free(stack);
+    stack->freeFn(stack, stack->stack);
 }
 
-static void StackPush(Stack* stack, pointer entry) {
+static o_bool StackPush(Stack* stack, pointer entry) {
     uword index;
+    uword newCap;
+    u8* newSpace;
     
     if(stack->capacity == stack->top) {
-        stack->capacity *= 2;
-        stack->stack = (char*)realloc(stack->stack, stack->entrySize * stack->capacity);
+        newCap = stack->capacity * 2;
+        newSpace = (u8*)stack->allocateFn(stack, newCap * stack->entrySize);
+
+        if(newSpace == NULL) {
+            return o_false;
+        }
+        
+        memcpy(newSpace, stack->stack, stack->capacity * stack->entrySize);
+        stack->freeFn(stack, stack->stack);
+        stack->stack = newSpace;
+        stack->capacity = newCap;
     }
     index = stack->entrySize * stack->top;
     memcpy(stack->stack + index, entry, stack->entrySize);
     ++stack->top;
+    
+    return o_true;
 }
 
-static o_bool StackPop(Stack* stack, pointer out) {
+static o_bool StackPop(Stack* stack, pointer entry) {
     uword index;
     
     if(stack->top == 0) {
@@ -384,7 +414,7 @@ static o_bool StackPop(Stack* stack, pointer out) {
     }
     --stack->top;
     index = stack->entrySize * stack->top;
-    memcpy(out, stack->stack + index, stack->entrySize);
+    memcpy(entry, stack->stack + index, stack->entrySize);
     return o_true;
 }
 

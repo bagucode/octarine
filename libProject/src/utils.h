@@ -123,17 +123,28 @@ static o_bool CuckooRemove(Cuckoo* ck, pointer key);
 
 // Stack
 
+struct Stack;
+
+typedef pointer(*StackAllocateFn)(struct Stack* stack, uword neededSize);
+typedef void(*StackFreeFn)(struct Stack* stack, pointer location);
+
 typedef struct Stack {
     uword capacity;
     uword top;
     uword entrySize;
-    char* stack;
+    StackAllocateFn allocateFn;
+    StackFreeFn freeFn;
+    u8* stack;
 } Stack;
 
-static Stack* StackCreate(uword entrySize, uword initialCap);
+static o_bool StackCreate(Stack* stack,
+                          uword entrySize,
+                          uword initialCap,
+                          StackAllocateFn allocFn,
+                          StackFreeFn freeFn);
 static void StackDestroy(Stack* stack);
-static void StackPush(Stack* stack, pointer entry);
-static o_bool StackPop(Stack* stack, pointer out);
+static o_bool StackPush(Stack* stack, pointer entry);
+static o_bool StackPop(Stack* stack, pointer entry);
 
 #endif
 
