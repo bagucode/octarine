@@ -68,6 +68,7 @@ static void writingToWholeArrayShouldNotCrash() {
     
     assert(arrayBox != NULL);
     assert(BoxCheckArrayBit(arrayBox));
+    assert(BoxCheckSharedBit(arrayBox));
     
     aInfo = BoxGetArrayInfo(arrayBox);
     
@@ -87,7 +88,8 @@ static void writingToWholeArrayShouldNotCrash() {
     // Do asserts again to make sure we did not mess something up
     
     assert(arrayBox != NULL);
-    assert(BoxCheckArrayBit(arrayBox));    
+    assert(BoxCheckArrayBit(arrayBox));
+    assert(BoxCheckSharedBit(arrayBox));
 
     assert(aInfo != NULL);    
     assert(aInfo->alignment == 0);
