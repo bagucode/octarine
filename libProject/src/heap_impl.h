@@ -161,7 +161,6 @@ static void _OctHeapAllocArray(OctHeap* heap, uword type_size, uword n_elements,
 
     BoxSetArrayBit(*dest);
     
-    aInfo = BoxGetArrayInfo(*dest);
     aInfo->alignment = 0;
     aInfo->num_elements = n_elements;
     
@@ -185,7 +184,7 @@ static o_bool inBlock(OctHeapBlock* block, pointer addr) {
     && uwordAddr >= uwordBlockStart;
 }
 
-static o_bool OctHeapObjectInOctHeap(OctHeap* heap, pointer object) {
+static o_bool OctHeapObjectInHeap(OctHeap* heap, pointer object) {
     OctHeapBlock* block = heap->blocks;
     
     while(block) {
