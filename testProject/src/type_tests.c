@@ -73,4 +73,5 @@ static void typeCreation2() {
 void typeTests() {
     fieldCreation();
     typeCreation();
+    typeCreation2();
 }

@@ -100,7 +100,7 @@ static void _OctHeapAlloc(OctHeap* heap, uword type_size, Box** dest) {
     OctHeapBlock* block;
 
     size = BoxCalcObjectBoxSize(type_size);
-    space = malloc(size);
+    space = calloc(1, size);
     
     if(space == NULL) {
         (*dest) = NULL;
@@ -148,7 +148,7 @@ static void OctHeapAllocArray(OctHeap* heap, struct Type* type, uword n_elements
 
 static void _OctHeapAllocArray(OctHeap* heap, uword type_size, uword n_elements, Box** dest) {
     uword size = BoxCalcArrayBoxSize(type_size, 0, n_elements);
-    pointer space = malloc(size);
+    pointer space = calloc(1, size);
     ArrayInfo* aInfo;
     OctHeapBlock* block;
     

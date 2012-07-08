@@ -85,7 +85,7 @@ static void storeObject() {
     ts.p = &ts;
     
     boxSize = BoxCalcObjectBoxSize(sizeof(testStruct));
-    box = malloc(boxSize);
+    box = calloc(1, boxSize);
     // boxes must be cleared before use because some functions
     // depend on the padding space in boxes being zeroed
     memset(box, 0, boxSize);
@@ -125,7 +125,7 @@ static void storeArray() {
     ts.p = &ts;
     
     boxSize = BoxCalcArrayBoxSize(sizeof(testStruct), 0, 57);
-    aInfo = malloc(boxSize);
+    aInfo = calloc(1, boxSize);
     // boxes must be cleared before use because some functions
     // depend on the padding space in boxes being zeroed
     memset(aInfo, 0, boxSize);
