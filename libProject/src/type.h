@@ -36,4 +36,11 @@ static void TypeCreate(Type* type,
                        struct String* name,
                        struct Field* fields);
 
+static void _TypeCreate(Type* type,
+                        uword alignment,
+                        struct String* name,
+                        struct Field* fields,
+                        uword numFields);
+
+
 #endif

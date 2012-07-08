@@ -40,11 +40,18 @@ static void TypeCreate(Type* type,
                        uword alignment,
                        struct String* name,
                        struct Field* fields) {
+    ArrayInfo* aInfo = BoxGetArrayInfo(BoxGetBox(fields));
+    _TypeCreate(type, alignment, name, fields, aInfo->num_elements);
+}
+
+static void _TypeCreate(Type* type,
+                       uword alignment,
+                       struct String* name,
+                       struct Field* fields,
+                        uword numFields) {
     uword largestMember;
     uword i;
     uword align;
-    ArrayInfo* aInfo;
-    Box* box;
 
     type->name = name;
     type->alignment = alignment;
@@ -53,10 +60,7 @@ static void TypeCreate(Type* type,
 
     largestMember = 0;
     
-    box = BoxGetBox(fields);
-    aInfo = BoxGetArrayInfo(box);
-
-    for(i = 0; i < aInfo->num_elements; ++i) {
+    for(i = 0; i < numFields; ++i) {
         if(fields[i].ptr) {
             type->size = alignOffset(type->size, sizeof(pointer));
             fields[i].offset = type->size;
