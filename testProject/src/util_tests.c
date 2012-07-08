@@ -12,7 +12,7 @@ typedef struct testStruct {
     pointer p;
 } testStruct;
 
-static o_bool compareTestStructs(Cuckoo* ck, pointer a, pointer b) {
+static o_bool compareTestStructs(Cuckoo* ck, pointer a, pointer b, pointer ignore) {
     testStruct* ts1 = (testStruct*)a;
     testStruct* ts2 = (testStruct*)b;
     
@@ -29,7 +29,7 @@ static o_bool compareTestStructs(Cuckoo* ck, pointer a, pointer b) {
     && ts1->two == ts2->two;
 }
 
-static uword hashTestStruct(Cuckoo* ck, pointer p) {
+static uword hashTestStruct(Cuckoo* ck, pointer p, pointer ignore) {
     testStruct* ts = (testStruct*)p;
     
     if(ts == NULL)
@@ -38,13 +38,13 @@ static uword hashTestStruct(Cuckoo* ck, pointer p) {
     return 31 * (ts->byte + ts->one + (uword)ts->p + ts->two);
 }
 
-static o_bool testStructEmptyCheck(Cuckoo* ck, pointer p) {
+static o_bool testStructEmptyCheck(Cuckoo* ck, pointer p, pointer ignore) {
     testStruct* ts = (testStruct*)p;
     return ts->byte == 0 && ts->one == 0 && ts->p == NULL && ts->two == 0;
 }
 
 static u8 allocTimes;
-static pointer twiceAlloc(Cuckoo* ck, uword size) {
+static pointer twiceAlloc(Cuckoo* ck, uword size, pointer ignore) {
     if(allocTimes >= 2)
         return NULL;
     ++allocTimes;
@@ -58,7 +58,7 @@ static void cuckooTests() {
     uword val;
 	uword i;
     
-    CuckooCreate(&table, 10, sizeof(uword), sizeof(uword), NULL, NULL, NULL, NULL, NULL, NULL);
+    CuckooCreate(&table, 10, sizeof(uword), sizeof(uword), NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 
     assert(table.capacity == 16);
     assert(table.compareFn == CuckooDefaultCompare);
@@ -72,7 +72,7 @@ static void cuckooTests() {
     
     CuckooDestroy(&table);
     
-    CuckooCreate(&table, 10, sizeof(testStruct), sizeof(uword), compareTestStructs, hashTestStruct, testStructEmptyCheck, NULL, NULL, NULL);
+    CuckooCreate(&table, 10, sizeof(testStruct), sizeof(uword), compareTestStructs, hashTestStruct, testStructEmptyCheck, NULL, NULL, NULL, NULL);
     
     ts.byte = 1;
     ts.one = 65535;
@@ -90,7 +90,7 @@ static void cuckooTests() {
 
     // The same test should also work with the default functions, yay! :)
     
-    CuckooCreate(&table, 10, sizeof(testStruct), sizeof(uword), NULL, NULL, NULL, NULL, NULL, NULL);
+    CuckooCreate(&table, 10, sizeof(testStruct), sizeof(uword), NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 
     ts.byte = 1;
     ts.one = 65535;
@@ -130,7 +130,7 @@ static void cuckooTests() {
 
     // Check that the table does not get messed up when growing fails
     allocTimes = 0;
-    CuckooCreate(&table, 10, sizeof(testStruct), sizeof(uword), compareTestStructs, hashTestStruct, testStructEmptyCheck, twiceAlloc, NULL, NULL);
+    CuckooCreate(&table, 10, sizeof(testStruct), sizeof(uword), compareTestStructs, hashTestStruct, testStructEmptyCheck, twiceAlloc, NULL, NULL, NULL);
 
     // Same as above, but this time we expect the last put to fail
 	for(i = 0; i < 17; ++i) {
@@ -179,7 +179,7 @@ static void stackTests() {
     Stack stack;
     
     // Try ints
-    assert(StackCreate(&stack, sizeof(int), 25, NULL, NULL) == o_true);
+    assert(StackCreate(&stack, sizeof(int), 25, NULL, NULL, NULL) == o_true);
     
     for(i = 0; i < 101; ++i) {
         n = (i32)i;
@@ -196,7 +196,7 @@ static void stackTests() {
     StackDestroy(&stack);
 
     // And structs
-    assert(StackCreate(&stack, sizeof(testStruct), 25, NULL, NULL) == o_true);
+    assert(StackCreate(&stack, sizeof(testStruct), 25, NULL, NULL, NULL) == o_true);
     
     ts.one = 65535;
     ts.two = 2;

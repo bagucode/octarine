@@ -70,12 +70,12 @@ static uword fnv1a(const u8* data, uword datasize) {
 
 struct Cuckoo;
 
-typedef o_bool(*CuckooKeyCompareFn)(struct Cuckoo* ck, pointer key1, pointer key2);
-typedef uword(*CuckooKeyHashFn)(struct Cuckoo* ck, pointer key);
-typedef o_bool(*CuckooEmptyKeyFn)(struct Cuckoo* ck, pointer key);
-typedef pointer(*CuckooAllocateFn)(struct Cuckoo* ck, uword neededSize);
-typedef void(*CuckooFreeFn)(struct Cuckoo* ck, pointer location);
-typedef void(*CuckooEraseKeyFn)(struct Cuckoo* ck, pointer key);
+typedef o_bool(*CuckooKeyCompareFn)(struct Cuckoo* ck, pointer key1, pointer key2, pointer userData);
+typedef uword(*CuckooKeyHashFn)(struct Cuckoo* ck, pointer key, pointer userData);
+typedef o_bool(*CuckooEmptyKeyFn)(struct Cuckoo* ck, pointer key, pointer userData);
+typedef pointer(*CuckooAllocateFn)(struct Cuckoo* ck, uword neededSize, pointer userData);
+typedef void(*CuckooFreeFn)(struct Cuckoo* ck, pointer location, pointer userData);
+typedef void(*CuckooEraseKeyFn)(struct Cuckoo* ck, pointer key, pointer userData);
 
 typedef struct Cuckoo {
 	uword capacity;
@@ -88,6 +88,7 @@ typedef struct Cuckoo {
     CuckooAllocateFn allocateFn;
     CuckooFreeFn freeFn;
     CuckooEraseKeyFn eraseKeyFn;
+    pointer userData;
     pointer keyCopy;
     pointer valCopy;
     pointer evictedKey;
@@ -115,7 +116,8 @@ static o_bool CuckooCreate(Cuckoo* ck,
                            CuckooEmptyKeyFn keyCheckFn,
                            CuckooAllocateFn allocateFn,
                            CuckooFreeFn freeFn,
-                           CuckooEraseKeyFn eraseKeyFn);
+                           CuckooEraseKeyFn eraseKeyFn,
+                           pointer userData);
 static void CuckooDestroy(Cuckoo* ck);
 static o_bool CuckooPut(Cuckoo* ck, pointer key, pointer val);
 static o_bool CuckooGet(Cuckoo* ck, pointer key, pointer val);
@@ -125,8 +127,8 @@ static o_bool CuckooRemove(Cuckoo* ck, pointer key);
 
 struct Stack;
 
-typedef pointer(*StackAllocateFn)(struct Stack* stack, uword neededSize);
-typedef void(*StackFreeFn)(struct Stack* stack, pointer location);
+typedef pointer(*StackAllocateFn)(struct Stack* stack, uword neededSize, pointer userData);
+typedef void(*StackFreeFn)(struct Stack* stack, pointer location, pointer userData);
 
 typedef struct Stack {
     uword capacity;
@@ -134,6 +136,7 @@ typedef struct Stack {
     uword entrySize;
     StackAllocateFn allocateFn;
     StackFreeFn freeFn;
+    pointer userData;
     u8* stack;
 } Stack;
 
@@ -141,7 +144,8 @@ static o_bool StackCreate(Stack* stack,
                           uword entrySize,
                           uword initialCap,
                           StackAllocateFn allocFn,
-                          StackFreeFn freeFn);
+                          StackFreeFn freeFn,
+                          pointer userData);
 static void StackDestroy(Stack* stack);
 static o_bool StackPush(Stack* stack, pointer entry);
 static o_bool StackPop(Stack* stack, pointer entry);
