@@ -13,16 +13,16 @@ typedef struct Box {
 } Box;
 
 static o_bool BoxCheckArrayBit(Box* box);
-static o_bool BoxCheckGCMarkedBit(Box* box);
-static o_bool BoxCheckSharedBit(Box* box);
+//static o_bool BoxCheckGCMarkedBit(Box* box);
+//static o_bool BoxCheckSharedBit(Box* box);
 
 static void BoxSetArrayBit(Box* box);
-static void BoxSetGCMarkedBit(Box* box);
-static void BoxSetSharedBit(Box* box);
+//static void BoxSetGCMarkedBit(Box* box);
+//static void BoxSetSharedBit(Box* box);
 
 static void BoxClearArrayBit(Box* box);
-static void BoxClearGCMarkedBit(Box* box);
-static void BoxClearSharedBit(Box* box);
+//static void BoxClearGCMarkedBit(Box* box);
+//static void BoxClearSharedBit(Box* box);
 
 struct Type;
 

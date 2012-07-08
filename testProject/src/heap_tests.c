@@ -2,12 +2,12 @@
 #include "../../libProject/src/liboctarine.h"
 
 static void createAndDestroy() {
-    OctHeap* heap1 = OctHeapCreate(o_false);
+    OctHeap* heap1 = OctHeapCreate();
     OctHeapDestroy(heap1);
 }
 
 static void allocateSomething() {
-    OctHeap* heap1 = OctHeapCreate(o_false);
+    OctHeap* heap1 = OctHeapCreate();
     Box* box = NULL;
     
     _OctHeapAlloc(heap1, 10000, &box);
@@ -22,7 +22,7 @@ static void allocateSomething() {
 }
 
 static void allocateArray() {
-    OctHeap* heap1 = OctHeapCreate(o_false);
+    OctHeap* heap1 = OctHeapCreate();
     Box* arrayBox = NULL;
     ArrayInfo* aInfo = NULL;
     
@@ -52,7 +52,7 @@ typedef struct testStruct {
 } testStruct;
 
 static void writingToWholeArrayShouldNotCrash() {
-    OctHeap* heap1 = OctHeapCreate(o_true); // o_true because ... why not
+    OctHeap* heap1 = OctHeapCreate();
     Box* arrayBox = NULL;
     ArrayInfo* aInfo = NULL;
     testStruct* array = NULL;
@@ -68,7 +68,7 @@ static void writingToWholeArrayShouldNotCrash() {
     
     assert(arrayBox != NULL);
     assert(BoxCheckArrayBit(arrayBox));
-    assert(BoxCheckSharedBit(arrayBox));
+//    assert(BoxCheckSharedBit(arrayBox));
     
     aInfo = BoxGetArrayInfo(arrayBox);
     
@@ -89,7 +89,7 @@ static void writingToWholeArrayShouldNotCrash() {
     
     assert(arrayBox != NULL);
     assert(BoxCheckArrayBit(arrayBox));
-    assert(BoxCheckSharedBit(arrayBox));
+//    assert(BoxCheckSharedBit(arrayBox));
 
     assert(aInfo != NULL);    
     assert(aInfo->alignment == 0);

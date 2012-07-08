@@ -29,20 +29,20 @@
 //    return node;
 //}
 
-static OctHeap* OctHeapCreate(o_bool shared) {
+static OctHeap* OctHeapCreate() {//o_bool shared) {
     OctHeap* heap = (OctHeap*)malloc(sizeof(OctHeap));
 
 	if(heap == NULL) {
 		return NULL;
 	}
     
-    if(shared) {
-        heap->lock = (Mutex*)malloc(sizeof(Mutex));
-        MutexCreate(heap->lock);
-    }
-    else {
-        heap->lock = NULL;
-    }
+//    if(shared) {
+//        heap->lock = (Mutex*)malloc(sizeof(Mutex));
+    MutexCreate(&heap->lock);
+//    }
+//    else {
+//        heap->lock = NULL;
+//    }
     heap->blocks = NULL;
     heap->size = 0;
     
@@ -58,16 +58,16 @@ static void OctHeapDestroy(OctHeap* heap) {
         heap->blocks = tmp;
     }
     
-    if(heap->lock) {
-        MutexDestroy(heap->lock);
-        free(heap->lock);
-    }
+//    if(heap->lock) {
+    MutexDestroy(&heap->lock);
+//        free(heap->lock);
+//    }
     free(heap);
 }
 
-static o_bool OctHeapShared(OctHeap* heap) {
-    return heap->lock != NULL;
-}
+//static o_bool OctHeapShared(OctHeap* heap) {
+//    return heap->lock != NULL;
+//}
 
 static void OctHeapAlloc(OctHeap* heap, Type* type, pointer* dest) {
     Box* box;
@@ -95,10 +95,13 @@ static void OctHeapAlloc(OctHeap* heap, Type* type, pointer* dest) {
 //}
 
 static void _OctHeapAlloc(OctHeap* heap, uword type_size, Box** dest) {
-    uword size = BoxCalcObjectBoxSize(type_size);
-    pointer space = malloc(size);
+    uword size;
+    pointer space;
     OctHeapBlock* block;
 
+    size = BoxCalcObjectBoxSize(type_size);
+    space = malloc(size);
+    
     if(space == NULL) {
         (*dest) = NULL;
         return;
@@ -113,16 +116,21 @@ static void _OctHeapAlloc(OctHeap* heap, uword type_size, Box** dest) {
 
     (*dest) = (Box*)space;
     
-    if(OctHeapShared(heap)) {
-        BoxSetSharedBit(*dest);
-    }
+//    if(OctHeapShared(heap)) {
+//        BoxSetSharedBit(*dest);
+//    }
 
     block->addr = space;
     block->size = size;
+    
+    MutexLock(&heap->lock);
+
     block->next = heap->blocks;
     heap->blocks = block;
     
     heap->size += size;
+    
+    MutexUnlock(&heap->lock);
 }
 
 static void OctHeapAllocArray(OctHeap* heap, struct Type* type, uword n_elements, pointer* dest) {
@@ -164,16 +172,21 @@ static void _OctHeapAllocArray(OctHeap* heap, uword type_size, uword n_elements,
     aInfo->alignment = 0;
     aInfo->num_elements = n_elements;
     
-    if(OctHeapShared(heap)) {
-        BoxSetSharedBit(*dest);
-    }
+//    if(OctHeapShared(heap)) {
+//        BoxSetSharedBit(*dest);
+//    }
 
     block->addr = space;
     block->size = size;
+    
+    MutexLock(&heap->lock);
+    
     block->next = heap->blocks;
     heap->blocks = block;
     
     heap->size += size;
+    
+    MutexUnlock(&heap->lock);
 }
 
 static o_bool inBlock(OctHeapBlock* block, pointer addr) {
@@ -185,20 +198,31 @@ static o_bool inBlock(OctHeapBlock* block, pointer addr) {
 }
 
 static o_bool OctHeapObjectInHeap(OctHeap* heap, pointer object) {
-    OctHeapBlock* block = heap->blocks;
+    OctHeapBlock* block;
+    
+    MutexLock(&heap->lock);
+    
+    block = heap->blocks;
     
     while(block) {
-        if(inBlock(block, object))
+        if(inBlock(block, object)) {
+            MutexUnlock(&heap->lock);
             return o_true;
+        }
         block = block->next;
     }
     
+    MutexUnlock(&heap->lock);
     return o_false;
 }
 
 static void OctHeapFree(OctHeap* heap, pointer object) {
-    OctHeapBlock* block = heap->blocks;
+    OctHeapBlock* block;
     OctHeapBlock* prev = NULL;
+    
+    MutexLock(&heap->lock);
+    
+    block = heap->blocks;
     
     while(block) {
         if(inBlock(block, object)) {
@@ -213,6 +237,7 @@ static void OctHeapFree(OctHeap* heap, pointer object) {
                 heap->blocks = block->next;
             }
             
+            MutexUnlock(&heap->lock);
             free(block->addr);
             free(block);
             return;
@@ -220,6 +245,7 @@ static void OctHeapFree(OctHeap* heap, pointer object) {
         prev = block;
         block = block->next;
     }
+    MutexUnlock(&heap->lock);
 }
 
 #endif

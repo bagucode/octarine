@@ -6,8 +6,8 @@
 #include "utils.h"
 
 #define ARRAY_BIT     (1 << 0)
-#define MARKED_BIT    (1 << 1)
-#define SHARED_BIT    (1 << 2)
+//#define MARKED_BIT    (1 << 1)
+//#define SHARED_BIT    (1 << 2)
 //#define ALL_BIT_FLAGS 0xF
 #define ALL_BIT_FLAGS 0x7
 
@@ -49,37 +49,37 @@ static o_bool BoxCheckArrayBit(Box* box) {
     return (box->data & ARRAY_BIT) > 0;
 }
 
-static o_bool BoxCheckGCMarkedBit(Box* box) {
-    return (box->data & MARKED_BIT) > 0;
-}
-
-static o_bool BoxCheckSharedBit(Box* box) {
-    return (box->data & SHARED_BIT) > 0;
-}
+//static o_bool BoxCheckGCMarkedBit(Box* box) {
+//    return (box->data & MARKED_BIT) > 0;
+//}
+//
+//static o_bool BoxCheckSharedBit(Box* box) {
+//    return (box->data & SHARED_BIT) > 0;
+//}
 
 static void BoxSetArrayBit(Box* box) {
     box->data |= ARRAY_BIT;
 }
 
-static void BoxSetGCMarkedBit(Box* box) {
-    box->data |= MARKED_BIT;
-}
-
-static void BoxSetSharedBit(Box* box) {
-    box->data |= SHARED_BIT;
-}
+//static void BoxSetGCMarkedBit(Box* box) {
+//    box->data |= MARKED_BIT;
+//}
+//
+//static void BoxSetSharedBit(Box* box) {
+//    box->data |= SHARED_BIT;
+//}
 
 static void BoxClearArrayBit(Box* box) {
     box->data &= (~ARRAY_BIT);
 }
 
-static void BoxClearGCMarkedBit(Box* box) {
-    box->data &= (~MARKED_BIT);
-}
-
-static void BoxClearSharedBit(Box* box) {
-    box->data &= (~SHARED_BIT);
-}
+//static void BoxClearGCMarkedBit(Box* box) {
+//    box->data &= (~MARKED_BIT);
+//}
+//
+//static void BoxClearSharedBit(Box* box) {
+//    box->data &= (~SHARED_BIT);
+//}
 
 static pointer BoxGetObject(Box* box) {
     uword dataAddr;

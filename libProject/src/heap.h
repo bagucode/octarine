@@ -49,14 +49,14 @@ typedef struct OctHeapBlock {
 
 typedef struct OctHeap {
     uword size;
-    Mutex* lock;
+    Mutex lock;
     OctHeapBlock* blocks;
 } OctHeap;
 
-static OctHeap* OctHeapCreate(o_bool shared);
+static OctHeap* OctHeapCreate();//o_bool shared);
 static void OctHeapDestroy(OctHeap* heap);
 
-static o_bool OctHeapShared(OctHeap* heap);
+//static o_bool OctHeapShared(OctHeap* heap);
 
 struct Type;
 struct Box;
