@@ -2,31 +2,27 @@
 #ifndef octarine_thread_context_h
 #define octarine_thread_context_h
 
-#include "typedefs.h"
 #include "platform.h"
 
-struct oThreadContext {
-    oRuntimeRef runtime;
-    oHeapRef heap;
-	oErrorRef error;
-	volatile oNamespaceRef currentNs;
-    oRootSetRef roots;
-    volatile uword gcRequestedFlag;
-    volatile uword gcProceedFlag;
-    NativeThread* thread;
-};
+struct Runtime;
+struct Namespace;
+struct ResultStack;
 
-oThreadContextRef oThreadContextGetCurrent(oRuntimeRef rt);
+typedef struct ThreadContext {
+    Runtime* runtime;
+    ResultStack* resultStack;
+	Namespace* ns;
+    Thread thread;
+} ThreadContext;
 
-oThreadContextRef oThreadContextCreate(oRuntimeRef runtime);
+ThreadContext* ThreadContextGetCurrent(struct Runtime* rt);
 
-void oThreadContextDestroy(oThreadContextRef ctx);
+void ThreadContextCreate(ThreadContext* ctx, struct Runtime* rt);
 
-void oThreadContextSetNS(oThreadContextRef ctx, oNamespaceRef ns);
+void ThreadContextDestroy(ThreadContext* ctx);
 
-oNamespaceRef oThreadContextGetNS(oThreadContextRef ctx);
+void ThreadContextSetNS(ThreadContext* ctx, struct Namespace* ns);
 
-void bootstrap_thread_context_type_init(oRuntimeRef rt);
-void bootstrap_thread_context_init_llvm_type(oThreadContextRef ctx);
+struct Namespace* ThreadContextGetNS(ThreadContext* ctx);
 
 #endif
