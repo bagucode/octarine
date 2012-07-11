@@ -10,7 +10,14 @@ typedef struct String {
     u8* characters;
 } String;
 
+struct OctHeap;
 
-void StringCreate(String* str, const char* cstr
+static void StringCreate(String* str, const char* cstr, struct OctHeap* heap);
+
+static void _StringCreate(String* str, const char* cstr, u8* boxedArray);
+
+static o_bool StringEquals(String* str1, String* str2);
+
+static uword StringHash(String* str);
 
 #endif
