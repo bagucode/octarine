@@ -14,12 +14,23 @@ typedef struct Field {
     uword offset;
 } Field;
 
+// When isArray is true, the Type is actually not a Type instance
+// but an instance of ArrayType and should be casted to ArrayType.
 typedef struct Type {
+    o_bool isArray;
     struct String* name;
     struct Field* fields;
     uword size;
     uword alignment;
 } Type;
+
+// When isArray is false, the ArrayType is actually not an ArrayType
+// instance but an instance of Type and should be casted to Type.
+typedef struct ArrayType {
+    o_bool isArray;
+    Type* type;
+    uword size;
+} ArrayType;
 
 static void FieldCreate(Field* field,
                         struct String* name,
@@ -42,5 +53,8 @@ static void _TypeCreate(Type* type,
                         struct Field* fields,
                         uword numFields);
 
+static void ArrayTypeCreate(ArrayType* arrType,
+                            Type* type,
+                            uword size);
 
 #endif
