@@ -4,21 +4,21 @@
 #include "utils.h"
 #include "platform.h"
 
-struct String;
+struct Symbol;
 struct OctHeap;
 
 typedef struct Namespace {
-	struct String* name;
+	struct Symbol* name;
     Cuckoo bindings;
     Mutex lock;
 } Namespace;
 
-static void NamespaceCreate(Namespace* ns, struct String* name, struct OctHeap* heap);
+static void NamespaceCreate(Namespace* ns, struct Symbol* name, struct OctHeap* heap);
 
-static struct String* NamespaceGetName(Namespace* ns);
+static struct Symbol* NamespaceGetName(Namespace* ns);
 
-static o_bool NamespaceBind(Namespace* ns, struct String* name, pointer value);
+static o_bool NamespaceBind(Namespace* ns, struct Symbol* name, pointer value);
 
-static pointer NamespaceLookup(Namespace* ns, struct String* name);
+static pointer NamespaceLookup(Namespace* ns, struct Symbol* name);
 
 #endif

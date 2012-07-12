@@ -4,15 +4,15 @@
 #include "namespace.h"
 #include "heap.h"
 
-static void NamespaceCreate(Namespace* ns, struct String* name, OctHeap* heap) {
+static void NamespaceCreate(Namespace* ns, struct Symbol* name, OctHeap* heap) {
     CuckooCreate(&ns->bindings, 50, sizeof(pointer), sizeof(pointer), <#CuckooKeyCompareFn compareFn#>, <#CuckooKeyHashFn hashFn#>, <#CuckooEmptyKeyFn keyCheckFn#>, <#CuckooAllocateFn allocateFn#>, <#CuckooFreeFn freeFn#>, <#CuckooEraseKeyFn eraseKeyFn#>, <#pointer userData#>)
 }
 
-static struct String* NamespaceGetName(Namespace* ns);
+static struct Symbol* NamespaceGetName(Namespace* ns);
 
-static o_bool NamespaceBind(Namespace* ns, struct String* name, pointer value);
+static o_bool NamespaceBind(Namespace* ns, struct Symbol* name, pointer value);
 
-static pointer NamespaceLookup(Namespace* ns, struct String* name);
+static pointer NamespaceLookup(Namespace* ns, struct Symbol* name);
 
 
 static void NSBindingDestroy(oNSBindingRef binding) {

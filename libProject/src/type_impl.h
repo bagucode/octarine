@@ -38,7 +38,7 @@ static uword findLargestAlignment(uword largest,
 
 static void TypeCreate(Type* type,
                        uword alignment,
-                       struct String* name,
+                       struct Symbol* name,
                        struct Field* fields) {
     ArrayInfo* aInfo = BoxGetArrayInfo(BoxGetBox(fields));
     _TypeCreate(type, alignment, name, fields, aInfo->num_elements);
@@ -46,7 +46,7 @@ static void TypeCreate(Type* type,
 
 static void _TypeCreate(Type* type,
                        uword alignment,
-                       struct String* name,
+                       struct Symbol* name,
                        struct Field* fields,
                         uword numFields) {
     uword largestMember;
@@ -85,7 +85,7 @@ static void _TypeCreate(Type* type,
 }
 
 static void FieldCreate(Field* field,
-                        struct String* name,
+                        struct Symbol* name,
                         struct Type* type,
                         o_bool ptr) {
     field->name = name;

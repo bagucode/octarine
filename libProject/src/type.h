@@ -4,11 +4,11 @@
 
 #include "basic_types.h"
 
-struct String;
+struct Symbol;
 struct Type;
 
 typedef struct Field {
-    struct String* name;
+    struct Symbol* name;
     struct Type* type;
     o_bool ptr;
     uword offset;
@@ -18,7 +18,7 @@ typedef struct Field {
 // but an instance of ArrayType and should be casted to ArrayType.
 typedef struct Type {
     o_bool isArray;
-    struct String* name;
+    struct Symbol* name;
     struct Field* fields;
     uword size;
     uword alignment;
@@ -37,7 +37,7 @@ typedef struct TemplateType {
 } TemplateType;
 
 static void FieldCreate(Field* field,
-                        struct String* name,
+                        struct Symbol* name,
                         struct Type* type,
                         o_bool ptr);
 
@@ -48,12 +48,12 @@ static o_bool TypeIsPrimitive(Type* t);
 // available field instances!
 static void TypeCreate(Type* type,
                        uword alignment,
-                       struct String* name,
+                       struct Symbol* name,
                        struct Field* fields);
 
 static void _TypeCreate(Type* type,
                         uword alignment,
-                        struct String* name,
+                        struct Symbol* name,
                         struct Field* fields,
                         uword numFields);
 
