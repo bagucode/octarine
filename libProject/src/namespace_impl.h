@@ -5,7 +5,7 @@
 #include "heap.h"
 
 static o_bool NamespaceBindingNameEquals(Cuckoo* ck, pointer key1, pointer key2, pointer userData) {
-    return SymbolEquals(key1, key2);
+    return SymbolEquals((Symbol*)key1, (Symbol*)key2);
 }
 
 static void NamespaceCreate(Namespace* ns, struct Symbol* name, OctHeap* heap) {
