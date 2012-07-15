@@ -4,8 +4,12 @@
 #include "namespace.h"
 #include "heap.h"
 
+static o_bool NamespaceBindingNameEquals(Cuckoo* ck, pointer key1, pointer key2, pointer userData) {
+    return SymbolEquals(key1, key2);
+}
+
 static void NamespaceCreate(Namespace* ns, struct Symbol* name, OctHeap* heap) {
-    CuckooCreate(&ns->bindings, 50, sizeof(pointer), sizeof(pointer), <#CuckooKeyCompareFn compareFn#>, <#CuckooKeyHashFn hashFn#>, <#CuckooEmptyKeyFn keyCheckFn#>, <#CuckooAllocateFn allocateFn#>, <#CuckooFreeFn freeFn#>, <#CuckooEraseKeyFn eraseKeyFn#>, <#pointer userData#>)
+    CuckooCreate(&ns->bindings, 50, sizeof(pointer), sizeof(pointer), NamespaceBindingNameEquals, <#CuckooKeyHashFn hashFn#>, <#CuckooEmptyKeyFn keyCheckFn#>, <#CuckooAllocateFn allocateFn#>, <#CuckooFreeFn freeFn#>, <#CuckooEraseKeyFn eraseKeyFn#>, <#pointer userData#>)
 }
 
 static struct Symbol* NamespaceGetName(Namespace* ns);
