@@ -3,13 +3,51 @@
 
 #include "namespace.h"
 #include "heap.h"
+#include "symbol.h"
+#include "binding.h"
 
-static o_bool NamespaceBindingNameEquals(Cuckoo* ck, pointer key1, pointer key2, pointer userData) {
-    return SymbolEquals((Symbol*)key1, (Symbol*)key2);
+static o_bool NamespaceBindingKeyEquals(Cuckoo* ck, pointer key1, pointer key2, pointer userData) {
+	// We will get pointers to the key entries as parameters to this function
+	// but the keys are themselves pointers so the parameters are in fact pointers to pointers
+    return SymbolEquals(*((Symbol**)key1), *((Symbol**)key2));
+}
+
+static uword NamespaceBindingKeyHash(Cuckoo* ck, pointer key, pointer userData) {
+	return SymbolHash(*((Symbol**)key));
+}
+
+static o_bool NamespaceBindingKeyIsEmpty(Cuckoo* ck, pointer key, pointer userData) {
+	return SymbolIsEmpty(*((Symbol**)key));
+}
+
+static pointer NamespaceAllocateBindingSpace(Cuckoo* ck, uword size, pointer userData) {
+	// Just use malloc for now. Change later?
+	// Using malloc here means there is no type information to look up at runtime
+	return malloc(size);
+}
+
+static void NamespaceFreeBindingSpace(Cuckoo* ck, pointer location, pointer userData) {
+	free(location);
+}
+
+static void NamespaceEraseKey(Cuckoo* ck, pointer key, pointer userData) {
+	// keys are just pointers so set it to NULL
+	(*(Symbol**)key) = NULL;
 }
 
 static void NamespaceCreate(Namespace* ns, struct Symbol* name, OctHeap* heap) {
-    CuckooCreate(&ns->bindings, 50, sizeof(pointer), sizeof(pointer), NamespaceBindingNameEquals, <#CuckooKeyHashFn hashFn#>, <#CuckooEmptyKeyFn keyCheckFn#>, <#CuckooAllocateFn allocateFn#>, <#CuckooFreeFn freeFn#>, <#CuckooEraseKeyFn eraseKeyFn#>, <#pointer userData#>)
+    CuckooCreate(
+		&ns->bindings,
+		32,
+		sizeof(pointer),
+		sizeof(Binding),
+		NamespaceBindingKeyEquals,
+		NamespaceBindingKeyHash,
+		NamespaceBindingKeyIsEmpty,
+		NamespaceAllocateBindingSpace,
+		NamespaceFreeBindingSpace,
+		NamespaceEraseKey,
+		NULL);
 }
 
 static struct Symbol* NamespaceGetName(Namespace* ns);

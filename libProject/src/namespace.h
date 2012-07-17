@@ -13,7 +13,7 @@ typedef struct Namespace {
     Mutex lock;
 } Namespace;
 
-static void NamespaceCreate(Namespace* ns, struct Symbol* name, struct OctHeap* heap);
+static void NamespaceCreate(Namespace* ns, struct Symbol* name);
 
 static struct Symbol* NamespaceGetName(Namespace* ns);
 

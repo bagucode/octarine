@@ -14,5 +14,8 @@ static o_bool SymbolEquals(Symbol* sym1, Symbol* sym2) {
 static uword SymbolHash(Symbol* sym) {
 }
 
+static o_bool SymbolIsEmpty(Symbol* sym) {
+}
+
 
 #endif
