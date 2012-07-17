@@ -5,6 +5,9 @@
 #include "heap.h"
 #include "symbol.h"
 #include "binding.h"
+#include "error.h"
+#include "thread_context.h"
+#include "type.h"
 
 static o_bool NamespaceBindingKeyEquals(Cuckoo* ck, pointer key1, pointer key2, pointer userData) {
 	// We will get pointers to the key entries as parameters to this function
@@ -35,8 +38,11 @@ static void NamespaceEraseKey(Cuckoo* ck, pointer key, pointer userData) {
 	(*(Symbol**)key) = NULL;
 }
 
-static void NamespaceCreate(Namespace* ns, struct Symbol* name, OctHeap* heap) {
-    CuckooCreate(
+static o_bool NamespaceCreate(ThreadContext* ctx, Namespace* ns, struct Symbol* name) {
+	o_bool result = o_false;
+
+	// bindings
+    result = CuckooCreate(
 		&ns->bindings,
 		32,
 		sizeof(pointer),
@@ -48,11 +54,46 @@ static void NamespaceCreate(Namespace* ns, struct Symbol* name, OctHeap* heap) {
 		NamespaceFreeBindingSpace,
 		NamespaceEraseKey,
 		NULL);
+
+	if(result == o_false) {
+		// CuckooCreate can only fail on out of memory so that is the error we set.
+		ErrorSet(ctx, &ErrorOutOfMemory);
+		return o_false;
+	}
+
+	// lock
+	MutexCreate(&ns->lock);
+
+	// name
+	ns->name = name;
 }
 
-static struct Symbol* NamespaceGetName(Namespace* ns);
+static struct Symbol* NamespaceGetName(Namespace* ns) {
+	return ns->name;
+}
 
-static o_bool NamespaceBind(Namespace* ns, struct Symbol* name, pointer value);
+static o_bool NamespaceBind(struct ThreadContext* ctx, Namespace* ns, struct Symbol* name, pointer value, struct Type* valType) {
+	o_bool result = o_false;
+	Binding newBinding;
+	Symbol* keySymbol;
+	
+	keySymbol = SymbolDeepCopy(name, ns->heap);
+
+	newBinding.type = valType;
+	newBinding.value = value;
+
+	MutexLock(&ns->lock);
+
+	result = CuckooPut(&ns->bindings, keySymbol, &newBinding);
+
+	if(result == o_false) {
+		// CuckooPut can only fail on OOM
+		ErrorSet(ctx, &ErrorOutOfMemory);
+	}
+
+	MutexUnlock(&ns->lock);
+	return result;
+}
 
 static pointer NamespaceLookup(Namespace* ns, struct Symbol* name);
 

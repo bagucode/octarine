@@ -19,4 +19,6 @@ static uword SymbolHash(Symbol* sym);
 
 static o_bool SymbolIsEmpty(Symbol* sym);
 
+static Symbol* SymbolDeepCopy(Symbol* sym, struct OctHeap* heap);
+
 #endif

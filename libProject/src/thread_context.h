@@ -7,11 +7,15 @@
 struct Runtime;
 struct Namespace;
 struct ResultStack;
+struct Error;
 
 typedef struct ThreadContext {
-    Runtime* runtime;
-    ResultStack* resultStack;
-	Namespace* ns;
+    struct Runtime* runtime;
+    struct ResultStack* resultStack;
+	struct Namespace* ns;
+	struct Error* error;
+	// Errors need a mutex lock because they can be set/get from other threads
+	Mutex errorLock;
     Thread thread;
 } ThreadContext;
 
