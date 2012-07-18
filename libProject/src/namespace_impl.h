@@ -57,7 +57,7 @@ static o_bool NamespaceCreate(ThreadContext* ctx, Namespace* ns, struct Symbol* 
 
 	if(result == o_false) {
 		// CuckooCreate can only fail on out of memory so that is the error we set.
-		ErrorSet(ctx, &ErrorOutOfMemory);
+		ErrorSet(ctx, ErrorBuiltInOOM());
 		return o_false;
 	}
 
@@ -88,13 +88,14 @@ static o_bool NamespaceBind(struct ThreadContext* ctx, Namespace* ns, struct Sym
 
 	if(result == o_false) {
 		// CuckooPut can only fail on OOM
-		ErrorSet(ctx, &ErrorOutOfMemory);
+		ErrorSet(ctx, ErrorBuiltInOOM());
 	}
 
 	MutexUnlock(&ns->lock);
 	return result;
 }
 
+/*
 static pointer NamespaceLookup(Namespace* ns, struct Symbol* name);
 
 
@@ -232,5 +233,6 @@ void bootstrap_namespace_type_init(oThreadContextRef ctx) {
 	fields[0]->offset = offsetof(oNamespace, name);
     fields[0]->type = ctx->runtime->builtInTypes.string;
 }
+*/
 
 #endif

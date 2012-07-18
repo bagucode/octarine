@@ -23,7 +23,6 @@ static Error* ErrorGet(struct ThreadContext* ctx);
 
 // Built in error constants
 
-static u8* ErrorMessageOOM = (u8*)"Out of memory";
-static Error ErrorOutOfMemory = { ErrorMessageOOM, NULL };
+static Error* ErrorBuiltInOOM();
 
 #endif

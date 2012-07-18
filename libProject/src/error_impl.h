@@ -37,4 +37,11 @@ static Error* ErrorGet(struct ThreadContext* ctx) {
 	return result;
 }
 
+static Error* ErrorBuiltInOOM() {
+	static Error oom;
+	oom.message = (u8*)"Out of memory";
+	oom.reserved = NULL;
+	return &oom;
+}
+
 #endif

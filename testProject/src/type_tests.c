@@ -10,12 +10,12 @@ static void fieldCreation() {
     Field expected;
     Field actual;
     
-    expected.name = (struct String*)1;
+    expected.name = (struct Symbol*)1;
     expected.offset = 0;
     expected.ptr = o_true;
     expected.type = (Type*)2;
     
-    FieldCreate(&actual, (struct String*)1, (Type*)2, o_true);
+    FieldCreate(&actual, (struct Symbol*)1, (Type*)2, o_true);
     
     assert(expected.name == actual.name);
     assert(expected.offset == actual.offset);
@@ -27,9 +27,9 @@ static void typeCreation() {
     Type expected;
     Type actual;
     Field fields[1];
-    struct String* name;
+    struct Symbol* name;
     
-    name = (struct String*)250;
+    name = (struct Symbol*)250;
     
     FieldCreate(&fields[0], name, &actual, o_true);
     
@@ -46,7 +46,7 @@ static void typeCreation() {
 static void typeCreation2() {
     Type expected;
     Type actual;
-    struct String* name;
+    struct Symbol* name;
     Box* fieldBox;
     OctHeap* heap = OctHeapCreate();
     Field* fields;
@@ -54,7 +54,7 @@ static void typeCreation2() {
     _OctHeapAllocArray(heap, sizeof(Field), 1, &fieldBox);
     fields = BoxGetObject(fieldBox);
     
-    name = (struct String*)250;
+    name = (struct Symbol*)250;
     
     FieldCreate(&fields[0], name, &actual, o_true);
     

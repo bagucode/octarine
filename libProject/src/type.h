@@ -32,9 +32,9 @@ typedef struct ArrayType {
     uword size;
 } ArrayType;
 
-typedef struct TemplateType {
+//typedef struct TemplateType {
     // needed?
-} TemplateType;
+//} TemplateType;
 
 static void FieldCreate(Field* field,
                         struct Symbol* name,

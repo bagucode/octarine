@@ -3,7 +3,7 @@
 #include "stdlib.h"
 #include "memory.h"
 #include "string.h"
-#include "../../libProject/src/string.h"
+#include "../../libProject/src/symbol.h"
 #include "../../libProject/src/runtime.h"
 #include "../../libProject/src/memory.h"
 #include "../../libProject/src/reader.h"
