@@ -24,46 +24,15 @@ static void markerBits() {
 	box.retainCount = 1;
     
     assert(!BoxCheckArrayBit(&box));
-//    assert(!BoxCheckGCMarkedBit(&box));
-//    assert(!BoxCheckSharedBit(&box));
 
     BoxSetArrayBit(&box);
 
     assert(BoxCheckArrayBit(&box));
-//    assert(!BoxCheckGCMarkedBit(&box));
-//    assert(!BoxCheckSharedBit(&box));
-
-//    BoxSetGCMarkedBit(&box);
-    
-//    assert(BoxCheckArrayBit(&box));
-//    assert(BoxCheckGCMarkedBit(&box));
-//    assert(!BoxCheckSharedBit(&box));
-//
-//    BoxSetSharedBit(&box);
-    
-//    assert(BoxCheckArrayBit(&box));
-//    assert(BoxCheckGCMarkedBit(&box));
-//    assert(BoxCheckSharedBit(&box));
-
     assert(BoxGetType(&box) == NULL);
 
     BoxClearArrayBit(&box);
     
     assert(!BoxCheckArrayBit(&box));
-//    assert(BoxCheckGCMarkedBit(&box));
-//    assert(BoxCheckSharedBit(&box));
-    
-//    BoxClearGCMarkedBit(&box);
-    
-//    assert(!BoxCheckArrayBit(&box));
-//    assert(!BoxCheckGCMarkedBit(&box));
-//    assert(BoxCheckSharedBit(&box));
-    
-//    BoxClearSharedBit(&box);
-    
-//    assert(!BoxCheckArrayBit(&box));
-//    assert(!BoxCheckGCMarkedBit(&box));
-//    assert(!BoxCheckSharedBit(&box));
 }
 
 typedef struct testStruct {
