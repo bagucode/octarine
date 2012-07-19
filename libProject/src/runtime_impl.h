@@ -1,23 +1,6 @@
 #include "runtime.h"
-#include "memory.h"
-#include "type.h"
-#include "string.h"
-#include "array.h"
-#include "list.h"
-#include "map.h"
-#include "thread_context.h"
-#include "reader.h"
-#include "symbol.h"
-#include "vector.h"
-#include "keyword.h"
-#include "error.h"
-#include "namespace.h"
-#include "function.h"
 
-#include <memory.h>
-#include <stdio.h>
-#include <stdlib.h>
-
+/*
 static oTypeRef alloc_built_in(oRuntimeRef rt, oHeapRef heap) {
 	return (oTypeRef)bootstrap_object_alloc(rt, rt->builtInTypes.type, sizeof(oType));
 }
@@ -72,15 +55,15 @@ static void alloc_builtInTypes(oRuntimeRef rt) {
 }
 
 static void init_builtInTypes1(oRuntimeRef rt) {
-    /* primitives */
+    // primitives
 
 	set_shared_primitive_attributes(rt->builtInTypes.char);
     rt->builtInTypes.char->name = bootstrap_string_create(rt, "char");
-	rt->builtInTypes.char->size = 4; /* i32 - unicode code point */
+	rt->builtInTypes.char->size = 4; // i32 - unicode code point
 
 	set_shared_primitive_attributes(rt->builtInTypes.bool);
   	rt->builtInTypes.bool->name = bootstrap_string_create(rt, "bool");
-	rt->builtInTypes.bool->size = 1; /* i8 */
+	rt->builtInTypes.bool->size = 1; // i8
 
 	set_shared_primitive_attributes(rt->builtInTypes.f32);
   	rt->builtInTypes.f32->name = bootstrap_string_create(rt, "f32");
@@ -134,9 +117,9 @@ static void init_builtInTypes1(oRuntimeRef rt) {
   	rt->builtInTypes.word->name = bootstrap_string_create(rt, "word");
 	rt->builtInTypes.word->size = sizeof(word);
 
-    /* aggregate structs */
+    // aggregate structs
 
-    /* objects */
+    // objects
 
 	bootstrap_any_type_init(rt);
     bootstrap_string_init_type(rt);
@@ -373,7 +356,7 @@ oRuntimeRef oRuntimeCreate() {
 }
 
 void oRuntimeDestroy(oRuntimeRef rt) {
-    /* TODO: synchronize stopping of all threads before deleting the heaps */
+    // TODO: synchronize stopping of all threads before deleting the heaps
     oThreadContextListRef lst = rt->allContexts;
 	oThreadContextListRef next;
 
@@ -443,3 +426,5 @@ oThreadContextRef oRuntimeCreateThread(oRuntimeRef rt, oFunctionOverloadRef thre
 	
     return newCtx;
 }
+
+*/

@@ -3,8 +3,9 @@
 
 #include "symbol.h"
 #include "heap.h"
+#include "thread_context.h"
 
-static void SymbolCreate(Symbol* sym, const char* cstr, OctHeap* heap) {
+static o_bool SymbolCreate(struct ThreadContext* ctx, Symbol* sym, const char* utf8String) {
 
 }
 
@@ -17,7 +18,7 @@ static uword SymbolHash(Symbol* sym) {
 static o_bool SymbolIsEmpty(Symbol* sym) {
 }
 
-static Symbol* SymbolDeepCopy(Symbol* sym, struct OctHeap* heap) {
+static o_bool SymbolDeepCopy(struct ThreadContext* ctx, Symbol* sym, Symbol** result) {
 }
 
 #endif

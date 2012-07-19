@@ -138,10 +138,10 @@ static void cuckooTests() {
 		val = 100 + i;
 
         if(i < 16) {
-		    assert(CuckooPut(&table, &ts, &val) == o_true);
+			assert(CuckooPut(&table, &ts, &val) == CUCKOO_OK);
         }
         else {
-            assert(CuckooPut(&table, &ts, &val) == o_false);
+			assert(CuckooPut(&table, &ts, &val) == CUCKOO_OOM);
         }
 	}
 

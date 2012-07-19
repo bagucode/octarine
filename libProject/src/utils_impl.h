@@ -145,7 +145,7 @@ static uword CuckooGetSlot(Cuckoo* ck, pointer key, uword step, uword* slot1, uw
 	return result;
 }
 
-static o_bool CuckooTryPut(Cuckoo* ck, pointer key, pointer val) {
+static CuckooPutResult CuckooTryPut(Cuckoo* ck, pointer key, pointer val) {
 	uword i, slot1, slot2, step, entrySize;
 	pointer iKey;
 	pointer iVal;
@@ -171,13 +171,13 @@ static o_bool CuckooTryPut(Cuckoo* ck, pointer key, pointer val) {
 			// Slot is empty, put key and value in and report success
 			++ck->size;
 			memcpy(iKey, ck->keyCopy, entrySize);
-			return o_true;
+			return CUCKOO_OK;
 		}
 		// Check if key is equal to the key in the slot
 		if(ck->compareFn(ck, ck->keyCopy, iKey, ck->userData)) {
 			// Keys match, just replace the value
 			memcpy(iVal, ck->valCopy, ck->valSize);
-			return o_true;
+			return CUCKOO_REPLACED;
 		}
 
 		// If the slot is not empty we have to evict the old value,
@@ -191,7 +191,7 @@ static o_bool CuckooTryPut(Cuckoo* ck, pointer key, pointer val) {
 		memcpy(ck->keyCopy, ck->evictedKey, entrySize);
     }
     
-    return o_false;
+	return CUCKOO_OOM;
 }
 
 static o_bool CuckooGrow(Cuckoo* ck) {
@@ -222,7 +222,7 @@ static o_bool CuckooGrow(Cuckoo* ck) {
         val = entryPtr + ck->keySize;
         
 		if(ck->keyCheckFn(ck, key, ck->userData) == o_false) {
-			if(CuckooTryPut(&bigger, key, val) == o_false) {
+			if(CuckooTryPut(&bigger, key, val) == CUCKOO_OOM) {
 				cap = bigger.capacity + 1;
 				CuckooDestroy(&bigger);
                 if(!CuckooCreate(
@@ -274,14 +274,16 @@ static void CuckooRevert(Cuckoo* ck, pointer key) {
     CuckooPut(ck, ck->keyCopy, ck->valCopy);
 }
 
-static o_bool CuckooPut(Cuckoo* ck, pointer key, pointer val) {
+static CuckooPutResult CuckooPut(Cuckoo* ck, pointer key, pointer val) {
 	uword i;
     pointer tmpKey = key;
+	CuckooPutResult result;
 
 	while(o_true) {
 		for(i = 0; i < 5; ++i) {
-			if(CuckooTryPut(ck, tmpKey, val)) {
-				return o_true;
+			result = CuckooTryPut(ck, tmpKey, val);
+			if(result != CUCKOO_OOM) {
+				return result;
 			}
 			// If CuckooTryPut failed it means that we have an evicted key-value pair
 			// stored in the scratch space. We have to try to insert that pair next time
@@ -291,14 +293,12 @@ static o_bool CuckooPut(Cuckoo* ck, pointer key, pointer val) {
 		}
 		if(!CuckooGrow(ck)) {
             CuckooRevert(ck, key);
-            return o_false;
+			return CUCKOO_OOM;
         }
 		// After a grow, the addresses of keyCopy and valCopy will have changed
 		tmpKey = ck->keyCopy;
 		val = ck->valCopy;
 	}
-
-    return o_true;
 }
 
 static o_bool CuckooGet(Cuckoo* ck, pointer key, pointer val) {

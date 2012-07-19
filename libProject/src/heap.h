@@ -49,6 +49,7 @@ typedef struct OctHeapBlock {
 
 typedef struct OctHeap {
     uword size;
+	uword alignmentPadding;
     Mutex lock;
     OctHeapBlock* blocks;
 } OctHeap;

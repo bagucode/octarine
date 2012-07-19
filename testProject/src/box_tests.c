@@ -20,7 +20,8 @@ static void correct_size() {
 
 static void markerBits() {
     Box box;
-    box.data = 0;
+	box.typeAndFlags = 0;
+	box.retainCount = 1;
     
     assert(!BoxCheckArrayBit(&box));
 //    assert(!BoxCheckGCMarkedBit(&box));
@@ -85,12 +86,10 @@ static void storeObject() {
     ts.p = &ts;
     
     boxSize = BoxCalcObjectBoxSize(sizeof(testStruct));
-    box = calloc(1, boxSize);
-    // boxes must be cleared before use because some functions
-    // depend on the padding space in boxes being zeroed
-    memset(box, 0, boxSize);
+    box = (Box*)malloc(boxSize);
+	BoxCreate(box);
     
-    tsp = BoxGetObject(box);
+	tsp = (testStruct*)BoxGetObject(box);
     BoxSetType(box, (Type*)box);
     (*tsp) = ts;
     
@@ -125,18 +124,16 @@ static void storeArray() {
     ts.p = &ts;
     
     boxSize = BoxCalcArrayBoxSize(sizeof(testStruct), 0, 57);
-    aInfo = calloc(1, boxSize);
-    // boxes must be cleared before use because some functions
-    // depend on the padding space in boxes being zeroed
-    memset(aInfo, 0, boxSize);
+	aInfo = (ArrayInfo*)calloc(1, boxSize);
 
     aInfo->alignment = 0;
     aInfo->num_elements = 57;
 
     box = (Box*)(((uword)aInfo) + sizeof(ArrayInfo) + ARRAY_PAD_BYTES);
+	BoxCreate(box);
 
     BoxSetArrayBit(box);
-    tsp = BoxGetObject(box);
+	tsp = (testStruct*)BoxGetObject(box);
     
     for(i = 0; i < aInfo->num_elements; ++i) {
         tsp[i] = ts;

@@ -4,6 +4,9 @@
 #include "box.h"
 #include "type.h"
 #include "utils.h"
+#include "platform.h"
+
+#include <assert.h>
 
 #define ARRAY_BIT     (1 << 0)
 //#define MARKED_BIT    (1 << 1)
@@ -21,9 +24,10 @@
  +------------+
  |PADDING     | 0
  +------------+ Box
- |type+flags  | 8 16-aligned
+ |retainCount | 8 16-aligned
+ |type+flags  | 8 8-aligned
  +------------+
- |DATA        | word-aligned
+ |DATA        | 16-aligned
  +------------+
 
  32 bits
@@ -33,9 +37,10 @@
  +------------+
  |PADDING     | 8  8-aligned
  +------------+ Box
- |type+flags  | 4 16-aligned
+ |retainCount | 4 16-aligned
+ |type+flags  | 4 4-aligned
  +------------+
- |DATA        | word-aligned
+ |DATA        | 8-aligned <- change this to 16 by adding padding after box?
  +------------+
  */
 
@@ -45,8 +50,14 @@
 #define ARRAY_PAD_BYTES 8
 #endif
 
+static void BoxCreate(Box* box) {
+	assert(((uword)(box)) % 16 == 0 && "Box is not 16-aligned");
+	box->retainCount = 1;
+	box->typeAndFlags = 0;
+}
+
 static o_bool BoxCheckArrayBit(Box* box) {
-    return (box->data & ARRAY_BIT) > 0;
+	return (box->typeAndFlags & ARRAY_BIT) > 0;
 }
 
 //static o_bool BoxCheckGCMarkedBit(Box* box) {
@@ -58,7 +69,7 @@ static o_bool BoxCheckArrayBit(Box* box) {
 //}
 
 static void BoxSetArrayBit(Box* box) {
-    box->data |= ARRAY_BIT;
+    box->typeAndFlags |= ARRAY_BIT;
 }
 
 //static void BoxSetGCMarkedBit(Box* box) {
@@ -70,7 +81,7 @@ static void BoxSetArrayBit(Box* box) {
 //}
 
 static void BoxClearArrayBit(Box* box) {
-    box->data &= (~ARRAY_BIT);
+    box->typeAndFlags &= (~ARRAY_BIT);
 }
 
 //static void BoxClearGCMarkedBit(Box* box) {
@@ -97,11 +108,11 @@ static pointer BoxGetObject(Box* box) {
 }
 
 static Type* BoxGetType(Box* box) {
-    return (Type*)(box->data & (~(ALL_BIT_FLAGS)));
+    return (Type*)(box->typeAndFlags & (~(ALL_BIT_FLAGS)));
 }
 
 static void BoxSetType(Box* box, Type* type) {
-    box->data = ((uword)type) | (box->data & ALL_BIT_FLAGS);
+    box->typeAndFlags = ((uword)type) | (box->typeAndFlags & ALL_BIT_FLAGS);
 }
 
 static ArrayInfo* BoxGetArrayInfo(Box* box) {
@@ -125,7 +136,7 @@ static Box* BoxGetBox(pointer object) {
     // 3. Backtrack by alignment offset
     ptr = ((uword)object) - alignment;
     // 4. We are now either in the box or in alignment padding space.
-    // The padding is always initialized to NULL and the data field of a valid
+    // The padding is always initialized to NULL and the typeAndFlags field of a valid
     // box instance can never be NULL so now we just back up one word at a time
     // until we hit something that is not NULL and that should be the box.
     do {
@@ -133,10 +144,32 @@ static Box* BoxGetBox(pointer object) {
         ptr -= sizeof(uword);
     } while (object == NULL);
 
+	// Now back up one more word to get to the top of the box
+    object = (pointer)ptr;
+
     return (Box*)object;
 }
 
+// Increase a boxed object refcount, returns the new count.
+static uword BoxRetainObject(pointer object) {
+	Box* box = BoxGetBox(object);
+	uword oldCount = AtomicGetThenAddUword(&box->retainCount, 1);
+	return oldCount + 1;
+}
 
+// Decrease a boxed object refcount. Returns the new refcount.
+// This does not delete the object, it is the resposibility of the caller
+// to decide what to do when the count reaches zero.
+static uword BoxReleaseObject(pointer object) {
+	Box* box = BoxGetBox(object);
+	uword oldCount = AtomicGetThenSubUword(&box->retainCount, 1);
+	return oldCount - 1;
+}
+
+static uword BoxGetRefcount(pointer object) {
+	Box* box = BoxGetBox(object);
+	return AtomicGetUword(&box->retainCount);
+}
 
 #endif
 

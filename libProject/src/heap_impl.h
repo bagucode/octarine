@@ -10,41 +10,22 @@
 #include <stdlib.h>
 #include <assert.h>
 
-//static OctHeapNode* createNode(uword node_size) {
-//    OctHeapNode* node;
-//
-//    assert(node_size > (sizeof(OctHeapNode) + sizeof(FreeCell) + sizeof(pointer)));
-//    
-//    node = (OctHeapNode*)malloc(node_size);
-//    memset(node, 0, sizeof(OctHeapNode));
-//    
-//    node->start = (pointer)((uword)node + sizeof(OctHeapNode));
-//    node->end = (pointer)((uword)node + node_size);
-//
-//    node->free_list = (FreeCell*)alignOffset((uword)node->start, sizeof(pointer));
-//    node->free_list->start = (pointer)((uword)node->free_list + sizeof(FreeCell));
-//    node->free_list->end = node->end;
-//    node->free_list->next = NULL;
-//    
-//    return node;
-//}
-
-static OctHeap* OctHeapCreate() {//o_bool shared) {
+static OctHeap* OctHeapCreate() {
     OctHeap* heap = (OctHeap*)malloc(sizeof(OctHeap));
+	pointer alignTest;
 
 	if(heap == NULL) {
 		return NULL;
 	}
     
-//    if(shared) {
-//        heap->lock = (Mutex*)malloc(sizeof(Mutex));
     MutexCreate(&heap->lock);
-//    }
-//    else {
-//        heap->lock = NULL;
-//    }
-    heap->blocks = NULL;
+
+	heap->blocks = NULL;
     heap->size = 0;
+
+	alignTest = malloc(100);
+	heap->alignmentPadding = ((uword)alignTest) % 16;
+	free(alignTest);
     
     return heap;
 }
@@ -58,16 +39,20 @@ static void OctHeapDestroy(OctHeap* heap) {
         heap->blocks = tmp;
     }
     
-//    if(heap->lock) {
     MutexDestroy(&heap->lock);
-//        free(heap->lock);
-//    }
-    free(heap);
+
+	free(heap);
 }
 
-//static o_bool OctHeapShared(OctHeap* heap) {
-//    return heap->lock != NULL;
-//}
+static pointer _alignedAlloc(OctHeap* heap, uword size) {
+	uword raw = (uword)calloc(1, size + heap->alignmentPadding);
+	return (pointer)(raw + heap->alignmentPadding);
+}
+
+static void _alignedFree(OctHeap* heap, pointer location) {
+	uword loc = (uword)location;
+	free((pointer)(loc - heap->alignmentPadding));
+}
 
 static void OctHeapAlloc(OctHeap* heap, Type* type, pointer* dest) {
     Box* box;
@@ -83,43 +68,29 @@ static void OctHeapAlloc(OctHeap* heap, Type* type, pointer* dest) {
     }
 }
 
-//static pointer nodeAlloc(OctHeapNode* node, uword size) {
-//    if(size <= 16) {
-//    } else if(size <= 32) {
-//    } else if(size <= 64) {
-//    } else if(size <= 128) {
-//    } else if(size <= 256) {
-//    } else if(size <= 512) {
-//    } else {
-//    }
-//}
-
 static void _OctHeapAlloc(OctHeap* heap, uword type_size, Box** dest) {
     uword size;
     pointer space;
     OctHeapBlock* block;
 
     size = BoxCalcObjectBoxSize(type_size);
-    space = calloc(1, size);
+	space = _alignedAlloc(heap, size);
     
     if(space == NULL) {
         (*dest) = NULL;
         return;
     }
 
-    block = malloc(sizeof(OctHeapBlock));
+    block = (OctHeapBlock*)malloc(sizeof(OctHeapBlock));
     if(block == NULL) {
-        free(space);
+		_alignedFree(heap, space);
         (*dest) = NULL;
         return;
     }
 
     (*dest) = (Box*)space;
+	BoxCreate(*dest);
     
-//    if(OctHeapShared(heap)) {
-//        BoxSetSharedBit(*dest);
-//    }
-
     block->addr = space;
     block->size = size;
     
@@ -148,7 +119,7 @@ static void OctHeapAllocArray(OctHeap* heap, struct Type* type, uword n_elements
 
 static void _OctHeapAllocArray(OctHeap* heap, uword type_size, uword n_elements, Box** dest) {
     uword size = BoxCalcArrayBoxSize(type_size, 0, n_elements);
-    pointer space = calloc(1, size);
+	pointer space = _alignedAlloc(heap, size);
     ArrayInfo* aInfo;
     OctHeapBlock* block;
     
@@ -157,9 +128,9 @@ static void _OctHeapAllocArray(OctHeap* heap, uword type_size, uword n_elements,
         return;
     }
     
-    block = malloc(sizeof(OctHeapBlock));
+    block = (OctHeapBlock*)malloc(sizeof(OctHeapBlock));
     if(block == NULL) {
-        free(space);
+		_alignedFree(heap, space);
         (*dest) = NULL;
         return;
     }
@@ -167,14 +138,11 @@ static void _OctHeapAllocArray(OctHeap* heap, uword type_size, uword n_elements,
     aInfo = (ArrayInfo*)space;
     (*dest) = (Box*)(((uword)space) + sizeof(ArrayInfo) + ARRAY_PAD_BYTES);
 
+	BoxCreate(*dest);
     BoxSetArrayBit(*dest);
     
     aInfo->alignment = 0;
     aInfo->num_elements = n_elements;
-    
-//    if(OctHeapShared(heap)) {
-//        BoxSetSharedBit(*dest);
-//    }
 
     block->addr = space;
     block->size = size;
@@ -238,7 +206,7 @@ static void OctHeapFree(OctHeap* heap, pointer object) {
             }
             
             MutexUnlock(&heap->lock);
-            free(block->addr);
+			_alignedFree(heap, block->addr);
             free(block);
             return;
         }

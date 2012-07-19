@@ -10,6 +10,7 @@
 #include "symbol.h"
 #include "error.h"
 #include "namespace.h"
+#include "runtime.h"
 
 // Implementation files
 #include "platform_impl.h"
@@ -20,5 +21,6 @@
 #include "symbol_impl.h"
 #include "error_impl.h"
 #include "namespace_impl.h"
+#include "runtime_impl.h"
 
 #endif

@@ -73,26 +73,41 @@ static struct Symbol* NamespaceGetName(Namespace* ns) {
 }
 
 static o_bool NamespaceBind(struct ThreadContext* ctx, Namespace* ns, struct Symbol* name, pointer value, struct Type* valType) {
-	o_bool result = o_false;
+	o_bool didRetain;
+	CuckooPutResult cuckooResult;
 	Binding newBinding;
 	Symbol* keySymbol;
-	
-	keySymbol = SymbolDeepCopy(name, ns->heap);
+
+	if(OctHeapObjectInHeap(ctx->runtime->heap, name)) {
+		// If the symbol is in the octarine heap already then we need to increase the retain count
+		BoxRetainObject(name);
+		keySymbol = name;
+		didRetain = o_true;
+	}
+	else {
+		if(SymbolDeepCopy(ctx, name, &keySymbol) == o_false) {
+			// Don't set an error here. DeepCopy will have done that.
+			return o_false;
+		}
+		didRetain = o_false;
+	}
 
 	newBinding.type = valType;
 	newBinding.value = value;
 
 	MutexLock(&ns->lock);
 
-	result = CuckooPut(&ns->bindings, keySymbol, &newBinding);
+	cuckooResult = CuckooPut(&ns->bindings, keySymbol, &newBinding);
 
-	if(result == o_false) {
-		// CuckooPut can only fail on OOM
+	if(cuckooResult == CUCKOO_OOM) {
+		if(didRetain) {
+			BoxReleaseObject(name);
+		}
 		ErrorSet(ctx, ErrorBuiltInOOM());
 	}
 
 	MutexUnlock(&ns->lock);
-	return result;
+	return cuckooResult != CUCKOO_OOM;
 }
 
 /*

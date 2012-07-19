@@ -96,6 +96,12 @@ typedef struct Cuckoo {
 	u8* table;
 } Cuckoo;
 
+typedef enum CuckooPutResult {
+	CUCKOO_OK,
+	CUCKOO_REPLACED,
+	CUCKOO_OOM
+} CuckooPutResult;
+
 // Compare fn may be NULL, in which case memcmp is used
 // Hash fn may be NULL, in which case a standard string hashing algorithm is mapped over the memory of the object
 // keyCheck function is used to tell if the value of a key means the table slot is empty,
@@ -119,7 +125,7 @@ static o_bool CuckooCreate(Cuckoo* ck,
                            CuckooEraseKeyFn eraseKeyFn,
                            pointer userData);
 static void CuckooDestroy(Cuckoo* ck);
-static o_bool CuckooPut(Cuckoo* ck, pointer key, pointer val);
+static CuckooPutResult CuckooPut(Cuckoo* ck, pointer key, pointer val);
 static o_bool CuckooGet(Cuckoo* ck, pointer key, pointer val);
 static o_bool CuckooRemove(Cuckoo* ck, pointer key);
 
