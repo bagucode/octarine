@@ -55,8 +55,7 @@ static o_bool NamespaceCreate(ThreadContext* ctx, Namespace* ns, struct Symbol* 
 		NamespaceEraseKey,
 		NULL);
 
-	if(result == o_false) {
-		// CuckooCreate can only fail on out of memory so that is the error we set.
+	if(result == CUCKOO_OOM) {
 		ErrorSet(ctx, ErrorBuiltInOOM());
 		return o_false;
 	}
@@ -66,6 +65,8 @@ static o_bool NamespaceCreate(ThreadContext* ctx, Namespace* ns, struct Symbol* 
 
 	// name
 	ns->name = name;
+    
+    return o_true;
 }
 
 static struct Symbol* NamespaceGetName(Namespace* ns) {

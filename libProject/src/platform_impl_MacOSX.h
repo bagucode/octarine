@@ -79,25 +79,25 @@ static void AtomicSetUword(volatile uword* uw, uword value) {
     }
 }
 
-//static uword AtomicGetThenAddUword(volatile uword* uw, uword add) {
-//    uword old;
-//    while(1) {
-//        old = *uw;
-//        if(AtomicCompareAndSwapUword(uw, old, old + add)) {
-//            return old;
-//        }
-//    }
-//}
+static uword AtomicGetThenAddUword(volatile uword* uw, uword add) {
+    uword old;
+    while(1) {
+        old = *uw;
+        if(AtomicCompareAndSwapUword(uw, old, old + add)) {
+            return old;
+        }
+    }
+}
 
-//static uword AtomicGetThenSubUword(volatile uword* uw, uword sub) {
-//    uword old;
-//    while(1) {
-//        old = *uw;
-//        if(AtomicCompareAndSwapUword(uw, old, old - sub)) {
-//            return old;
-//        }
-//    }
-//}
+static uword AtomicGetThenSubUword(volatile uword* uw, uword sub) {
+    uword old;
+    while(1) {
+        old = *uw;
+        if(AtomicCompareAndSwapUword(uw, old, old - sub)) {
+            return old;
+        }
+    }
+}
 
 // uwords are always pointer size so these functions just wrap the uword ones
 static pointer AtomicGetPointer(volatile pointer* p) {
