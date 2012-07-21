@@ -6,6 +6,7 @@
 
 struct Symbol;
 struct Type;
+struct ThreadContext;
 
 typedef struct Field {
     struct Symbol* name;
@@ -14,27 +15,17 @@ typedef struct Field {
     uword offset;
 } Field;
 
-// When isArray is true, the Type is actually not a Type instance
-// but an instance of ArrayType and should be casted to ArrayType.
+// If arrayInfo is not zero then this type represents an array
+// and arrayInfo contains a pointer to the type of the elements
+// and flags that say if the size (and perhaps alignment) fields
+// are part of the type or just runtime properties.
 typedef struct Type {
-    o_bool isArray;
+	uword arrayInfo;
     struct Symbol* name;
     struct Field* fields;
     uword size;
     uword alignment;
 } Type;
-
-// When isArray is false, the ArrayType is actually not an ArrayType
-// instance but an instance of Type and should be casted to Type.
-typedef struct ArrayType {
-    o_bool isArray;
-    Type* type;
-    uword size;
-} ArrayType;
-
-//typedef struct TemplateType {
-    // needed?
-//} TemplateType;
 
 static void FieldCreate(Field* field,
                         struct Symbol* name,
@@ -57,8 +48,35 @@ static void _TypeCreate(Type* type,
                         struct Field* fields,
                         uword numFields);
 
-static void ArrayTypeCreate(ArrayType* arrType,
-                            Type* type,
-                            uword size);
+static void TypeCreateArrayType(Type* type,
+								o_bool useSize,
+								uword size,
+								o_bool useAlignment,
+								uword alignment);
+
+static o_bool TypeIsArrayType(Type* type);
+
+static o_bool TypeIsArrayTypeSized(Type* type);
+
+static uword TypeGetArrayTypeSize(Type* type);
+
+// fieldValues is expected to be an octarine array
+// This function is also used to create instances of array types.
+// When creating an array type instance, the fieldValues (if any)
+// are used to fill the array, starting at index 0
+static o_bool TypeInstanceCreate(struct ThreadContext* ctx,
+								 pointer place,
+								 Type* type,
+								 pointer* fieldValues
+								 //Type** fieldTypes
+								 );
+
+static o_bool _TypeInstanceCreate(struct ThreadContext* ctx,
+								 pointer place,
+								 Type* type,
+								 pointer* fieldValues,
+								 uword fieldValueCount,
+								 Type** fieldTypes,
+								 uword fieldTypeCount);
 
 #endif

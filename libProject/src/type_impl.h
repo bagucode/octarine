@@ -53,7 +53,6 @@ static void _TypeCreate(Type* type,
     uword i;
     uword align;
 
-    type->isArray = o_false;
     type->name = name;
     type->alignment = alignment;
     type->fields = fields;
@@ -93,12 +92,6 @@ static void FieldCreate(Field* field,
     field->type = type;
     field->ptr = ptr;
     field->offset = 0;
-}
-
-static void ArrayTypeCreate(ArrayType* arrType,
-                            Type* type,
-                            uword size) {
-    // TODO
 }
 
 

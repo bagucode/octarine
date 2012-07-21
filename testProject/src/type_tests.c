@@ -33,7 +33,6 @@ static void typeCreation() {
     
     FieldCreate(&fields[0], name, &actual, o_true);
     
-    expected.isArray = o_false;
     expected.alignment = 0;
     expected.fields = fields;
     expected.name = name;
@@ -43,7 +42,6 @@ static void typeCreation() {
 
     assert(expected.alignment == actual.alignment);
     assert(expected.fields == actual.fields);
-    assert(expected.isArray == actual.isArray);
     assert(expected.name == actual.name);
     assert(expected.size == actual.size);
 }
@@ -63,7 +61,6 @@ static void typeCreation2() {
     
     FieldCreate(&fields[0], name, &actual, o_true);
     
-    expected.isArray = o_false;
     expected.alignment = 0;
     expected.fields = fields;
     expected.name = name;
@@ -73,7 +70,6 @@ static void typeCreation2() {
     
     assert(expected.alignment == actual.alignment);
     assert(expected.fields == actual.fields);
-    assert(expected.isArray == actual.isArray);
     assert(expected.name == actual.name);
     assert(expected.size == actual.size);
     
