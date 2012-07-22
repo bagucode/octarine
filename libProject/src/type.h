@@ -34,21 +34,14 @@ static void FieldCreate(Field* field,
 
 static o_bool TypeIsPrimitive(Type* t);
 
-// WARNING: This function changes the supplied field instances.
-// Do not re-use fields from another type instance, or any publicly
-// available field instances!
 static void TypeCreate(Type* type,
                        uword alignment,
                        struct Symbol* name,
-                       struct Field* fields);
+                       struct Field* fields,
+                       uword numFields);
 
-static void _TypeCreate(Type* type,
-                        uword alignment,
-                        struct Symbol* name,
-                        struct Field* fields,
-                        uword numFields);
-
-static void TypeCreateArrayType(Type* type,
+static void TypeCreateArrayType(Type* arrayType,
+								Type* elementType,
 								o_bool useSize,
 								uword size,
 								o_bool useAlignment,
@@ -56,27 +49,10 @@ static void TypeCreateArrayType(Type* type,
 
 static o_bool TypeIsArrayType(Type* type);
 
-static o_bool TypeIsArrayTypeSized(Type* type);
+static o_bool TypeIsArrayTypeSized(Type* arrayType);
 
-static uword TypeGetArrayTypeSize(Type* type);
+//static uword TypeGetArrayTypeSize(Type* arrayType);
 
-// fieldValues is expected to be an octarine array
-// This function is also used to create instances of array types.
-// When creating an array type instance, the fieldValues (if any)
-// are used to fill the array, starting at index 0
-static o_bool TypeInstanceCreate(struct ThreadContext* ctx,
-								 pointer place,
-								 Type* type,
-								 pointer* fieldValues
-								 //Type** fieldTypes
-								 );
-
-static o_bool _TypeInstanceCreate(struct ThreadContext* ctx,
-								 pointer place,
-								 Type* type,
-								 pointer* fieldValues,
-								 uword fieldValueCount,
-								 Type** fieldTypes,
-								 uword fieldTypeCount);
+static Type* TypeGetArrayTypeElementType(Type* arrayType);
 
 #endif

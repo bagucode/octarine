@@ -1,6 +1,9 @@
 #include "type.h"
 #include "utils.h"
 
+#define OCT_ARRAY_USE_SIZE 1 << 0
+#define OCT_ARRAY_USE_ALIGNMENT 1 << 1
+
 static o_bool TypeIsPrimitive(Type* t) {
 	return t->fields == NULL;
 }
@@ -39,16 +42,8 @@ static uword findLargestAlignment(uword largest,
 static void TypeCreate(Type* type,
                        uword alignment,
                        struct Symbol* name,
-                       struct Field* fields) {
-    ArrayInfo* aInfo = BoxGetArrayInfo(BoxGetBox(fields));
-    _TypeCreate(type, alignment, name, fields, aInfo->num_elements);
-}
-
-static void _TypeCreate(Type* type,
-                       uword alignment,
-                       struct Symbol* name,
                        struct Field* fields,
-                        uword numFields) {
+                       uword numFields) {
     uword largestMember;
     uword i;
     uword align;
@@ -94,9 +89,38 @@ static void FieldCreate(Field* field,
     field->offset = 0;
 }
 
+static void TypeCreateArrayType(Type* arrayType,
+								Type* elementType,
+								o_bool useSize,
+								uword size,
+								o_bool useAlignment,
+								uword alignment) {
+	arrayType->alignment = alignment;
+	arrayType->arrayInfo = (uword)elementType;
+	arrayType->fields = NULL;
+	arrayType->name = NULL;
+	arrayType->size = size;
 
+	if(useSize) {
+		arrayType->arrayInfo |= OCT_ARRAY_USE_SIZE;
+	}
+	if(useAlignment) {
+		arrayType->arrayInfo |= OCT_ARRAY_USE_ALIGNMENT;
+	}
+}
 
+static o_bool TypeIsArrayType(Type* type) {
+	return type->arrayInfo != 0;
+}
 
+static o_bool TypeIsArrayTypeSized(Type* arrayType) {
+	return (arrayType->arrayInfo & OCT_ARRAY_USE_SIZE) != 0;
+}
 
+//static uword TypeGetArrayTypeSize(Type* arrayType) {
+//	return arrayType->size;
+//}
 
-
+static Type* TypeGetArrayTypeElementType(Type* arrayType) {
+	return (Type*)(arrayType->arrayInfo & (~(OCT_ARRAY_USE_SIZE | OCT_ARRAY_USE_ALIGNMENT)));
+}
