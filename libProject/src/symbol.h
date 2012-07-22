@@ -9,7 +9,7 @@ typedef struct Symbol {
 
 struct ThreadContext;
 
-static o_bool SymbolCreate(struct ThreadContext* ctx, Symbol* sym, const char* utf8String);
+static Type* SymbolGetType();
 
 static o_bool SymbolEquals(Symbol* sym1, Symbol* sym2);
 

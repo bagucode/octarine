@@ -38,7 +38,8 @@ static void TypeCreate(Type* type,
                        uword alignment,
                        struct Symbol* name,
                        struct Field* fields,
-                       uword numFields);
+                       uword numFields,
+					   uword primitiveSize);
 
 static void TypeCreateArrayType(Type* arrayType,
 								Type* elementType,

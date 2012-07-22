@@ -38,7 +38,7 @@ static void typeCreation() {
     expected.name = name;
     expected.size = sizeof(pointer);
     
-    TypeCreate(&actual, 0, name, fields, 1);
+    TypeCreate(&actual, 0, name, fields, 1, 0);
 
     assert(expected.alignment == actual.alignment);
     assert(expected.fields == actual.fields);

@@ -43,7 +43,8 @@ static void TypeCreate(Type* type,
                        uword alignment,
                        struct Symbol* name,
                        struct Field* fields,
-                       uword numFields) {
+                       uword numFields,
+					   uword primitiveSize) {
     uword largestMember;
     uword i;
     uword align;
@@ -51,32 +52,35 @@ static void TypeCreate(Type* type,
     type->name = name;
     type->alignment = alignment;
     type->fields = fields;
-    type->size = 0;
+	type->size = primitiveSize;
 
-    largestMember = 0;
+	if(numFields > 0) {
+		largestMember = 0;
+		type->size = 0;
     
-    for(i = 0; i < numFields; ++i) {
-        if(fields[i].ptr) {
-            type->size = alignOffset(type->size, sizeof(pointer));
-            fields[i].offset = type->size;
-            type->size += sizeof(pointer);
-            if(largestMember < sizeof(pointer))
-                largestMember = sizeof(pointer);
-        } else { // inline
-            if(TypeIsPrimitive(fields[i].type)) {
-                align = fields[i].type->alignment != 0 ? fields[i].type->alignment : fields[i].type->size;
-            } else {
-                // Align composite types on pointer if there is no explicit alignment
-                align = fields[i].type->alignment != 0 ? fields[i].type->alignment : sizeof(void*);
-            }
-            type->size = alignOffset(type->size, align);
-            fields[i].offset = type->size;
-            type->size += fields[i].type->size;
-            largestMember = findLargestAlignment(largestMember, &fields[i]);
-        }
-    }
+		for(i = 0; i < numFields; ++i) {
+			if(fields[i].ptr) {
+				type->size = alignOffset(type->size, sizeof(pointer));
+				fields[i].offset = type->size;
+				type->size += sizeof(pointer);
+				if(largestMember < sizeof(pointer))
+					largestMember = sizeof(pointer);
+			} else { // inline
+				if(TypeIsPrimitive(fields[i].type)) {
+					align = fields[i].type->alignment != 0 ? fields[i].type->alignment : fields[i].type->size;
+				} else {
+					// Align composite types on pointer if there is no explicit alignment
+					align = fields[i].type->alignment != 0 ? fields[i].type->alignment : sizeof(void*);
+				}
+				type->size = alignOffset(type->size, align);
+				fields[i].offset = type->size;
+				type->size += fields[i].type->size;
+				largestMember = findLargestAlignment(largestMember, &fields[i]);
+			}
+		}
     
-    type->size = nextLargerMultiple(largestMember, type->size);
+		type->size = nextLargerMultiple(largestMember, type->size);
+	}
 }
 
 static void FieldCreate(Field* field,
