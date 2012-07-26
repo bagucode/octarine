@@ -6,10 +6,14 @@
 
 struct OctHeap;
 
-struct Runtime {
+typedef struct Runtime {
 	struct OctHeap* heap;
 	//TLS contextTLS;
-};
+} Runtime;
+
+static void RuntimeCreate(Runtime* rt);
+
+static void RuntimeDestroy(Runtime* rt);
 
 //typedef struct oThreadContextList {
 //    oThreadContextRef ctx;

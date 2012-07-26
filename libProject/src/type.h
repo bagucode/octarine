@@ -42,6 +42,7 @@ static void TypeCreate(Type* type,
 					   uword primitiveSize);
 
 static void TypeCreateArrayType(Type* arrayType,
+                                struct Symbol* name,
 								Type* elementType,
 								o_bool useSize,
 								uword size,

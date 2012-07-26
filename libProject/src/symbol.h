@@ -7,9 +7,13 @@ typedef struct Symbol {
     u8* characters;
 } Symbol;
 
+struct Type;
 struct ThreadContext;
 
-static Type* SymbolGetType();
+static struct Type* SymbolType;
+static struct Type* SymbolArrayType;
+
+static void SymbolInitType();
 
 static o_bool SymbolEquals(Symbol* sym1, Symbol* sym2);
 

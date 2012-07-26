@@ -1,4 +1,40 @@
+#ifndef octarine_runtime_impl
+#define octarine_runtime_impl
+
 #include "runtime.h"
+#include "heap.h"
+#include "primitives.h"
+#include "symbol.h"
+
+static uword _typesInitFlag1 = 0;
+static uword _typesInitFlag2 = 0;
+
+static void RuntimeCreate(Runtime* rt) {
+    if(AtomicCompareAndSwapUword(&_typesInitFlag1, 0, 1)) {
+        PrimitivesInitTypes();
+        SymbolInitType();
+
+        // Don't remove the atomic set here, it may not seem necessary but
+        // the memory barriers may be needed to make sure it is absolutely
+        // the last thing in this block
+        AtomicSetUword(&_typesInitFlag2, 1);
+    }
+    else {
+        // Make sure to wait if another thread is initializing the values
+        // right now.
+        while (_typesInitFlag2 == 0) {
+            SleepMillis(0);
+        }
+    }
+
+    rt->heap = OctHeapCreate();
+}
+
+static void RuntimeDestroy(Runtime* rt) {
+    OctHeapDestroy(rt->heap);
+}
+
+#endif
 
 /*
 static oTypeRef alloc_built_in(oRuntimeRef rt, oHeapRef heap) {

@@ -1,3 +1,6 @@
+#ifndef ocatrine_type_impl
+#define octarine_type_impl
+
 #include "type.h"
 #include "utils.h"
 
@@ -94,6 +97,7 @@ static void FieldCreate(Field* field,
 }
 
 static void TypeCreateArrayType(Type* arrayType,
+                                Symbol* name,
 								Type* elementType,
 								o_bool useSize,
 								uword size,
@@ -102,7 +106,7 @@ static void TypeCreateArrayType(Type* arrayType,
 	arrayType->alignment = alignment;
 	arrayType->arrayInfo = (uword)elementType;
 	arrayType->fields = NULL;
-	arrayType->name = NULL;
+	arrayType->name = name;
 	arrayType->size = size;
 
 	if(useSize) {
@@ -128,3 +132,5 @@ static o_bool TypeIsArrayTypeSized(Type* arrayType) {
 static Type* TypeGetArrayTypeElementType(Type* arrayType) {
 	return (Type*)(arrayType->arrayInfo & (~(OCT_ARRAY_USE_SIZE | OCT_ARRAY_USE_ALIGNMENT)));
 }
+
+#endif
